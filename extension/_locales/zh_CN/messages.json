@@ -1,0 +1,11 @@
+{
+  "extName": { "message": "Muse 自动批准" },
+  "extDesc": { "message": "自动点击 Muse（muse.ai）审批请求中的“Allow”。支持开关与点击日志，数据仅保存在本地。" },
+  "toggleLabel": { "message": "自动点击 Allow" },
+  "delayLabel": { "message": "点击间隔：" },
+  "clickedLabel": { "message": "已点击：" },
+  "noClicks": { "message": "暂无点击记录" },
+  "kindAllow": { "message": "批准" },
+  "kindExpand": { "message": "展开" },
+  "kindOpenPanel": { "message": "打开面板" }
+}

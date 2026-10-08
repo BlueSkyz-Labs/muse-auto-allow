@@ -1,0 +1,11 @@
+{
+  "extName": { "message": "Muse Auto-Aprobar" },
+  "extDesc": { "message": "Hace clic automáticamente en Allow en las solicitudes de aprobación de Muse (muse.ai). Interruptor, registro de clics; todo local." },
+  "toggleLabel": { "message": "Clic automático en Allow" },
+  "delayLabel": { "message": "Retardo entre clics:" },
+  "clickedLabel": { "message": "Clics:" },
+  "noClicks": { "message": "Aún no hay clics" },
+  "kindAllow": { "message": "permitir" },
+  "kindExpand": { "message": "expandir" },
+  "kindOpenPanel": { "message": "abrir panel" }
+}

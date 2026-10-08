@@ -1,0 +1,11 @@
+{
+  "extName": { "message": "Muse 자동 승인" },
+  "extDesc": { "message": "Muse(muse.ai) 승인 요청에서 'Allow'를 자동으로 클릭합니다. 켜기/끄기 스위치와 클릭 로그 제공, 데이터는 로컬에만 저장." },
+  "toggleLabel": { "message": "Allow 자동 클릭" },
+  "delayLabel": { "message": "클릭 간격:" },
+  "clickedLabel": { "message": "클릭 수:" },
+  "noClicks": { "message": "아직 클릭 기록이 없습니다" },
+  "kindAllow": { "message": "승인" },
+  "kindExpand": { "message": "펼치기" },
+  "kindOpenPanel": { "message": "패널 열기" }
+}

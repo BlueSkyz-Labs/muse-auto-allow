@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Muse approvals fixture</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: #0b0b0c; color: #eee; padding: 24px; }
+  .card { border: 1px solid #333; border-radius: 12px; padding: 16px; margin: 12px 0; background: #151517; }
+  button { padding: 8px 18px; border-radius: 999px; border: 0; margin-right: 8px; font-size: 14px; cursor: pointer; }
+  .allow { background: #2f6df6; color: #fff; }
+  .deny { background: #333; color: #ddd; }
+  .pending { background: #1b2438; color: #cfe1ff; text-align: left; border-radius: 10px; }
+</style>
+</head>
+<body>
+<h2>Needs review</h2>
+
+<!-- path B: classic Allow+Deny pairs -->
+<div class="card" id="card1">
+  <p>Allow Muse to perform this action on your GitHub account?</p>
+  <div class="row">
+    <button type="button" class="allow" id="allow1">Allow</button>
+    <button type="button" class="deny" id="deny1">Deny</button>
+  </div>
+</div>
+
+<div class="card" id="card2">
+  <p>Second request</p>
+  <div class="row">
+    <button type="button" class="allow" id="allow2">Allow</button>
+    <button type="button" class="deny" id="deny2">Deny</button>
+  </div>
+</div>
+
+<!-- path A: Muse-marked card -->
+<div class="card" data-testid="hatch-inline-approval-card" id="card4">
+  <p>Inline marked approval</p>
+  <div class="row">
+    <button type="button" class="allow" id="allow4">Allow</button>
+    <button type="button" class="deny" id="deny4">Deny</button>
+  </div>
+</div>
+
+<!-- negative controls: must NEVER be clicked -->
+<p><button type="button" class="allow" id="lone">Allow</button></p>
+<p><button type="button" class="allow" id="notif">Allow notifications</button>
+   <button type="button" class="deny" id="block">Block</button></p>
+
+<!-- path C: collapsed pending card -->
+<button type="button" id="pending5" class="pending">Allow Muse to perform this action on your GitHub account? Your assistant wants to create or update files in the GitHub repository.</button>
+
+<!-- path D: background approval surface -->
+<div id="surface" data-testid="hatch-inline-approval-card" data-hatch-background-approval-surface="true" class="card">
+  <span>2 tasks need your approval</span>
+  <button type="button" id="surfaceBtn">Review</button>
+</div>
+
+<script>
+window.__clicks = [];
+window.__errors = [];
+window.addEventListener('error', (e) => window.__errors.push(String(e.message)));
+function rec(n, extra) { window.__clicks.push(Object.assign({ n: n, t: Date.now() }, extra || {})); }
+function wirePair(scope, id) {
+  scope.querySelector('#allow' + id).addEventListener('click', function () {
+    rec(id, { allow: true });
+    var c = document.getElementById('card' + id); if (c) c.remove();
+  });
+  scope.querySelector('#deny' + id).addEventListener('click', function () {
+    rec(id, { deny: true });
+    var c = document.getElementById('card' + id); if (c) c.remove();
+  });
+}
+wirePair(document, 1);
+wirePair(document, 2);
+wirePair(document, 4);
+
+document.getElementById('lone').addEventListener('click', function () { rec('lone', { allow: true }); });
+document.getElementById('notif').addEventListener('click', function () { rec('notif', { allow: true }); });
+
+// path C: expanding a collapsed pending card reveals the pair
+document.getElementById('pending5').addEventListener('click', function () {
+  rec('pending5');
+  var d = document.createElement('div');
+  d.className = 'card'; d.id = 'card5';
+  d.innerHTML = '<p>Expanded pending</p><div class="row">' +
+    '<button type="button" class="allow" id="allow5">Allow</button>' +
+    '<button type="button" class="deny" id="deny5">Deny</button></div>';
+  this.replaceWith(d);
+  wirePair(d, 5);
+});
+
+// path D: surface button opens the panel and reveals a pair
+document.getElementById('surfaceBtn').addEventListener('click', function () {
+  rec('surface');
+  var s = document.getElementById('surface'); if (s) s.remove();
+  var d = document.createElement('div');
+  d.className = 'card'; d.id = 'card6';
+  d.innerHTML = '<p>Panel opened</p><div class="row">' +
+    '<button type="button" class="allow" id="allow6">Allow</button>' +
+    '<button type="button" class="deny" id="deny6">Deny</button></div>';
+  document.body.appendChild(d);
+  wirePair(d, 6);
+});
+
+// late card (MutationObserver)
+setTimeout(function () {
+  var div = document.createElement('div');
+  div.className = 'card'; div.id = 'card3';
+  div.innerHTML = '<p>Late request</p><div class="row">' +
+    '<button type="button" class="allow" id="allow3">Allow</button>' +
+    '<button type="button" class="deny" id="deny3">Deny</button></div>';
+  document.body.appendChild(div);
+  wirePair(div, 3);
+}, 2500);
+</script>
+</body>
+</html>

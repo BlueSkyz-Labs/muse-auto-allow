@@ -1,0 +1,11 @@
+{
+  "extName": { "message": "Muse Auto-Allow" },
+  "extDesc": { "message": "Auto-clicks Allow on Muse (muse.ai) approval requests. On/off switch, click log, local-only." },
+  "toggleLabel": { "message": "Auto-click Allow" },
+  "delayLabel": { "message": "Delay between clicks:" },
+  "clickedLabel": { "message": "Clicked:" },
+  "noClicks": { "message": "No clicks yet" },
+  "kindAllow": { "message": "allow" },
+  "kindExpand": { "message": "expand" },
+  "kindOpenPanel": { "message": "open panel" }
+}

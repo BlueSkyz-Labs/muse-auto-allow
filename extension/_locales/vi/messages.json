@@ -1,0 +1,11 @@
+{
+  "extName": { "message": "Muse Auto-Allow" },
+  "extDesc": { "message": "Tự động bấm Allow cho các yêu cầu phê duyệt của Muse (muse.ai). Có công tắc bật/tắt, nhật ký bấm, chỉ lưu cục bộ." },
+  "toggleLabel": { "message": "Tự động bấm Allow" },
+  "delayLabel": { "message": "Độ trễ giữa các lần bấm:" },
+  "clickedLabel": { "message": "Đã bấm:" },
+  "noClicks": { "message": "Chưa bấm lần nào" },
+  "kindAllow": { "message": "duyệt" },
+  "kindExpand": { "message": "mở rộng" },
+  "kindOpenPanel": { "message": "mở bảng" }
+}

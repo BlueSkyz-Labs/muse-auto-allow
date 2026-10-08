@@ -1,0 +1,11 @@
+{
+  "extName": { "message": "Muse 自動承認" },
+  "extDesc": { "message": "Muse（muse.ai）の承認リクエストで「Allow」を自動クリック。オン/オフ切替とクリックログ付き、データはローカルのみ。" },
+  "toggleLabel": { "message": "Allow を自動クリック" },
+  "delayLabel": { "message": "クリック間隔：" },
+  "clickedLabel": { "message": "クリック数：" },
+  "noClicks": { "message": "まだクリックはありません" },
+  "kindAllow": { "message": "承認" },
+  "kindExpand": { "message": "展開" },
+  "kindOpenPanel": { "message": "パネルを開く" }
+}
