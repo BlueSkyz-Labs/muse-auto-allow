@@ -76,8 +76,14 @@ const CHROME_ARGS = [
   '--enable-unsafe-extension-debugging',
   '--no-first-run',
   '--no-default-browser-check',
-  '--disable-features=Translate,MediaRouter',
+  // Keep the offscreen window fully active: on Windows, occlusion detection plus
+  // background timer throttling froze layout ~5s in, every getBoundingClientRect
+  // check returned 0 and all clicking silently stopped mid-test (diagnosed 2026-10-08).
+  '--disable-features=Translate,MediaRouter,CalculateNativeWinOcclusion,OptimizationHints',
   '--disable-background-networking',
+  '--disable-background-timer-throttling',
+  '--disable-backgrounding-occluded-windows',
+  '--disable-renderer-backgrounding',
   '--window-position=-32000,-32000',
   '--window-size=1100,800',
   'about:blank',
@@ -152,7 +158,8 @@ function killMyChrome() {
   } catch { /* nothing to kill */ }
 }
 
-const EXPECTED = ['1', '2', '3', '4', '5', '6', 'pending5', 'surface'];
+const EXPECTED = ['1', '2', '3', '4', '5', '6', '7', 'pending5', 'surface'];
+const FORBIDDEN = ['8', '9', 'surface2', 'lone', 'notif'];
 
 let ws = null;
 let send = null;
@@ -173,23 +180,64 @@ try {
 
   const deadline = Date.now() + 18000;
   let clicks = [];
+  const timeline = [];
   while (Date.now() < deadline) {
     try {
-      const r = await send('Runtime.evaluate', { expression: 'JSON.stringify(window.__clicks || [])', returnByValue: true }, sessionId);
-      clicks = JSON.parse(r?.result?.value || '[]');
+      const r = await send('Runtime.evaluate', { expression: 'JSON.stringify({c:(window.__clicks||[]).length, v:document.visibilityState, p:window.__probe||null})', returnByValue: true }, sessionId);
+      const j = JSON.parse(r?.result?.value || '{}');
+      timeline.push({ t: Date.now(), c: j.c, v: j.v, ticks: j.p && j.p.ticks });
+      const rr = await send('Runtime.evaluate', { expression: 'JSON.stringify(window.__clicks || [])', returnByValue: true }, sessionId);
+      clicks = JSON.parse(rr?.result?.value || '[]');
     } catch { /* target may still be booting */ }
     const got = clicks.map((c) => String(c.n));
     if (EXPECTED.every((n) => got.includes(n))) break;
     await sleep(400);
   }
 
-  const got = clicks.map((c) => String(c.n));
+  // Settle: let the extension run a few extra sweep cycles so late-evaluated guards
+  // are actually exercised before asserting. Phase 1 covers everything whose timing
+  // window is short (dedup is asserted inside its 5s window). Phase 2 then waits out
+  // the 10s open-panel throttle before checking surface2, whose negative test is only
+  // reachable after surface -> card6 (without it the surface2 test is vacuous).
+  await sleep(2000);
+  try {
+    const rr2 = await send('Runtime.evaluate', { expression: 'JSON.stringify(window.__clicks || [])', returnByValue: true }, sessionId);
+    clicks = JSON.parse(rr2?.result?.value || '[]');
+  } catch { /* keep last known clicks */ }
+
+  const got = clicks.map((c) => String(c.n)); // phase-1 snapshot
   const missing = EXPECTED.filter((n) => !got.includes(n));
   const extra = got.filter((n) => !EXPECTED.includes(n));
   const dupes = got.filter((n, i) => got.indexOf(n) !== i);
   const denyCount = clicks.filter((c) => c.deny).length;
+  const n7count = got.filter((n) => n === '7').length; // re-render dedup: must be exactly 1
   const idx = (n) => got.indexOf(n);
   const orderOk = idx('pending5') >= 0 && idx('5') > idx('pending5') && idx('surface') >= 0 && idx('6') > idx('surface');
+
+  // Phase 2: wait out the surface throttle, then confirm surface2 was still skipped.
+  // Sampled every 1s so the diagnostics show whether the page stayed alive through
+  // the idle window (ticks) and when late clicks actually happen.
+  const surfaceAt = (clicks.find((c) => c.n === 'surface') || {}).t || 0;
+  const waitUntil = surfaceAt + 10500;
+  const timeline2 = [];
+  while (Date.now() < waitUntil) {
+    try {
+      const r2 = await send('Runtime.evaluate', { expression: 'JSON.stringify({c:(window.__clicks||[]).length, v:document.visibilityState, p:window.__probe||null})', returnByValue: true }, sessionId);
+      const j2 = JSON.parse(r2?.result?.value || '{}');
+      timeline2.push({ t: Date.now(), c: j2.c, v: j2.v, ticks: j2.p && j2.p.ticks, last: j2.p && j2.p.last });
+    } catch { /* keep waiting */ }
+    await sleep(1000);
+  }
+  let clicksFinal = clicks;
+  try {
+    const rr3 = await send('Runtime.evaluate', { expression: 'JSON.stringify(window.__clicks || [])', returnByValue: true }, sessionId);
+    clicksFinal = JSON.parse(rr3?.result?.value || '[]');
+  } catch { /* keep phase-1 snapshot */ }
+  const gotFinal = clicksFinal.map((c) => String(c.n));
+  const surface2Hit = gotFinal.includes('surface2');
+  const lateClicks = gotFinal.slice(got.length); // appended clicks after the phase-1 snapshot
+  const retryFired = gotFinal.filter((n) => n === '7').length >= 2; // dedup window expired -> legitimate retry
+  const forbiddenHit = [...FORBIDDEN.filter((n) => got.includes(n)), ...(surface2Hit ? ['surface2'] : [])];
 
   // ---- muse.ai smoke (logged out; WARN-only if the network is blocked) ----
   let museAttr = null;
@@ -209,7 +257,8 @@ try {
     museAttr = 'error: ' + e.message;
   }
 
-  const pass = missing.length === 0 && extra.length === 0 && dupes.length === 0 && denyCount === 0 && orderOk;
+  const pass = missing.length === 0 && extra.length === 0 && dupes.length === 0 && denyCount === 0 && orderOk
+    && forbiddenHit.length === 0 && n7count === 1 && !surface2Hit;
   Object.assign(results, {
     ok: pass,
     extId,
@@ -217,10 +266,17 @@ try {
     clicked: got,
     missing,
     extra,
+    forbiddenHit,
     dupes,
     denyCount,
+    n7count,
     orderOk,
     museAttr,
+    surface2Hit,
+    lateClicks,
+    retryFired,
+    timeline: timeline.slice(-45),
+    timeline2: timeline2.slice(-30),
     raw: clicks,
   });
 } catch (e) {

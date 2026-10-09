@@ -55,10 +55,46 @@
   <button type="button" id="surfaceBtn">Review</button>
 </div>
 
+<!-- redteam case: dedup probe — clicking Allow replaces the card with an IDENTICAL one (re-render race) -->
+<div class="card" id="card7">
+  <p>Dedup probe request</p>
+  <div class="row">
+    <button type="button" class="allow" id="allow7">Allow</button>
+    <button type="button" class="deny" id="deny7">Deny</button>
+  </div>
+</div>
+
+<!-- redteam case: allow button inside an <a> must NEVER be clicked -->
+<div class="card" id="card8">
+  <p>Anchor probe</p>
+  <div class="row">
+    <a href="#noop"><button type="button" class="allow" id="allow8">Allow</button></a>
+    <button type="button" class="deny" id="deny8">Deny</button>
+  </div>
+</div>
+
+<!-- redteam case: consent-only pair (notifications) must NEVER be clicked -->
+<div class="card" id="card9">
+  <p>Allow notifications to keep you posted about updates?</p>
+  <div class="row">
+    <button type="button" class="allow" id="allow9">Allow</button>
+    <button type="button" class="deny" id="deny9">Deny</button>
+  </div>
+</div>
+
+<!-- redteam case: surface whose only button is NOT an open/review intent -> must NOT be clicked -->
+<div id="surface2" data-testid="hatch-inline-approval-card" data-hatch-background-approval-surface="true" class="card">
+  <span>3 tasks need your approval</span>
+  <button type="button" id="surfaceBtn2">Delete everything</button>
+</div>
+
 <script>
 window.__clicks = [];
 window.__errors = [];
 window.addEventListener('error', (e) => window.__errors.push(String(e.message)));
+// probe: is the PAGE's own JS still running when clicks stop? (freeze vs script-death)
+window.__probe = { start: Date.now(), ticks: 0, last: 0 };
+setInterval(function () { window.__probe.ticks++; window.__probe.last = Date.now(); }, 500);
 function rec(n, extra) { window.__clicks.push(Object.assign({ n: n, t: Date.now() }, extra || {})); }
 function wirePair(scope, id) {
   scope.querySelector('#allow' + id).addEventListener('click', function () {
@@ -101,6 +137,38 @@ document.getElementById('surfaceBtn').addEventListener('click', function () {
   document.body.appendChild(d);
   wirePair(d, 6);
 });
+
+// redteam case: dedup — first click replaces card7 with an identical card (new nodes, same text).
+// With the fingerprint dedup the replacement must NOT be clicked again (within the dedup window).
+var replaced7 = false;
+function wire7() {
+  document.getElementById('allow7').addEventListener('click', function () {
+    rec(7, { allow: true });
+    if (!replaced7) {
+      replaced7 = true;
+      var old = document.getElementById('card7');
+      var d = document.createElement('div');
+      d.className = 'card'; d.id = 'card7';
+      d.innerHTML = '<p>Dedup probe request</p><div class="row">' +
+        '<button type="button" class="allow" id="allow7">Allow</button>' +
+        '<button type="button" class="deny" id="deny7">Deny</button></div>';
+      old.replaceWith(d);
+      wire7();
+    } else {
+      var c = document.getElementById('card7'); if (c) c.remove();
+    }
+  });
+}
+wire7();
+
+// redteam case: anchor-contained allow must never be clicked
+document.getElementById('allow8').addEventListener('click', function () { rec(8, { allow: true }); });
+
+// redteam case: consent-only allow must never be clicked
+document.getElementById('allow9').addEventListener('click', function () { rec(9, { allow: true }); });
+
+// redteam case: dangerous surface button must never be clicked
+document.getElementById('surfaceBtn2').addEventListener('click', function () { rec('surface2'); });
 
 // late card (MutationObserver)
 setTimeout(function () {

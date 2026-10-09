@@ -27,7 +27,7 @@ provided in all six supported languages (en, vi, zh_CN, ja, ko, es). Values mark
 Auto-click Allow on Muse (muse.ai) approval requests so your agent keeps running. Local-only, no data sent.
 ```
 
-> Verified length: 106 characters (limit 132). Every other locale below repeats the
+> Verified length: 107 characters (limit 132). Every other locale below repeats the
 > item name as-is; the Chrome Web Store lets you localize the short description per
 > language in the **Store listing → localized** tab.
 
@@ -367,14 +367,14 @@ The dashboard requires these images. Provide them at the exact sizes below.
 | Asset | Requirement | Source in this repo | Status |
 |---|---|---|---|
 | Extension icon | 128×128 px PNG | `extension/icons/icon128.png` | ✅ present |
-| Screenshot | 1280×800 px PNG (up to 5) | `store/screenshot1.png` | ⛳ TODO: render before submit |
-| Small promo tile | 440×280 px PNG | `store/promo440x280.png` | ⛳ TODO: render before submit |
+| Screenshot | 1280×800 px PNG (up to 5) | `store/screenshot1.png` | ✅ present (verified 1280×800) |
+| Small promo tile | 440×280 px PNG | `store/promo440x280.png` | ✅ present (verified 440×280) |
 | Marquee promo tile | 1400×560 px (optional) | — | optional, not required |
 
 Upload steps: **Store listing → Graphic assets** → upload the icon (also validated by
 Chrome from the package), the 1280×800 screenshot, and the 440×280 promo tile.
 
-Screenshot guidance: show the real Muse approval card with the extension's popup open
+Screenshot guidance (verify before submit that the uploaded images match these sizes): show the real Muse approval card with the extension's popup open
 (click counter + log visible). Do **not** use a mockup that implies the extension does
 anything beyond its single purpose, and do not put misleading wording in the image.
 
