@@ -58,11 +58,18 @@ Contrast (computed from these tokens): `--ink` on `--bg` 18.39:1; `--muted` on `
 filled-control background (paired with white text, 5.80:1), not body text on `--bg`.
 All shipped text pairs ≥ 5.30:1 (WCAG AA).
 
+Selected-state pills (popup: quick combos, library tabs, phrase chips): light `#005abf` on
+`rgba(0,90,191,.14)` over `#fcfcfc` **5.12:1**; dark `#8ab8ff` on `rgba(10,92,224,.32)` over
+`#18191a` **6.63:1** (recorded per rule 5; the dark phrase-chip pair was corrected in the
+v1.7.0 experience fix — it had fallen back to `#0a5ce0` on the same tint = 2.77:1).
+
 ### 3.1 Data-visualization palette (Statistics dashboard + designed assets)
 
 Topic bars/dots and KPI chips cycle a curated five-hue palette; the trend chart is deliberately
-single-hue (brand blue + one "today" accent). Each hue has a lighter "top" and a deeper "bottom"
-gradient stop; the segmented control, focus ring and designed-asset accents reuse the same hues.
+single-hue (brand blue + one "today" accent). Each hue is recorded with a lighter "top" and a
+deeper "bottom" stop for gradient use (the trend chart takes the blue stops; the topic bars and
+dots themselves are solid `--tc`). The segmented control, focus ring and designed-asset accents
+reuse the same hues.
 Every stop is ≥ 4.5:1 against the card surface it sits on — the 3:1 non-text minimum
 (WCAG 1.4.11) is met with headroom, so the same tokens stay safe for small glyphs
 (KPI chips, dots) as well.
@@ -85,7 +92,7 @@ Every stop is ≥ 4.5:1 against the card surface it sits on — the 3:1 non-text
 - Cycle order (positional): blue → rose → teal → amber → violet. Topic rows take the next hue by
   rank (decorative — bar length is the datum); KPI chips fix it as Total = blue, Today = rose,
   This week = teal, This month = amber. Chip glyph ink is the deeper stop on a 13 % tint in light
-  (5.10–6.02:1) and the bright stop on a 13 % tint in dark (4.83–6.28:1).
+  (5.10–6.72:1) and the bright stop on a 13 % tint in dark (4.83–6.28:1).
 - Segmented control: white on `#005abf` 6.53:1 (light) / `#0a5ce0` 5.80:1 (dark).
   Focus ring: `#005abf` on `#fcfcfc` 6.37:1 (light) / `#7cb0ff` on `#18191a` 7.97:1 (dark).
 - Chart baseline and topic-row dividers are decorative (non-informational) hairlines

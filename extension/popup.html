@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <style>
   :root { color-scheme: light dark;
-          --blue: #005abf; --ink: #111112; --muted: #4a4e54; --bg: #fcfcfc; --surface: #ffffff;
-          --fill: rgba(17,17,18,.05); --on: #31a24c; --track: rgba(17,17,18,.22);
+          --blue: #005abf; --ink: #111112; --muted: #4a4e54; --bg: #fcfcfc;
+          --fill: rgba(17,17,18,.05); --track: rgba(17,17,18,.22);
           --divider: rgba(17,17,18,.16);   /* section + log-row hairlines (visible on --bg) */
           --stroke: rgba(17,17,18,.16);    /* form-control outlines */
           --panel: rgba(17,17,18,.035);    /* follow-up controls panel */
@@ -13,8 +13,8 @@
           --ok: #146c2e; --ok-bg: rgba(49,162,76,.14);  /* 'sent' pill text: 5.48:1 on its tint */
           --axis: rgba(17,17,18,.2); }     /* mini-chart baseline */
   @media (prefers-color-scheme: dark) {
-    :root { --blue: #0a5ce0; --ink: #e4e6eb; --muted: #b0b3b8; --bg: #18191a; --surface: #242526;
-            --fill: #3a3b3c; --on: #45c463; --track: rgba(255,255,255,.30);
+    :root { --blue: #0a5ce0; --ink: #e4e6eb; --muted: #b0b3b8; --bg: #18191a;
+            --fill: #3a3b3c; --track: rgba(255,255,255,.30);
             --divider: rgba(228,230,235,.18); --stroke: rgba(228,230,235,.22); --panel: rgba(255,255,255,.045);
             --focus: #7cb0ff; --ok: #5fd07a; --ok-bg: rgba(69,196,99,.20); --axis: rgba(228,230,235,.22); }
   }
@@ -115,7 +115,11 @@
   .fblock:first-child { margin-top: 0; }
   .fblock:last-child { margin-bottom: 0; }
   .flabel { display: block; margin-bottom: 2px; }
-  .sendrow { display: flex; justify-content: flex-end; }
+  .sendrow { display: flex; justify-content: flex-end; align-items: center; gap: 6px; }
+  /* N3 fix: a failed 'Send now' shows the engine's reason inline next to the button
+     (role=status also announces it to screen readers); it clears itself after ~8s */
+  .fsendnote { flex: 1 1 auto; min-width: 0; font-size: 11px; line-height: 1.35; color: var(--muted);
+               overflow-wrap: anywhere; }
   /* one compact wait+cooldown pair — both settings share a row to keep the popup <=600px;
      the unit glyphs (s / min) carry the meaning */
   .fset { gap: 6px; }
@@ -194,7 +198,9 @@
   .froti .rm:hover { color: var(--ink); }
   @media (prefers-color-scheme: dark) {
     .qbtn:hover, .chipbtn:hover { background: rgba(10,92,224,.30); }
-    .qbtn.on, .ftab.on { background: rgba(10,92,224,.32); border-color: rgba(10,92,224,.50); color: #8ab8ff; }
+    /* selected-state pills share one dark pair: #8ab8ff on rgba(10,92,224,.32) over --bg
+       = 6.63:1 (N1: .chipbtn.on was missing here and fell back to #0a5ce0 = 2.77:1) */
+    .qbtn.on, .ftab.on, .chipbtn.on { background: rgba(10,92,224,.32); border-color: rgba(10,92,224,.50); color: #8ab8ff; }
     .fcount { background: rgba(10,92,224,.30); color: #8ab8ff; }
     .froti .src { background: rgba(10,92,224,.30); color: #8ab8ff; }
     .fsheet { box-shadow: 0 12px 28px -14px rgba(0,0,0,.8); }
@@ -283,7 +289,7 @@
         <div class="fprev"><span class="plabel" data-i18n="followupPreview">Preview</span><span class="fprevtext" id="fprevA"></span></div>
       </div>
       <div class="fblock"><textarea id="fprompt" class="tbox" rows="1" placeholder="Type your follow-up prompt…" data-i18n-ph="followupCustomPlaceholder"></textarea></div>
-      <div class="fblock fprev"><span class="plabel" data-i18n="followupPreview">Preview</span><span class="fprevtext" id="fprevB"></span></div>
+      <div class="fblock fprev"><span class="plabel" data-i18n="followupPreview">Preview</span><span class="fprevtext" id="fprevB" aria-live="polite" aria-atomic="true"></span></div>
       <div class="fblock frot" id="frotrow">
         <span class="fqlabel muted" data-i18n="followupRotateLabel">Rotation</span>
         <button type="button" class="qbtn" id="frotadd" data-i18n="followupRotateSave">Save combo</button>
@@ -296,7 +302,7 @@
         <label class="muted" for="fcool" data-i18n="followupCooldownShort">Cooldown</label>
         <span class="numwrap"><input type="number" id="fcool" min="1" max="1440" step="1"><span class="unit muted">min</span></span>
       </div>
-      <div class="fblock sendrow" id="fsendrow"><button class="btn tonal" id="fsendnow" data-i18n="followupSendNow">Send now</button></div>
+      <div class="fblock sendrow" id="fsendrow"><span class="fsendnote" id="fsendnote" role="status"></span><button class="btn tonal" id="fsendnow" data-i18n="followupSendNow">Send now</button></div>
     </div>
   </div>
   <div class="log" id="log" aria-live="polite"></div>

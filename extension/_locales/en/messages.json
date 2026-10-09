@@ -44,9 +44,6 @@
   "monthLabel": {
     "message": "This month"
   },
-  "yearLabel": {
-    "message": "This year"
-  },
   "topicsTitle": {
     "message": "By topic (repo / project)"
   },
@@ -119,12 +116,6 @@
   "followupCustomPlaceholder": {
     "message": "Type your follow-up prompt…"
   },
-  "followupIdleLabel": {
-    "message": "Wait before sending (seconds):"
-  },
-  "followupCooldownLabel": {
-    "message": "Cooldown (minutes):"
-  },
   "followupIdleShort": {
     "message": "Wait"
   },
@@ -137,14 +128,8 @@
   "followupWorking": {
     "message": "Working"
   },
-  "followupConnected": {
-    "message": "Connected"
-  },
   "followupSentAt": {
     "message": "Follow-up sent $1"
-  },
-  "followupUnknown": {
-    "message": "Status unknown"
   },
   "followupQuickLabel": {
     "message": "Quick combos"
@@ -238,5 +223,26 @@
   },
   "followupSendNowHint": {
     "message": "Enable Auto follow-up first"
+  },
+  "followupSendBlocked": {
+    "message": "Couldn't send the follow-up"
+  },
+  "followupSendBlockedApproval": {
+    "message": "Couldn't send — Muse is waiting for your approval"
+  },
+  "followupSendBlockedDraft": {
+    "message": "Couldn't send — Muse's message box already has text"
+  },
+  "followupSendBlockedComposer": {
+    "message": "Couldn't send — no message box found on the Muse page"
+  },
+  "followupSendBlockedNoPrompt": {
+    "message": "Couldn't send — no follow-up prompt is set"
+  },
+  "followupSendBlockedSending": {
+    "message": "A follow-up is already being sent"
+  },
+  "followupRotateStarterConfirm": {
+    "message": "Replace your $1 saved combos? Tap again"
   }
 }

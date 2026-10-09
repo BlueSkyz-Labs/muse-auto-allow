@@ -44,9 +44,6 @@
   "monthLabel": {
     "message": "Tháng này"
   },
-  "yearLabel": {
-    "message": "Năm nay"
-  },
   "topicsTitle": {
     "message": "Theo chủ đề (repo / dự án)"
   },
@@ -119,17 +116,11 @@
   "followupCustomPlaceholder": {
     "message": "Nhập tin nhắn gửi tiếp…"
   },
-  "followupIdleLabel": {
-    "message": "Chờ trước khi gửi (giây):"
-  },
-  "followupCooldownLabel": {
-    "message": "Chờ giữa các lần gửi (phút):"
-  },
   "followupIdleShort": {
     "message": "Chờ"
   },
   "followupCooldownShort": {
-    "message": "Giãn cách"
+    "message": "Khoảng chờ"
   },
   "followupSendNow": {
     "message": "Gửi ngay"
@@ -137,14 +128,8 @@
   "followupWorking": {
     "message": "Đang làm việc"
   },
-  "followupConnected": {
-    "message": "Đã kết nối"
-  },
   "followupSentAt": {
     "message": "Đã gửi tiếp lúc $1"
-  },
-  "followupUnknown": {
-    "message": "Không rõ trạng thái"
   },
   "followupQuickLabel": {
     "message": "Combo nhanh"
@@ -207,7 +192,7 @@
     "message": "Lưu combo"
   },
   "followupRotateStarter": {
-    "message": "Bộ khởi đầu"
+    "message": "Luân phiên khởi đầu"
   },
   "followupRotateNext": {
     "message": "Tiếp: $1/$2"
@@ -238,5 +223,26 @@
   },
   "followupSendNowHint": {
     "message": "Hãy bật Tự động gửi tiếp trước"
+  },
+  "followupSendBlocked": {
+    "message": "Không gửi được tin nhắn gửi tiếp"
+  },
+  "followupSendBlockedApproval": {
+    "message": "Không gửi được — Muse đang chờ bạn phê duyệt"
+  },
+  "followupSendBlockedDraft": {
+    "message": "Không gửi được — ô nhập tin của Muse đang có nội dung"
+  },
+  "followupSendBlockedComposer": {
+    "message": "Không gửi được — không tìm thấy ô nhập tin trên trang Muse"
+  },
+  "followupSendBlockedNoPrompt": {
+    "message": "Không gửi được — chưa đặt tin nhắn gửi tiếp"
+  },
+  "followupSendBlockedSending": {
+    "message": "Đang gửi một tin nhắn gửi tiếp"
+  },
+  "followupRotateStarterConfirm": {
+    "message": "Thay thế $1 combo đã lưu? Chạm lần nữa"
   }
 }

@@ -44,9 +44,6 @@
   "monthLabel": {
     "message": "今月"
   },
-  "yearLabel": {
-    "message": "今年"
-  },
   "topicsTitle": {
     "message": "トピック別（リポジトリ / プロジェクト）"
   },
@@ -119,12 +116,6 @@
   "followupCustomPlaceholder": {
     "message": "フォローアップのプロンプトを入力…"
   },
-  "followupIdleLabel": {
-    "message": "送信までの待機（秒）："
-  },
-  "followupCooldownLabel": {
-    "message": "クールダウン（分）："
-  },
   "followupIdleShort": {
     "message": "待機"
   },
@@ -137,14 +128,8 @@
   "followupWorking": {
     "message": "作業中"
   },
-  "followupConnected": {
-    "message": "接続済み"
-  },
   "followupSentAt": {
     "message": "フォローアップ送信済み $1"
-  },
-  "followupUnknown": {
-    "message": "状態不明"
   },
   "followupQuickLabel": {
     "message": "クイックコンボ"
@@ -207,7 +192,7 @@
     "message": "コンボを保存"
   },
   "followupRotateStarter": {
-    "message": "スターターセット"
+    "message": "スターターローテーション"
   },
   "followupRotateNext": {
     "message": "次: $1/$2"
@@ -238,5 +223,26 @@
   },
   "followupSendNowHint": {
     "message": "先に自動フォローアップを有効にしてください"
+  },
+  "followupSendBlocked": {
+    "message": "フォローアップを送信できませんでした"
+  },
+  "followupSendBlockedApproval": {
+    "message": "送信できません — Muse が承認を待っています"
+  },
+  "followupSendBlockedDraft": {
+    "message": "送信できません — Muse のメッセージ欄にすでに入力があります"
+  },
+  "followupSendBlockedComposer": {
+    "message": "送信できません — ページ上で Muse のメッセージ欄が見つかりません"
+  },
+  "followupSendBlockedNoPrompt": {
+    "message": "送信できません — フォローアップのプロンプトが設定されていません"
+  },
+  "followupSendBlockedSending": {
+    "message": "フォローアップを送信中です"
+  },
+  "followupRotateStarterConfirm": {
+    "message": "保存済みの $1 件のコンボを置き換えますか？もう一度タップ"
   }
 }

@@ -44,9 +44,6 @@
   "monthLabel": {
     "message": "이번 달"
   },
-  "yearLabel": {
-    "message": "올해"
-  },
   "topicsTitle": {
     "message": "주제별(저장소 / 프로젝트)"
   },
@@ -119,12 +116,6 @@
   "followupCustomPlaceholder": {
     "message": "후속 프롬프트를 입력하세요…"
   },
-  "followupIdleLabel": {
-    "message": "보내기 전 대기(초):"
-  },
-  "followupCooldownLabel": {
-    "message": "쿨다운(분):"
-  },
   "followupIdleShort": {
     "message": "대기"
   },
@@ -137,14 +128,8 @@
   "followupWorking": {
     "message": "작업 중"
   },
-  "followupConnected": {
-    "message": "연결됨"
-  },
   "followupSentAt": {
     "message": "후속 프롬프트 전송 완료 $1"
-  },
-  "followupUnknown": {
-    "message": "상태 알 수 없음"
   },
   "followupQuickLabel": {
     "message": "빠른 조합"
@@ -207,7 +192,7 @@
     "message": "조합 저장"
   },
   "followupRotateStarter": {
-    "message": "스타터 세트"
+    "message": "스타터 순환"
   },
   "followupRotateNext": {
     "message": "다음: $1/$2"
@@ -228,15 +213,36 @@
     "message": "Muse가 작업 중입니다"
   },
   "followupHintWaiting": {
-    "message": "Muse가 유휴 상태입니다 — 대기 시간이 지나면 후속 요청을 보냅니다"
+    "message": "Muse가 대기 중입니다 — 대기 시간이 지나면 후속 프롬프트를 보냅니다"
   },
   "followupHintIdle": {
-    "message": "Muse가 유휴 상태입니다"
+    "message": "Muse가 대기 중입니다"
   },
   "followupGateNote": {
     "message": "설정을 변경하려면 자동 후속 요청을 켜세요"
   },
   "followupSendNowHint": {
     "message": "먼저 자동 후속 요청을 켜세요"
+  },
+  "followupSendBlocked": {
+    "message": "후속 프롬프트를 보내지 못했습니다"
+  },
+  "followupSendBlockedApproval": {
+    "message": "보내지 못했습니다 — Muse가 승인을 기다리고 있습니다"
+  },
+  "followupSendBlockedDraft": {
+    "message": "보내지 못했습니다 — Muse 입력창에 이미 내용이 있습니다"
+  },
+  "followupSendBlockedComposer": {
+    "message": "보내지 못했습니다 — 페이지에서 Muse 입력창을 찾을 수 없습니다"
+  },
+  "followupSendBlockedNoPrompt": {
+    "message": "보내지 못했습니다 — 후속 프롬프트가 설정되어 있지 않습니다"
+  },
+  "followupSendBlockedSending": {
+    "message": "후속 프롬프트를 보내는 중입니다"
+  },
+  "followupRotateStarterConfirm": {
+    "message": "저장된 조합 $1개를 교체할까요? 다시 탭하세요"
   }
 }

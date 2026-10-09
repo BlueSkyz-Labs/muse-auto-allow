@@ -192,3 +192,33 @@ Evidence classes: **MEASURED** (runtime/harness/geometry/contrast computation/pi
 ---
 
 *Independent W4 experience audit for the v1.7.0 freeze — findings are evidence-qualified; no GO/NO-GO claim is made here. Fixes are coordinator work (maker ≠ judge).*
+
+---
+
+## Disposition — EXPERIENCE-FIX lane (v1.7.0 experience findings)
+
+**Lane:** experience-fix (maker ≠ judge follow-up to this audit). **Basis:** the working tree on top of `7de2e91` (this report) with the v1.7.0 feature set unchanged — every fix is presentation/copy or an additive confirm step; no engine logic, guard or test file was touched.
+**Write-set:** `extension/popup.html`, `extension/popup.js`, `extension/stats.html`, `extension/_locales/*/messages.json`, `docs/EXPERIENCE_REVIEW_V17.md`, `docs/UX_COPY_REVIEW.md`, `docs/BRANDING.md`. No git operations.
+**Evidence:** scratch CDP probe in a real Chrome 154 (scratch profile + temp extension copy with the localhost test match — same lane as `test/followup-e2e.mjs`; raw JSON in the Hermes scratch dir), plus the three shipped gates re-run on the final state.
+
+| ID | Disposition | Where / evidence |
+|---|---|---|
+| N1 | **FIXED** | `extension/popup.html:203` — `.chipbtn.on` added to the dark override rule (identical values to the sibling pills; base light rule at `:176`). Runtime computed styles (real Chromium): light `rgb(0,90,191)` on `rgba(0,90,191,.14)`; dark `rgb(138,184,255)` on `rgba(10,92,224,.32)`. Contrast, 8-bit-composited (same method as this audit): **2.77:1 → 6.63:1** (sibling `#8ab8ff` pair re-measured 6.63:1). BRANDING §3 now records the pair. |
+| N2 | **FIXED** | `extension/popup.html:292` — `aria-live="polite" aria-atomic="true"` on `#fprevB`. One live region deliberately: the in-sheet `#fprevA` would double-announce the same string whenever the sheet is open, and `#fprevB` is in the a11y tree in both sheet states (runtime: `B:"polite"/atomic:true`, `A:null`). |
+| N3 | **FIXED** | `extension/popup.js:677-733` (`SEND_BLOCKED_KEY` + `fSendNote` + reworked `#fsendnow` handler), `extension/popup.html:305` (`#fsendnote`, `role="status"`, inside `#fsendrow`), 6 new keys ×6 locales. Runtime with the real engine: composer draft → *"Couldn't send — Muse's message box already has text"*; approval card → *"Couldn't send — Muse is waiting for your approval"*; no muse.ai tab → *"No muse.ai tab found"*; an accepted send → no note and the fixture recorded the send (no false failure). Geometry with the note visible: 208×30 inside the 292 px row, popup 564 px ≤ 600. |
+| N4 | **FIXED** | `extension/stats.html:43` (`.head` wraps) + `:133-138` (`@media (max-width:480px)`: body padding 16 px, `.seg` shrink/wrap, 2-col KPI grid). Measured: **320 → scrollWidth 320 = clientWidth 320 (was 475)**; 640 → 640/640; 1280 → 1280/1280 with `.seg` unchanged (293 px) — the 1280×800 fit is intact. Also fixed the squeeze found while measuring: at 4 columns the KPI values measured **0 px wide at 320** (clipped); with the 2-col grid they are 26 px and unclipped. |
+| N5 | **FIXED** | `extension/popup.js:614-640` — two-step inline confirm, **only when a non-empty list would be replaced** (native dialogs are unreliable inside a browser-action popup, so the confirm is inline): first tap arms the button with `followupRotateStarterConfirm` ("Replace your $1 saved combos? Tap again", 5 s timeout disarms), second tap replaces. Runtime: non-empty list → tap 1 leaves storage at 2 items + shows the question; tap 2 → 3 starter items; timeout → disarms; empty list → one tap replaces (no arm). Key ×6 locales. |
+| N6 | **FIXED (audit scope)** | Values-only pass over the 33 unreviewed keys; the three flagged items fixed: ko `followupHintIdle`/`followupHintWaiting` (유휴 상태 → 대기 중 …), vi `followupCooldownShort` (Giãn cách → Khoảng chờ), ja/ko/vi `followupRotateStarter` (…セット / 세트 / Bộ khởi đầu → ローテーション / 순환 / Luân phiên khởi đầu). Recorded in the `docs/UX_COPY_REVIEW.md` addendum with UNVERIFIED flags. |
+| N7 | **FIXED** | 5 keys removed from all 6 locales after re-verifying (programmatically) that `extension/**` and `test/**` reference none of them: `yearLabel`, `followupIdleLabel`, `followupCooldownLabel`, `followupConnected`, `followupUnknown`. Locales now **82 keys each** (80 − 5 + 7 new), parity exact, order preserved. |
+| N8 | **FIXED** | `extension/popup.js:222-231` — remove buttons get `aria-label="Remove: <row text>"` (row text bounded at 80 chars); `:238,245-246` — the list opener's accessible name is now "Saved list ($1) — Next: i/n" (title + counter, existing keys). |
+| N9 | NOT-DONE | Optional reorder affordance — no safe minimal change without new UI/interaction; deferred (order = save order stays the documented behaviour). |
+| N10 | **FIXED (partial, as scoped)** | Dead custom properties removed: popup `--on`, `--surface` (`popup.html:7-8,16-17`); stats `--tcb` (`stats.html:94-98`). The per-hue bottom-stop palette tokens (`--c-*-b`) are kept deliberately — they are the documented §3.1 palette and the blue stop feeds the trend gradient; the §3.1 sentence now states the topic bars are solid `--tc`. |
+| N11 | NOT-DONE | Store-asset capture framing — `scripts/*`, `store/*.png`, `assets/*` are outside this lane's write set (needs a re-render). |
+| N12 | NOT-DONE | Store-asset polish — same reason (scripts/assets outside the write set). |
+| N13 | NOT-DONE | Store listing completeness — `store/LISTING.md` outside the write set; remains an owner decision. |
+| N14 | **FIXED** | `docs/BRANDING.md` §3.1 — light chip-ink range corrected to **5.10–6.72:1** (violet 6.72, recomputed with the audit's compositing method). |
+| N15 | NOT-DONE | `docs/EXPERIENCE_REVIEW_V14.md` is outside the write set; the record fix remains open. |
+| N16 | NOT-DONE | Store-set consistency — assets outside the write set. |
+| N17 | NO ACTION | Informational; the 320 px popup contract is unchanged (real action popup re-measured w=320 h=555 ≤ 600 with the preview live region present). |
+
+**Gates on the final state:** `node scripts/lint.mjs` exit 0 (24 checks / 18 files) · `node test/followup-e2e.mjs` exit 0 **74/74** (heights 561/590/590 unchanged; overflow + rotation probes unchanged) · `node test/e2e.mjs` exit 0 `ok:true` (statsCheck/encCheck/statsPage/locksProbe true, `missing []`, `forbiddenHit []`, `denyCount 0`).

@@ -175,3 +175,87 @@ rationalised in §2 and §3.
   es cooldown label, vi "Tin nhắn gửi tiếp") — each is a single-value change.
 - W1 (popup premium) should sanity-check the two longest new labels in the rendered
   popup (ja/ko status chip, es cooldown label) at 320 px.
+
+---
+
+## Addendum — EXPERIENCE-FIX lane (v1.7.0 unreviewed keys + N7 cleanup)
+
+Status: **complete (values-only)** · Revision: working tree on top of `7de2e91` (v1.7.0 +
+the experience fixes; see `docs/EXPERIENCE_REVIEW_V17.md` → Disposition). Write-set here:
+`extension/_locales/*/messages.json` (values only), this document. No keys renamed; the only
+key-set changes are the N7 removals and the 7 additions listed below — parity stays exact
+(**82 keys × 6 locales**, order preserved, `$1` placeholders kept).
+
+### A.1 What this addendum covers
+
+The W3 review above covered **47 keys** at v1.6.0. The frozen v1.7.0 build carried **33 keys
+with no documented review** — the phrase-library / rotation / status-pill / compact-settings
+set the audit's N6 flagged. This pass reviewed those 33 keys in all 6 locales (conservative,
+evidence-checked pass; I am not a native speaker of ko/vi/ja/zh/es — every judgment call is
+flagged in A.5), fixed the three flagged items plus the related tone issues below, and records
+the additions/removals that moved the key count 80 → 82.
+
+### A.2 Value changes (keys untouched)
+
+| # | Key | Locale | Before | After | Rationale |
+|---|---|---|---|---|---|
+| 1 | `followupHintIdle` | ko | Muse가 **유휴 상태**입니다 | Muse가 **대기 중**입니다 | N6: W3 deliberately moved the idle concept to 대기 중 (toggle `followupToggle`); 유휴 상태 is developer jargon reintroduced by the unreviewed v1.7.0 keys. |
+| 2 | `followupHintWaiting` | ko | Muse가 **유휴 상태**입니다 — 대기 시간이 지나면 후속 **요청**을 보냅니다 | Muse가 **대기 중**입니다 — 대기 시간이 지나면 후속 **프롬프트**를 보냅니다 | Same fix; also aligns the sent object with the shipped ko family (`후속 프롬프트` — placeholder, `followupSentAt`). |
+| 3 | `followupCooldownShort` | vi | **Giãn cách** | **Khoảng chờ** | N6: "giãn cách" alone carries the social-distancing reading W3 removed from the long label; "Khoảng chờ" (waiting period) pairs with the sibling "Chờ" and the long label "Chờ giữa các lần gửi". |
+| 4 | `followupRotateStarter` | ja | スターター**セット** | スターター**ローテーション** | N6: the button loads the rotation list — the value must link to the rotation row (`followupRotateLabel` = ローテーション), not read as a generic "starter set". |
+| 5 | `followupRotateStarter` | ko | 스타터 **세트** | 스타터 **순환** | Same fix (rotation family in ko = 순환 — `followupRotateLabel`, `followupGroupSaved`). |
+| 6 | `followupRotateStarter` | vi | **Bộ khởi đầu** | **Luân phiên khởi đầu** | Same fix (rotation family in vi = luân phiên). |
+
+### A.3 N7 cleanup — 5 dead keys removed from all 6 locales
+
+`yearLabel`, `followupIdleLabel`, `followupCooldownLabel`, `followupConnected`,
+`followupUnknown` were referenced nowhere in `extension/**` (re-verified programmatically
+before removal; `test/**` does not reference them either). Removed in every locale to keep
+parity. Consequences recorded here: W3 review entries for `followupIdleLabel` /
+`followupCooldownLabel` (colon unification, ja #7/#8) and for the status labels
+`Connected` / `Status unknown` (§4) no longer describe shipped strings — those surfaces were
+replaced in v1.7.0 by the compact pair (`followupIdleShort` / `followupCooldownShort`) and
+the pill set (`followupWorking` / `followupWaiting` / `followupIdle`).
+
+### A.4 New keys added by the experience fixes (this lane authored the values)
+
+N3 (inline send-failure reason) and N5 (rotation-replace confirm) added 7 keys; all are new
+values, reviewed here for consistency with each locale's existing family:
+
+| Key | en value |
+|---|---|
+| `followupSendBlocked` | Couldn't send the follow-up |
+| `followupSendBlockedApproval` | Couldn't send — Muse is waiting for your approval |
+| `followupSendBlockedDraft` | Couldn't send — Muse's message box already has text |
+| `followupSendBlockedComposer` | Couldn't send — no message box found on the Muse page |
+| `followupSendBlockedNoPrompt` | Couldn't send — no follow-up prompt is set |
+| `followupSendBlockedSending` | A follow-up is already being sent |
+| `followupRotateStarterConfirm` | Replace your $1 saved combos? Tap again |
+
+Per-locale families used: vi "Không gửi được …" + "tin nhắn gửi tiếp"; zh_CN "无法发送 …" +
+"跟进"; ja "送信できません …" / "フォローアップ"; ko "보내지 못했습니다 …" / "후속 프롬프트";
+es "No se pudo enviar …" / "seguimiento". The confirm key names the saved **combos** being
+replaced (matching the per-locale `followupRotateSave` / `followupGroupSave` wording —
+combo / 组合 / コンボ / 조합 / combo), not the rotation list itself.
+
+### A.5 UNVERIFIED / confidence notes (not a native speaker)
+
+1. **The 6 changed values and the 7 new keys above are non-native review** (ko/vi/ja/zh/es) —
+   each was chosen conservatively from the locale's existing reviewed family and is a
+   single-value change if a native reviewer disagrees. Highest-uncertainty items:
+   vi `Khoảng chờ` (alternate: "Chờ gửi"), ko `followupHintWaiting` 프롬프트 alignment,
+   ja `スターターローテーション` (alternate: "おすすめローテーション").
+2. **Reviewed and deliberately NOT changed** (flagged for the native reviewer):
+   - ja `followupIdle` "アイドル" (pill only; standard IT Japanese, but collides with "idol" —
+     alternate: "待機中", which would then equal `followupWaiting`);
+   - ko `followupIdle` "유휴" (single-word pill; the hints were moved to 대기 중 per N6, the
+     pill kept distinct from the armed "대기 중");
+   - ja `followupRotateNext` "次: $1/$2" (halfwidth colon in a compact counter — kept, the
+     W3 colon unification targeted labels);
+   - vi library wording "Thư viện câu lệnh" / "câu lệnh" (literal "command"; "mẫu câu" is the
+     softer alternative — kept, widely understood in vi tooling copy).
+3. **Rendered width** of the longer values (ja `スターターローテーション`,
+   vi `Luân phiên khởi đầu`, the "Couldn't send — …" notes) was measured only for the send
+   note (208×30 px inside the 292 px row, popup 564 ≤ 600 in the real popup surface); the
+   rotation-row labels wrap by design (`flex-wrap` on `.frot`) and were not re-measured
+   per locale — no layout gate covers them.

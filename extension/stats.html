@@ -40,7 +40,7 @@
          -webkit-font-smoothing: antialiased; }
 
   /* ---- header: title + range control ---- */
-  .head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+  .head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 14px; flex-wrap: wrap; }
   h1 { font-size: 24px; font-weight: 500; letter-spacing: -0.01em; margin: 0; display: flex; align-items: center; gap: 11px; color: var(--ink); }
   h1 svg.logo { width: 30px; height: 30px; border-radius: 9px; box-shadow: 0 8px 20px -9px rgba(0,64,220,.6); }
 
@@ -91,11 +91,11 @@
      The five-hue palette below (t-*) is categorical only — topics + KPI chips. */
   .sc-blue { stop-color: var(--c-blue); }  .sc-blue-b { stop-color: var(--c-blue-b); }
   .sc-now { stop-color: var(--c-now); }    .sc-now-m { stop-color: var(--c-now-m); }  .sc-now-b { stop-color: var(--c-now-b); }
-  .t-blue   { --tc: var(--c-blue);   --tcb: var(--c-blue-b); }
-  .t-rose   { --tc: var(--c-rose);   --tcb: var(--c-rose-b); }
-  .t-teal   { --tc: var(--c-teal);   --tcb: var(--c-teal-b); }
-  .t-amber  { --tc: var(--c-amber);  --tcb: var(--c-amber-b); }
-  .t-violet { --tc: var(--c-violet); --tcb: var(--c-violet-b); }
+  .t-blue   { --tc: var(--c-blue); }
+  .t-rose   { --tc: var(--c-rose); }
+  .t-teal   { --tc: var(--c-teal); }
+  .t-amber  { --tc: var(--c-amber); }
+  .t-violet { --tc: var(--c-violet); }
 
   /* ---- topics ---- */
   .topics { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 14px 18px; box-shadow: var(--sh-2); }
@@ -127,6 +127,16 @@
   ::-webkit-scrollbar-thumb { background: rgba(17,17,18,.18); border-radius: 999px; }
   ::-webkit-scrollbar-track { background: transparent; }
   @media (prefers-color-scheme: dark) { ::-webkit-scrollbar-thumb { background: rgba(228,230,235,.22); } }
+  /* narrow widths (WCAG 1.4.10 reflow): the header wraps and the segmented control
+     shrinks/wraps instead of pushing the page into horizontal scroll (measured 475px
+     wide at 320 CSS px before this fix); 1280x800 renders are unaffected (media query only) */
+  @media (max-width: 480px) {
+    body { padding: 16px 16px 18px; }
+    .head { gap: 10px; }
+    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } /* KPI values stay visible (measured 0px wide at 4 columns) */
+    .seg { flex-wrap: wrap; }
+    .seg button { padding: 6px 12px; }
+  }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
   }

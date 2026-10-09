@@ -44,9 +44,6 @@
   "monthLabel": {
     "message": "Este mes"
   },
-  "yearLabel": {
-    "message": "Este año"
-  },
   "topicsTitle": {
     "message": "Por tema (repositorio / proyecto)"
   },
@@ -119,12 +116,6 @@
   "followupCustomPlaceholder": {
     "message": "Escribe tu mensaje de seguimiento…"
   },
-  "followupIdleLabel": {
-    "message": "Espera antes de enviar (segundos):"
-  },
-  "followupCooldownLabel": {
-    "message": "Intervalo entre envíos (minutos):"
-  },
   "followupIdleShort": {
     "message": "Espera"
   },
@@ -137,14 +128,8 @@
   "followupWorking": {
     "message": "Trabajando"
   },
-  "followupConnected": {
-    "message": "Conectado"
-  },
   "followupSentAt": {
     "message": "Seguimiento enviado $1"
-  },
-  "followupUnknown": {
-    "message": "Estado desconocido"
   },
   "followupQuickLabel": {
     "message": "Combinaciones rápidas"
@@ -238,5 +223,26 @@
   },
   "followupSendNowHint": {
     "message": "Activa primero el seguimiento automático"
+  },
+  "followupSendBlocked": {
+    "message": "No se pudo enviar el seguimiento"
+  },
+  "followupSendBlockedApproval": {
+    "message": "No se pudo enviar — Muse está esperando tu aprobación"
+  },
+  "followupSendBlockedDraft": {
+    "message": "No se pudo enviar — el cuadro de mensaje de Muse ya tiene texto"
+  },
+  "followupSendBlockedComposer": {
+    "message": "No se pudo enviar — no se encontró el cuadro de mensaje en la página de Muse"
+  },
+  "followupSendBlockedNoPrompt": {
+    "message": "No se pudo enviar — no hay ningún mensaje de seguimiento configurado"
+  },
+  "followupSendBlockedSending": {
+    "message": "Ya se está enviando un seguimiento"
+  },
+  "followupRotateStarterConfirm": {
+    "message": "¿Reemplazar tus $1 combos guardados? Toca de nuevo"
   }
 }

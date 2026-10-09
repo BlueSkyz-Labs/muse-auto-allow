@@ -219,24 +219,31 @@ function rotItemSource(p) {
 function fRenderRotList() {
   const box = $('frotitems');
   if (!box) return;
+  // N8: a list of N combos must not render N identical 'Remove' buttons — each label
+  // names the row it deletes (bounded so a long custom combo cannot flood the name)
+  const rmLabel = t('followupRotateRemove', 'Remove');
   box.innerHTML = fRotItems.map((p, i) => {
     const src = rotItemSource(p);
+    const row = String(p || '');
+    const named = rmLabel + ': ' + (row.length > 80 ? row.slice(0, 79) + '…' : row);
     return '<div class="froti">' + (src ? '<span class="src">' + esc(src) + '</span>' : '') +
       '<span class="txt" title="' + esc(p) + '">' + esc(p) + '</span>' +
-      '<button type="button" class="rm" data-rm="' + i + '" aria-label="' + esc(t('followupRotateRemove', 'Remove')) + '">✕</button></div>';
+      '<button type="button" class="rm" data-rm="' + i + '" aria-label="' + esc(named) + '">✕</button></div>';
   }).join('');
 }
 function fRenderRot() {
   const next = $('frotnext');
   if (!next) return;
   const n = fRotItems.length;
-  if (!n) { next.hidden = true; next.textContent = ''; return; }
+  if (!n) { next.hidden = true; next.textContent = ''; next.removeAttribute('aria-label'); return; }
   let idx = ((fRotIdx % n) + n) % n;
   // the live per-tab ping is the freshest truth once a tab with rotation answers
   if (fAgg && fAgg.rotateCount === n && Number.isFinite(fAgg.rotateIdx)) idx = ((fAgg.rotateIdx % n) + n) % n;
   next.hidden = false;
   next.textContent = t('followupRotateNext', 'Next: $1/$2', [String(idx + 1), String(n)]);
   next.title = t('followupRotateList', 'Saved list ($1)', [String(n)]);
+  // N8: the accessible name must say what the control opens, not only the counter
+  next.setAttribute('aria-label', next.title + ' — ' + next.textContent);
 }
 function fRender() {
   fRenderQuick();
@@ -604,7 +611,32 @@ $('frotadd').addEventListener('click', () => {
   try { chrome.storage.local.set(patch); } catch { /* ignore */ }
   fRender();
 });
+// ---- v1.7.0 fix (N5): replacing a saved rotation is a confirm step --------------
+// Only when a NON-EMPTY list would be replaced. Two-step inline confirm: the first tap
+// arms the button with the question, a second tap within 5 s performs the replace
+// (native dialogs are unreliable inside a browser-action popup).
+let fStarterArmed = false;
+let fStarterTimer = null;
+function fStarterDisarm() {
+  if (fStarterTimer) { clearTimeout(fStarterTimer); fStarterTimer = null; }
+  if (!fStarterArmed) return;
+  fStarterArmed = false;
+  const b = $('frotstarter');
+  if (b) { b.textContent = t('followupRotateStarter', 'Starter rotation'); b.classList.remove('on'); }
+}
 $('frotstarter').addEventListener('click', () => {
+  const b = $('frotstarter');
+  if (fRotItems.length && !fStarterArmed) {
+    fStarterArmed = true;
+    if (b) {
+      b.textContent = t('followupRotateStarterConfirm', 'Replace your $1 saved combos? Tap again', [String(fRotItems.length)]);
+      b.classList.add('on');
+    }
+    if (fStarterTimer) clearTimeout(fStarterTimer);
+    fStarterTimer = setTimeout(() => { fStarterTimer = null; fStarterDisarm(); }, 5000);
+    return;
+  }
+  fStarterDisarm();
   fRotItems = STARTER_ROTATION.slice();
   fRotIdx = 0;
   try { chrome.storage.local.set({ followupPrompts: fRotItems.slice(), followupRotateIdx: 0 }); } catch { /* ignore */ }
@@ -642,11 +674,55 @@ $('fcool').addEventListener('change', () => {
   $('fcool').value = v;
   chrome.storage.local.set({ followupCooldownMs: v * 60000 });
 });
+// ---- v1.7.0 fix (N3): 'Send now' must never fail silently ----------------------
+// The engine answers { ok, reason } per tab (disabled | sending | approval-present |
+// no-composer | composer-not-empty | no-prompt | type-failed | attempted | dead — see
+// content.js followupAttempt). When NO tab accepted the send, the first reason is shown
+// inline next to the button (#fsendnote, role=status so screen readers hear it too).
+// A successful send keeps the existing 'Follow-up sent HH:MM' pill path (2.5 s poll).
+const SEND_BLOCKED_KEY = {
+  'approval-present': ['followupSendBlockedApproval', "Couldn't send — Muse is waiting for your approval"],
+  'composer-not-empty': ['followupSendBlockedDraft', "Couldn't send — Muse's message box already has text"],
+  'no-composer': ['followupSendBlockedComposer', "Couldn't send — no message box found on the Muse page"],
+  'type-failed': ['followupSendBlockedComposer', "Couldn't send — no message box found on the Muse page"],
+  'no-prompt': ['followupSendBlockedNoPrompt', "Couldn't send — no follow-up prompt is set"],
+  'sending': ['followupSendBlockedSending', 'A follow-up is already being sent'],
+  'disabled': ['followupSendNowHint', 'Enable Auto follow-up first'],
+};
+let fSendNoteTimer = null;
+function fSendNote(text) {
+  const el = $('fsendnote');
+  if (!el) return;
+  if (fSendNoteTimer) { clearTimeout(fSendNoteTimer); fSendNoteTimer = null; }
+  el.textContent = text || '';
+  if (!text) return;
+  fSendNoteTimer = setTimeout(() => { fSendNoteTimer = null; el.textContent = ''; }, 8000);
+}
 $('fsendnow').addEventListener('click', () => {
+  fSendNote(''); // a new attempt supersedes the previous reason
   try {
     chrome.tabs.query({ url: ['https://muse.ai/*', 'https://*.muse.ai/*'] }, (tabs) => {
-      (tabs || []).forEach((tb) => {
-        try { chrome.tabs.sendMessage(tb.id, { type: 'followup-send-now' }, () => { void chrome.runtime.lastError; }); } catch { /* ignore */ }
+      const list = tabs || [];
+      if (!list.length) { fSendNote(t('museTabsNone', 'No muse.ai tab found')); return; }
+      let pending = list.length, anyOk = false, firstFail = '';
+      const settle = () => {
+        if (--pending > 0) return;
+        if (anyOk) return; // a tab took the send — the status pill reports the outcome
+        const k = SEND_BLOCKED_KEY[firstFail] || ['followupSendBlocked', "Couldn't send the follow-up"];
+        fSendNote(t(k[0], k[1]));
+      };
+      list.forEach((tb) => {
+        let settled = false;
+        const done = () => { if (settled) return; settled = true; settle(); };
+        try {
+          chrome.tabs.sendMessage(tb.id, { type: 'followup-send-now' }, (r) => {
+            void chrome.runtime.lastError; // no content script in that tab — a failed target
+            if (r && r.ok) anyOk = true;
+            else if (!firstFail) firstFail = (r && typeof r.reason === 'string') ? r.reason : 'dead';
+            done();
+          });
+        } catch { if (!firstFail) firstFail = 'dead'; done(); }
+        setTimeout(() => { if (!firstFail && !anyOk) firstFail = 'dead'; done(); }, 800); // a tab that never answers
       });
       setTimeout(refreshFollowupStatus, 1500);
     });

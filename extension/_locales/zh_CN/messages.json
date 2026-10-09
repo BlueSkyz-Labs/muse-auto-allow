@@ -44,9 +44,6 @@
   "monthLabel": {
     "message": "本月"
   },
-  "yearLabel": {
-    "message": "今年"
-  },
   "topicsTitle": {
     "message": "按主题（仓库 / 项目）"
   },
@@ -119,12 +116,6 @@
   "followupCustomPlaceholder": {
     "message": "输入跟进提示词…"
   },
-  "followupIdleLabel": {
-    "message": "发送前等待（秒）："
-  },
-  "followupCooldownLabel": {
-    "message": "冷却时间（分钟）："
-  },
   "followupIdleShort": {
     "message": "等待"
   },
@@ -137,14 +128,8 @@
   "followupWorking": {
     "message": "工作中"
   },
-  "followupConnected": {
-    "message": "已连接"
-  },
   "followupSentAt": {
     "message": "已于 $1 发送跟进"
-  },
-  "followupUnknown": {
-    "message": "状态未知"
   },
   "followupQuickLabel": {
     "message": "快捷组合"
@@ -238,5 +223,26 @@
   },
   "followupSendNowHint": {
     "message": "请先开启自动跟进"
+  },
+  "followupSendBlocked": {
+    "message": "无法发送跟进"
+  },
+  "followupSendBlockedApproval": {
+    "message": "无法发送 — Muse 正在等待你的批准"
+  },
+  "followupSendBlockedDraft": {
+    "message": "无法发送 — Muse 的输入框已有内容"
+  },
+  "followupSendBlockedComposer": {
+    "message": "无法发送 — 页面上找不到 Muse 的输入框"
+  },
+  "followupSendBlockedNoPrompt": {
+    "message": "无法发送 — 尚未设置跟进提示词"
+  },
+  "followupSendBlockedSending": {
+    "message": "跟进消息正在发送中"
+  },
+  "followupRotateStarterConfirm": {
+    "message": "替换已保存的 $1 个组合？再次点按"
   }
 }
