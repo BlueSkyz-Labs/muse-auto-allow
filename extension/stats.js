@@ -188,15 +188,23 @@ $('seg').addEventListener('click', (e) => {
 // encryption key so the backup stays readable, stats aggregates, counters) into one
 // JSON file. Import VALIDATES and SANITIZES the file first (redteam v4 / V4-1): only
 // known keys with correct types survive, sizes are capped, and a supplied key must
-// actually decrypt the first encrypted entry before anything is replaced.
+// actually decrypt a ctx-bearing entry — ANY of them, not just the first (SA-1) —
+// before anything is replaced; with no ctx-bearing entry at all the key rotation is
+// refused and the current key is kept (fail closed). v1.7.0: the auto follow-up
+// config (followup* keys) round-trips through export/import (SA-2) and the imported
+// dataset is bounded (clickCount cap, ISO `at` cap — SA-3).
+// SA-3: log timestamps must be ISO-ish and <= 64 chars — anything else drops the entry,
+// so a crafted file cannot inflate the log or the storage quota with junk `at` values.
+const ISO_AT_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})?$/;
+const isoAt = (v) => { const s = typeof v === 'string' ? v.slice(0, 64) : ''; return ISO_AT_RE.test(s) ? s : null; };
 const sanitizeBackup = (d) => {
   const out = {}; let seen = 0;
   if (typeof d.enabled === 'boolean') { out.enabled = d.enabled; seen++; }
   if (typeof d.minDelayMs === 'number' && isFinite(d.minDelayMs)) { out.minDelayMs = Math.min(10000, Math.max(0, Math.round(d.minDelayMs))); seen++; }
-  if (typeof d.clickCount === 'number' && isFinite(d.clickCount)) { out.clickCount = Math.max(0, Math.floor(d.clickCount)); seen++; }
+  if (typeof d.clickCount === 'number' && isFinite(d.clickCount)) { out.clickCount = Math.min(1e7, Math.max(0, Math.floor(d.clickCount))); seen++; } // SA-3: hard ceiling
   if (Array.isArray(d.log)) {
-    out.log = d.log.filter((e) => e && typeof e === 'object' && typeof e.at === 'string').slice(0, 50).map((e) => {
-      const o = { at: e.at, kind: typeof e.kind === 'string' ? e.kind.slice(0, 24) : 'allow',
+    out.log = d.log.filter((e) => e && typeof e === 'object' && isoAt(e.at) !== null).slice(0, 50).map((e) => {
+      const o = { at: isoAt(e.at), kind: typeof e.kind === 'string' ? e.kind.slice(0, 24) : 'allow',
                   label: typeof e.label === 'string' ? e.label.slice(0, 60) : '' };
       if (e.ctx && typeof e.ctx === 'object' && typeof e.ctx.iv === 'string' && typeof e.ctx.ct === 'string'
           && /^[A-Za-z0-9+/=]{8,64}$/.test(e.ctx.iv) && /^[A-Za-z0-9+/=]{8,4096}$/.test(e.ctx.ct)) o.ctx = { iv: e.ctx.iv, ct: e.ctx.ct };
@@ -219,6 +227,18 @@ const sanitizeBackup = (d) => {
     }
     out.stats = st; seen++;
   }
+  // v1.6.0/v1.7.0 auto follow-up config — carried EXACTLY as popup.js/content.js consume
+  // it (SA-2): booleans, strings, phrase-id arrays and ms numbers, each bounded.
+  if (typeof d.followupEnabled === 'boolean') { out.followupEnabled = d.followupEnabled; seen++; }
+  if (typeof d.followupPrompt === 'string' && d.followupPrompt.trim()) { out.followupPrompt = d.followupPrompt.slice(0, 4000); seen++; }
+  if (Array.isArray(d.followupPrompts)) { out.followupPrompts = d.followupPrompts.filter((p) => typeof p === 'string' && p.trim()).slice(0, 10).map((p) => p.slice(0, 600)); seen++; }
+  if (Array.isArray(d.followupChips)) { out.followupChips = d.followupChips.filter((c) => typeof c === 'string' && c.length <= 64).slice(0, 32); seen++; }
+  if (Number.isInteger(d.followupRotateIdx) && d.followupRotateIdx >= 0) { out.followupRotateIdx = Math.min(100000, d.followupRotateIdx); seen++; }
+  // engine bounds (content.js applyFollowupSettings): any finite ms >= 0 is honoured; the
+  // caps mirror the popup's reachable ranges (<= 3600 s / <= 1440 min) so crafted
+  // magnitudes clamp while every UI-settable value round-trips exactly.
+  if (typeof d.followupIdleMs === 'number' && isFinite(d.followupIdleMs)) { out.followupIdleMs = Math.min(3600000, Math.max(0, Math.round(d.followupIdleMs))); seen++; }
+  if (typeof d.followupCooldownMs === 'number' && isFinite(d.followupCooldownMs)) { out.followupCooldownMs = Math.min(86400000, Math.max(0, Math.round(d.followupCooldownMs))); seen++; }
   if (typeof d.cryptKeyRaw === 'string' && /^[A-Za-z0-9+/]{43}=$/.test(d.cryptKeyRaw)) { out.cryptKeyRaw = d.cryptKeyRaw; seen++; }
   if (!seen) return null;
   out.schemaVersion = 2;
@@ -232,6 +252,24 @@ const testBackupKey = async (raw, ctx) => {
     return true;
   } catch { return false; }
 };
+// SA-1: a file-supplied key may rotate the at-rest key ONLY with decrypt proof against a
+// ctx-bearing entry — ANY entry with ctx, not just the first. With no ctx-bearing entry
+// at all the rotation is REFUSED (adopt = null, kept = true) and the current key stays;
+// proof failure on an existing ctx entry rejects the whole import (ok = false, fail
+// closed). Same key as the current one => nothing rotates, no proof needed.
+async function resolveImportedKey(clean, currentKeyRaw) {
+  const supplied = typeof clean.cryptKeyRaw === 'string' ? clean.cryptKeyRaw : null;
+  if (!supplied) return { adopt: null, kept: false, ok: true };
+  const ctxEntries = (clean.log || []).filter((e) => e && e.ctx && e.ctx.iv && e.ctx.ct);
+  if (!ctxEntries.length) {
+    if (currentKeyRaw === supplied) return { adopt: supplied, kept: false, ok: true };
+    return { adopt: null, kept: true, ok: true };
+  }
+  for (const e of ctxEntries) {
+    if (await testBackupKey(supplied, e.ctx)) return { adopt: supplied, kept: false, ok: true };
+  }
+  return { adopt: null, kept: false, ok: false };
+}
 $('exportData').addEventListener('click', async () => {
   try {
     const s = await chrome.storage.local.get(null);
@@ -258,13 +296,23 @@ $('importFile').addEventListener('change', async (ev) => {
       if (!clean) {
         alert(t('importBad', 'Not a Muse Auto-Allow backup file.'));
       } else {
-        const first = clean.log && clean.log[0];
-        const decOk = !clean.cryptKeyRaw || !(first && first.ctx) ? true : await testBackupKey(clean.cryptKeyRaw, first.ctx);
-        if (!decOk) {
+        // SA-1: a supplied key is adopted only after decrypt proof against a ctx-bearing
+        // entry; with none present the rotation is refused and the current key is kept.
+        const cur = await chrome.storage.local.get({ cryptKeyRaw: null });
+        const kr = await resolveImportedKey(clean, typeof cur.cryptKeyRaw === 'string' ? cur.cryptKeyRaw : null);
+        if (!kr.ok) {
           alert(t('importBad', 'Not a Muse Auto-Allow backup file.'));
         } else if (confirm(t('importConfirm', 'Restore this backup? Current settings, log and statistics will be replaced.'))) {
-          await chrome.storage.local.set(clean);
-          renderAll();
+          if (kr.adopt === null) delete clean.cryptKeyRaw; else clean.cryptKeyRaw = kr.adopt;
+          try {
+            await chrome.storage.local.set(clean);
+            renderAll();
+            if (kr.kept) alert(t('importKeyKept', "Imported. The backup's encryption key could not be verified, so it was not restored (the existing key was kept)."));
+          } catch (err) {
+            // SA-3: a quota rejection gets its own message (was: "not a backup file")
+            if (/quota/i.test(String((err && err.message) || err))) alert(t('importQuota', 'Could not restore the backup: browser storage is full.'));
+            else alert(t('importBad', 'Not a Muse Auto-Allow backup file.'));
+          }
         }
       }
     }

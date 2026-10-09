@@ -175,6 +175,16 @@
   </div>
 </div>
 
+<!-- OB-1 case: a notification-style card that carries approval wording ("Allow Muse …")
+     must NEVER be clicked — the consent filter cannot be overridden by 'allow muse'. -->
+<div class="card" id="card19">
+  <p>Allow Muse to send notifications about updates?</p>
+  <div class="row">
+    <button type="button" class="allow" id="allow19">Allow</button>
+    <button type="button" class="deny" id="deny19">Deny</button>
+  </div>
+</div>
+
 <script>
 window.__clicks = [];
 window.__errors = [];
@@ -265,6 +275,9 @@ wirePair(document, 14);
 wirePair(document, 16);
 // v1.3: stats topic extraction (context contains "Repository test-repo")
 wirePair(document, 17);
+
+// OB-1: notification-style card carrying approval wording ("Allow Muse …") — never clicked
+wirePair(document, 19);
 
 // v1.5.1: chat-level review bar opens a hidden marked card (path E -> path A)
 document.getElementById('reviewBtn1').addEventListener('click', function () {

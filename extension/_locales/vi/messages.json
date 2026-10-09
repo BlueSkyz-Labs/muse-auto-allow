@@ -104,6 +104,12 @@
   "importBad": {
     "message": "Không phải tệp sao lưu của Muse Auto-Allow."
   },
+  "importQuota": {
+    "message": "Không thể khôi phục bản sao lưu: bộ nhớ trình duyệt đã đầy."
+  },
+  "importKeyKept": {
+    "message": "Đã nhập. Không thể xác minh khóa mã hóa của bản sao lưu nên khóa đó không được khôi phục (giữ nguyên khóa hiện có)."
+  },
   "followupTitle": {
     "message": "Tự động gửi tiếp"
   },

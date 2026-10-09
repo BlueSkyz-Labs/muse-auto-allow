@@ -104,6 +104,12 @@
   "importBad": {
     "message": "不是 Muse Auto-Allow 的备份文件。"
   },
+  "importQuota": {
+    "message": "无法恢复备份：浏览器存储空间已满。"
+  },
+  "importKeyKept": {
+    "message": "已导入。无法验证备份的加密密钥，因此未恢复该密钥（保留现有密钥）。"
+  },
   "followupTitle": {
     "message": "自动跟进"
   },

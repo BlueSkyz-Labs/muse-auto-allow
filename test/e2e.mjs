@@ -14,7 +14,8 @@
  *  3. path C: collapsed pending card expanded, then its Allow clicked (pending5 -> 5)
  *  4. path D: background surface button clicked, then revealed Allow clicked (surface -> 6)
  *  5. late card (MutationObserver) clicked (card 3)
- *  6. never: lone Allow, "Allow notifications"/"Block", Deny buttons
+ *  6. never: lone Allow, "Allow notifications"/"Block", the notification-style card
+ *     carrying approval wording (19), Deny buttons
  *  7. muse.ai (logged out): content script injects (documentElement attribute) — WARN-only
  */
 import { execFileSync } from 'node:child_process';
@@ -160,7 +161,7 @@ function killMyChrome() {
 }
 
 const EXPECTED = ['1', '2', '3', '4', '5', '6', '7', '11', '17', 'pending5', 'surface', 'reviewbar', '18'];
-const FORBIDDEN = ['8', '9', '10', '12', '13', '14', '16', 'surface2', 'surface3', 'lone', 'notif', 'plain-review'];
+const FORBIDDEN = ['8', '9', '10', '12', '13', '14', '16', '19', 'surface2', 'surface3', 'lone', 'notif', 'plain-review'];
 
 let ws = null;
 let send = null;

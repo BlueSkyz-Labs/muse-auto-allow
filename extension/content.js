@@ -21,7 +21,9 @@
 //    in the same button container and be clickable (adjacent-pair rule).
 //  - Never clicks a candidate inside an <a> or tied to a <form> (no navigation/submit).
 //  - Consent-only pairs (notifications/newsletter/subscribe/cookies/marketing/alerts/
-//    reminders/tips without explicit approval wording) are skipped.
+//    reminders/tips without explicit approval wording) are skipped — and notification/
+//    permission-style cards (notifications/camera/microphone/location/clipboard) are
+//    NEVER clicked even when they carry 'allow muse' wording (OB-1, fail closed).
 //  - Standing-grant labels ("Always allow", "Allow for this site/task") are not recognized
 //    as the positive option — the engine clicks only plain/one-shot forms, so it can never
 //    silently escalate the granted scope (a card offering only a standing grant is left to
@@ -64,6 +66,9 @@
   const DESTRUCTIVE_RE = /\b(delete|remove|deny|reject|decline|clear|reset|dismiss|block)\b/i;
   const CONSENT_ONLY_RE = /\b(notifications?|newsletter|subscribe|cookies?|marketing|alerts?|reminders?|tips?)\b/i;
   const APPROVAL_CONTEXT_RE = /\b(approv|perform this action|allow muse\b)/i;
+  // OB-1: notification/permission-style cards are NEVER clicked — the 'allow muse …'
+  // approval wording can no longer override the consent filter (fail closed).
+  const PERMISSION_CARD_RE = /\b(send notifications|notifications?|camera|microphone|location|clipboard)\b/i;
   const EXPAND_THROTTLE_MS = 800;
   const SURFACE_THROTTLE_MS = 10000;
   const REVIEW_BAR_THROTTLE_MS = 1000; // chat-level bar: snappy (the panel only renders after this click)
@@ -168,7 +173,7 @@
     while (allowClicks.length && now - allowClicks[0] > AUX_RATE_WINDOW_MS) allowClicks.shift();
     return allowClicks.length < ALLOW_RATE_MAX;
   }
-  function consentOnly(cardText) { return CONSENT_ONLY_RE.test(cardText) && !APPROVAL_CONTEXT_RE.test(cardText); }
+  function consentOnly(cardText) { return PERMISSION_CARD_RE.test(cardText) || (CONSENT_ONLY_RE.test(cardText) && !APPROVAL_CONTEXT_RE.test(cardText)); }
 
   // Path A — Muse-marked approval cards.
   function findMarkedAllow() {

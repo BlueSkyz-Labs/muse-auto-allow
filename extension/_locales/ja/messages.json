@@ -104,6 +104,12 @@
   "importBad": {
     "message": "Muse Auto-Allow のバックアップファイルではありません。"
   },
+  "importQuota": {
+    "message": "バックアップを復元できませんでした：ブラウザーのストレージが満杯です。"
+  },
+  "importKeyKept": {
+    "message": "インポートしました。バックアップの暗号化キーを検証できなかったため復元せず、既存のキーを維持しました。"
+  },
   "followupTitle": {
     "message": "自動フォローアップ"
   },

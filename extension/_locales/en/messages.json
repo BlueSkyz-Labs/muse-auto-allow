@@ -104,6 +104,12 @@
   "importBad": {
     "message": "Not a Muse Auto-Allow backup file."
   },
+  "importQuota": {
+    "message": "Could not restore the backup: browser storage is full."
+  },
+  "importKeyKept": {
+    "message": "Imported. The backup's encryption key could not be verified, so it was not restored (the existing key was kept)."
+  },
   "followupTitle": {
     "message": "Auto follow-up"
   },
