@@ -3,7 +3,7 @@
     "message": "Muse 자동 승인"
   },
   "extDesc": {
-    "message": "Muse(muse.ai) 승인 요청에서 'Allow'를 자동으로 클릭합니다. 켜기/끄기 스위치와 클릭 로그 제공, 데이터는 로컬에만 저장."
+    "message": "Muse(muse.ai) 승인 요청에서 'Allow'를 자동으로 클릭합니다. 켜기/끄기 스위치와 클릭 로그를 제공합니다. 데이터는 로컬에만 저장됩니다."
   },
   "toggleLabel": {
     "message": "Allow 자동 클릭"
@@ -108,7 +108,7 @@
     "message": "자동 후속 요청"
   },
   "followupToggle": {
-    "message": "Muse가 유휴 상태일 때 계속하기"
+    "message": "Muse가 대기 중일 때 계속하기"
   },
   "followupPromptLabel": {
     "message": "후속 프롬프트:"
@@ -135,7 +135,7 @@
     "message": "연결됨"
   },
   "followupSentAt": {
-    "message": "후속 요청 전송 $1"
+    "message": "후속 프롬프트 전송 완료 $1"
   },
   "followupUnknown": {
     "message": "상태 알 수 없음"

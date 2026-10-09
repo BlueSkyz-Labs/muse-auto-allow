@@ -3,7 +3,7 @@
     "message": "Muse Auto-Aprobar"
   },
   "extDesc": {
-    "message": "Hace clic automáticamente en Allow en las solicitudes de aprobación de Muse (muse.ai). Interruptor, registro de clics; todo local."
+    "message": "Hace clic automáticamente en Allow cuando Muse (muse.ai) pide aprobación. Interruptor, registro de clics; todo local."
   },
   "toggleLabel": {
     "message": "Clic automático en Allow"
@@ -99,7 +99,7 @@
     "message": "Importar datos"
   },
   "importConfirm": {
-    "message": "¿Restaurar esta copia? La configuración, el registro y las estadísticas actuales se reemplazarán."
+    "message": "¿Restaurar esta copia de seguridad? La configuración, el registro y las estadísticas actuales se reemplazarán."
   },
   "importBad": {
     "message": "No es un archivo de copia de seguridad de Muse Auto-Allow."
@@ -123,7 +123,7 @@
     "message": "Espera antes de enviar (segundos):"
   },
   "followupCooldownLabel": {
-    "message": "Enfriamiento (minutos):"
+    "message": "Intervalo entre envíos (minutos):"
   },
   "followupSendNow": {
     "message": "Enviar ahora"

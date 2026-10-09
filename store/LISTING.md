@@ -27,9 +27,22 @@ provided in all six supported languages (en, vi, zh_CN, ja, ko, es). Values mark
 Auto-click Allow on Muse (muse.ai) approval requests so your agent keeps running. Local-only, no data sent.
 ```
 
-> Verified length: 107 characters (limit 132). Every other locale below repeats the
-> item name as-is; the Chrome Web Store lets you localize the short description per
-> language in the **Store listing → localized** tab.
+> Verified length: 107 characters (limit 132). The listing title stays **Muse
+> Auto-Allow** as-is in every locale; the in-browser name is localized separately via
+> `extension/_locales/*/messages.json`. The Chrome Web Store lets you localize the
+> short description per language in the **Store listing → localized** tab — all six
+> localized short descriptions below make the same claims as the English one.
+
+#### Localized short descriptions (all six locales, same claims, ≤132 characters)
+
+| Locale | Short description | Characters |
+|---|---|---|
+| en | Auto-click Allow on Muse (muse.ai) approval requests so your agent keeps running. Local-only, no data sent. | 107 |
+| vi | Tự động bấm Allow cho các yêu cầu phê duyệt của Muse (muse.ai) để agent của bạn chạy liên tục. Chỉ lưu cục bộ, không gửi dữ liệu. | 129 |
+| zh_CN | 自动点击 Muse（muse.ai）批准请求中的“Allow”，让你的智能体持续运行。仅保存在本地，不发送任何数据。 | 58 |
+| ja | Muse（muse.ai）の承認リクエストで「Allow」を自動クリックし、あなたのエージェントを止めずに動かします。ローカル保存のみ、データ送信なし。 | 76 |
+| ko | Muse(muse.ai)의 승인 요청에서 'Allow'를 자동으로 클릭해 에이전트가 계속 실행되도록 합니다. 로컬에만 저장되며 데이터는 전송되지 않습니다. | 86 |
+| es | Clic automático en Allow cuando Muse (muse.ai) pide aprobación, para que tu agente siga en marcha. Todo local, sin enviar datos. | 128 |
 
 ---
 
@@ -94,18 +107,18 @@ bị ngắt quãng.
 **Tiện ích tuyệt đối không làm**
 - Không bao giờ bấm **Deny**, **Reject** hay **Decline**.
 - Không bao giờ bấm nút **Allow** đứng một mình, không thuộc một cặp phê duyệt — ví dụ
-  băng xin quyền của trình duyệt hay “Allow notifications”.
+  dải xin quyền của trình duyệt hay “Allow notifications”.
 - Không bao giờ bấm trùng cùng một nút.
 
-**Bạn luôn nắm quyền**
+**Bạn luôn nắm quyền kiểm soát**
 - Công tắc bật/tắt ngay trong popup — tắt bất cứ lúc nào.
 - Chỉnh được độ trễ giữa các lần bấm (mili-giây).
 - Bộ đếm số lần bấm và nhật ký 50 lần bấm gần nhất, để bạn thấy rõ tiện ích đã làm gì
   (loại thao tác, nhãn nút, ngữ cảnh).
-- Trang Thống kê sẵn có: số lượt bấm theo ngày / tuần / tháng / năm và theo chủ đề
+- Trang Thống kê tích hợp: số lượt bấm theo ngày / tuần / tháng / năm và theo chủ đề
   (repo / dự án) — biểu đồ nhẹ, hiển thị tức thì.
 
-**Riêng tư từ thiết kế**
+**Riêng tư ngay từ thiết kế**
 - Mọi thứ diễn ra trên máy bạn. Cài đặt và nhật ký bấm được lưu cục bộ trong trình duyệt.
 - Không tài khoản, không phân tích, không theo dõi, không mã từ xa, và không gửi gì lên
   máy chủ nào.
@@ -117,14 +130,14 @@ Muse Auto-Allow chỉ chạy trên các trang muse.ai, và chỉ khi bạn đang
 Muse Auto-Allow 让你的 Muse 智能体不再中断。
 
 Muse（muse.ai）在执行操作前会暂停并向你请求批准。你一旦离开，批准提示就会不断堆积，
-智能体只能空等。Muse Auto-Allow 在你自己的浏览器里监视 Muse 页面，替你点击
+智能体只能空等。Muse Auto-Allow 在你自己的浏览器里监控 Muse 页面，替你点击
 **Allow（允许）**，让任务继续推进。
 
 **它做什么**
 - 识别 Muse 的批准请求，并点击 **Allow（允许）** 按钮。
 - 覆盖 Muse 展示批准的全部四种方式：带标记的批准卡片、成对的 Allow/Deny 按钮、
   折叠的“Allow Muse to perform this action…”卡片（会先展开再批准），以及后台的
-  “N tasks need your approval”横幅（打开批准面板，让待处理卡片渲染出来）。
+  “N tasks need your approval”横幅（打开批准面板，让待处理卡片显示出来）。
 - 后台标签页同样处理，每分钟检查一次。
 
 **它绝不会做**
@@ -150,7 +163,7 @@ Muse Auto-Allow 仅在 muse.ai 页面上运行，且只在你启用该扩展时�
 Muse Auto-Allow は、あなたの Muse エージェントを止めずに動かし続けます。
 
 Muse（muse.ai）は操作の前に承認を求めて一時停止します。席を外すと承認リクエストが
-溜まっていき、エージェントは待ったままになります。Muse Auto-Allow は、あなた自身の
+溜まっていき、エージェントは待機したままになります。Muse Auto-Allow は、あなた自身の
 ブラウザで Muse のページを見守り、代わりに **Allow（許可）** をクリックします。
 
 **できること**
@@ -167,7 +180,7 @@ Muse（muse.ai）は操作の前に承認を求めて一時停止します。席
   「Allow notifications（通知を許可）」など）はクリックしません。
 - 同じボタンを二度クリックすることはありません。
 
-**常にあなたが主導**
+**主導権はあなたに**
 - ポップアップのオン／オフスイッチでいつでも停止できます。
 - クリック間隔（ミリ秒）を調整できます。
 - クリック回数と直近 50 件のクリックログで、何をしたかを確認できます
@@ -204,7 +217,7 @@ Muse(muse.ai)는 작업 전에 승인을 요청하며 잠시 멈춥니다. 자�
   “Allow notifications(알림 허용)” 등)은 클릭하지 않습니다.
 - 같은 버튼을 두 번 클릭하지 않습니다.
 
-**항상 사용자가 제어**
+**제어권은 사용자에게**
 - 팝업의 켜기/끄기 스위치로 언제든 중지할 수 있습니다.
 - 클릭 간 간격(밀리초)을 조절할 수 있습니다.
 - 클릭 횟수와 최근 50건의 클릭 로그로 무엇을 했는지 확인할 수 있습니다
@@ -232,7 +245,7 @@ se detenga.
 - Cubre las cuatro formas en que Muse muestra una aprobación: tarjetas de aprobación
   marcadas, pares de botones Permitir/Denegar, tarjetas contraídas
   “Allow Muse to perform this action…” (las expande primero) y el aviso de fondo
-  “N tasks need your approval” (abre el panel de aprobaciones para que se rendericen las
+  “N tasks need your approval” (abre el panel de aprobaciones para que se muestren las
   tarjetas pendientes).
 - También atiende las pestañas en segundo plano, revisando una vez por minuto.
 

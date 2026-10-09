@@ -69,7 +69,7 @@
     "message": "$1 tab muse.ai đang mở"
   },
   "museTabsNone": {
-    "message": "Chưa thấy tab muse.ai"
+    "message": "Không tìm thấy tab muse.ai nào"
   },
   "onlyMuse": {
     "message": "Chỉ hoạt động trên muse.ai"
@@ -111,19 +111,19 @@
     "message": "Tự gửi tiếp khi Muse ngừng chạy"
   },
   "followupPromptLabel": {
-    "message": "Lời nhắc gửi tiếp:"
+    "message": "Tin nhắn gửi tiếp:"
   },
   "followupCustomOption": {
     "message": "Tùy chỉnh…"
   },
   "followupCustomPlaceholder": {
-    "message": "Nhập lời nhắc gửi tiếp…"
+    "message": "Nhập tin nhắn gửi tiếp…"
   },
   "followupIdleLabel": {
     "message": "Chờ trước khi gửi (giây):"
   },
   "followupCooldownLabel": {
-    "message": "Giãn cách tối thiểu (phút):"
+    "message": "Chờ giữa các lần gửi (phút):"
   },
   "followupSendNow": {
     "message": "Gửi ngay"

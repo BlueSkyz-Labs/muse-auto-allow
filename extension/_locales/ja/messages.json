@@ -111,7 +111,7 @@
     "message": "Muse が待機中のとき続行する"
   },
   "followupPromptLabel": {
-    "message": "フォローアップのプロンプト:"
+    "message": "フォローアップのプロンプト："
   },
   "followupCustomOption": {
     "message": "カスタム…"
@@ -120,10 +120,10 @@
     "message": "フォローアップのプロンプトを入力…"
   },
   "followupIdleLabel": {
-    "message": "送信までの待機（秒）:"
+    "message": "送信までの待機（秒）："
   },
   "followupCooldownLabel": {
-    "message": "クールダウン（分）:"
+    "message": "クールダウン（分）："
   },
   "followupSendNow": {
     "message": "今すぐ送信"
@@ -135,7 +135,7 @@
     "message": "接続済み"
   },
   "followupSentAt": {
-    "message": "フォローアップ送信 $1"
+    "message": "フォローアップ送信済み $1"
   },
   "followupUnknown": {
     "message": "状態不明"
