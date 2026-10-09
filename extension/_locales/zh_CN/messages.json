@@ -76,5 +76,17 @@
   },
   "last7": {
     "message": "最近 7 天"
+  },
+  "last14d": {
+    "message": "最近 14 天"
+  },
+  "last12w": {
+    "message": "最近 12 周"
+  },
+  "last12m": {
+    "message": "最近 12 个月"
+  },
+  "allYears": {
+    "message": "全部年份"
   }
 }

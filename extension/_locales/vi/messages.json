@@ -76,5 +76,17 @@
   },
   "last7": {
     "message": "7 ngày gần nhất"
+  },
+  "last14d": {
+    "message": "14 ngày gần nhất"
+  },
+  "last12w": {
+    "message": "12 tuần gần nhất"
+  },
+  "last12m": {
+    "message": "12 tháng gần nhất"
+  },
+  "allYears": {
+    "message": "Tất cả các năm"
   }
 }

@@ -23,10 +23,14 @@ function renderLog(log) {
   $('log').innerHTML = log.length
     ? log.slice(0, 50).map((e) => {
         const k = e.kind || 'allow';
+        const ctx = String(e.context || '');
+        const ctxS = ctx.length > 170 ? ctx.slice(0, 170) + '…' : ctx;
+        const lbl = String(e.label || '');
+        const lblS = lbl.length > 40 ? lbl.slice(0, 40) + '…' : lbl;
         return '<div class="item"><span class="t">' + esc((e.at || '').slice(11, 19)) + '</span>' +
           '<span class="k k-' + esc(k) + '">' + esc(kindLabel(k)) + '</span>' +
-          '<b>' + esc((e.label || '').slice(0, 40)) + '</b>' +
-          '<div class="c">' + esc((e.context || '').slice(0, 170)) + '</div></div>';
+          '<b>' + esc(lblS) + '</b>' +
+          '<div class="c">' + esc(ctxS) + '</div></div>';
       }).join('')
     : '<div class="empty">' + esc(t('noClicks', 'No clicks yet')) + '</div>';
 }

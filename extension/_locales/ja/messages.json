@@ -76,5 +76,17 @@
   },
   "last7": {
     "message": "直近 7 日間"
+  },
+  "last14d": {
+    "message": "直近 14 日間"
+  },
+  "last12w": {
+    "message": "直近 12 週間"
+  },
+  "last12m": {
+    "message": "直近 12 か月"
+  },
+  "allYears": {
+    "message": "全期間"
   }
 }

@@ -76,5 +76,17 @@
   },
   "last7": {
     "message": "최근 7일"
+  },
+  "last14d": {
+    "message": "최근 14일"
+  },
+  "last12w": {
+    "message": "최근 12주"
+  },
+  "last12m": {
+    "message": "최근 12개월"
+  },
+  "allYears": {
+    "message": "전체 연도"
   }
 }

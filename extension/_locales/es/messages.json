@@ -76,5 +76,17 @@
   },
   "last7": {
     "message": "Últimos 7 días"
+  },
+  "last14d": {
+    "message": "Últimos 14 días"
+  },
+  "last12w": {
+    "message": "Últimas 12 semanas"
+  },
+  "last12m": {
+    "message": "Últimos 12 meses"
+  },
+  "allYears": {
+    "message": "Todos los años"
   }
 }

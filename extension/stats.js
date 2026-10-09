@@ -57,10 +57,18 @@ function series() {
   return out;
 }
 
+const CAP = {
+  day: ['last14d', 'Last 14 days'],
+  week: ['last12w', 'Last 12 weeks'],
+  month: ['last12m', 'Last 12 months'],
+  year: ['allYears', 'All years'],
+};
+
 function renderChart() {
   const svg = $('chart');
   const data = series();
-  const W = 720, H = 240, padL = 8, padR = 8, padT = 22, padB = 26;
+  $('ccap').textContent = t(CAP[RANGE][0], CAP[RANGE][1]);
+  const W = 720, H = 175, padL = 8, padR = 8, padT = 26, padB = 22;
   const innerW = W - padL - padR, innerH = H - padT - padB;
   const n = data.length || 1;
   const gap = Math.max(3, Math.floor(innerW / n * 0.22));
