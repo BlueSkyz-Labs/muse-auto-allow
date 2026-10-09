@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.0
+- UI/UX overhaul in Muse's design language (tokens captured from the live site, 2026-10-09): light-first surfaces (`#fcfcfc` page, white cards, `#111112` ink, `#005abf` accent, pill controls, weight-500 tight-tracked headings) with a full dark theme via `prefers-color-scheme` (`#18191a` / `#242526` / `#0a5ce0`); popup + Statistics page rebuilt on shared tokens.
+- Brand Kit v2 (`docs/BRANDING.md`): original check-on-tile mark with the brand gradient `#0082FB → #0064E0 → #0040DC` (Muse-compatible palette, deliberately not Muse's trademarked squiggle); refined 16/32/48/128/512 icons; new promo tile + designed overview; every store asset regenerated.
+- Store showcase assets now use strictly fictional demo data (Example Org, demo-project, sample-app, web-starter, notes-app, files.example.com) — no real projects anywhere in public assets.
+- Screenshots: screenshot1 = real runtime capture (live popup + live clicks, light stage), screenshot2-stats + screenshot3-popup = real renders (light; dark captured separately for QA), screenshot4-overview + promo440x280 = designed; `render.mjs` no longer overwrites screenshot1; `stats-shot.mjs` reports page fit (h:800/w:1280) and captures the dark QA pair.
+- Contrast/a11y: secondary text ≥6:1 light / ≥5:1 dark; dark chip/badge text is light blue on dark pills; status dot aria-hidden (state carried by the toggle); singular/plural chip copy ("1 muse.ai tab open" vs "N muse.ai tabs open") across 6 locales (31 keys each).
+- e2e re-run after the redesign: exit 0 (clicks, statsCheck, statsPage, locksProbe all green).
+
 ## 1.3.0
 - Usage statistics (user-facing): clicks by day / week / month / year, plus by topic — the topic is the GitHub repo (or host) extracted from each approval's context. Aggregates are compact local counters (`stats.byDay` / `byMonth` / `byYear` / `byTopic`; 400 days / 24 months / 100 topics retained).
 - New Statistics page (`stats.html`): dependency-free inline-SVG bar charts with a Day / Week / Month / Year switcher, KPI cards (total / today / this week / this month) and a top-topics list. Renders instantly; no libraries.

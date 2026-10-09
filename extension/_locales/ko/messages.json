@@ -88,5 +88,8 @@
   },
   "allYears": {
     "message": "전체 연도"
+  },
+  "museTabsFoundOne": {
+    "message": "muse.ai 탭 1개 열림"
   }
 }

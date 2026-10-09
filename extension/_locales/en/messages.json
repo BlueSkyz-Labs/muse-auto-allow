@@ -66,7 +66,7 @@
     "message": "Year"
   },
   "museTabsFound": {
-    "message": "$1 muse.ai tab(s) open"
+    "message": "$1 muse.ai tabs open"
   },
   "museTabsNone": {
     "message": "No muse.ai tab found"
@@ -88,5 +88,8 @@
   },
   "allYears": {
     "message": "All years"
+  },
+  "museTabsFoundOne": {
+    "message": "1 muse.ai tab open"
   }
 }

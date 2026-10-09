@@ -3,68 +3,87 @@
 <head>
 <meta charset="utf-8">
 <style>
-  :root { color-scheme: dark; --blue: #2f6df6; --cream: #f3d9b4; }
+  :root { color-scheme: light dark;
+          --blue: #005abf; --ink: #111112; --muted: #4a4e54; --bg: #fcfcfc; --surface: #ffffff;
+          --line: rgba(17,17,18,.08); --fill: rgba(17,17,18,.05); --on: #31a24c; }
+  @media (prefers-color-scheme: dark) {
+    :root { --blue: #0a5ce0; --ink: #e4e6eb; --muted: #b0b3b8; --bg: #18191a; --surface: #242526;
+            --line: #3e4042; --fill: #3a3b3c; --on: #45c463; }
+  }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
     /* the check mark is drawn via dashoffset animation — pin its final state so it
        stays visible when animations are disabled (otherwise it would never appear) */
     .head svg .ck { stroke-dashoffset: 0 !important; }
   }
-  body { width: 320px; box-sizing: border-box; margin: 0; padding: 12px 14px; background: #14151a; color: #e8e8ea;
-         font: 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  body { width: 320px; box-sizing: border-box; margin: 0; padding: 12px 14px; background: var(--bg); color: var(--ink);
+         font: 13px/1.45 "Optimistic", "optimisticAI", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
   .head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-  .head svg { width: 24px; height: 24px; border-radius: 8px; display: block; }
+  .head svg { width: 24px; height: 24px; border-radius: 7px; display: block; }
   .head svg .ck { stroke-dasharray: 420; stroke-dashoffset: 420; animation: draw .55s ease forwards .05s; }
   @keyframes draw { to { stroke-dashoffset: 0; } }
-  h1 { font-size: 13px; margin: 0; letter-spacing: .02em; color: #fff; }
-  .dot { width: 7px; height: 7px; border-radius: 50%; background: #6ee7a0; margin-left: auto;
-         box-shadow: 0 0 0 0 rgba(110,231,160,.45); animation: pulse 2.4s ease-out infinite; }
-  .dot.off { background: #5a5f6b; animation: none; box-shadow: none; }
+  h1 { font-size: 13.5px; font-weight: 500; margin: 0; letter-spacing: -0.01em; color: var(--ink); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--on); margin-left: auto;
+         box-shadow: 0 0 0 0 rgba(49,162,76,.45); animation: pulse 2.4s ease-out infinite; }
+  .dot.off { background: #9aa0a6; animation: none; box-shadow: none; }
   @keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(110,231,160,.45); }
-    70% { box-shadow: 0 0 0 7px rgba(110,231,160,0); }
-    100% { box-shadow: 0 0 0 0 rgba(110,231,160,0); }
+    0% { box-shadow: 0 0 0 0 rgba(49,162,76,.45); }
+    70% { box-shadow: 0 0 0 7px rgba(49,162,76,0); }
+    100% { box-shadow: 0 0 0 0 rgba(49,162,76,0); }
   }
   .row { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
   label.sw { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
   input[type=checkbox] { width: 34px; height: 18px; accent-color: var(--blue); cursor: pointer; }
-  input[type=number] { width: 74px; background: #1e2027; color: #eee; border: 1px solid #343742;
-                       border-radius: 6px; padding: 3px 6px; }
-  .muted { color: #9a9ba3; }
-  b.count { color: #ffd79a; font-size: 15px; display: inline-block; transition: transform .18s ease; }
+  input[type=number] { width: 74px; background: var(--fill); color: var(--ink); border: 0; border-radius: 999px;
+                       padding: 5px 12px; font: inherit; }
+  .muted { color: var(--muted); }
+  b.count { color: var(--ink); font-size: 15px; font-weight: 500; display: inline-block; transition: transform .18s ease; }
   b.count.pop { transform: scale(1.25); }
-  .log { margin-top: 10px; border-top: 1px solid #262932; padding-top: 8px; max-height: 220px; overflow: auto; }
-  .item { padding: 6px 0; border-bottom: 1px dashed #262932; animation: slidein .22s ease; }
+  .log { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; max-height: 220px; overflow: auto; }
+  .item { padding: 6px 0; border-bottom: 1px solid var(--line); animation: slidein .22s ease; }
   @keyframes slidein { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
-  .item .t { color: #777; font-variant-numeric: tabular-nums; margin-right: 6px; }
-  .item .c { color: #9a9ba3; font-size: 12px; margin-top: 2px; }
-  .k { font-size: 10px; padding: 1px 5px; border-radius: 999px; margin-right: 4px; vertical-align: 1px; }
-  .k-allow { background: #173a24; color: #6ee7a0; }
-  .k-expand { background: #3a3317; color: #e7d76e; }
-  .k-open-panel { background: #17253a; color: #7cc0ff; }
-  .chip { margin-left: auto; font-size: 11px; padding: 2px 8px; border-radius: 999px; border: 1px solid #2a3242; color: #9aa3b2; white-space: nowrap; }
-  .chip.on { color: #6ee7a0; border-color: #1f4a33; }
-  .chip.off { color: #e7d76e; border-color: #4a4426; }
+  .item .t { color: var(--muted); font-variant-numeric: tabular-nums; margin-right: 6px; }
+  .item .c { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .k { font-size: 10px; font-weight: 500; padding: 1px 7px; border-radius: 999px; margin-right: 4px; vertical-align: 1px; }
+  .k-allow { background: rgba(0,90,191,.10); color: var(--blue); }
+  .k-expand { background: rgba(243,217,180,.55); color: #7a5a20; }
+  .k-open-panel { background: var(--fill); color: var(--muted); }
+  @media (prefers-color-scheme: dark) {
+    .k-allow { background: rgba(10,92,224,.25); color: #8ab8ff; }
+    .k-expand { background: rgba(243,217,180,.18); color: #e8c98a; }
+  }
+  .chip { margin-left: auto; font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 999px;
+          background: var(--fill); color: var(--muted); white-space: nowrap; }
+  .chip.on { background: rgba(0,90,191,.10); color: var(--blue); }
+  @media (prefers-color-scheme: dark) { .chip.on { background: rgba(10,92,224,.25); color: #8ab8ff; } }
   .mini { margin-top: 8px; }
   .mcap { font-size: 11px; margin-bottom: 2px; }
   .mini svg { display: block; }
   .mini rect { transition: opacity .15s ease; }
   .mini rect:hover { opacity: .8; }
-  .btn { background: #1e2027; color: #e8e8ea; border: 1px solid #343742; border-radius: 8px; padding: 6px 12px; cursor: pointer; font: inherit; }
-  .btn:hover { border-color: var(--blue); }
+  .btn { background: var(--blue); color: #fff; border: 0; border-radius: 999px; padding: 7px 16px;
+         cursor: pointer; font: inherit; font-weight: 500; }
+  .btn:hover { filter: brightness(.94); }
   .note { font-size: 11px; margin-left: auto; }
-  .empty { color: #777; padding: 6px 0; }
+  .empty { color: var(--muted); padding: 6px 0; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: rgba(17,17,18,.18); border-radius: 999px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  @media (prefers-color-scheme: dark) { ::-webkit-scrollbar-thumb { background: rgba(228,230,235,.22); } }
 </style>
 </head>
 <body>
   <div class="head">
     <svg viewBox="0 0 512 512" aria-hidden="true">
-      <rect x="16" y="16" width="480" height="480" rx="132" fill="#f3d9b4"/>
-      <path class="ck" d="M120 282 L214 376 L372 176" fill="none" stroke="#2f6df6" stroke-width="72"
+      <defs><linearGradient id="hbg" x1="72" y1="60" x2="452" y2="464" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#0082FB"/><stop offset="0.62" stop-color="#0064E0"/><stop offset="1" stop-color="#0040DC"/>
+      </linearGradient></defs>
+      <rect x="16" y="16" width="480" height="480" rx="133" fill="url(#hbg)"/>
+      <path class="ck" d="M124 284 L214 374 L368 182" fill="none" stroke="#fff" stroke-width="76"
             stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
     <h1 data-i18n="extName">Muse Auto-Allow</h1>
-    <span class="dot" id="dot"></span>
+    <span class="dot" id="dot" aria-hidden="true"></span>
   </div>
   <label class="sw"><input type="checkbox" id="enabled"> <span data-i18n="toggleLabel">Auto-click Allow</span></label>
   <div class="row"><span class="muted" data-i18n="delayLabel">Delay between clicks:</span>

@@ -88,5 +88,8 @@
   },
   "allYears": {
     "message": "Tất cả các năm"
+  },
+  "museTabsFoundOne": {
+    "message": "1 tab muse.ai đang mở"
   }
 }

@@ -104,7 +104,9 @@ const JOBS = [
   { src: 'assets/icon.html', out: 'extension/icons/icon48.png', w: 48, h: 48, transparent: true },
   { src: 'assets/icon.html', out: 'extension/icons/icon128.png', w: 128, h: 128, transparent: true },
   { src: 'assets/icon.html', out: 'extension/icons/icon512.png', w: 512, h: 512, transparent: true },
-  { src: 'assets/store-screenshot.html', out: 'store/screenshot1.png', w: 1280, h: 800, transparent: false },
+  // Designed overview (light). screenshot1 is owned by scripts/store-shot.mjs (real runtime
+  // capture) — do not render the mock over it.
+  { src: 'assets/store-screenshot.html', out: 'store/screenshot4-overview.png', w: 1280, h: 800, transparent: false },
   { src: 'assets/promo-tile.html', out: 'store/promo440x280.png', w: 440, h: 280, transparent: false },
 ];
 
@@ -122,7 +124,7 @@ try {
     await send('Page.enable', {}, sessionId);
     await send('Emulation.setDeviceMetricsOverride', { width: job.w, height: job.h, deviceScaleFactor: 1, mobile: false }, sessionId);
     await send('Emulation.setDefaultBackgroundColorOverride',
-      { color: job.transparent ? { r: 0, g: 0, b: 0, a: 0 } : { r: 15, g: 16, b: 21, a: 1 } }, sessionId);
+      { color: job.transparent ? { r: 0, g: 0, b: 0, a: 0 } : { r: 252, g: 252, b: 252, a: 1 } }, sessionId);
     const url = pathToFileURL(path.join(ROOT, job.src)).href;
     await send('Page.navigate', { url }, sessionId);
     await sleep(1000); // let the page render and settle

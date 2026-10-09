@@ -88,5 +88,8 @@
   },
   "allYears": {
     "message": "全部年份"
+  },
+  "museTabsFoundOne": {
+    "message": "已打开 1 个 muse.ai 标签页"
   }
 }

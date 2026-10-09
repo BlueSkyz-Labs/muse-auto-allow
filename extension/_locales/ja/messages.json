@@ -88,5 +88,8 @@
   },
   "allYears": {
     "message": "全期間"
+  },
+  "museTabsFoundOne": {
+    "message": "muse.ai タブ 1 件が開いています"
   }
 }

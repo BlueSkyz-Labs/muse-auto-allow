@@ -51,11 +51,11 @@ function renderMini(byDay, now) {
   const W = 292, H = 46, gap = 4;
   const bw = Math.floor((W - gap * 6) / 7);
   const max = Math.max(1, ...days.map((x) => x.v));
-  let out = '';
+  let out = '<defs><linearGradient id="mg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0082FB"/><stop offset="1" stop-color="#0064E0"/></linearGradient></defs>';
   days.forEach((x, i) => {
-    const h = x.v ? Math.max(2, Math.round((H - 6) * (x.v / max))) : 1;
+    const h = x.v ? Math.max(2, Math.round((H - 6) * (x.v / max))) : 3;
     out += '<rect x="' + (i * (bw + gap)) + '" y="' + (H - h) + '" width="' + bw + '" height="' + h +
-      '" rx="2" fill="#2f6df6" opacity="' + (x.v ? 0.92 : 0.18) + '"><title>' + x.key + ': ' + x.v + '</title></rect>';
+      '" rx="2" fill="url(#mg)" opacity="' + (x.v ? 0.95 : 0.18) + '"><title>' + x.key + ': ' + x.v + '</title></rect>';
   });
   svg.innerHTML = out;
 }
@@ -67,7 +67,7 @@ function refreshMuseStat() {
       if (!el) return;
       const n = tabs ? tabs.length : 0;
       el.textContent = n > 0
-        ? t('museTabsFound', '$1 muse.ai tab(s) open', [String(n)])
+        ? (n === 1 ? t('museTabsFoundOne', '1 muse.ai tab open') : t('museTabsFound', '$1 muse.ai tabs open', [String(n)]))
         : t('museTabsNone', 'No muse.ai tab found');
       el.classList.toggle('on', n > 0);
       el.classList.toggle('off', n === 0);

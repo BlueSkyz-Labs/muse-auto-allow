@@ -66,7 +66,7 @@
     "message": "Año"
   },
   "museTabsFound": {
-    "message": "$1 pestaña(s) de muse.ai abierta(s)"
+    "message": "$1 pestañas de muse.ai abiertas"
   },
   "museTabsNone": {
     "message": "No se encontró ninguna pestaña de muse.ai"
@@ -88,5 +88,8 @@
   },
   "allYears": {
     "message": "Todos los años"
+  },
+  "museTabsFoundOne": {
+    "message": "1 pestaña de muse.ai abierta"
   }
 }

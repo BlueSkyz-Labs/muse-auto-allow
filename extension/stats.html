@@ -4,34 +4,44 @@
 <meta charset="utf-8">
 <title>Muse Auto-Allow — Statistics</title>
 <style>
-  :root { color-scheme: dark; --blue: #2f6df6; --cream: #f3d9b4; }
-  body { margin: 0; padding: 16px 32px; background: #14151a; color: #e8e8ea;
-         font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
-  h1 { font-size: 18px; margin: 0 0 10px; display: flex; align-items: center; gap: 10px; color: #fff; }
-  h1 svg { width: 26px; height: 26px; border-radius: 8px; }
-  .grid { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
-  .kpi { background: #1a1c22; border: 1px solid #262932; border-radius: 12px; padding: 10px 20px; min-width: 118px; }
-  .kpi .v { font-size: 24px; font-weight: 700; color: #ffd79a; font-variant-numeric: tabular-nums; }
-  .kpi .l { font-size: 12px; color: #a8b1c2; margin-top: 2px; }
-  .seg { display: inline-flex; gap: 4px; background: #1a1c22; border: 1px solid #262932; border-radius: 10px; padding: 4px; margin-bottom: 12px; }
-  .seg button { background: transparent; border: 0; color: #9aa3b2; padding: 6px 16px; border-radius: 7px; cursor: pointer; font: inherit; }
+  :root { color-scheme: light dark;
+          --blue: #005abf; --ink: #111112; --muted: #4a4e54; --bg: #fcfcfc; --surface: #ffffff;
+          --line: rgba(17,17,18,.08); --fill: rgba(17,17,18,.05); }
+  @media (prefers-color-scheme: dark) {
+    :root { --blue: #0a5ce0; --ink: #e4e6eb; --muted: #b0b3b8; --bg: #18191a; --surface: #242526;
+            --line: #3e4042; --fill: #3a3b3c; }
+  }
+  body { margin: 0; padding: 18px 32px 16px; background: var(--bg); color: var(--ink);
+         font: 14px/1.5 "Optimistic", "optimisticAI", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+  h1 { font-size: 24px; font-weight: 500; letter-spacing: -0.01em; margin: 0 0 10px; display: flex; align-items: center; gap: 10px; color: var(--ink); }
+  h1 svg { width: 28px; height: 28px; border-radius: 8px; }
+  .grid { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+  .kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 10px 20px; min-width: 118px; }
+  .kpi .v { font-size: 26px; font-weight: 500; letter-spacing: -0.01em; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .kpi .l { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .seg { display: inline-flex; gap: 4px; background: var(--fill); border-radius: 999px; padding: 4px; margin-bottom: 12px; }
+  .seg button { background: transparent; border: 0; color: var(--muted); padding: 6px 18px; border-radius: 999px; cursor: pointer; font: inherit; font-weight: 500; }
   .seg button.active { background: var(--blue); color: #fff; }
-  .chart { background: #1a1c22; border: 1px solid #262932; border-radius: 12px; padding: 12px; margin-bottom: 12px; }
-  .chart .ccap { font-size: 12px; color: #a8b1c2; margin-bottom: 8px; }
+  .chart { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px 16px; margin-bottom: 12px; }
+  .chart .ccap { font-size: 12.5px; color: var(--muted); margin-bottom: 8px; }
   .chart svg { display: block; width: 100%; height: auto; }
-  .chart rect.bar { fill: var(--blue); opacity: .9; transition: opacity .15s ease; }
+  .chart rect.bar { opacity: .92; transition: opacity .15s ease; }
   .chart rect.bar:hover { opacity: 1; }
-  .chart text { fill: #a8b1c2; font-size: 11px; }
-  .chart text.val { fill: #ffd79a; font-size: 10px; }
-  .topics { background: #1a1c22; border: 1px solid #262932; border-radius: 12px; padding: 12px; }
-  .topics .cap { font-size: 12px; color: #a8b1c2; margin-bottom: 10px; }
+  .chart text { fill: var(--muted); font-size: 11px; }
+  .chart text.val { fill: var(--ink); font-size: 10px; font-weight: 500; }
+  .topics { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px 16px; }
+  .topics .cap { font-size: 12.5px; color: var(--muted); margin-bottom: 10px; }
   .topic { display: flex; align-items: center; gap: 10px; padding: 4px 0; }
-  .topic .name { width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #cfd6e4; }
-  .topic .bar { flex: 1; height: 10px; background: #11151d; border-radius: 999px; overflow: hidden; }
-  .topic .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #2f6df6, #5fb2ff); border-radius: 999px; transition: width .35s ease; }
-  .topic .n { width: 58px; text-align: right; color: #ffd79a; font-variant-numeric: tabular-nums; }
-  .empty { color: #777; padding: 8px 0; }
-  .foot { color: #7d8698; font-size: 12px; margin-top: 10px; }
+  .topic .name { width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); }
+  .topic .bar { flex: 1; height: 10px; background: var(--fill); border-radius: 999px; overflow: hidden; }
+  .topic .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #0082FB, #0064E0); border-radius: 999px; transition: width .35s ease; }
+  .topic .n { width: 58px; text-align: right; color: var(--ink); font-weight: 500; font-variant-numeric: tabular-nums; }
+  .empty { color: var(--muted); padding: 8px 0; }
+  .foot { color: var(--muted); font-size: 12px; margin-top: 8px; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: rgba(17,17,18,.18); border-radius: 999px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  @media (prefers-color-scheme: dark) { ::-webkit-scrollbar-thumb { background: rgba(228,230,235,.22); } }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
   }
@@ -39,7 +49,7 @@
 </head>
 <body>
   <h1>
-    <svg viewBox="0 0 512 512" aria-hidden="true"><rect x="16" y="16" width="480" height="480" rx="132" fill="#f3d9b4"/><path d="M120 282 L214 376 L372 176" fill="none" stroke="#2f6df6" stroke-width="72" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <svg viewBox="0 0 512 512" aria-hidden="true"><defs><linearGradient id="hbg" x1="72" y1="60" x2="452" y2="464" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#0082FB"/><stop offset="0.62" stop-color="#0064E0"/><stop offset="1" stop-color="#0040DC"/></linearGradient></defs><rect x="16" y="16" width="480" height="480" rx="133" fill="url(#hbg)"/><path d="M124 284 L214 374 L368 182" fill="none" stroke="#fff" stroke-width="76" stroke-linecap="round" stroke-linejoin="round"/></svg>
     <span data-i18n="statsTitle">Muse Auto-Allow — Statistics</span>
   </h1>
 
@@ -57,10 +67,10 @@
     <button data-range="year" data-i18n="rangeYear">Year</button>
   </div>
 
-  <div class="chart"><div class="ccap" id="ccap"></div><svg id="chart" viewBox="0 0 720 175" role="img"></svg></div>
+  <div class="chart"><div class="ccap" id="ccap"></div><svg id="chart" viewBox="0 0 720 170" role="img"></svg></div>
 
   <div class="topics">
-    <div class="cap" data-i18n="topicsTitle">By topic (repo/project)</div>
+    <div class="cap" data-i18n="topicsTitle">By topic (repo / project)</div>
     <div id="topics"></div>
   </div>
 

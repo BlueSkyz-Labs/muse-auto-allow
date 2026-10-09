@@ -69,18 +69,18 @@ function renderChart() {
   const svg = $('chart');
   const data = series();
   $('ccap').textContent = t(CAP[RANGE][0], CAP[RANGE][1]);
-  const W = 720, H = 175, padL = 8, padR = 8, padT = 26, padB = 22;
+  const W = 720, H = 170, padL = 8, padR = 8, padT = 26, padB = 22;
   const innerW = W - padL - padR, innerH = H - padT - padB;
   const n = data.length || 1;
   const gap = Math.max(3, Math.floor(innerW / n * 0.22));
   const bw = Math.max(4, Math.floor((innerW - gap * (n - 1)) / n));
   const max = Math.max(1, ...data.map((x) => x.v));
-  let out = '';
+  let out = '<defs><linearGradient id="bar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0082FB"/><stop offset="1" stop-color="#0064E0"/></linearGradient></defs>';
   data.forEach((x, i) => {
     const h = x.v ? Math.max(2, Math.round(innerH * (x.v / max))) : 1;
     const xx = padL + i * (bw + gap);
     const y = padT + innerH - h;
-    out += '<rect class="bar" x="' + xx + '" y="' + y + '" width="' + bw + '" height="' + h + '" rx="3" opacity="' + (x.v ? 0.9 : 0.18) + '"><title>' + x.label + ': ' + x.v + '</title></rect>';
+    out += '<rect class="bar" x="' + xx + '" y="' + y + '" width="' + bw + '" height="' + h + '" rx="3" fill="url(#bar)" opacity="' + (x.v ? 0.92 : 0.16) + '"><title>' + x.label + ': ' + x.v + '</title></rect>';
     if (x.v) out += '<text class="val" x="' + (xx + bw / 2) + '" y="' + (y - 5) + '" text-anchor="middle">' + x.v + '</text>';
     out += '<text x="' + (xx + bw / 2) + '" y="' + (H - 8) + '" text-anchor="middle">' + x.label + '</text>';
   });

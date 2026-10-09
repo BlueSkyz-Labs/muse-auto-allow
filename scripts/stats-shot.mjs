@@ -41,25 +41,26 @@ for (let i = 44; i >= 0; i--) {
 }
 const stats = {
   byDay, byMonth, byYear,
+  // Neutral, clearly fictional demo data (never real projects — public store assets).
   byTopic: {
-    'sgps': 66,
-    'SGPS': 31,
-    'project-neu': 24,
-    'project-nau': 12,
-    'production-results.sa5.blob.core.windows.net': 5,
+    'demo-project': 66,
+    'sample-app': 31,
+    'web-starter': 24,
+    'notes-app': 12,
+    'files.example.com': 5,
   },
 };
 
-// realistic click log for the popup shot
+// realistic click log for the popup shot (fictional org/repos only)
 const isoMinus = (mins) => new Date(Date.now() - mins * 60000).toISOString();
 const log = [
-  { at: isoMinus(2), kind: 'allow', label: 'Allow', context: 'Allow Muse to perform this action on your GitHub account? Action Pull request read on GitHub Repository owner BlueSkyz-Labs Pull request 257 Repository sgps Method get' },
-  { at: isoMinus(6), kind: 'allow', label: 'Allow', context: 'Allow Muse to perform this action on your GitHub account? Action Create a GitHub branch on GitHub Repository owner BlueSkyz-Labs Repository SGPS Branch fix/i18n-zh-parity-gaps Method post' },
-  { at: isoMinus(11), kind: 'allow', label: 'Allow', context: 'Allow Muse to perform this action on your GitHub account? Action Push files to GitHub on GitHub Repository owner BlueSkyz-Labs Repository project-neu Method post' },
-  { at: isoMinus(15), kind: 'allow', label: 'Allow', context: 'Allow Muse to perform this action on your GitHub account? Action Create a GitHub pull request on GitHub Repository owner BlueSkyz-Labs Repository SGPS Title fix(i18n): zh/zh-hant parity gaps Method post' },
-  { at: isoMinus(22), kind: 'allow', label: 'Allow', context: 'Allow Muse to perform this action on your GitHub account? Action Issue read on GitHub Issue 65 Repository project-neu Method get' },
-  { at: isoMinus(31), kind: 'allow', label: 'Allow', context: 'Allow Muse to perform this action on your Azure account? Access production-results.sa5.blob.core.windows.net' },
-  { at: isoMinus(40), kind: 'allow', label: 'Allow', context: 'Allow Muse to perform this action on your GitHub account? Action Pull request read on GitHub Repository owner BlueSkyz-Labs Pull request 257 Repository sgps Method get' },
+  { at: isoMinus(2), kind: 'allow', label: 'Allow', context: 'Allow Muse to perform this action on your GitHub account? Action Pull request read on GitHub Repository owner Example Org Pull request 42 Repository demo-project Method get' },
+  { at: isoMinus(6), kind: 'allow', label: 'Allow', context: 'Allow Muse to perform this action on your GitHub account? Action Create a GitHub branch on GitHub Repository owner Example Org Repository sample-app Branch feature/new-docs Method post' },
+  { at: isoMinus(11), kind: 'allow', label: 'Allow', context: 'Allow Muse to perform this action on your GitHub account? Action Push files to GitHub on GitHub Repository owner Example Org Repository web-starter Method post' },
+  { at: isoMinus(15), kind: 'allow', label: 'Allow', context: 'Allow Muse to perform this action on your GitHub account? Action Create a GitHub pull request on GitHub Repository owner Example Org Repository sample-app Title docs: refresh quick-start guide Method post' },
+  { at: isoMinus(22), kind: 'allow', label: 'Allow', context: 'Allow Muse to perform this action on your GitHub account? Action Issue read on GitHub Issue 12 Repository web-starter Method get' },
+  { at: isoMinus(31), kind: 'allow', label: 'Allow', context: 'Allow Muse to perform this action on your Azure account? Access files.example.com' },
+  { at: isoMinus(40), kind: 'allow', label: 'Allow', context: 'Allow Muse to perform this action on your GitHub account? Action Pull request read on GitHub Repository owner Example Org Pull request 42 Repository demo-project Method get' },
 ];
 
 const chromePath = process.env.MAA_CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
@@ -161,25 +162,54 @@ try {
   const t1 = await send('Target.createTarget', { url: `chrome-extension://${extId}/stats.html` });
   const { sessionId: s1 } = await send('Target.attachToTarget', { targetId: t1.targetId, flatten: true });
   await send('Runtime.evaluate', { expression: seedExpr, awaitPromise: true, returnByValue: true }, s1);
+  // store captures are LIGHT (Muse language); dark is captured separately for QA
+  await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'light' }] }, s1);
   await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false }, s1);
   await send('Page.reload', {}, s1);
   await sleep(1600);
   const shot1 = await send('Page.captureScreenshot', { format: 'png' }, s1);
   fs.writeFileSync(path.join(OUT, 'screenshot2-stats.png'), Buffer.from(shot1.data, 'base64'));
   out.stats = path.join(OUT, 'screenshot2-stats.png');
+  try {
+    const fitR = await send('Runtime.evaluate', { expression: 'JSON.stringify({ h: document.documentElement.scrollHeight, w: document.documentElement.scrollWidth })', returnByValue: true }, s1);
+    out.fit = JSON.parse(fitR?.result?.value || '{}');
+  } catch { /* informational only */ }
 
   // ---- popup ----
   // a real muse.ai tab so the popup status chip shows the live state (best effort)
   try { await send('Target.createTarget', { url: 'https://muse.ai/' }); await sleep(4000); } catch { /* offline is fine */ }
   const t2 = await send('Target.createTarget', { url: `chrome-extension://${extId}/popup.html` });
   const { sessionId: s2 } = await send('Target.attachToTarget', { targetId: t2.targetId, flatten: true });
+  await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'light' }] }, s2);
   await send('Emulation.setDeviceMetricsOverride', { width: 340, height: 660, deviceScaleFactor: 2, mobile: false }, s2);
   await send('Runtime.evaluate', { expression: seedExpr, awaitPromise: true, returnByValue: true }, s2);
   await send('Page.reload', {}, s2);
   await sleep(1200);
+  // crop to content: expand the log viewport (with slack so no scrollbar remains),
+  // then capture exactly the popup's height
+  await send('Runtime.evaluate', { expression: '(() => { const lg = document.getElementById("log"); if (lg) lg.style.maxHeight = (lg.scrollHeight + 8) + "px"; return "ok"; })()', returnByValue: true }, s2);
+  await sleep(250);
+  const hR = await send('Runtime.evaluate', { expression: 'Math.max(document.body.scrollHeight, 520)', returnByValue: true }, s2);
+  const contentH = Math.min(1200, Number(hR?.result?.value) || 660);
+  await send('Emulation.setDeviceMetricsOverride', { width: 340, height: contentH, deviceScaleFactor: 2, mobile: false }, s2);
+  await sleep(300);
   const shot2 = await send('Page.captureScreenshot', { format: 'png' }, s2);
   fs.writeFileSync(path.join(OUT, 'screenshot3-popup.png'), Buffer.from(shot2.data, 'base64'));
   out.popup = path.join(OUT, 'screenshot3-popup.png');
+
+  // ---- dark-mode QA captures (scratch only, never store assets) ----
+  const QADIR = 'C:/Users/<local-user>/AppData/Local/hermes/cache/scratch/maa-dark';
+  fs.mkdirSync(QADIR, { recursive: true });
+  const DARK = { features: [{ name: 'prefers-color-scheme', value: 'dark' }] };
+  await send('Emulation.setEmulatedMedia', DARK, s1);
+  await sleep(600);
+  const s1d = await send('Page.captureScreenshot', { format: 'png' }, s1);
+  fs.writeFileSync(path.join(QADIR, 'stats-dark.png'), Buffer.from(s1d.data, 'base64'));
+  await send('Emulation.setEmulatedMedia', DARK, s2);
+  await sleep(600);
+  const s2d = await send('Page.captureScreenshot', { format: 'png' }, s2);
+  fs.writeFileSync(path.join(QADIR, 'popup-dark.png'), Buffer.from(s2d.data, 'base64'));
+  out.dark = [path.join(QADIR, 'stats-dark.png'), path.join(QADIR, 'popup-dark.png')];
 
   out.ok = true;
 } catch (e) {
