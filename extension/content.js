@@ -1,4 +1,4 @@
-// Muse Auto-Allow — content script (v1.6.0 dev: auto follow-up + v1.5.0 approval engine).
+// Muse Auto-Allow — content script (v1.7.0: auto follow-up + phrase library/rotation + v1.5.0 approval engine).
 // Automatically clicks "Allow" on Muse (muse.ai) approval requests, and — when the
 // user enables Auto follow-up — keeps Muse working long-run by sending a chosen
 // prompt into the chat composer whenever Muse goes idle ('Connected' status).
