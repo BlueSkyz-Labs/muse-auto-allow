@@ -6,7 +6,9 @@ function t(key, fallback, subs) {
 
 function applyI18n() {
   document.querySelectorAll('[data-i18n]').forEach((el) => {
-    const msg = t(el.dataset.i18n, el.textContent);
+    let msg = t(el.dataset.i18n, el.textContent);
+    // data-nc: drop the locale's trailing colon so labels and stat captions share one punctuation style
+    if (msg && el.hasAttribute('data-nc')) msg = String(msg).replace(/[:：]\s*$/, '');
     if (msg) el.textContent = msg;
   });
   document.querySelectorAll('[data-i18n-ph]').forEach((el) => {
@@ -14,6 +16,8 @@ function applyI18n() {
     if (msg) el.setAttribute('placeholder', msg);
   });
   try { document.documentElement.lang = chrome.i18n.getUILanguage() || 'en'; } catch { /* keep */ }
+  const hint = $('fhint');
+  if (hint) hint.textContent = t('followupGateNote', hint.textContent); // fallback = the caption in the markup
 }
 
 function esc(s) {
@@ -61,23 +65,53 @@ function applyFollowupUI(s) {
   const cool = $('fcool');
   if (cool && document.activeElement !== cool) cool.value = Math.max(1, Math.round((Number(s.followupCooldownMs) || 600000) / 60000));
   const btn = $('fsendnow');
-  if (btn) btn.disabled = !on;
+  if (btn) {
+    btn.disabled = !on;
+    if (on) { btn.removeAttribute('title'); } else { btn.title = t('followupSendNowHint', 'Enable Auto follow-up first'); }
+  }
+  const sendrow = $('fsendrow');
+  if (sendrow) { if (on) sendrow.removeAttribute('title'); else sendrow.title = t('followupSendNowHint', 'Enable Auto follow-up first'); }
+  // gate the whole controls block while the feature is off: collapse the settings and keep the
+  // disabled Send-now visible (explicit treatment + tooltip); one inline hint explains.
+  const panel = $('fpanel');
+  if (panel) panel.classList.toggle('gated', !on);
+  const hint = $('fhint');
+  if (hint) hint.hidden = on;
+  renderFollowupStatus(fAgg); // the toggle re-words the pill (Waiting vs Idle)
 }
-function fstatSet(text, on) {
+// Status pill: informative states only — Working / Sent HH:MM / Waiting (armed) / Idle.
+// A tab that never reports (or reports 'none') hides the pill: the header chip already
+// carries the muse.ai tab status, so the old dead-end 'Status unknown' pill is gone.
+let fAgg = null; // last engine snapshot, kept so the pill re-renders when the toggle flips
+function fstatSet(text, cls, title) {
   const el = $('fstat');
-  if (!el) return;
-  el.textContent = text;
-  el.classList.toggle('on', !!on);
+  const tx = $('fstatText');
+  if (!el || !tx) return;
+  tx.textContent = text;
+  el.className = 'fstat' + (cls ? ' ' + cls : '');
+  if (title) el.title = title; else el.removeAttribute('title');
+  el.hidden = false;
+}
+function fstatHide() {
+  const el = $('fstat');
+  if (el) el.hidden = true;
 }
 function renderFollowupStatus(agg) {
-  if (agg.state === 'working') return fstatSet(t('followupWorking', 'Working'), true);
+  fAgg = agg || null;
+  const cb = $('followupEnabled');
+  const on = !!(cb && cb.checked);
+  if (!agg) return fstatHide();
+  if (agg.state === 'working') return fstatSet(t('followupWorking', 'Working'), 'on', t('followupHintWorking', 'Muse is working'));
   if (agg.lastSentAt && Date.now() - agg.lastSentAt < FUP_SENT_RECENT_MS) {
     const d = new Date(agg.lastSentAt);
-    return fstatSet(t('followupSentAt', 'Follow-up sent $1', [pad2(d.getHours()) + ':' + pad2(d.getMinutes())]), true);
+    return fstatSet(t('followupSentAt', 'Follow-up sent $1', [pad2(d.getHours()) + ':' + pad2(d.getMinutes())]), 'sent', localFull(agg.lastSentAt));
   }
-  if (agg.state === 'idle') return fstatSet(t('followupConnected', 'Connected'), true);
-  if (agg.state === 'none') return fstatSet(t('museTabsNone', 'No muse.ai tab found'), false);
-  return fstatSet(t('followupUnknown', 'Status unknown'), false);
+  if (agg.state === 'idle') {
+    return on
+      ? fstatSet(t('followupWaiting', 'Waiting'), 'on', t('followupHintWaiting', 'Muse is idle — a follow-up is sent once the wait time passes'))
+      : fstatSet(t('followupIdle', 'Idle'), '', t('followupHintIdle', 'Muse is idle'));
+  }
+  return fstatHide(); // no muse.ai tab reporting / unsettled — nothing useful to say
 }
 // Ask every muse.ai tab for its engine state; aggregate (working wins, newest
 // lastSentAt wins). A tab that never answers is settled by the 700ms timeout.
@@ -153,14 +187,20 @@ async function renderLog(log) {
   $('log').innerHTML = items.length
     ? items.map(({ e, plain }) => {
         const k = e.kind || 'allow';
-        let ctxS = plain;
-        if (ctxS.length > 170) { ctxS = ctxS.slice(0, 170); const sp = ctxS.lastIndexOf(' '); if (sp > 130) ctxS = ctxS.slice(0, sp); ctxS += '…'; }
+        const kCls = k === 'review-bar' ? 'open-panel' : k; // review-bar entries share the open-panel chip
+        const kLbl = kindLabel(k);
         const lbl = String(e.label || '');
-        const lblS = lbl.length > 40 ? lbl.slice(0, 40) + '…' : lbl;
+        // the kind chip already says it — don't repeat the same word as a bold title
+        const title = lbl && lbl.toLowerCase() !== kLbl.toLowerCase() ? '<b title="' + esc(lbl) + '">' + esc(lbl) + '</b>' : '';
+        // clip the context at a WORD boundary at roughly two lines (the CSS clamp stays as a
+        // safety net) so the ellipsis never lands mid-word
+        let ctxS = String(plain);
+        if (ctxS.length > 78) { const cut = ctxS.slice(0, 78); const sp = cut.lastIndexOf(' '); ctxS = (sp > 48 ? cut.slice(0, sp) : cut) + '…'; }
+        // timestamp column on the left; the kind chip opens the message column and the
+        // clamped context hangs under it (no full-margin continuation lines)
         return '<div class="item"><span class="t" title="' + esc(localFull(e.at)) + '">' + esc(localTime(e.at)) + '</span>' +
-          '<span class="k k-' + esc(k) + '">' + esc(kindLabel(k)) + '</span>' +
-          '<b>' + esc(lblS) + '</b>' +
-          '<div class="c">' + esc(ctxS) + '</div></div>';
+          '<div class="top"><span class="k k-' + esc(kCls) + '">' + esc(kLbl) + '</span>' + title + '</div>' +
+          '<div class="c" title="' + esc(plain) + '">' + esc(ctxS) + '</div></div>';
       }).join('')
     : '<div class="empty">' + esc(t('noClicks', 'No clicks yet')) + '</div>';
 }
@@ -176,16 +216,28 @@ function renderMini(byDay, now) {
   const days = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
-    days.push({ key: dayKeyOf(d), v: Number(byDay[dayKeyOf(d)]) || 0 });
+    days.push({ d, key: dayKeyOf(d), v: Number(byDay[dayKeyOf(d)]) || 0 });
   }
-  const W = 292, H = 46, gap = 4;
+  // labelled sparkline: day labels under the bars (locale-aware, no new i18n keys).
+  // Uses the locale's short weekday ("Sat Sun Mon …" — unambiguous at this size);
+  // narrow when the short form is multi-word (vi "Thứ 6" -> "T6").
+  let lang = 'en';
+  try { lang = chrome.i18n.getUILanguage() || 'en'; } catch { /* keep */ }
+  const fmt = (d, o) => { try { return d.toLocaleDateString(lang, o); } catch { return ''; } };
+  const dayLabel = (d) => { const sh = fmt(d, { weekday: 'short' }); return sh.includes(' ') ? fmt(d, { weekday: 'narrow' }) : sh; };
+  const W = 292, H = 46, gap = 4, base = 32, top = 2;
   const bw = Math.floor((W - gap * 6) / 7);
   const max = Math.max(1, ...days.map((x) => x.v));
-  let out = '<defs><linearGradient id="mg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0082FB"/><stop offset="1" stop-color="#0064E0"/></linearGradient></defs>';
+  let out = '<defs><linearGradient id="mg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0082FB"/><stop offset="1" stop-color="#0064E0"/></linearGradient>' +
+    '<linearGradient id="mgd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0064E0"/><stop offset="1" stop-color="#0040DC"/></linearGradient></defs>' +
+    '<line class="baseline" x1="0" y1="' + (base + 0.5) + '" x2="' + W + '" y2="' + (base + 0.5) + '"/>';
   days.forEach((x, i) => {
-    const h = x.v ? Math.max(2, Math.round((H - 6) * (x.v / max))) : 3;
-    out += '<rect x="' + (i * (bw + gap)) + '" y="' + (H - h) + '" width="' + bw + '" height="' + h +
-      '" rx="2" fill="url(#mg)" opacity="' + (x.v ? 0.95 : 0.18) + '"><title>' + x.key + ': ' + x.v + '</title></rect>';
+    const cx = i * (bw + gap) + bw / 2;
+    const h = x.v ? Math.max(3, Math.round((base - top) * (x.v / max))) : 4;
+    out += '<rect x="' + (i * (bw + gap)) + '" y="' + (base - h) + '" width="' + bw + '" height="' + h +
+      '" rx="4" fill="url(#' + (i === 6 ? 'mgd' : 'mg') + ')" opacity="' + (x.v ? (i === 6 ? 1 : 0.5) : 0.45) + '"><title>' +
+      esc(fmt(x.d, { weekday: 'long', day: 'numeric', month: 'short' }) + ' — ' + x.v) + '</title></rect>' +
+      '<text x="' + cx + '" y="43" text-anchor="middle"' + (i === 6 ? ' class="today"' : '') + '>' + esc(dayLabel(x.d)) + '</text>';
   });
   svg.innerHTML = out;
 }
@@ -194,13 +246,14 @@ function refreshMuseStat() {
   try {
     chrome.tabs.query({ url: ['https://muse.ai/*', 'https://*.muse.ai/*'] }, (tabs) => {
       const el = $('musestat');
-      if (!el) return;
+      const tx = $('musestatText');
+      if (!el || !tx) return;
       const n = tabs ? tabs.length : 0;
-      el.textContent = n > 0
+      tx.textContent = n > 0
         ? (n === 1 ? t('museTabsFoundOne', '1 muse.ai tab open') : t('museTabsFound', '$1 muse.ai tabs open', [String(n)]))
         : t('museTabsNone', 'No muse.ai tab found');
+      el.title = tx.textContent; // full text when the header clips it
       el.classList.toggle('on', n > 0);
-      el.classList.toggle('off', n === 0);
     });
   } catch { /* ignore */ }
 }
@@ -225,7 +278,6 @@ function refresh() {
     const today = $('today');
     if (today) today.textContent = Number(byDay[dayKeyOf(now)]) || 0;
     renderMini(byDay, now);
-    $('dot').classList.toggle('off', s.enabled === false);
     applyFollowupUI(s);
     renderLog(Array.isArray(s.log) ? s.log : []);
   });

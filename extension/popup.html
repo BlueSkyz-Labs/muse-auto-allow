@@ -5,10 +5,18 @@
 <style>
   :root { color-scheme: light dark;
           --blue: #005abf; --ink: #111112; --muted: #4a4e54; --bg: #fcfcfc; --surface: #ffffff;
-          --line: rgba(17,17,18,.08); --fill: rgba(17,17,18,.05); --on: #31a24c; --track: rgba(17,17,18,.22); }
+          --fill: rgba(17,17,18,.05); --on: #31a24c; --track: rgba(17,17,18,.22);
+          --divider: rgba(17,17,18,.16);   /* section + log-row hairlines (visible on --bg) */
+          --stroke: rgba(17,17,18,.16);    /* form-control outlines */
+          --panel: rgba(17,17,18,.035);    /* follow-up controls panel */
+          --focus: #005abf;                /* same focus ring as the Statistics page (light) */
+          --ok: #146c2e; --ok-bg: rgba(49,162,76,.14);  /* 'sent' pill text: 5.48:1 on its tint */
+          --axis: rgba(17,17,18,.2); }     /* mini-chart baseline */
   @media (prefers-color-scheme: dark) {
     :root { --blue: #0a5ce0; --ink: #e4e6eb; --muted: #b0b3b8; --bg: #18191a; --surface: #242526;
-            --line: #3e4042; --fill: #3a3b3c; --on: #45c463; --track: rgba(255,255,255,.30); }
+            --fill: #3a3b3c; --on: #45c463; --track: rgba(255,255,255,.30);
+            --divider: rgba(228,230,235,.18); --stroke: rgba(228,230,235,.22); --panel: rgba(255,255,255,.045);
+            --focus: #7cb0ff; --ok: #5fd07a; --ok-bg: rgba(69,196,99,.20); --axis: rgba(228,230,235,.22); }
   }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -16,22 +24,24 @@
        stays visible when animations are disabled (otherwise it would never appear) */
     .head svg .ck { stroke-dashoffset: 0 !important; }
   }
-  body { width: 320px; box-sizing: border-box; margin: 0; padding: 12px 14px; background: var(--bg); color: var(--ink);
+  body { width: 320px; max-height: 600px; box-sizing: border-box; margin: 0; padding: 10px 14px 10px;
+         background: var(--bg); color: var(--ink); display: flex; flex-direction: column;
          font: 13px/1.45 "Optimistic", "optimisticAI", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
-  .head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-  .head svg { width: 24px; height: 24px; border-radius: 7px; display: block; }
+  body > * { flex: 0 0 auto; }
+  .head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .head svg { width: 24px; height: 24px; border-radius: 7px; display: block; flex: none;
+              box-shadow: 0 6px 14px -7px rgba(0,64,220,.55); }
   .head svg .ck { stroke-dasharray: 420; stroke-dashoffset: 420; animation: draw .55s ease forwards .05s; }
   @keyframes draw { to { stroke-dashoffset: 0; } }
-  h1 { font-size: 13.5px; font-weight: 500; margin: 0; letter-spacing: -0.01em; color: var(--ink); }
-  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--on); margin-left: auto;
-         box-shadow: 0 0 0 0 rgba(49,162,76,.45); animation: pulse 2.4s ease-out infinite; }
-  .dot.off { background: #9aa0a6; animation: none; box-shadow: none; }
-  @keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(49,162,76,.45); }
-    70% { box-shadow: 0 0 0 7px rgba(49,162,76,0); }
-    100% { box-shadow: 0 0 0 0 rgba(49,162,76,0); }
-  }
-  .row { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
+  h1 { font-size: 13.5px; font-weight: 500; margin: 0; letter-spacing: -0.01em; color: var(--ink); min-width: 0; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; font-size: 11px; font-weight: 500;
+          padding: 3px 9px; border-radius: 999px; background: var(--fill); color: var(--muted);
+          max-width: 158px; flex: 0 1 auto; min-width: 0; }
+  .chip .cd { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; opacity: .9; }
+  #musestatText { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chip.on { background: rgba(0,90,191,.10); color: var(--blue); }
+  @media (prefers-color-scheme: dark) { .chip.on { background: rgba(10,92,224,.25); color: #8ab8ff; } }
+  .row { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
   [hidden] { display: none !important; }
   label.sw { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
   input[type=checkbox] { position: absolute; opacity: 0; width: 1px; height: 1px; }
@@ -41,20 +51,94 @@
   .knob { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff;
           transition: transform .18s ease; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
   input:checked + .track .knob { transform: translateX(16px); }
-  input:focus-visible + .track { outline: 2px solid var(--blue); outline-offset: 2px; }
-  :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
-  input[type=number] { width: 80px; background: var(--fill); color: var(--ink); border: 1px solid var(--line); border-radius: 999px;
-                       padding: 5px 12px; font: inherit; font-weight: 500; text-align: center; }
+  input:focus-visible + .track { outline: 2px solid var(--focus); outline-offset: 2px; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  /* numeric pills: value + unit inside one pill; identical pills in every row keep the
+     three values on a single axis (unit glyphs are the same latin abbreviations as before) */
+  .numwrap { position: relative; flex: 0 0 86px; display: flex; align-items: center; box-sizing: border-box;
+             background: var(--fill); border: 1px solid var(--stroke); border-radius: 999px; padding: 2px 8px 2px 4px; }
+  .numwrap input { flex: 1 1 auto; width: 100%; min-width: 0; background: transparent; border: 0; padding: 2px 0;
+                   font: inherit; font-weight: 500; color: var(--ink); text-align: right; font-variant-numeric: tabular-nums; }
+  .numwrap input:focus-visible { outline: none; }
+  .numwrap:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .numwrap .unit { flex: 0 0 18px; font-size: 11px; color: var(--muted); }
+  .field > label { flex: 1 1 auto; min-width: 0; }
   .muted { color: var(--muted); }
-  b.count { color: var(--ink); font-size: 15px; font-weight: 500; display: inline-block; transition: transform .18s ease; }
+  .note { font-size: 11px; }
+  b.count { color: var(--ink); font-size: 15px; font-weight: 600; display: inline-block; transition: transform .18s ease;
+            font-variant-numeric: tabular-nums; }
   b.count.pop { transform: scale(1.25); }
-  .log { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; max-height: 220px; overflow: auto; }
-  .item { padding: 6px 0; border-bottom: 1px solid var(--line); animation: slidein .22s ease; }
+  .stats { display: flex; align-items: baseline; gap: 14px; margin: 4px 0; }
+  .stat { display: inline-flex; align-items: baseline; gap: 6px; }
+  .stat + .stat { border-left: 1px solid var(--divider); padding-left: 14px; margin-left: auto; }
+  .mini { margin-top: 4px; }
+  .mcap { font-size: 11px; margin-bottom: 0; }
+  .mini svg { display: block; }
+  #mini text { font-size: 11px; fill: var(--muted); }
+  #mini text.today { fill: var(--blue); font-weight: 600; }
+  #mini line.baseline { stroke: var(--axis); stroke-width: 1; }
+  #mini rect { transition: opacity .15s ease; }
+  #mini rect:hover { opacity: 1; }
+  .btn { background: var(--blue); color: #fff; border: 0; border-radius: 999px; padding: 5px 16px;
+         cursor: pointer; font: inherit; font-weight: 500; transition: filter .15s ease; }
+  .btn:hover { filter: brightness(.94); }
+  .btn.tonal { background: rgba(0,90,191,.10); color: var(--blue); }
+  .btn.tonal:hover { background: rgba(0,90,191,.16); filter: none; }
+  @media (prefers-color-scheme: dark) {
+    .btn.tonal { background: rgba(10,92,224,.25); color: #8ab8ff; }
+    .btn.tonal:hover { background: rgba(10,92,224,.34); }
+  }
+  /* disabled 'Send now': explicit inert treatment — readable, never a washed-out primary;
+     the lock glyph marks it as unavailable rather than broken */
+  .btn:disabled, .btn:disabled:hover { display: inline-flex; align-items: center; background: var(--fill); color: var(--muted);
+                                       filter: none; cursor: default; box-shadow: inset 0 0 0 1px var(--stroke); }
+  .btn:disabled::before { content: ""; width: 12px; height: 12px; margin-right: 6px; flex: none; background: currentColor;
+                          -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='5' y='10.5' width='14' height='9.5' rx='2.5'/%3E%3Cpath d='M8.2 10.5V7.6a3.8 3.8 0 0 1 7.6 0v2.9' fill='none' stroke='black' stroke-width='2.6'/%3E%3C/svg%3E") center/contain no-repeat;
+                          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='5' y='10.5' width='14' height='9.5' rx='2.5'/%3E%3Cpath d='M8.2 10.5V7.6a3.8 3.8 0 0 1 7.6 0v2.9' fill='none' stroke='black' stroke-width='2.6'/%3E%3C/svg%3E") center/contain no-repeat; }
+  /* v1.6.0 — Auto follow-up section */
+  .sect { margin-top: 7px; border-top: 1px solid var(--divider); padding-top: 6px; }
+  .secthead { display: flex; align-items: center; gap: 8px; font-weight: 500; }
+  .sect .sw { margin-top: 5px; }
+  .fstat { display: flex; align-items: center; gap: 5px; margin-left: auto; font-size: 11px; font-weight: 500;
+           padding: 3px 9px; border-radius: 999px; background: var(--fill); color: var(--muted); white-space: nowrap; }
+  .fstat .fd { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; opacity: .9; }
+  .fstat.on { background: rgba(0,90,191,.10); color: var(--blue); }
+  .fstat.sent { background: var(--ok-bg); color: var(--ok); }
+  @media (prefers-color-scheme: dark) { .fstat.on { background: rgba(10,92,224,.25); color: #8ab8ff; } }
+  .fhint { font-size: 11.5px; margin: 3px 0 0; }
+  .fpanel { margin-top: 4px; padding: 6px 0; background: var(--panel); border-radius: 14px; }
+  /* off = collapsed settings + the disabled Send-now pill (explicit treatment + tooltip);
+     the tinted panel shows only while the settings are open */
+  .fpanel.gated { background: transparent; }
+  .fpanel.gated > .fblock:not(.sendrow), .fpanel.gated > .row { display: none; }
+  .fblock { margin: 3px 0; }
+  .fblock:first-child { margin-top: 0; }
+  .fblock:last-child { margin-bottom: 0; }
+  .flabel { display: block; margin-bottom: 2px; }
+  .sendrow { display: flex; justify-content: flex-end; }
+  select.sel { width: 100%; box-sizing: border-box; background: var(--fill); color: var(--ink); border: 1px solid var(--stroke);
+               border-radius: 12px; padding: 4px 30px 4px 10px; font: inherit; appearance: none; -webkit-appearance: none;
+               background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%234a4e54' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+               background-repeat: no-repeat; background-position: right 10px center; }
+  textarea.tbox { width: 100%; box-sizing: border-box; background: var(--fill); color: var(--ink); border: 1px solid var(--stroke);
+                  border-radius: 12px; padding: 6px 10px; font: inherit; resize: vertical; min-height: 34px; }
+  @media (prefers-color-scheme: dark) {
+    select.sel { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23b0b3b8' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+  }
+  .log { margin-top: 6px; border-top: 1px solid var(--divider); padding-top: 4px; min-height: 36px; box-sizing: border-box;
+         overflow: auto; overscroll-behavior: contain; flex: 0 1 auto; }
+  /* log row: timestamp column on the left; kind chip + message column on the right, so
+     clamped context lines hang under the message column instead of the page margin */
+  .item { position: relative; padding: 4px 0 4px 52px; border-bottom: 1px solid var(--divider); animation: slidein .22s ease; }
   .item:last-child { border-bottom: 0; }
   @keyframes slidein { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
-  .item .t { color: var(--muted); font-variant-numeric: tabular-nums; margin-right: 6px; }
-  .item .c { color: var(--muted); font-size: 12px; margin-top: 2px; }
-  .k { font-size: 10px; font-weight: 500; padding: 1px 7px; border-radius: 999px; margin-right: 4px; vertical-align: 1px; }
+  .item .top { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+  .item .t { position: absolute; left: 0; top: 4px; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .item .k { font-size: 10.5px; font-weight: 500; padding: 1px 7px; border-radius: 999px; flex: none; }
+  .item b { color: var(--ink); font-weight: 500; flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis;
+            white-space: nowrap; }
+  .item .c { color: var(--muted); font-size: 13px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2;
+             -webkit-box-orient: vertical; overflow: hidden; }
   .k-allow { background: rgba(0,90,191,.10); color: var(--blue); }
   .k-expand { background: rgba(243,217,180,.55); color: #7a5a20; }
   .k-open-panel { background: var(--fill); color: var(--muted); }
@@ -62,36 +146,13 @@
     .k-allow { background: rgba(10,92,224,.25); color: #8ab8ff; }
     .k-expand { background: rgba(243,217,180,.18); color: #e8c98a; }
   }
-  .chip { margin-left: auto; font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 999px;
-          background: var(--fill); color: var(--muted); white-space: nowrap; }
-  .chip.on { background: rgba(0,90,191,.10); color: var(--blue); }
-  @media (prefers-color-scheme: dark) { .chip.on { background: rgba(10,92,224,.25); color: #8ab8ff; } }
-  .mini { margin-top: 8px; }
-  .mcap { font-size: 11px; margin-bottom: 2px; }
-  .mini svg { display: block; }
-  .mini rect { transition: opacity .15s ease; }
-  .mini rect:hover { opacity: .8; }
-  .btn { background: var(--blue); color: #fff; border: 0; border-radius: 999px; padding: 7px 16px;
-         cursor: pointer; font: inherit; font-weight: 500; }
-  .btn:hover { filter: brightness(.94); }
-  .btn:disabled { opacity: .45; cursor: default; filter: none; }
-  /* v1.6.0 — Auto follow-up section */
-  .sect { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
-  .secthead { display: flex; align-items: center; gap: 8px; font-weight: 500; }
-  .fstat { margin-left: auto; font-size: 11px; font-weight: 500; padding: 2px 9px; border-radius: 999px;
-           background: var(--fill); color: var(--muted); white-space: nowrap; }
-  .fstat.on { background: rgba(0,90,191,.10); color: var(--blue); }
-  @media (prefers-color-scheme: dark) { .fstat.on { background: rgba(10,92,224,.25); color: #8ab8ff; } }
-  select.sel { width: 100%; box-sizing: border-box; background: var(--fill); color: var(--ink); border: 1px solid var(--line);
-               border-radius: 12px; padding: 6px 10px; font: inherit; }
-  textarea.tbox { width: 100%; box-sizing: border-box; background: var(--fill); color: var(--ink); border: 1px solid var(--line);
-                  border-radius: 12px; padding: 6px 10px; font: inherit; resize: vertical; min-height: 38px; }
-  .note { font-size: 11px; margin-left: auto; }
-  .empty { color: var(--muted); padding: 6px 0; }
-  ::-webkit-scrollbar { width: 8px; height: 8px; }
-  ::-webkit-scrollbar-thumb { background: rgba(17,17,18,.18); border-radius: 999px; }
+  .empty { color: var(--muted); padding: 4px 0; }
+  .foot { margin: 5px 0 0; border-top: 1px solid var(--divider); padding-top: 5px; justify-content: space-between; }
+  .foot .note { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-thumb { background: rgba(17,17,18,.26); border-radius: 999px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  @media (prefers-color-scheme: dark) { ::-webkit-scrollbar-thumb { background: rgba(228,230,235,.22); } }
+  @media (prefers-color-scheme: dark) { ::-webkit-scrollbar-thumb { background: rgba(228,230,235,.30); } }
 </style>
 </head>
 <body>
@@ -105,29 +166,35 @@
             stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
     <h1 data-i18n="extName">Muse Auto-Allow</h1>
-    <span class="dot" id="dot" aria-hidden="true"></span>
+    <span class="chip" id="musestat"><i class="cd" aria-hidden="true"></i><span id="musestatText">&hellip;</span></span>
   </div>
   <label class="sw"><input type="checkbox" id="enabled"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="toggleLabel">Auto-click Allow</span></label>
-  <div class="row"><label class="muted" for="delay" data-i18n="delayLabel">Delay between clicks:</label>
-    <input type="number" id="delay" min="0" max="10000" step="100"> <span class="muted">ms</span></div>
-  <div class="row"><span class="muted" data-i18n="clickedLabel">Clicked:</span><b class="count" id="count">0</b></div>
-  <div class="row"><span class="muted" data-i18n="todayLabel">Today:</span><b class="count" id="today" style="font-size:13px">0</b><span class="chip" id="musestat">&hellip;</span></div>
+  <div class="row field"><label class="muted" for="delay" data-i18n="delayLabel" data-nc>Delay between clicks:</label>
+    <span class="numwrap"><input type="number" id="delay" min="0" max="10000" step="100"><span class="unit muted">ms</span></span></div>
+  <div class="stats">
+    <span class="stat"><span class="muted" data-i18n="clickedLabel" data-nc>Clicked:</span><b class="count" id="count">0</b></span>
+    <span class="stat"><span class="muted" data-i18n="todayLabel" data-nc>Today</span><b class="count" id="today">0</b></span>
+  </div>
   <div class="mini"><div class="mcap muted" data-i18n="last7">Last 7 days</div><svg id="mini" width="292" height="46" aria-hidden="true"></svg></div>
-  <div class="row"><button class="btn" id="openstats" data-i18n="statsOpen">Statistics</button><span class="muted note" data-i18n="onlyMuse">Works only on muse.ai</span></div>
   <!-- v1.6.0 — Auto follow-up: keep Muse working long-run when it goes idle -->
   <div class="sect" id="followupSect">
-    <div class="secthead"><span data-i18n="followupTitle">Auto follow-up</span><span class="fstat" id="fstat" aria-live="polite">&mdash;</span></div>
+    <div class="secthead"><span data-i18n="followupTitle">Auto follow-up</span>
+      <span class="fstat" id="fstat" hidden><i class="fd" aria-hidden="true"></i><span id="fstatText" aria-live="polite"></span></span></div>
     <label class="sw"><input type="checkbox" id="followupEnabled"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="followupToggle">Continue when Muse is idle</span></label>
-    <div class="row"><label class="muted" for="fpreset" data-i18n="followupPromptLabel">Follow-up prompt:</label></div>
-    <div class="row"><select id="fpreset" class="sel"></select></div>
-    <div class="row" id="fpromptRow" hidden><textarea id="fprompt" class="tbox" rows="2" placeholder="Type your follow-up prompt…" data-i18n-ph="followupCustomPlaceholder"></textarea></div>
-    <div class="row"><label class="muted" for="fidle" data-i18n="followupIdleLabel">Wait before sending (seconds):</label>
-      <input type="number" id="fidle" min="1" max="3600" step="1"></div>
-    <div class="row"><label class="muted" for="fcool" data-i18n="followupCooldownLabel">Cooldown (minutes):</label>
-      <input type="number" id="fcool" min="1" max="1440" step="1"></div>
-    <div class="row"><button class="btn" id="fsendnow" data-i18n="followupSendNow">Send now</button></div>
+    <div class="fhint muted" id="fhint" hidden>Enable Auto follow-up to change these settings</div>
+    <div class="fpanel" id="fpanel">
+      <div class="fblock"><label class="flabel muted" for="fpreset" data-i18n="followupPromptLabel" data-nc>Follow-up prompt:</label>
+        <select id="fpreset" class="sel"></select></div>
+      <div class="fblock" id="fpromptRow" hidden><textarea id="fprompt" class="tbox" rows="2" placeholder="Type your follow-up prompt…" data-i18n-ph="followupCustomPlaceholder"></textarea></div>
+      <div class="row field"><label class="muted" for="fidle" data-i18n="followupIdleLabel" data-nc>Wait before sending (seconds):</label>
+        <span class="numwrap"><input type="number" id="fidle" min="1" max="3600" step="1"><span class="unit muted">s</span></span></div>
+      <div class="row field"><label class="muted" for="fcool" data-i18n="followupCooldownLabel" data-nc>Cooldown (minutes):</label>
+        <span class="numwrap"><input type="number" id="fcool" min="1" max="1440" step="1"><span class="unit muted">min</span></span></div>
+      <div class="fblock sendrow" id="fsendrow"><button class="btn tonal" id="fsendnow" data-i18n="followupSendNow">Send now</button></div>
+    </div>
   </div>
   <div class="log" id="log" aria-live="polite"></div>
+  <div class="row foot"><span class="note muted" data-i18n="onlyMuse">Works only on muse.ai</span><button class="btn" id="openstats" data-i18n="statsOpen">Statistics</button></div>
   <script src="popup.js"></script>
 </body>
 </html>
