@@ -281,6 +281,16 @@ try {
     });
   } catch (e) { statsPage.error = e.message; }
 
+  // ---- Web Locks availability (V3-2 caveat closure) ----
+  // The content script serializes its storage RMW with navigator.locks; probe the
+  // fixture document (main-world proxy for the content script's isolated world — same
+  // document, origin and WebIDL bindings).
+  let locksProbe = null;
+  try {
+    const rl = await send('Runtime.evaluate', { expression: "typeof navigator.locks !== 'undefined' && typeof navigator.locks.request === 'function'", returnByValue: true }, sessionId);
+    locksProbe = rl?.result?.value === true;
+  } catch { /* leave null */ }
+
   // ---- muse.ai smoke (logged out; WARN-only if the network is blocked) ----
   let museAttr = null;
   try {
@@ -300,7 +310,8 @@ try {
   }
 
   const pass = missing.length === 0 && extra.length === 0 && dupes.length === 0 && denyCount === 0 && orderOk
-    && forbiddenHit.length === 0 && n7count === 1 && n11count === 1 && !surface2Hit && statsCheck.ok && statsPage.ok;
+    && forbiddenHit.length === 0 && n7count === 1 && n11count === 1 && !surface2Hit && statsCheck.ok && statsPage.ok
+    && locksProbe === true;
   Object.assign(results, {
     ok: pass,
     extId,
@@ -320,6 +331,7 @@ try {
     retryFired,
     statsCheck,
     statsPage,
+    locksProbe,
     timeline: timeline.slice(-45),
     timeline2: timeline2.slice(-30),
     raw: clicks,

@@ -112,6 +112,8 @@ Findings V3-2..V3-6 were written against the pre-fix working tree; fixes were ap
 
 Re-verification after all fixes: full e2e exit 0 (11/11 clicks, 0 forbidden, dedup 1/1, statsCheck ok, statsPage ok, museAttr ok); zip 18 entries, 18/18 byte-matched; mutation proofs on this delta: host-guard, topic, byDay, i18n — each RED on disable, GREEN on restore.
 
+Residual (accepted, documented): Web Locks are origin-scoped, so two DIFFERENT muse.ai subdomains clicking in the same instant can still race (same-origin tabs are serialized). `navigator.locks` availability in the page / content-script context is now asserted by the e2e (`locksProbe === true`), so the lock path is proven exercised — not a silent fallback.
+
 ## Post-review addendum (2026-10-09 13:18 +07) — tree moved after this report's binding
 
 After this review bound to `45b6379`, the tree moved; this addendum records what changed and what was re-checked. The findings above remain the record of the reviewed revision.
