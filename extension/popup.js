@@ -57,7 +57,8 @@ async function renderLog(log) {
   $('log').innerHTML = items.length
     ? items.map(({ e, plain }) => {
         const k = e.kind || 'allow';
-        const ctxS = plain.length > 170 ? plain.slice(0, 170) + '…' : plain;
+        let ctxS = plain;
+        if (ctxS.length > 170) { ctxS = ctxS.slice(0, 170); const sp = ctxS.lastIndexOf(' '); if (sp > 130) ctxS = ctxS.slice(0, sp); ctxS += '…'; }
         const lbl = String(e.label || '');
         const lblS = lbl.length > 40 ? lbl.slice(0, 40) + '…' : lbl;
         return '<div class="item"><span class="t" title="' + esc(localFull(e.at)) + '">' + esc(localTime(e.at)) + '</span>' +

@@ -4,7 +4,8 @@
  * Launches installed Chrome on a SCRATCH profile (never the user's), loads the real
  * extension unpacked, seeds realistic stats data, and captures:
  *   store/screenshot2-stats.png  (1280x800, store-size)
- *   store/screenshot3-popup.png  (340x640 @2x)
+ *   store/screenshot3-popup.png  (1280x800 stage: the real popup centered on a light stage)
+ *   + a dark-mode QA pair in the OS temp dir (maa-dark/)
  */
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -56,11 +57,6 @@ const isoMinus = (mins) => new Date(Date.now() - mins * 60000).toISOString();
 const log = [
   { at: isoMinus(2), kind: 'allow', label: 'Allow', context: 'Allow Muse to perform this action on your GitHub account? Action Pull request read on GitHub Repository owner Example Org Pull request 42 Repository demo-project Method get' },
   { at: isoMinus(6), kind: 'allow', label: 'Allow', context: 'Allow Muse to perform this action on your GitHub account? Action Create a GitHub branch on GitHub Repository owner Example Org Repository sample-app Branch feature/new-docs Method post' },
-  { at: isoMinus(11), kind: 'allow', label: 'Allow', context: 'Allow Muse to perform this action on your GitHub account? Action Push files to GitHub on GitHub Repository owner Example Org Repository web-starter Method post' },
-  { at: isoMinus(15), kind: 'allow', label: 'Allow', context: 'Allow Muse to perform this action on your GitHub account? Action Create a GitHub pull request on GitHub Repository owner Example Org Repository sample-app Title docs: refresh quick-start guide Method post' },
-  { at: isoMinus(22), kind: 'allow', label: 'Allow', context: 'Allow Muse to perform this action on your GitHub account? Action Issue read on GitHub Issue 12 Repository web-starter Method get' },
-  { at: isoMinus(31), kind: 'allow', label: 'Allow', context: 'Allow Muse to perform this action on your Azure account? Access files.example.com' },
-  { at: isoMinus(40), kind: 'allow', label: 'Allow', context: 'Allow Muse to perform this action on your GitHub account? Action Pull request read on GitHub Repository owner Example Org Pull request 42 Repository demo-project Method get' },
 ];
 
 const chromePath = process.env.MAA_CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
@@ -185,16 +181,37 @@ try {
   await send('Runtime.evaluate', { expression: seedExpr, awaitPromise: true, returnByValue: true }, s2);
   await send('Page.reload', {}, s2);
   await sleep(1200);
-  // crop to content: expand the log viewport (with slack so no scrollbar remains),
-  // then capture exactly the popup's height
-  await send('Runtime.evaluate', { expression: '(() => { const lg = document.getElementById("log"); if (lg) lg.style.maxHeight = (lg.scrollHeight + 8) + "px"; return "ok"; })()', returnByValue: true }, s2);
-  await sleep(250);
-  const hR = await send('Runtime.evaluate', { expression: 'Math.max(document.body.scrollHeight, 520)', returnByValue: true }, s2);
-  const contentH = Math.min(1200, Number(hR?.result?.value) || 660);
-  await send('Emulation.setDeviceMetricsOverride', { width: 340, height: contentH, deviceScaleFactor: 2, mobile: false }, s2);
-  await sleep(300);
-  const shot2 = await send('Page.captureScreenshot', { format: 'png' }, s2);
-  fs.writeFileSync(path.join(OUT, 'screenshot3-popup.png'), Buffer.from(shot2.data, 'base64'));
+  // capture the popup at its natural height (2x)…
+  const bh = await send('Runtime.evaluate', { expression: 'document.body.scrollHeight', returnByValue: true }, s2);
+  const bodyH = Math.min(760, Number(bh?.result?.value) || 620);
+  const shot2 = await send('Page.captureScreenshot', { format: 'png', clip: { x: 0, y: 0, width: 340, height: bodyH, scale: 2 } }, s2);
+  // …then compose a 1280x800 store shot: the real popup centered on the light stage
+  const stageDir = path.join(os.tmpdir(), 'maa-stage');
+  fs.mkdirSync(stageDir, { recursive: true });
+  const stagePath = path.join(stageDir, 'popup-stage.html');
+  const stageHtml = `<!doctype html><html><head><meta charset="utf-8"><style>
+    * { box-sizing: border-box; } html, body { margin: 0; width: 1280px; height: 800px; overflow: hidden; }
+    body { background: #fcfcfc; color: #111112; font-family: "Optimistic","optimisticAI",-apple-system,"Segoe UI",system-ui,sans-serif; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(80px); }
+    .b1 { width: 480px; height: 480px; background: #f3d9b4; left: -150px; top: -170px; opacity: .5; }
+    .b2 { width: 460px; height: 460px; background: #cfe2ff; right: -130px; bottom: -150px; opacity: .8; }
+    .wrap { position: relative; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
+    .cap { font-size: 15px; color: #4a4e54; } .cap b { color: #005abf; font-weight: 500; }
+    img { display: block; width: 430px; border-radius: 16px; box-shadow: 0 18px 60px rgba(17,17,18,.16), 0 0 0 1px rgba(17,17,18,.08); }
+  </style></head><body>
+    <div class="blob b1"></div><div class="blob b2"></div>
+    <div class="wrap">
+      <div class="cap"><b>Live popup</b> &mdash; real click log, counter, on/off, delay</div>
+      <img src="data:image/png;base64,${shot2.data}">
+    </div>
+  </body></html>`;
+  fs.writeFileSync(stagePath, stageHtml);
+  const t3 = await send('Target.createTarget', { url: 'file:///' + stagePath.replace(/\\/g, '/') });
+  const { sessionId: s3 } = await send('Target.attachToTarget', { targetId: t3.targetId, flatten: true });
+  await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false }, s3);
+  await sleep(900);
+  const stageShot = await send('Page.captureScreenshot', { format: 'png' }, s3);
+  fs.writeFileSync(path.join(OUT, 'screenshot3-popup.png'), Buffer.from(stageShot.data, 'base64'));
   out.popup = path.join(OUT, 'screenshot3-popup.png');
 
   // ---- dark-mode QA captures (scratch only, never store assets) ----

@@ -1,4 +1,4 @@
-// Muse Auto-Allow — content script (v1.2.0, security-hardened).
+// Muse Auto-Allow — content script (v1.5.0, security-hardened — redteam v1–v3).
 // Automatically clicks "Allow" on Muse (muse.ai) approval requests.
 //
 // Click paths, in priority order:

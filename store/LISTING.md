@@ -13,9 +13,9 @@ provided in all six supported languages (en, vi, zh_CN, ja, ko, es). Values mark
 | Item name | **Muse Auto-Allow** |
 | Category | **Productivity** |
 | Default language | English (en) |
-| Version | 1.2.0 |
+| Version | 1.5.0 |
 | Manifest version | Manifest V3 |
-| Extension package | `dist/muse-auto-allow-v1.2.0.zip` |
+| Extension package | `dist/muse-auto-allow-v1.5.0.zip` |
 | License | MIT © 2026 BlueSkyz Labs |
 | Homepage / support URL | `TODO: fill before submit` |
 | Privacy policy URL | `TODO: fill before submit` (host `store/PRIVACY.md` and paste the public link) |
@@ -317,7 +317,7 @@ The extension needs none of them.
 Compliance notes for this declaration:
 - Manifest V3, no `content_security_policy` relaxation.
 - No analytics SDK, no CDN, no update endpoint.
-- `dist/muse-auto-allow-v1.2.0.zip` contains only static files with `manifest.json` at the
+- `dist/muse-auto-allow-v1.5.0.zip` contains only static files with `manifest.json` at the
   zip root.
 
 ---
@@ -376,12 +376,17 @@ The dashboard requires these images. Provide them at the exact sizes below.
 | Asset | Requirement | Source in this repo | Status |
 |---|---|---|---|
 | Extension icon | 128×128 px PNG | `extension/icons/icon128.png` | ✅ present |
-| Screenshot | 1280×800 px PNG (up to 5) | `store/screenshot1.png` | ✅ present (verified 1280×800) |
+| Screenshots | 1280×800 px PNG (up to 5) | `store/screenshot1.png` (live runtime capture), `store/screenshot2-stats.png` (Statistics), `store/screenshot3-popup.png` (popup on stage), `store/screenshot4-overview.png` (designed overview) | ✅ 4 present, all verified 1280×800 |
 | Small promo tile | 440×280 px PNG | `store/promo440x280.png` | ✅ present (verified 440×280) |
-| Marquee promo tile | 1400×560 px (optional) | — | optional, not required |
+| Marquee promo tile | 1400×560 px (optional) | `store/marquee1400x560.png` | ✅ present (verified 1400×560) |
+
+All showcase images use strictly fictional demo data (Example Org, demo-project,
+sample-app, web-starter, notes-app, files.example.com) — never real projects or personal
+data. Full inventory + regenerate commands: `store/SHOWCASE.md`.
 
 Upload steps: **Store listing → Graphic assets** → upload the icon (also validated by
-Chrome from the package), the 1280×800 screenshot, and the 440×280 promo tile.
+Chrome from the package), the four 1280×800 screenshots, the 440×280 promo tile and the
+1400×560 marquee.
 
 Screenshot guidance (verify before submit that the uploaded images match these sizes): show the real Muse approval card with the extension's popup open
 (click counter + log visible). Do **not** use a mockup that implies the extension does
