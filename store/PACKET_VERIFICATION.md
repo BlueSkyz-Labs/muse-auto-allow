@@ -7,6 +7,8 @@
 **Method:** static inspection; Python 3.14.7 zip / sha256 / PNG-header checks; sandbox re-run of `node scripts/build.mjs` (node v26.7.0) on a scratch copy outside the repo; image inspection of `store/screenshot1.png`.
 **Not executed (per task constraints):** Chrome, `test/e2e.mjs`. No existing repo file was modified; this report is the only file created.
 
+> **v1.4.0 addendum:** the packet now ships as **v1.4.0** (`dist/muse-auto-allow-v1.4.0.zip`) — the addendum at the end of this document records what changed and the re-verification status per item. Everything above this line remains the v1.2.0 record.
+
 ## Verdict
 
 **43 / 45 checks PASS · 2 FAIL · 0 UNCERTAIN.** The packet's substantive claims — manifest metadata, permissions, locale set, zip contents, privacy behavior, runbook paths/commands — are accurate. The two FAILs: (a) `store/screenshot1.png` is a rendered marketing composition, not a real capture, while the packet's own guidance requires a real screenshot (M1, medium); (b) the popup shows only the 12 most recent log entries while the listing says the log of the last 50 clicks is viewable (M2, low). See "Mismatches found" for all findings.
@@ -120,3 +122,56 @@ Entries carry an ISO `at` timestamp (`content.js:203`); PRIVACY §2 describes "k
 - PNG sizes: header parse (bytes 16–24) for all store assets and icons.
 - Network scan: substring scan of every file under `extension/` for `fetch(`, `XMLHttpRequest`, `WebSocket`, `sendBeacon`, `EventSource`, `importScripts`, `eval(`, `new Function`, `http://`, `https://`, `chrome.storage`, `chrome.runtime.connect`.
 - Environment: Windows host, git-bash; Python 3.14.7; node v26.7.0; git `3af9ba4979bbc7859f93a44eff7f14f61b0a31b9`.
+
+---
+
+## v1.4.0 Addendum (2026-10-09)
+
+**Verifier:** same independent pass (maker ≠ judge). File-level re-verification only — **no Chrome / e2e run was performed in this pass**; the redesign e2e result is cited from `CHANGELOG.md` line 9, not re-executed.
+**Revision:** v1.4.0 revision = commit `8c76d2a` (2026-10-09); the zip byte-matches this revision for all 18 entries (normalized line endings). Later in-flight working-tree edits (e.g. uncommitted post-release work) are outside this record.
+**Method:** full read of every changed file; `python scripts/verify-zip.py` executed read-only (byte-compare, exit 0); Python zip listing + sha256; PNG-header dimension checks on all store images + icons; JSON locale-parity parse; grep scans (remote code / URLs / manifest keys).
+
+### What changed since this report's v1.2.0 pass
+
+- **v1.3.0** — Statistics page (`extension/stats.html` + `stats.js`), toolbar badge (`extension/background.js` lines 34–46), muse.ai-only status chip, Web-Locks-serialized stats recording (`extension/content.js` lines 225–294), i18n 26→30 keys; zip-guard HIGH fix (`scripts/build.mjs` lines 32–54; new `scripts/verify-zip.py`). See `docs/REDTEAM_V3.md` lines 104–113.
+- **v1.4.0** — UI/UX redesign in Muse's design language + dark theme (`CHANGELOG.md` line 4); Brand Kit v2 (`CHANGELOG.md` line 5, `docs/BRANDING.md`); strictly fictional demo data in store assets (`CHANGELOG.md` line 6); regenerated screenshots (`CHANGELOG.md` line 7); i18n 31 keys × 6 locales (`CHANGELOG.md` line 8); e2e re-run recorded exit 0 (`CHANGELOG.md` line 9 — NOT_RE_VERIFIED here).
+- Manifest 1.3.0 → **1.4.0** (`extension/manifest.json` line 4); package **`dist/muse-auto-allow-v1.4.0.zip`** — **18 entries** (was 16).
+
+### Previously-verified items — re-verification status
+
+| Old item | v1.2.0 claim | v1.4.0 re-check (file-level) | Status |
+|---|---|---|---|
+| 1.1 | name "Muse Auto-Allow" | `extension/_locales/en/messages.json` lines 2–4 unchanged | PASS |
+| 1.2 | version 1.2.0 | `extension/manifest.json` line 4 = `"1.4.0"` | PASS (superseded) |
+| 1.7 | 6 locales, same key set | all 6 locale files = identical 31-key sets (Python parse) | PASS |
+| 1.10 | short description 107 chars | recounted: 107 (limit 132) | PASS |
+| 1.15 / M2 | popup rendered only 12 of the 50 log entries | `extension/popup.js` line 24 now `log.slice(0, 50)`; scroll area `extension/popup.html` line 42 | PASS (M2 fixed) |
+| 1.20 | asset dimensions | icon128 128×128; screenshot1 1280×800; promo 440×280; **new:** screenshot2-stats 1280×800, screenshot4-overview 1280×800, screenshot3-popup 680×1964 | PASS except screenshot3-popup → Finding F1 |
+| 1.21 / M1 | screenshot1 was a mockup | `scripts/store-shot.mjs` lines 3–11, 24: real runtime capture pipeline | PASS (structural; visual content NOT_RE_VERIFIED in this pass) |
+| 2.1–2.3 | 16 entries, 16/16 byte-equal, manifest at root | **18 entries, 18/18 byte-equal** — `scripts/verify-zip.py` output: `muse-auto-allow-v1.4.0.zip: 18 matched, 0 mismatched, 0 disk-only, 0 zip-only` (exit 0); manifest at root | PASS |
+| 2.5 | rebuild reproducibility | full-tree guard present (`scripts/build.mjs` lines 32–54, exit 3/4); no sandbox rebuild performed this pass (byte-compare covers content identity) | NOT_RE_VERIFIED |
+| 2.6 | zip structural hygiene | 18 entries, `/`-separated, no directory entries (Python listing) | PASS |
+| 3.1–3.4 | PRIVACY vs code | `store/PRIVACY.md` lines 23, 42–46, 78–79, 92 now enumerate settings + click counter + log (timestamp/kind/label/context) + statistics (caps 400 days / 24 months / 100 topics), matching `extension/content.js` lines 262–277 | PASS (M3/M4 fixed) |
+| 4.1–4.6 | runbook paths/commands | runbook updated to v1.4.0 + mandatory `verify-zip.py` step in this pass | PASS (see runbook) |
+| M5 | icon512 unreferenced in manifest | unchanged (still shipped, still unreferenced; allowed) | PASS (informational) |
+| M6 | build open item unchecked | runbook open-items updated | PASS |
+
+> `scripts/verify-zip.py` is a live check against the current working tree: it reported 18/18 matched (exit 0) at the 2026-10-09 check on revision `8c76d2a`; an uncommitted edit landing after a build shows as `MISMATCH <file>` until the zip is rebuilt — rebuild + re-verify on the final release revision before upload.
+
+### New items (introduced after the v1.2.0 pass)
+
+| # | Item | Status | Evidence |
+|---|---|---|---|
+| N1 | `scripts/verify-zip.py` byte-compare step | PASS | executed 2026-10-09: 18 matched / 0 mismatched / 0 disk-only / 0 zip-only, exit 0; script derives the zip name from `manifest.json` (lines 7–8) and exits 1 on any mismatch/missing/extra (lines 25–29) |
+| N2 | Full-tree build guard | PASS (read) | `scripts/build.mjs` lines 32–43 (disk ↔ zip set equality), lines 47–54 (exit 2/3/4); residual scope notes at `docs/REDTEAM_V3.md` line 35 (V3-8) fixed per line 111 |
+| N3 | Neutral fictional demo data in store assets | PASS | `docs/BRANDING.md` lines 75–77; `scripts/stats-shot.mjs` lines 44–51, 54–64; `scripts/store-shot.mjs` line 219 |
+| N4 | v1.4.0 store image set (4 screenshots + promo) | PASS with F1 | PNG headers 2026-10-09; `CHANGELOG.md` line 7 |
+| N5 | i18n 31 keys × 6 locales | PASS | Python parity parse; `CHANGELOG.md` line 8; new key `museTabsFoundOne` at `extension/_locales/en/messages.json` lines 92–94 |
+
+### Findings in this pass (outside this report's write scope)
+
+- **F1 — `store/screenshot3-popup.png` is 680×1964** — not a valid CWS screenshot size (1280×800 / 640×400; developer.chrome.com, checked 2026-10-09) and not the packet's stated 1280×800 (`store/LISTING.md` line 379). Re-render or drop it from the dashboard set; the other three screenshots comply. (`scripts/stats-shot.mjs` header line 7 also says "(340x640 @2x)" while the file is 680×1964 — comment drift.)
+- **F2 — `store/LISTING.md` still says v1.2.0** (§1 lines 16, 18; §6 line 320) and its §8 asset table lists only screenshot1 + promo (lines 378–381). Stale for a 1.4.0 submission; update before uploading.
+- **F3 — cosmetic:** `extension/content.js` line 1 header comment still reads "(v1.2.0, security-hardened)".
+
+**Bottom line:** all substantive v1.2.0 findings M1–M4 and M6 are addressed in the working tree; the two baseline FAILs (M1 screenshot mockup, M2 log count) are both resolved by file-level evidence. Remaining submission blockers are F1 (screenshot3) and F2 (LISTING.md staleness), plus the pre-existing owner-input TODOs (privacy URL, support email, publisher name).

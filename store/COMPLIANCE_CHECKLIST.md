@@ -5,6 +5,58 @@
 
 > Provenance: `CHANGELOG.md` (1.2.0 entry) already references this file: "Independent store-compliance checklist added (`store/COMPLIANCE_CHECKLIST.md`)."
 
+**v1.4.0 addendum:** the release packet is now **1.4.0** — `extension/manifest.json` line 4 (`"version": "1.4.0"`), package `dist/muse-auto-allow-v1.4.0.zip`. The addendum below supersedes the version-specific details in this header and in §3/§7/§10 wherever they conflict; §1–§11 remain the v1.2.0 baseline record.
+
+---
+
+## v1.4.0 Addendum (2026-10-09)
+
+Checked against the v1.4.0 revision (commit `8c76d2a`, 2026-10-09; manifest 1.4.0; package `dist/muse-auto-allow-v1.4.0.zip`). Every item cites the file and line it was verified against; items marked `UNCERTAIN` must be resolved by the owner before **Submit for review**.
+
+### A. Redesign vs store policy — no trademark copying, original mark
+
+- [ ] **No Muse/Meta trademark is copied in the redesign.** `docs/BRANDING.md` lines 3–5: "Everything here is original to BlueSkyz Labs; the visual language is *compatible with* Muse's design system without copying any Muse/Meta trademark (logo, squiggle mark, wordmark or product imagery)." Rule restated at line 85 ("Never substitute Muse/Meta trademarks for our mark; style compatibility only").
+- [ ] **The mark is original — a white check on a gradient tile, deliberately not Muse's squiggle.** `docs/BRANDING.md` lines 28–29 ("a white **check** on a rounded-square tile … deliberately does **not** reproduce Muse's squiggle \"m\""); geometry at lines 30–34 (tile radius 26% = 133/512; gradient diagonal 72,60 → 452,464; check stroke 76/512). Shipped in-product: `extension/popup.html` lines 77–84 and `extension/stats.html` line 52 (`rect … rx="133"` + check path `M124 284 L214 374 L368 182`); icons re-rendered from `assets/icon.html` / `assets/icon-small.html` by `scripts/render.mjs` lines 102–106.
+- [ ] **The adopted "Muse language" is style tokens, not IP.** `docs/BRANDING.md` lines 15–24 (tokens captured from the live site as computed styles) and lines 40–51 (light/dark token table); implemented in `extension/popup.html` lines 6–12 and `extension/stats.html` lines 7–13. `CHANGELOG.md` line 5 (1.4.0) states the mark uses a "Muse-compatible palette, deliberately not Muse's trademarked squiggle".
+- [ ] **Screenshots show real behavior; no mockups implying extra capability.** Real-capture pipeline: `scripts/store-shot.mjs` lines 3–11 ("captures the real extension at runtime … Unlike the old designed mock"), output `store/screenshot1.png` (line 24); `scripts/stats-shot.mjs` lines 3–7, 171–172, 197–198; designed overview/promo only via `scripts/render.mjs` lines 107–110. Caption copy stays within product behavior ("Allow only — never Deny", `scripts/store-shot.mjs` line 283).
+
+### B. Neutral demo data policy for store assets
+
+- [ ] **Policy stated.** `docs/BRANDING.md` lines 75–77: "All demo data in public assets is **fictional** (`Example Org`, `demo-project`, `sample-app`, `web-starter`, `notes-app`, `files.example.com`). Never use real projects, real repositories or personal data in store assets." `CHANGELOG.md` line 6 (1.4.0): "no real projects anywhere in public assets."
+- [ ] **Policy enforced in the render seeds.** `scripts/stats-shot.mjs` lines 44–51 (`byTopic` = exactly those five fictional names) and lines 54–64 (fictional org/repos only); `scripts/store-shot.mjs` line 219 (seed `byTopic: { 'demo-project': 8, 'sample-app': 4 }`; showcase cards lines 191–199 carry no org names); `assets/store-screenshot.html` lines 92, 107–108 ("Example Org/demo-project").
+
+### C. Store images for v1.4.0 (dimensions verified from PNG headers, 2026-10-09)
+
+| File | Size | Produced by | Evidence |
+|---|---|---|---|
+| `store/screenshot1.png` | 1280×800 | real runtime capture (live popup + live card clicks, light stage) | `scripts/store-shot.mjs` lines 3–11, 24; `CHANGELOG.md` line 7 |
+| `store/screenshot2-stats.png` | 1280×800 | real render — Statistics page | `scripts/stats-shot.mjs` lines 5–6, 166–167, 171–172 |
+| `store/screenshot3-popup.png` | 680×1964 | real render — popup (portrait; height is content-dependent) | `scripts/stats-shot.mjs` lines 7, 184, 192–198 |
+| `store/screenshot4-overview.png` | 1280×800 | designed overview (`assets/store-screenshot.html`) | `scripts/render.mjs` lines 107–109 |
+| `store/promo440x280.png` | 440×280 | designed promo tile (`assets/promo-tile.html`) | `scripts/render.mjs` line 110 |
+
+- [ ] **`UNCERTAIN` — `store/screenshot3-popup.png` (680×1964, portrait) does not match the screenshot spec.** Chrome Web Store screenshots must be **1280×800 or 640×400** landscape (developer.chrome.com → "Supplying Images", checked 2026-10-09), and the packet's own §8 requires 1280×800 (`store/LISTING.md` line 379). 680×1964 matches neither. Re-render it at a valid size or exclude it from the dashboard screenshot slots before submitting. (The script header still labels it "(340x640 @2x)" — `scripts/stats-shot.mjs` line 7 — while the capture height is dynamic, lines 192–194.)
+- [ ] **At least one compliant screenshot exists.** `screenshot1.png` (1280×800) satisfies the mandatory screenshot; `screenshot2-stats.png` and `screenshot4-overview.png` are also 1280×800.
+
+### D. i18n — 31 keys × 6 locales
+
+- [ ] **All six locale files carry the identical 31-key set (Python JSON parse, 2026-10-09).** `extension/_locales/{en,es,ja,ko,vi,zh_CN}/messages.json`; key sets compared pairwise — no missing/extra keys. Newest key `museTabsFoundOne` (singular chip copy) at `extension/_locales/en/messages.json` lines 92–94, consumed at `extension/popup.js` line 70. `CHANGELOG.md` line 8: "singular/plural chip copy … across 6 locales (31 keys each)". Manifest `"default_locale": "en"` (`extension/manifest.json` line 7).
+
+### E. muse.ai-only interaction guarantees (unchanged)
+
+- [ ] **Manifest scope is muse.ai-only.** `extension/manifest.json` line 9 (`host_permissions`) and line 13 (`content_scripts[0].matches`) contain exactly `https://muse.ai/*` + `https://*.muse.ai/*`; grep on the shipped manifest for `localhost`/`127.0.0.1`: 0 hits (the temp-copy exception for captures is documented at `scripts/store-shot.mjs` line 28).
+- [ ] **Defense-in-depth hostname guard in the content script.** `extension/content.js` lines 31–34 — the script returns unless the hostname is muse.ai; the `localhost`/`127.0.0.1` branch exists solely for the test-harness copy (comment line 32).
+- [ ] **Service worker only touches muse.ai URLs.** `extension/background.js` lines 6 (URL regex), 24 (tab-query filter), 31 (onUpdated sweep).
+- [ ] **Live status is surfaced to the user.** Popup chip "N muse.ai tabs open / No muse.ai tab found" (`extension/popup.js` lines 63–76; `extension/popup.html` line 92); "Works only on muse.ai" (`extension/popup.html` line 94; `extension/stats.html` line 77).
+- [ ] **Safety rails unchanged** (never Deny / never lone Allow / rate caps / liveness guard): `extension/content.js` lines 36–37 (regexes), 79 (never inside `<a>` or tied to a `<form>`), 145–149 and 336 (allow rate cap), 315–320 (liveness guard). Behavior identical to the baseline §6 review.
+- [ ] **No broad permissions / no remote code — re-checked 2026-10-09.** Manifest requests only `storage`, `alarms`, and the muse.ai hosts (`extension/manifest.json` lines 8–9); grep for `tabs`/`scripting`/`webRequest`/`cookies`/`downloads`/`<all_urls>`: 0 hits. Remote-code grep over `extension/` (`eval(`, `new Function`, `fetch(`, `XMLHttpRequest`, `insertAdjacentHTML`, `document.write`, dynamic `import(`, script-element creation): **0 matches**. URL grep: only muse.ai match patterns (`background.js` line 24; `manifest.json` lines 9, 13; `popup.js` line 65). Only bundled script tags (`extension/popup.html` line 96; `extension/stats.html` line 78).
+
+### F. Package and pre-submit for this release
+
+- [ ] **Package `dist/muse-auto-allow-v1.4.0.zip` — 18 entries, manifest at root, byte-clean.** `scripts/verify-zip.py` run 2026-10-09: `18 matched, 0 mismatched, 0 disk-only, 0 zip-only` (exit 0); sha256 `3e22397c59de252b2eb1bf581ce13bda215b31c6831aecf476d3758b6a964061`, 125,067 bytes; the zip byte-matches the committed v1.4.0 revision `8c76d2a` for all 18 entries. `verify-zip.py` compares the zip against the **current working tree**, so any uncommitted edit landing after the build shows as `MISMATCH <file>` until rebuilt — rebuild + re-verify on the final release revision before uploading. Entries: `manifest.json`, `content.js`, `background.js`, `popup.html`, `popup.js`, `stats.html`, `stats.js`, 5 icons, 6 `_locales/*/messages.json`. Build guard: `scripts/build.mjs` lines 16 (item list), 32–43 (full-tree set equality), 47–54 (exit 2/3/4).
+- [ ] **Mandatory pre-submit: `node scripts/build.mjs` then `python scripts/verify-zip.py`, both exit 0** (now a required runbook step — `store/PUBLISH_RUNBOOK.md` Step 2).
+- [ ] **`FLAG (outside this checklist's write scope)` — `store/LISTING.md` still carries v1.2.0 references** (§1 "Version | 1.2.0" line 16; package line 18; §6 line 320) and its §8 asset table lists only `screenshot1.png` + promo (lines 378–381). Update it so the dashboard copy matches 1.4.0 before submitting.
+
 ---
 
 ## 1. Single Purpose
