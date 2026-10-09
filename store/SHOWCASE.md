@@ -8,11 +8,11 @@ files.example.com) — never real projects or personal data.
 |---|---|---|---|
 | Extension icon | `extension/icons/icon128.png` | 128×128 | required (in package) |
 | Screenshot 1 — live popup + approval cards (real runtime capture) | `store/screenshot1.png` | 1280×800 | required (≥1; 1280×800 or 640×400) |
-| Screenshot 2 — Statistics dashboard (real render) | `store/screenshot2-stats.png` | 1280×800 | up to 5 total |
+| Screenshot 2 — Statistics dashboard (real render, premium colorful data-viz — `docs/BRANDING.md` §3.1) | `store/screenshot2-stats.png` | 1280×800 | up to 5 total |
 | Screenshot 3 — popup (real render) | `store/screenshot3-popup.png` | 1280×800 | up to 5 total |
-| Screenshot 4 — designed overview | `store/screenshot4-overview.png` | 1280×800 | up to 5 total |
-| Small promo tile | `store/promo440x280.png` | 440×280 | optional (featured placement) |
-| Marquee promo | `store/marquee1400x560.png` | 1400×560 | optional (featured placement) |
+| Screenshot 4 — designed overview (approval card + layered mini Statistics card) | `store/screenshot4-overview.png` | 1280×800 | up to 5 total |
+| Small promo tile (palette-dot chips) | `store/promo440x280.png` | 440×280 | optional (featured placement) |
+| Marquee promo (layered popup + Statistics cards) | `store/marquee1400x560.png` | 1400×560 | optional (featured placement) |
 | Listing copy (6 locales) | `store/LISTING.md` | — | title / short / full description per locale |
 | Permission justifications | `store/LISTING.md` §5 | — | required in dashboard |
 | Privacy policy | `store/PRIVACY.md` | — | required (public URL before submit) |

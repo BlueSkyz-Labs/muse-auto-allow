@@ -40,16 +40,14 @@ for (let i = 44; i >= 0; i--) {
   byYear[String(d.getFullYear())] = (byYear[String(d.getFullYear())] || 0) + v;
   total += v;
 }
+const _topicNames = ['demo-project', 'sample-app', 'web-starter', 'notes-app', 'files.example.com'];
+const _topicRest = _topicNames.slice(1).map((_, i) => Math.floor(total * [0.221, 0.172, 0.088, 0.049][i]));
 const stats = {
   byDay, byMonth, byYear,
   // Neutral, clearly fictional demo data (never real projects — public store assets).
-  byTopic: {
-    'demo-project': 66,
-    'sample-app': 31,
-    'web-starter': 24,
-    'notes-app': 12,
-    'files.example.com': 5,
-  },
+  // Topic values partition the all-time click count, so the screenshot reconciles with
+  // the Total KPI ('demo-project' absorbs the rounding remainder).
+  byTopic: Object.fromEntries(_topicNames.map((n, i) => [n, i ? _topicRest[i - 1] : total - _topicRest.reduce((s, v) => s + v, 0)])),
 };
 
 // realistic click log for the popup shot (fictional org/repos only)
@@ -177,13 +175,14 @@ try {
   const t2 = await send('Target.createTarget', { url: `chrome-extension://${extId}/popup.html` });
   const { sessionId: s2 } = await send('Target.attachToTarget', { targetId: t2.targetId, flatten: true });
   await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'light' }] }, s2);
-  await send('Emulation.setDeviceMetricsOverride', { width: 340, height: 660, deviceScaleFactor: 2, mobile: false }, s2);
+  await send('Emulation.setDeviceMetricsOverride', { width: 340, height: 1500, deviceScaleFactor: 2, mobile: false }, s2);
   await send('Runtime.evaluate', { expression: seedExpr, awaitPromise: true, returnByValue: true }, s2);
   await send('Page.reload', {}, s2);
   await sleep(1200);
-  // capture the popup at its natural height (2x)…
+  // capture the popup at its full natural height (2x) — the popup page keeps growing with new
+  // features, so the viewport is tall enough to render all of it and the stage below fits it.
   const bh = await send('Runtime.evaluate', { expression: 'document.body.scrollHeight', returnByValue: true }, s2);
-  const bodyH = Math.min(760, Number(bh?.result?.value) || 620);
+  const bodyH = Math.min(1500, Number(bh?.result?.value) || 620);
   const shot2 = await send('Page.captureScreenshot', { format: 'png', clip: { x: 0, y: 0, width: 340, height: bodyH, scale: 2 } }, s2);
   // …then compose a 1280x800 store shot: the real popup centered on the light stage
   const stageDir = path.join(os.tmpdir(), 'maa-stage');
@@ -197,7 +196,8 @@ try {
     .b2 { width: 460px; height: 460px; background: #cfe2ff; right: -130px; bottom: -150px; opacity: .8; }
     .wrap { position: relative; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
     .cap { font-size: 15px; color: #4a4e54; } .cap b { color: #005abf; font-weight: 500; }
-    img { display: block; width: 430px; border-radius: 16px; box-shadow: 0 18px 60px rgba(17,17,18,.16), 0 0 0 1px rgba(17,17,18,.08); }
+    img { display: block; max-width: 430px; max-height: 700px; width: auto; height: auto; border-radius: 16px;
+          box-shadow: 0 18px 60px rgba(17,17,18,.16), 0 0 0 1px rgba(17,17,18,.08); }
   </style></head><body>
     <div class="blob b1"></div><div class="blob b2"></div>
     <div class="wrap">

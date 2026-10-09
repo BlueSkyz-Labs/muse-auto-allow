@@ -6,44 +6,116 @@
 <style>
   :root { color-scheme: light dark;
           --blue: #005abf; --ink: #111112; --muted: #4a4e54; --bg: #fcfcfc; --surface: #ffffff;
-          --line: rgba(17,17,18,.08); --fill: rgba(17,17,18,.05); }
+          --line: rgba(17,17,18,.08); --fill: rgba(17,17,18,.05);
+          --axis: rgba(17,17,18,.32); --hairline: rgba(17,17,18,.07); --divide: rgba(17,17,18,.16); --focus: #005abf;
+          /* data-viz palette — light stops (every stop >= 4.5:1 on --surface) */
+          --c-blue: #0f63e6;   --c-blue-b: #0a4fc4;
+          --c-rose: #c2263f;   --c-rose-b: #a51e35;
+          --c-teal: #0e8571;   --c-teal-b: #0a6d5d;
+          --c-amber: #bf5700;  --c-amber-b: #a34705;
+          --c-violet: #6d3ad6; --c-violet-b: #5c2fb8;
+          /* glyph ink for tinted chips (deeper in light, brighter in dark) */
+          --c-blue-g: #0a4fc4; --c-teal-g: #0a6d5d; --c-violet-g: #5c2fb8; --c-amber-g: #a34705;
+          --sh-1: 0 1px 2px rgba(17,17,18,.05);
+          --sh-2: 0 1px 2px rgba(17,17,18,.04), 0 16px 36px -24px rgba(17,17,18,.30); }
   @media (prefers-color-scheme: dark) {
     :root { --blue: #0a5ce0; --ink: #e4e6eb; --muted: #b0b3b8; --bg: #18191a; --surface: #242526;
-            --line: #3e4042; --fill: #3a3b3c; }
+            --line: #3e4042; --fill: #3a3b3c;
+            --axis: rgba(228,230,235,.36); --hairline: rgba(228,230,235,.08); --divide: rgba(228,230,235,.20); --focus: #7cb0ff;
+            /* data-viz palette — dark stops (every stop >= 4.5:1 on --surface) */
+            --c-blue: #5aa5ff;   --c-blue-b: #3f8ceb;
+            --c-rose: #ff8296;   --c-rose-b: #f06680;
+            --c-teal: #35d2b8;   --c-teal-b: #22b89e;
+            --c-amber: #f2b435;  --c-amber-b: #dfa11c;
+            --c-violet: #ab93fb; --c-violet-b: #9a83f5;
+            --c-blue-g: #5aa5ff; --c-teal-g: #35d2b8; --c-violet-g: #ab93fb; --c-amber-g: #f2b435;
+            --sh-1: 0 1px 2px rgba(0,0,0,.35);
+            --sh-2: 0 1px 2px rgba(0,0,0,.30), 0 20px 44px -28px rgba(0,0,0,.85); }
   }
-  body { margin: 0; padding: 18px 32px 16px; background: var(--bg); color: var(--ink);
-         font: 14px/1.5 "Optimistic", "optimisticAI", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
-  h1 { font-size: 24px; font-weight: 500; letter-spacing: -0.01em; margin: 0 0 10px; display: flex; align-items: center; gap: 10px; color: var(--ink); }
-  h1 svg { width: 28px; height: 28px; border-radius: 8px; }
-  .grid { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
-  .kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 10px 20px; min-width: 118px; }
-  .kpi .v { font-size: 26px; font-weight: 500; letter-spacing: -0.01em; color: var(--ink); font-variant-numeric: tabular-nums; }
-  .kpi .l { font-size: 12px; color: var(--muted); margin-top: 2px; }
-  .seg { display: inline-flex; gap: 4px; background: var(--fill); border-radius: 999px; padding: 4px; margin-bottom: 12px; }
-  .seg button { background: transparent; border: 0; color: var(--muted); padding: 6px 18px; border-radius: 999px; cursor: pointer; font: inherit; font-weight: 500; }
-  .seg button.active { background: var(--blue); color: #fff; }
-  .chart { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px 16px; margin-bottom: 12px; }
-  .chart .ccap { font-size: 12.5px; color: var(--muted); margin-bottom: 8px; }
+  body { margin: 0; padding: 20px 32px 18px; background: var(--bg); color: var(--ink);
+         font: 14px/1.5 "Optimistic", "optimisticAI", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+         -webkit-font-smoothing: antialiased; }
+
+  /* ---- header: title + range control ---- */
+  .head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+  h1 { font-size: 24px; font-weight: 500; letter-spacing: -0.01em; margin: 0; display: flex; align-items: center; gap: 11px; color: var(--ink); }
+  h1 svg.logo { width: 30px; height: 30px; border-radius: 9px; box-shadow: 0 8px 20px -9px rgba(0,64,220,.6); }
+
+  .seg { display: inline-flex; gap: 4px; background: var(--fill); border-radius: 999px; padding: 4px;
+         box-shadow: inset 0 0 0 1px var(--hairline); }
+  .seg button { background: transparent; border: 0; color: var(--muted); padding: 6px 18px; border-radius: 999px;
+                cursor: pointer; font: inherit; font-weight: 500; transition: background .15s ease, color .15s ease, box-shadow .15s ease; }
+  .seg button:hover { background: color-mix(in srgb, var(--ink) 7%, transparent); color: var(--ink); }
+  .seg button.active { background: var(--blue); color: #fff; box-shadow: 0 1px 2px rgba(17,17,18,.22), inset 0 1px 0 rgba(255,255,255,.18); }
+  .seg button.active:hover { background: var(--blue); color: #fff; }
+
+  /* ---- KPI cards ---- */
+  .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+  .kpi { position: relative; display: flex; align-items: center; gap: 13px; overflow: hidden;
+         background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+         padding: 13px 16px; box-shadow: var(--sh-2); }
+  .kpi::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+                 background: radial-gradient(100% 140% at 0% 0%, color-mix(in srgb, var(--kc) 8%, transparent), transparent 60%); }
+  .kpi .ic { position: relative; flex: none; width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center;
+             color: var(--kc-g); background: color-mix(in srgb, var(--kc) 13%, transparent);
+             box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--kc) 22%, transparent); }
+  .kpi .ic svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.25; stroke-linecap: round; stroke-linejoin: round; }
+  .kpi .kv { position: relative; display: flex; flex-direction: column; min-width: 0; }
+  .kpi .v { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .kpi .l { font-size: 12px; color: var(--muted); margin-top: 3px; letter-spacing: .01em; }
+  .k-blue   { --kc: var(--c-blue);   --kc-g: var(--c-blue-g); }
+  .k-teal   { --kc: var(--c-teal);   --kc-g: var(--c-teal-g); }
+  .k-violet { --kc: var(--c-violet); --kc-g: var(--c-violet-g); }
+  .k-amber  { --kc: var(--c-amber);  --kc-g: var(--c-amber-g); }
+
+  /* ---- chart ---- */
+  .chart { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 14px 18px; margin-bottom: 12px; box-shadow: var(--sh-2); }
+  .chart .ccap { font-size: 12.5px; font-weight: 500; letter-spacing: .01em; color: var(--muted); margin-bottom: 8px; }
   .chart svg { display: block; width: 100%; height: auto; }
-  .chart rect.bar { opacity: .92; transition: opacity .15s ease; }
-  .chart rect.bar:hover { opacity: 1; }
-  .chart text { fill: var(--muted); font-size: 11px; }
+  .chart line.base { stroke: var(--axis); stroke-width: 1.25; }
+  .chart rect.bar { transition: filter .15s ease; }
+  .chart rect.bar:hover { filter: brightness(1.06); }
+  .chart text { fill: var(--muted); font-size: 11px; letter-spacing: .01em; }
   .chart text.val { fill: var(--ink); font-size: 11px; font-weight: 500; }
-  .topics { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px 16px; }
-  .topics .cap { font-size: 12.5px; color: var(--muted); margin-bottom: 10px; }
-  .topic { display: flex; align-items: center; gap: 10px; padding: 4px 0; }
-  .topic .name { width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); }
+
+  /* data-viz color classes (shared by chart gradient stops + topic bars/dots) */
+  .sc-blue { stop-color: var(--c-blue); }     .sc-blue-b { stop-color: var(--c-blue-b); }
+  .sc-rose { stop-color: var(--c-rose); }     .sc-rose-b { stop-color: var(--c-rose-b); }
+  .sc-teal { stop-color: var(--c-teal); }     .sc-teal-b { stop-color: var(--c-teal-b); }
+  .sc-amber { stop-color: var(--c-amber); }   .sc-amber-b { stop-color: var(--c-amber-b); }
+  .sc-violet { stop-color: var(--c-violet); } .sc-violet-b { stop-color: var(--c-violet-b); }
+  .t-blue   { --tc: var(--c-blue);   --tcb: var(--c-blue-b); }
+  .t-rose   { --tc: var(--c-rose);   --tcb: var(--c-rose-b); }
+  .t-teal   { --tc: var(--c-teal);   --tcb: var(--c-teal-b); }
+  .t-amber  { --tc: var(--c-amber);  --tcb: var(--c-amber-b); }
+  .t-violet { --tc: var(--c-violet); --tcb: var(--c-violet-b); }
+
+  /* ---- topics ---- */
+  .topics { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 14px 18px; box-shadow: var(--sh-2); }
+  .topics .cap { font-size: 12.5px; font-weight: 500; letter-spacing: .01em; color: var(--muted); margin-bottom: 12px; }
+  .topic { display: flex; align-items: center; gap: 11px; padding: 5px 0; }
+  .topic + .topic { border-top: 1px solid var(--divide); }
+  .topic .dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--tc, var(--muted));
+                box-shadow: 0 0 0 3px color-mix(in srgb, var(--tc, var(--muted)) 14%, transparent); }
+  .topic .name { width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); }
   .topic .bar { flex: 1; height: 10px; background: var(--fill); border-radius: 999px; overflow: hidden; }
-  .topic .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #0082FB, #0064E0); border-radius: 999px; transition: width .35s ease; }
-  .topic .n { width: 58px; text-align: right; color: var(--ink); font-weight: 500; font-variant-numeric: tabular-nums; }
-  .empty { color: var(--muted); padding: 8px 0; }
-  .footrow { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
-  .foot { color: var(--muted); font-size: 12px; }
+  .topic .bar i { display: block; height: 100%; width: 0; border-radius: 999px;
+                  background: linear-gradient(90deg, var(--tc, var(--blue)), var(--tcb, var(--blue)));
+                  transition: width .35s ease; }
+  .topic .n { width: 56px; text-align: right; color: var(--ink); font-weight: 600; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .empty { color: var(--muted); padding: 10px 0; }
+
+  /* ---- footer ---- */
+  .footrow { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
+  .foot { color: var(--muted); font-size: 12px; letter-spacing: .01em; }
   .tools { display: flex; gap: 8px; }
   .tool { background: var(--fill); color: var(--ink); border: 1px solid var(--line); border-radius: 999px;
-          padding: 6px 14px; cursor: pointer; font: inherit; font-weight: 500; }
-  .tool:hover { filter: brightness(.97); }
-  :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+          padding: 7px 16px; cursor: pointer; font: inherit; font-weight: 500; box-shadow: var(--sh-1);
+          transition: background .15s ease, filter .15s ease; }
+  .tool:hover { background: color-mix(in srgb, var(--ink) 7%, var(--fill)); }
+  .tool.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .tool.primary:hover { background: var(--blue); filter: brightness(1.08); }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-thumb { background: rgba(17,17,18,.18); border-radius: 999px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -54,23 +126,36 @@
 </style>
 </head>
 <body>
-  <h1>
-    <svg viewBox="0 0 512 512" aria-hidden="true"><defs><linearGradient id="hbg" x1="72" y1="60" x2="452" y2="464" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#0082FB"/><stop offset="0.62" stop-color="#0064E0"/><stop offset="1" stop-color="#0040DC"/></linearGradient></defs><rect x="16" y="16" width="480" height="480" rx="133" fill="url(#hbg)"/><path d="M124 284 L214 374 L368 182" fill="none" stroke="#fff" stroke-width="76" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    <span data-i18n="statsTitle">Muse Auto-Allow — Statistics</span>
-  </h1>
+  <header class="head">
+    <h1>
+      <svg class="logo" viewBox="0 0 512 512" aria-hidden="true"><defs><linearGradient id="hbg" x1="72" y1="60" x2="452" y2="464" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#0082FB"/><stop offset="0.62" stop-color="#0064E0"/><stop offset="1" stop-color="#0040DC"/></linearGradient></defs><rect x="16" y="16" width="480" height="480" rx="133" fill="url(#hbg)"/><path d="M124 284 L214 374 L368 182" fill="none" stroke="#fff" stroke-width="76" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span data-i18n="statsTitle">Muse Auto-Allow — Statistics</span>
+    </h1>
+    <div class="seg" id="seg">
+      <button data-range="day" class="active" aria-pressed="true" data-i18n="rangeDay">Day</button>
+      <button data-range="week" aria-pressed="false" data-i18n="rangeWeek">Week</button>
+      <button data-range="month" aria-pressed="false" data-i18n="rangeMonth">Month</button>
+      <button data-range="year" aria-pressed="false" data-i18n="rangeYear">Year</button>
+    </div>
+  </header>
 
   <div class="grid">
-    <div class="kpi"><div class="v" id="kTotal">0</div><div class="l" data-i18n="totalLabel">Total</div></div>
-    <div class="kpi"><div class="v" id="kToday">0</div><div class="l" data-i18n="todayLabel">Today</div></div>
-    <div class="kpi"><div class="v" id="kWeek">0</div><div class="l" data-i18n="weekLabel">This week</div></div>
-    <div class="kpi"><div class="v" id="kMonth">0</div><div class="l" data-i18n="monthLabel">This month</div></div>
-  </div>
-
-  <div class="seg" id="seg">
-    <button data-range="day" class="active" aria-pressed="true" data-i18n="rangeDay">Day</button>
-    <button data-range="week" aria-pressed="false" data-i18n="rangeWeek">Week</button>
-    <button data-range="month" aria-pressed="false" data-i18n="rangeMonth">Month</button>
-    <button data-range="year" aria-pressed="false" data-i18n="rangeYear">Year</button>
+    <div class="kpi k-blue">
+      <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.6l4.4 4.4L19 6.4"/></svg></span>
+      <span class="kv"><span class="v" id="kTotal">0</span><span class="l" data-i18n="totalLabel">Total</span></span>
+    </div>
+    <div class="kpi k-teal">
+      <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.4V12l3.1 2.1"/></svg></span>
+      <span class="kv"><span class="v" id="kToday">0</span><span class="l" data-i18n="todayLabel">Today</span></span>
+    </div>
+    <div class="kpi k-violet">
+      <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3.5"/><path d="M3.5 9.8h17"/><circle cx="12" cy="14.8" r="1.9"/></svg></span>
+      <span class="kv"><span class="v" id="kWeek">0</span><span class="l" data-i18n="weekLabel">This week</span></span>
+    </div>
+    <div class="kpi k-amber">
+      <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3.5"/><path d="M8 3.2v3.6M16 3.2v3.6M3.5 10.2h17"/></svg></span>
+      <span class="kv"><span class="v" id="kMonth">0</span><span class="l" data-i18n="monthLabel">This month</span></span>
+    </div>
   </div>
 
   <div class="chart"><div class="ccap" id="ccap"></div><svg id="chart" viewBox="0 0 720 158" role="img"></svg></div>
@@ -83,11 +168,11 @@
   <div class="footrow">
     <span class="foot" data-i18n="onlyMuse">Works only on muse.ai</span>
     <span class="tools">
-      <button class="tool" id="exportData" data-i18n="exportData">Export data</button>
+      <button class="tool primary" id="exportData" data-i18n="exportData">Export data</button>
       <button class="tool" id="importData" data-i18n="importData">Import data</button>
-      <input type="file" id="importFile" accept="application/json" style="display:none">
     </span>
   </div>
+  <input type="file" id="importFile" accept="application/json" style="display:none">
   <script src="stats.js"></script>
 </body>
 </html>

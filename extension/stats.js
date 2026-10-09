@@ -19,6 +19,9 @@ function applyI18n() {
 let STATS = { byDay: {}, byMonth: {}, byYear: {}, byTopic: {} };
 let TOTAL = 0;
 let RANGE = 'day';
+// presentation only: curated data-viz palette order (colors themselves live as CSS vars in stats.html,
+// so light/dark switch automatically; the values are never part of the data logic).
+const PALETTE = ['blue', 'rose', 'teal', 'amber', 'violet'];
 
 function weekStart(d) {
   const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -75,12 +78,16 @@ function renderChart() {
   const gap = Math.max(3, Math.floor(innerW / n * 0.22));
   const bw = Math.max(4, Math.floor((innerW - gap * (n - 1)) / n));
   const max = Math.max(1, ...data.map((x) => x.v));
-  let out = '<defs><linearGradient id="bar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0082FB"/><stop offset="1" stop-color="#0064E0"/></linearGradient></defs>';
+  let out = '<defs>';
+  for (const c of PALETTE) out += '<linearGradient id="g-' + c + '" x1="0" y1="0" x2="0" y2="1"><stop class="sc-' + c + '" offset="0"/><stop class="sc-' + c + '-b" offset="1"/></linearGradient>';
+  out += '</defs>';
+  out += '<line class="base" x1="' + padL + '" y1="' + (padT + innerH) + '" x2="' + (W - padR) + '" y2="' + (padT + innerH) + '"/>';
   data.forEach((x, i) => {
+    const c = PALETTE[i % PALETTE.length];
     const h = x.v ? Math.max(2, Math.round(innerH * (x.v / max))) : 1;
     const xx = padL + i * (bw + gap);
     const y = padT + innerH - h;
-    out += '<rect class="bar" x="' + xx + '" y="' + y + '" width="' + bw + '" height="' + h + '" rx="3" fill="url(#bar)" opacity="' + (x.v ? 0.92 : 0.16) + '"><title>' + x.label + ': ' + x.v + '</title></rect>';
+    out += '<rect class="bar" x="' + xx + '" y="' + y + '" width="' + bw + '" height="' + h + '" rx="4" fill="url(#g-' + c + ')" opacity="' + (x.v ? 1 : 0.15) + '"><title>' + x.label + ': ' + x.v + '</title></rect>';
     if (x.v) out += '<text class="val" x="' + (xx + bw / 2) + '" y="' + (y - 5) + '" text-anchor="middle">' + x.v + '</text>';
     out += '<text x="' + (xx + bw / 2) + '" y="' + (H - 8) + '" text-anchor="middle">' + x.label + '</text>';
   });
@@ -95,10 +102,13 @@ function renderTopics() {
     return;
   }
   const max = entries[0][1] || 1;
-  wrap.innerHTML = entries.map(([name, v]) =>
-    '<div class="topic"><span class="name" title="' + name.replace(/"/g, '&quot;') + '">' + name.replace(/[<>&]/g, '') + '</span>' +
-    '<span class="bar"><i style="width:' + Math.max(4, Math.round(v / max * 100)) + '%"></i></span>' +
-    '<span class="n">' + v + '</span></div>').join('');
+  wrap.innerHTML = entries.map(([name, v], i) => {
+    const c = PALETTE[i % PALETTE.length];
+    return '<div class="topic"><span class="dot t-' + c + '"></span>' +
+      '<span class="name" title="' + name.replace(/"/g, '&quot;') + '">' + name.replace(/[<>&]/g, '') + '</span>' +
+      '<span class="bar"><i class="t-' + c + '" style="width:' + Math.max(4, Math.round(v / max * 100)) + '%"></i></span>' +
+      '<span class="n">' + v + '</span></div>';
+  }).join('');
 }
 
 function renderKpis() {

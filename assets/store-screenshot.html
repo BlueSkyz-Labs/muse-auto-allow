@@ -4,29 +4,37 @@
 <meta charset="utf-8">
 <style>
   html, body { margin: 0; width: 1280px; height: 800px; overflow: hidden; background: #fcfcfc;
-               color: #111112; font-family: "Optimistic", "optimisticAI", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+               color: #111112; font-family: "Optimistic", "optimisticAI", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+               -webkit-font-smoothing: antialiased; }
   .blob { position: absolute; border-radius: 50%; filter: blur(90px); }
   .b1 { width: 520px; height: 520px; background: #f3d9b4; left: -160px; top: -180px; opacity: .5; }
   .b2 { width: 480px; height: 480px; background: #cfe2ff; right: -140px; bottom: -160px; opacity: .8; }
+  .b3 { width: 420px; height: 420px; background: #e3dbfa; right: 360px; top: -240px; opacity: .45; }
   .wrap { position: relative; display: flex; gap: 44px; padding: 52px 56px; box-sizing: border-box; height: 100%; }
-  .left { flex: 1.05; display: flex; flex-direction: column; }
+  .left { flex: 1.02; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
   .brand { display: flex; align-items: center; gap: 16px; }
-  .brand .logo { width: 60px; height: 60px; border-radius: 16px; }
+  .brand .logo { width: 60px; height: 60px; border-radius: 16px; box-shadow: 0 14px 32px -14px rgba(0,64,220,.55); }
   .brand h1 { margin: 0; font-size: 32px; font-weight: 500; letter-spacing: -0.01em; }
-  .tagline { color: #5c6066; font-size: 17px; margin: 10px 0 26px; }
-  .bullets { list-style: none; margin: 0 0 auto; padding: 0; font-size: 15px; color: #2c2e33; }
-  .bullets li { margin: 11px 0; display: flex; gap: 11px; align-items: center; }
+  .tagline { color: #5c6066; font-size: 17px; margin: 10px 0 24px; }
+  .bullets { list-style: none; margin: 0; padding: 0; font-size: 15px; color: #2c2e33; }
+  .bullets li { margin: 13px 0; display: flex; gap: 11px; align-items: center; }
   .bullets .b { width: 22px; height: 22px; border-radius: 50%; background: rgba(0,90,191,.10); color: #005abf;
-                display: inline-flex; align-items: center; justify-content: center; font-size: 12px; flex: none; }
-  .flow { display: flex; align-items: center; gap: 10px; margin: 20px 0 16px; }
+                display: inline-flex; align-items: center; justify-content: center; font-size: 12px; flex: none; font-weight: 600; }
+  .bottom { margin-top: 28px; border-top: 1px solid rgba(17,17,18,.07); padding-top: 22px; }
+  .flow { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; }
   .step { background: rgba(17,17,18,.05); color: #2c2e33; font-size: 13px; font-weight: 500;
           padding: 7px 15px; border-radius: 999px; }
-  .arrow { color: #6b7078; font-size: 14px; }
+  .arrow { color: #61666d; font-size: 14px; }
+  .trust { display: inline-flex; align-items: center; gap: 8px; background: rgba(14,133,113,.11); color: #0a6d5d;
+           font-size: 12.5px; font-weight: 500; padding: 7px 14px; border-radius: 999px; margin-bottom: 12px; }
+  .trust .d { width: 7px; height: 7px; border-radius: 50%; background: #0e8571; }
   .foot { color: #5c6066; font-size: 13px; }
-  .right { flex: .95; display: flex; flex-direction: column; gap: 18px; justify-content: center; }
+  .right { flex: .98; display: flex; flex-direction: column; gap: 18px; justify-content: center; padding-bottom: 56px; min-width: 0; }
   .card { background: #ffffff; border: 1px solid rgba(17,17,18,.08); border-radius: 16px; padding: 20px 22px;
           box-shadow: 0 12px 40px rgba(17,17,18,.07); }
   .card .ttl { font-size: 12.5px; font-weight: 500; color: #5c6066; margin-bottom: 10px; }
+  .card .chip-warn { display: inline-block; font-size: 12px; font-weight: 600; color: #8f4100;
+                     background: rgba(191,87,0,.11); padding: 5px 12px; border-radius: 999px; margin-bottom: 12px; }
   .card .q { font-size: 15.5px; color: #111112; margin: 0 0 12px; }
   .rows { font-size: 12.5px; color: #5c6066; border-top: 1px solid rgba(17,17,18,.07); padding-top: 10px; }
   .rows div { display: flex; gap: 12px; margin: 5px 0; }
@@ -35,25 +43,32 @@
   .btn { font-size: 14px; font-weight: 500; padding: 9px 24px; border-radius: 999px; }
   .allow { background: #005abf; color: #fff; }
   .deny { background: rgba(17,17,18,.06); color: #2c2e33; }
-  .badge { font-size: 12px; font-weight: 500; color: #005abf; background: rgba(0,90,191,.09);
-           padding: 5px 12px; border-radius: 999px; }
-  .pop { background: #ffffff; border: 1px solid rgba(17,17,18,.08); border-radius: 16px; padding: 14px 16px;
-         box-shadow: 0 22px 60px rgba(17,17,18,.12); }
-  .pop .head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-  .pop .head .mini { width: 22px; height: 22px; border-radius: 7px; }
-  .pop .head b { font-size: 13px; font-weight: 500; color: #111112; }
-  .pop .head .dot { width: 7px; height: 7px; border-radius: 50%; background: #31a24c; margin-left: auto; }
-  .pop .line { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #5c6066; margin: 7px 0; }
-  .pop .cnt { color: #111112; font-size: 16px; font-weight: 500; }
-  .pop .log { border-top: 1px solid rgba(17,17,18,.07); margin-top: 8px; padding-top: 8px; font-size: 12px; }
-  .pop .item { padding: 5px 0; border-bottom: 1px solid rgba(17,17,18,.06); color: #2c2e33; }
-  .pop .k { font-size: 10px; font-weight: 500; padding: 1px 7px; border-radius: 999px; margin-right: 5px; }
-  .pop .k-allow { background: rgba(0,90,191,.10); color: #005abf; }
-  .pop .k-expand { background: rgba(243,217,180,.55); color: #7a5a20; }
-  .pop .k-open { background: rgba(17,17,18,.06); color: #5c6066; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: #0a6d5d;
+           background: rgba(14,133,113,.12); padding: 6px 12px; border-radius: 999px; margin-top: 12px; }
+  .badge .d { width: 6px; height: 6px; border-radius: 50%; background: #0e8571; }
+
+  /* mini statistics card */
+  .stats .head { display: flex; align-items: center; gap: 9px; margin-bottom: 13px; }
+  .stats .head .mini { width: 22px; height: 22px; border-radius: 7px; }
+  .stats .head b { font-size: 13px; font-weight: 600; color: #111112; }
+  .stats .head .range { margin-left: auto; font-size: 11.5px; color: #5c6066; }
+  .kstrip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 15px; }
+  .kchip { border: 1px solid rgba(17,17,18,.07); border-radius: 12px; padding: 8px 11px; background: #fdfdfd; }
+  .kchip .n { font-size: 19px; font-weight: 600; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; color: #111112; }
+  .kchip .t { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #5c6066; margin-top: 2px; }
+  .kchip .t i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+  .kchip .t i.blue { background: #0f63e6; } .kchip .t i.teal { background: #0e8571; } .kchip .t i.violet { background: #6d3ad6; }
+  .bars { display: flex; align-items: flex-end; gap: 6px; height: 62px; border-bottom: 1px solid rgba(17,17,18,.18);
+          margin-bottom: 4px; }
+  .bars i { flex: 1; border-radius: 3px 3px 0 0; display: block; }
+  .bars i.c1 { background: linear-gradient(180deg, #0f63e6, #0a4fc4); }
+  .bars i.c2 { background: linear-gradient(180deg, #c2263f, #a51e35); }
+  .bars i.c3 { background: linear-gradient(180deg, #0e8571, #0a6d5d); }
+  .bars i.c4 { background: linear-gradient(180deg, #bf5700, #a34705); }
+  .bars i.c5 { background: linear-gradient(180deg, #6d3ad6, #5c2fb8); }
 </style></head>
 <body>
-  <div class="blob b1"></div><div class="blob b2"></div>
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
   <div class="wrap">
     <div class="left">
       <div class="brand">
@@ -74,18 +89,21 @@
         <li><span class="b">&#10003;</span> On/off switch, click delay, and a 50-entry click log</li>
         <li><span class="b">&#10003;</span> Local-only: no data collection, no network calls</li>
       </ul>
-      <div class="flow">
-        <span class="step">1 &middot; Detect</span>
-        <span class="arrow">&rarr;</span>
-        <span class="step">2 &middot; Allow</span>
-        <span class="arrow">&rarr;</span>
-        <span class="step">3 &middot; Log</span>
+      <div class="bottom">
+        <div class="flow">
+          <span class="step">1 &middot; Detect</span>
+          <span class="arrow">&rarr;</span>
+          <span class="step">2 &middot; Allow</span>
+          <span class="arrow">&rarr;</span>
+          <span class="step">3 &middot; Log</span>
+        </div>
+        <span class="trust"><span class="d"></span>Local-only &middot; nothing leaves your browser</span>
+        <p class="foot" style="margin: 0;">Works with muse.ai &middot; Chrome Manifest V3 &middot; 6 languages</p>
       </div>
-      <p class="foot">Works with muse.ai &middot; Chrome Manifest V3 &middot; 6 languages</p>
     </div>
     <div class="right">
       <div class="card">
-        <div class="ttl">Needs review</div>
+        <span class="chip-warn">Needs review</span>
         <p class="q">Allow Muse to perform this action on your GitHub account?</p>
         <div class="rows">
           <div><b>Action</b> List branches on GitHub</div>
@@ -94,19 +112,25 @@
         <div class="btns">
           <span class="btn allow">Allow</span>
           <span class="btn deny">Deny</span>
-          <span class="badge">&#10003; auto-clicked in 0.2s</span>
         </div>
+        <span class="badge"><span class="d"></span>auto-clicked in 0.2s</span>
       </div>
-      <div class="pop">
+      <div class="card stats">
         <div class="head">
           <svg class="mini" viewBox="0 0 512 512"><rect x="16" y="16" width="480" height="480" rx="133" fill="#0064E0"/><path d="M124 284 L214 374 L368 182" fill="none" stroke="#fff" stroke-width="76" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <b>Muse Auto-Allow</b><span class="dot"></span>
+          <b>Statistics</b>
+          <span class="range">Last 14 days</span>
         </div>
-        <div class="line">Clicked: <span class="cnt">489</span></div>
-        <div class="log">
-          <div class="item"><span class="k k-allow">allow</span>12:00:41 &mdash; list branches &middot; demo-project</div>
-          <div class="item"><span class="k k-expand">expand</span>12:00:38 &mdash; create or update files &middot; demo-project</div>
-          <div class="item"><span class="k k-open">open panel</span>12:00:35 &mdash; 2 tasks need your approval</div>
+        <div class="kstrip">
+          <div class="kchip"><div class="n">489</div><div class="t"><i class="blue"></i>Total</div></div>
+          <div class="kchip"><div class="n">14</div><div class="t"><i class="teal"></i>Today</div></div>
+          <div class="kchip"><div class="n">77</div><div class="t"><i class="violet"></i>This week</div></div>
+        </div>
+        <div class="bars">
+          <i class="c1" style="height:32%"></i><i class="c2" style="height:42%"></i><i class="c3" style="height:84%"></i><i class="c4" style="height:47%"></i>
+          <i class="c5" style="height:58%"></i><i class="c1" style="height:68%"></i><i class="c2" style="height:79%"></i><i class="c3" style="height:26%"></i>
+          <i class="c4" style="height:37%"></i><i class="c5" style="height:79%"></i><i class="c1" style="height:89%"></i><i class="c2" style="height:100%"></i>
+          <i class="c3" style="height:63%"></i><i class="c4" style="height:74%"></i>
         </div>
       </div>
     </div>
