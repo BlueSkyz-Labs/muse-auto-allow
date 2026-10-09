@@ -72,7 +72,7 @@ launchChromeDetached([
   `--user-data-dir=${profileDir}`,
   `--remote-debugging-port=${PORT}`,
   '--enable-unsafe-extension-debugging',
-  '--no-first-run',
+  '--no-first-run', '--force-color-profile=srgb',
   '--no-default-browser-check',
   '--disable-features=Translate,MediaRouter,CalculateNativeWinOcclusion,OptimizationHints',
   '--disable-background-networking',
@@ -216,7 +216,9 @@ try {
       const d = new Date(Date.now() - i * 864e5);
       byDay[d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate())] = 4 + ((i * 5 + 3) % 9);
     }
-    const seed = JSON.stringify({ stats: { byDay, byMonth: {}, byYear: {}, byTopic: { 'demo-project': 8, 'sample-app': 4 } }, clickCount: 128 });
+    const td = new Date();
+    byDay[td.getFullYear() + '-' + pad(td.getMonth() + 1) + '-' + pad(td.getDate())] = 11;
+    const seed = JSON.stringify({ stats: { byDay, byMonth: {}, byYear: {}, byTopic: { 'demo-project': 8, 'sample-app': 4 } }, clickCount: 489 });
     await send('Runtime.evaluate', { expression: `chrome.storage.local.set(${seed}); "ok"`, returnByValue: true }, ppS);
   }
   await send('Runtime.evaluate', { expression: 'chrome.storage.local.set({ enabled: true }); "ok"', returnByValue: true }, ppS);

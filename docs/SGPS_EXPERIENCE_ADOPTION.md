@@ -17,13 +17,13 @@ by `sgps_prompt_router.py`).
 | Localization | 6 locales: en, vi, zh_CN, ja, ko, es — popup UI + manifest name/description + store listing copy. |
 | State honesty | Empty state ("No clicks yet"), populated log, disabled state (status dot off). No silent failure: every click is logged with kind / label / context (last 50, local). |
 | Copy clarity | Plain language; the destructive-side risk of auto-allow is disclosed explicitly (store listing + on/off switch). No dark patterns. |
-| Brand | Soft Muse-inspired motion language (cream + electric blue + sparkle), deliberately NOT a clone of Meta branding. |
+| Brand | Brand Kit v2 (`docs/BRANDING.md`): Muse-adjacent light-first tokens + original check-on-tile mark; deliberately NOT a clone of Muse/Meta branding. |
 
 ## Release adoption (Release/Production v1.0)
 
 - `scripts/build.mjs` produces `dist/muse-auto-allow-v<version>.zip` with `manifest.json` at the zip root (verified by entry listing).
 - `store/PUBLISH_RUNBOOK.md` covers account setup, listing, privacy practices, review pitfalls, and the post-publish update flow (version bump → rebuild → upload).
-- Screenshots: `store/screenshot1.png` (1280x800), `store/promo440x280.png` (440x280).
+- Screenshots: 4×1280×800 (live runtime, stats, popup stage, overview) + promo 440×280 + marquee 1400×560 — see `store/SHOWCASE.md`.
 
 ## Evidence / status honesty
 
@@ -37,6 +37,6 @@ by `sgps_prompt_router.py`).
 
 ## STAGE -1 gates
 
-- Live truth baseline: local folder `C:\00. AI Project\muse-auto-allow` (not yet a git repo; no remote). `OBSERVED_AT` = build time.
+- Live truth baseline: local folder `C:\00. AI Project\muse-auto-allow` (git repo on branch `main`; no remote yet). `OBSERVED_AT` = build time.
 - **HEAD changed ⇒ affected evidence invalidated:** the E2E run must be re-executed after any further edit to `extension/` before any GO/publish claim.
 - No verdict beyond executed evidence; store approval is an external gate and is never claimed here.

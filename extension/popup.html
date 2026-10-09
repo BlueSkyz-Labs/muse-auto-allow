@@ -5,10 +5,10 @@
 <style>
   :root { color-scheme: light dark;
           --blue: #005abf; --ink: #111112; --muted: #4a4e54; --bg: #fcfcfc; --surface: #ffffff;
-          --line: rgba(17,17,18,.08); --fill: rgba(17,17,18,.05); --on: #31a24c; }
+          --line: rgba(17,17,18,.08); --fill: rgba(17,17,18,.05); --on: #31a24c; --track: rgba(17,17,18,.22); }
   @media (prefers-color-scheme: dark) {
     :root { --blue: #0a5ce0; --ink: #e4e6eb; --muted: #b0b3b8; --bg: #18191a; --surface: #242526;
-            --line: #3e4042; --fill: #3a3b3c; --on: #45c463; }
+            --line: #3e4042; --fill: #3a3b3c; --on: #45c463; --track: rgba(255,255,255,.30); }
   }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -33,7 +33,15 @@
   }
   .row { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
   label.sw { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
-  input[type=checkbox] { width: 34px; height: 18px; accent-color: var(--blue); cursor: pointer; }
+  input[type=checkbox] { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .track { width: 38px; height: 22px; border-radius: 999px; background: var(--track); position: relative;
+           transition: background .18s ease; flex: 0 0 auto; }
+  input:checked + .track { background: var(--blue); }
+  .knob { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff;
+          transition: transform .18s ease; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+  input:checked + .track .knob { transform: translateX(16px); }
+  input:focus-visible + .track { outline: 2px solid var(--blue); outline-offset: 2px; }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
   input[type=number] { width: 80px; background: var(--fill); color: var(--ink); border: 1px solid var(--line); border-radius: 999px;
                        padding: 5px 12px; font: inherit; font-weight: 500; text-align: center; }
   .muted { color: var(--muted); }
@@ -86,14 +94,14 @@
     <h1 data-i18n="extName">Muse Auto-Allow</h1>
     <span class="dot" id="dot" aria-hidden="true"></span>
   </div>
-  <label class="sw"><input type="checkbox" id="enabled"> <span data-i18n="toggleLabel">Auto-click Allow</span></label>
-  <div class="row"><span class="muted" data-i18n="delayLabel">Delay between clicks:</span>
+  <label class="sw"><input type="checkbox" id="enabled"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="toggleLabel">Auto-click Allow</span></label>
+  <div class="row"><label class="muted" for="delay" data-i18n="delayLabel">Delay between clicks:</label>
     <input type="number" id="delay" min="0" max="10000" step="100"> <span class="muted">ms</span></div>
   <div class="row"><span class="muted" data-i18n="clickedLabel">Clicked:</span><b class="count" id="count">0</b></div>
   <div class="row"><span class="muted" data-i18n="todayLabel">Today:</span><b class="count" id="today" style="font-size:13px">0</b><span class="chip" id="musestat">&hellip;</span></div>
   <div class="mini"><div class="mcap muted" data-i18n="last7">Last 7 days</div><svg id="mini" width="292" height="46" aria-hidden="true"></svg></div>
   <div class="row"><button class="btn" id="openstats" data-i18n="statsOpen">Statistics</button><span class="muted note" data-i18n="onlyMuse">Works only on muse.ai</span></div>
-  <div class="log" id="log"></div>
+  <div class="log" id="log" aria-live="polite"></div>
   <script src="popup.js"></script>
 </body>
 </html>

@@ -29,7 +29,10 @@ Evidence base (recon 2026-10-09, captured from the live site):
   The check is our own mark; it deliberately does **not** reproduce Muse's squiggle "m".
 - **Tile:** radius 26% (133/512), flat, filled with the brand gradient (diagonal
   72,60 → 452,464).
-- **Check:** stroke 76/512 (92/512 in the 16–32 px variant), round caps/joins, pure white.
+- **Check:** stroke 70/512 (86/512 in the 16–32 px variant), round caps/joins, pure white.
+- **Provenance:** the gradient is Muse-adjacent by design (visual compatibility inside Muse's
+  own UI); the mark geometry is original — no Muse/Meta logo shapes. Shape re-checked
+  2026-10-09 (icon16/128, promo, overview): no squiggle/infinity resemblance.
 - **Sizes:** 16 / 32 (bold variant), 48 / 128 / 512 (standard). Rendered by
   `scripts/render.mjs` from `assets/icon.html` + `assets/icon-small.html`.
 - **Motion:** in the popup header the check draws in (stroke-dashoffset, 0.55 s); disabled
@@ -50,8 +53,10 @@ Evidence base (recon 2026-10-09, captured from the live site):
 | Cream accent (soft blobs) | `#f3d9b4` | — |
 | Success dot | `#31a24c` | `#45c463` |
 
-Contrast: `--ink` on `--bg` ≈ 19:1; `--muted` on `--bg` ≈ 6.6:1; white on `--blue` ≈ 6:1;
-`#0866ff` on `#18191a` ≈ 4.9:1. All ≥ WCAG AA for their sizes.
+Contrast (computed from these tokens): `--ink` on `--bg` 18.39:1; `--muted` on `--bg` 8.16:1
+(light); white on `--blue` 6.0:1 (light) / 5.80:1 (dark `#0a5ce0`). The dark accent is a
+filled-control background (paired with white text, 5.80:1), not body text on `--bg`.
+All shipped text pairs ≥ 5.30:1 (WCAG AA).
 
 ## 4. Type & shape
 

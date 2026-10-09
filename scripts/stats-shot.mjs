@@ -75,7 +75,7 @@ launchChromeDetached([
   `--user-data-dir=${profileDir}`,
   `--remote-debugging-port=${PORT}`,
   '--enable-unsafe-extension-debugging',
-  '--no-first-run', '--no-default-browser-check',
+  '--no-first-run', '--no-default-browser-check', '--force-color-profile=srgb',
   '--disable-features=Translate,MediaRouter,CalculateNativeWinOcclusion,OptimizationHints',
   '--disable-background-timer-throttling',
   '--disable-backgrounding-occluded-windows',

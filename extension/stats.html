@@ -28,7 +28,7 @@
   .chart rect.bar { opacity: .92; transition: opacity .15s ease; }
   .chart rect.bar:hover { opacity: 1; }
   .chart text { fill: var(--muted); font-size: 11px; }
-  .chart text.val { fill: var(--ink); font-size: 10px; font-weight: 500; }
+  .chart text.val { fill: var(--ink); font-size: 11px; font-weight: 500; }
   .topics { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px 16px; }
   .topics .cap { font-size: 12.5px; color: var(--muted); margin-bottom: 10px; }
   .topic { display: flex; align-items: center; gap: 10px; padding: 4px 0; }
@@ -43,6 +43,7 @@
   .tool { background: var(--fill); color: var(--ink); border: 1px solid var(--line); border-radius: 999px;
           padding: 6px 14px; cursor: pointer; font: inherit; font-weight: 500; }
   .tool:hover { filter: brightness(.97); }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-thumb { background: rgba(17,17,18,.18); border-radius: 999px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -66,10 +67,10 @@
   </div>
 
   <div class="seg" id="seg">
-    <button data-range="day" class="active" data-i18n="rangeDay">Day</button>
-    <button data-range="week" data-i18n="rangeWeek">Week</button>
-    <button data-range="month" data-i18n="rangeMonth">Month</button>
-    <button data-range="year" data-i18n="rangeYear">Year</button>
+    <button data-range="day" class="active" aria-pressed="true" data-i18n="rangeDay">Day</button>
+    <button data-range="week" aria-pressed="false" data-i18n="rangeWeek">Week</button>
+    <button data-range="month" aria-pressed="false" data-i18n="rangeMonth">Month</button>
+    <button data-range="year" aria-pressed="false" data-i18n="rangeYear">Year</button>
   </div>
 
   <div class="chart"><div class="ccap" id="ccap"></div><svg id="chart" viewBox="0 0 720 158" role="img"></svg></div>

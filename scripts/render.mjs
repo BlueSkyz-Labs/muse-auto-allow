@@ -22,7 +22,7 @@ fs.mkdirSync(profileDir, { recursive: true });
 const CHROME_ARGS = [
   `--user-data-dir=${profileDir}`,
   `--remote-debugging-port=${PORT}`,
-  '--no-first-run',
+  '--no-first-run', '--force-color-profile=srgb',
   '--no-default-browser-check',
   '--disable-background-networking',
   '--window-position=-32000,-32000',

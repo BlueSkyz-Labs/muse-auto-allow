@@ -152,7 +152,7 @@ $('seg').addEventListener('click', (e) => {
   const b = e.target.closest('button[data-range]');
   if (!b) return;
   RANGE = b.dataset.range;
-  document.querySelectorAll('#seg button').forEach((x) => x.classList.toggle('active', x === b));
+  document.querySelectorAll('#seg button').forEach((x) => { x.classList.toggle('active', x === b); x.setAttribute('aria-pressed', String(x === b)); });
   renderChart();
 });
 
