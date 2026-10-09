@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.6.0 (unreleased)
+- Chrome best practices: explicit `extension_pages` CSP + `minimum_chrome_version` 116; versioned idempotent SW migration runner; `unhandledrejection` console surface; zero-dependency lint gate (`scripts/lint.mjs` — syntax/JSON/i18n parity/no-remote-code/manifest hygiene) wired into the publish runbook; practices checklist in `docs/CHROME_BEST_PRACTICES.md`.
+- New detection path E: the chat-level "A task needs review" bar — its Review button is clicked (own kind `review-bar`, 1 s throttle) so the approval panel renders and the Allow/Deny pair is approved on the next sweep.
+- Redteam v4 hardening (V4-1..V4-8 disposition in `docs/REDTEAM_V4.md`).
+
 ## 1.5.0
 - Upgrade-safe data inheritance: a `schemaVersion` stamp is written with every flush; all prior shapes (log, counters, aggregates) stay readable — nothing is dropped on upgrade. Legacy plaintext log entries keep rendering.
 - Encrypted at rest: the approval text in the click log is stored AES-GCM-256 encrypted (per-install key in `chrome.storage.local`; documented limitation — protects casual profile inspection, not a full local attacker). The popup decrypts for display; undecryptable entries degrade gracefully.
