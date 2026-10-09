@@ -386,6 +386,9 @@ Chrome from the package), the 1280×800 screenshot, and the 440×280 promo tile.
 Screenshot guidance (verify before submit that the uploaded images match these sizes): show the real Muse approval card with the extension's popup open
 (click counter + log visible). Do **not** use a mockup that implies the extension does
 anything beyond its single purpose, and do not put misleading wording in the image.
+A second image (`store/screenshot2-stats.png`, 1280x800) shows the Statistics page with
+real chart data; it must stay a truthful capture (the numbers come from the extension's
+own local storage).
 
 ---
 
