@@ -91,5 +91,17 @@
   },
   "museTabsFoundOne": {
     "message": "已打开 1 个 muse.ai 标签页"
+  },
+  "exportData": {
+    "message": "导出数据"
+  },
+  "importData": {
+    "message": "导入数据"
+  },
+  "importConfirm": {
+    "message": "恢复此备份？当前的设置、日志和统计数据将被替换。"
+  },
+  "importBad": {
+    "message": "不是 Muse Auto-Allow 的备份文件。"
   }
 }

@@ -249,6 +249,38 @@
     for (const k of keys.slice(0, keys.length - keep)) delete map[k];
   }
   const asObj = (v) => (v && typeof v === 'object' && !Array.isArray(v)) ? v : {};
+  // --- v1.5.0: at-rest encryption for the approval text (log context) + schema stamp ---
+  // AES-GCM (key per install, kept in chrome.storage.local). Protects against casual
+  // inspection of the browser profile on disk; it is NOT protection against an attacker
+  // who already has full access to the profile (the key lives there too). Legacy
+  // plaintext entries from older versions stay readable (upgrade inheritance).
+  let cryptKey = null;
+  const b64 = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf)));
+  const unb64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+  async function getKey() {
+    if (cryptKey) return cryptKey;
+    try {
+      const s = await chrome.storage.local.get({ cryptKeyRaw: null });
+      if (s.cryptKeyRaw) {
+        cryptKey = await crypto.subtle.importKey('raw', unb64(s.cryptKeyRaw), 'AES-GCM', false, ['encrypt', 'decrypt']);
+        return cryptKey;
+      }
+      const k = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']);
+      const raw = await crypto.subtle.exportKey('raw', k);
+      await chrome.storage.local.set({ cryptKeyRaw: b64(raw) });
+      cryptKey = k;
+      return k;
+    } catch { return null; }
+  }
+  async function encryptCtx(text) {
+    try {
+      const k = await getKey();
+      if (!k) return null;
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, k, new TextEncoder().encode(String(text || '')));
+      return { iv: b64(iv), ct: b64(ct) };
+    } catch { return null; }
+  }
   // One get->set per flush, updating log + counter + aggregates together. Flushes are
   // serialized per tab (clickFlushing) and, when the Web Locks API is available, across
   // tabs of the same origin too (redteam V3-2: the 1-minute alarm can nudge several
@@ -259,14 +291,20 @@
     clickFlushing = true;
     const run = () => new Promise((resolve) => {
       try {
-        chrome.storage.local.get({ log: [], stats: null, clickCount: 0 }, (s) => {
+        chrome.storage.local.get({ log: [], stats: null, clickCount: 0 }, async (s) => {
           const log = Array.isArray(s.log) ? s.log : [];
           let count = Number(s.clickCount) || 0;
           const st = asObj(s.stats);
           st.byDay = asObj(st.byDay); st.byMonth = asObj(st.byMonth); st.byYear = asObj(st.byYear); st.byTopic = asObj(st.byTopic);
           while (clickQueue.length) {
             const item = clickQueue.shift();
-            log.unshift(item.entry);
+            const entry = item.entry;
+            // encrypt the approval text at rest; on failure keep plaintext (never lose the record)
+            try {
+              const enc = await encryptCtx(entry.context);
+              if (enc) { entry.ctx = enc; delete entry.context; }
+            } catch { /* keep plaintext */ }
+            log.unshift(entry);
             count += 1;
             st.byDay[item.day] = (Number(st.byDay[item.day]) || 0) + 1;
             st.byMonth[item.month] = (Number(st.byMonth[item.month]) || 0) + 1;
@@ -274,7 +312,7 @@
             st.byTopic[item.topic] = (Number(st.byTopic[item.topic]) || 0) + 1;
           }
           pruneKeys(st.byDay, 400); pruneKeys(st.byMonth, 24); pruneTopics(st.byTopic, 100);
-          try { chrome.storage.local.set({ log: log.slice(0, 50), stats: st, clickCount: count }); } catch { /* invalidated */ }
+          try { chrome.storage.local.set({ log: log.slice(0, 50), stats: st, clickCount: count, schemaVersion: 2 }); } catch { /* invalidated */ }
           resolve();
         });
       } catch { resolve(); }

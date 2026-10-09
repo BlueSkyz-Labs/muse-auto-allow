@@ -37,7 +37,12 @@
   .topic .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #0082FB, #0064E0); border-radius: 999px; transition: width .35s ease; }
   .topic .n { width: 58px; text-align: right; color: var(--ink); font-weight: 500; font-variant-numeric: tabular-nums; }
   .empty { color: var(--muted); padding: 8px 0; }
-  .foot { color: var(--muted); font-size: 12px; margin-top: 8px; }
+  .footrow { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+  .foot { color: var(--muted); font-size: 12px; }
+  .tools { display: flex; gap: 8px; }
+  .tool { background: var(--fill); color: var(--ink); border: 1px solid var(--line); border-radius: 999px;
+          padding: 6px 14px; cursor: pointer; font: inherit; font-weight: 500; }
+  .tool:hover { filter: brightness(.97); }
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-thumb { background: rgba(17,17,18,.18); border-radius: 999px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -67,14 +72,21 @@
     <button data-range="year" data-i18n="rangeYear">Year</button>
   </div>
 
-  <div class="chart"><div class="ccap" id="ccap"></div><svg id="chart" viewBox="0 0 720 170" role="img"></svg></div>
+  <div class="chart"><div class="ccap" id="ccap"></div><svg id="chart" viewBox="0 0 720 158" role="img"></svg></div>
 
   <div class="topics">
     <div class="cap" data-i18n="topicsTitle">By topic (repo / project)</div>
     <div id="topics"></div>
   </div>
 
-  <div class="foot" data-i18n="onlyMuse">Works only on muse.ai</div>
+  <div class="footrow">
+    <span class="foot" data-i18n="onlyMuse">Works only on muse.ai</span>
+    <span class="tools">
+      <button class="tool" id="exportData" data-i18n="exportData">Export data</button>
+      <button class="tool" id="importData" data-i18n="importData">Import data</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none">
+    </span>
+  </div>
   <script src="stats.js"></script>
 </body>
 </html>

@@ -1,0 +1,41 @@
+# Chrome Web Store — Showcase Kit
+
+Asset inventory for the public listing. All sizes verified; all demo data is strictly
+fictional (Example Org, demo-project, sample-app, web-starter, notes-app,
+files.example.com) — never real projects or personal data.
+
+| Asset | File | Size | Store requirement |
+|---|---|---|---|
+| Extension icon | `extension/icons/icon128.png` | 128×128 | required (in package) |
+| Screenshot 1 — live popup + approval cards (real runtime capture) | `store/screenshot1.png` | 1280×800 | required (≥1; 1280×800 or 640×400) |
+| Screenshot 2 — Statistics dashboard (real render) | `store/screenshot2-stats.png` | 1280×800 | up to 5 total |
+| Screenshot 3 — popup (real render) | `store/screenshot3-popup.png` | 1280×800 | up to 5 total |
+| Screenshot 4 — designed overview | `store/screenshot4-overview.png` | 1280×800 | up to 5 total |
+| Small promo tile | `store/promo440x280.png` | 440×280 | optional (featured placement) |
+| Marquee promo | `store/marquee1400x560.png` | 1400×560 | optional (featured placement) |
+| Listing copy (6 locales) | `store/LISTING.md` | — | title / short / full description per locale |
+| Permission justifications | `store/LISTING.md` §5 | — | required in dashboard |
+| Privacy policy | `store/PRIVACY.md` | — | required (public URL before submit) |
+| Package | `dist/muse-auto-allow-v1.5.0.zip` | 18 files | built by `scripts/build.mjs`, byte-verified by `scripts/verify-zip.py` |
+| Brand spec | `docs/BRANDING.md` | — | internal reference (tokens, mark, rules) |
+
+## Regenerate everything
+
+```bash
+node scripts/render.mjs        # icons, promo, marquee, overview
+node scripts/stats-shot.mjs    # screenshot2 (stats) + screenshot3 (popup) + dark QA pair
+node scripts/store-shot.mjs    # screenshot1 (real runtime capture)
+node scripts/build.mjs && python scripts/verify-zip.py
+```
+
+Dark-mode renders are captured to the OS temp dir (`maa-dark/`) for QA only — the
+store images are light-theme (Muse language).
+
+## Pre-submit checklist
+
+- [ ] Replace the `TODO: fill before submit` placeholders in `store/PRIVACY.md` (publisher legal name, support email/URL, effective date)
+- [ ] Upload screenshots 1–4, promo tile, marquee
+- [ ] Paste listing copy per locale from `store/LISTING.md`
+- [ ] Paste permission justifications (storage / alarms / host)
+- [ ] Host the privacy policy at a public URL and paste it into the dashboard
+- [ ] Build + verify the zip; upload `dist/muse-auto-allow-v1.5.0.zip`

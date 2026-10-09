@@ -108,6 +108,7 @@ const JOBS = [
   // capture) — do not render the mock over it.
   { src: 'assets/store-screenshot.html', out: 'store/screenshot4-overview.png', w: 1280, h: 800, transparent: false },
   { src: 'assets/promo-tile.html', out: 'store/promo440x280.png', w: 440, h: 280, transparent: false },
+  { src: 'assets/marquee.html', out: 'store/marquee1400x560.png', w: 1400, h: 560, transparent: false },
 ];
 
 let ws = null;

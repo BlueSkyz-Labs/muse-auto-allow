@@ -91,5 +91,17 @@
   },
   "museTabsFoundOne": {
     "message": "muse.ai タブ 1 件が開いています"
+  },
+  "exportData": {
+    "message": "データをエクスポート"
+  },
+  "importData": {
+    "message": "データをインポート"
+  },
+  "importConfirm": {
+    "message": "このバックアップを復元しますか？現在の設定・ログ・統計は置き換えられます。"
+  },
+  "importBad": {
+    "message": "Muse Auto-Allow のバックアップファイルではありません。"
   }
 }

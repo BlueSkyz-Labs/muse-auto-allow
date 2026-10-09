@@ -91,5 +91,17 @@
   },
   "museTabsFoundOne": {
     "message": "muse.ai 탭 1개 열림"
+  },
+  "exportData": {
+    "message": "데이터 내보내기"
+  },
+  "importData": {
+    "message": "데이터 가져오기"
+  },
+  "importConfirm": {
+    "message": "이 백업을 복원할까요? 현재 설정, 로그, 통계가 대체됩니다."
+  },
+  "importBad": {
+    "message": "Muse Auto-Allow 백업 파일이 아닙니다."
   }
 }

@@ -19,15 +19,48 @@ function esc(s) {
 const KIND_KEY = { allow: 'kindAllow', expand: 'kindExpand', 'open-panel': 'kindOpenPanel' };
 const kindLabel = (k) => t(KIND_KEY[k] || '', k);
 
-function renderLog(log) {
-  $('log').innerHTML = log.length
-    ? log.slice(0, 50).map((e) => {
+// --- v1.5.0: decrypt at-rest context + show the user's LOCAL system time ---
+let popCryptKey = null;
+const unb64p = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+async function popKey() {
+  if (popCryptKey) return popCryptKey;
+  try {
+    const s = await chrome.storage.local.get({ cryptKeyRaw: null });
+    if (!s.cryptKeyRaw) return null;
+    popCryptKey = await crypto.subtle.importKey('raw', unb64p(s.cryptKeyRaw), 'AES-GCM', false, ['decrypt']);
+    return popCryptKey;
+  } catch { return null; }
+}
+async function decCtx(e) {
+  if (e && e.ctx && e.ctx.iv && e.ctx.ct) {
+    try {
+      const k = await popKey();
+      if (!k) return '(encrypted)';
+      const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64p(e.ctx.iv) }, k, unb64p(e.ctx.ct));
+      return new TextDecoder().decode(pt);
+    } catch { return '(unable to decrypt)'; }
+  }
+  return String((e && e.context) || ''); // legacy plaintext entries stay readable
+}
+// log times always show the viewer's system clock (stored values are UTC ISO)
+function localTime(iso) {
+  try { const d = new Date(iso); if (isNaN(d.getTime())) return ''; return pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds()); } catch { return ''; }
+}
+function localFull(iso) {
+  try { const d = new Date(iso); return isNaN(d.getTime()) ? '' : d.toLocaleString(); } catch { return ''; }
+}
+let renderSeq = 0;
+async function renderLog(log) {
+  const seq = ++renderSeq;
+  const items = await Promise.all(log.slice(0, 50).map(async (e) => ({ e, plain: await decCtx(e) })));
+  if (seq !== renderSeq) return; // a newer render superseded this one
+  $('log').innerHTML = items.length
+    ? items.map(({ e, plain }) => {
         const k = e.kind || 'allow';
-        const ctx = String(e.context || '');
-        const ctxS = ctx.length > 170 ? ctx.slice(0, 170) + '…' : ctx;
+        const ctxS = plain.length > 170 ? plain.slice(0, 170) + '…' : plain;
         const lbl = String(e.label || '');
         const lblS = lbl.length > 40 ? lbl.slice(0, 40) + '…' : lbl;
-        return '<div class="item"><span class="t">' + esc((e.at || '').slice(11, 19)) + '</span>' +
+        return '<div class="item"><span class="t" title="' + esc(localFull(e.at)) + '">' + esc(localTime(e.at)) + '</span>' +
           '<span class="k k-' + esc(k) + '">' + esc(kindLabel(k)) + '</span>' +
           '<b>' + esc(lblS) + '</b>' +
           '<div class="c">' + esc(ctxS) + '</div></div>';

@@ -69,7 +69,7 @@ function renderChart() {
   const svg = $('chart');
   const data = series();
   $('ccap').textContent = t(CAP[RANGE][0], CAP[RANGE][1]);
-  const W = 720, H = 170, padL = 8, padR = 8, padT = 26, padB = 22;
+  const W = 720, H = 158, padL = 8, padR = 8, padT = 26, padB = 22;
   const innerW = W - padL - padR, innerH = H - padT - padB;
   const n = data.length || 1;
   const gap = Math.max(3, Math.floor(innerW / n * 0.22));
@@ -154,4 +154,39 @@ $('seg').addEventListener('click', (e) => {
   RANGE = b.dataset.range;
   document.querySelectorAll('#seg button').forEach((x) => x.classList.toggle('active', x === b));
   renderChart();
+});
+
+// --- v1.5.0: backup / restore (upgrade-safe data inheritance) ---
+// Export bundles the full chrome.storage.local state (settings, log — including the
+// encryption key so the backup stays readable, stats aggregates, counters) into one
+// JSON file. Import validates the app marker, confirms, then replaces the stored state.
+$('exportData').addEventListener('click', async () => {
+  try {
+    const s = await chrome.storage.local.get(null);
+    const payload = { app: 'muse-auto-allow', schemaVersion: 2, exportedAt: new Date().toISOString(), data: s };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'muse-auto-allow-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  } catch { /* ignore */ }
+});
+$('importData').addEventListener('click', () => { try { $('importFile').click(); } catch { /* ignore */ } });
+$('importFile').addEventListener('change', async (ev) => {
+  const f = ev.target.files && ev.target.files[0];
+  if (!f) return;
+  try {
+    const j = JSON.parse(await f.text());
+    if (!j || j.app !== 'muse-auto-allow' || !j.data || typeof j.data !== 'object') {
+      alert(t('importBad', 'Not a Muse Auto-Allow backup file.'));
+    } else if (confirm(t('importConfirm', 'Restore this backup? Current settings, log and statistics will be replaced.'))) {
+      await chrome.storage.local.set(j.data);
+      renderAll();
+    }
+  } catch {
+    alert(t('importBad', 'Not a Muse Auto-Allow backup file.'));
+  }
+  ev.target.value = '';
 });

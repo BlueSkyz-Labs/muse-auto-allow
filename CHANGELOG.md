@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.0
+- Upgrade-safe data inheritance: a `schemaVersion` stamp is written with every flush; all prior shapes (log, counters, aggregates) stay readable — nothing is dropped on upgrade. Legacy plaintext log entries keep rendering.
+- Encrypted at rest: the approval text in the click log is stored AES-GCM-256 encrypted (per-install key in `chrome.storage.local`; documented limitation — protects casual profile inspection, not a full local attacker). The popup decrypts for display; undecryptable entries degrade gracefully.
+- Backup / restore: the Statistics page gains "Export data" / "Import data" — one JSON file with settings, log (incl. the key so backups stay readable), statistics and counters; import validates the app marker and confirms before replacing.
+- Log timestamps now display the viewer's LOCAL system clock (stored values remain UTC ISO; hover shows the full local date-time).
+- Store showcase kit completed to Chrome Web Store standards: 4 screenshots (1280×800), promo 440×280, new marquee 1400×560, `store/SHOWCASE.md` index; all demo data strictly fictional.
+
 ## 1.4.0
 - UI/UX overhaul in Muse's design language (tokens captured from the live site, 2026-10-09): light-first surfaces (`#fcfcfc` page, white cards, `#111112` ink, `#005abf` accent, pill controls, weight-500 tight-tracked headings) with a full dark theme via `prefers-color-scheme` (`#18191a` / `#242526` / `#0a5ce0`); popup + Statistics page rebuilt on shared tokens.
 - Brand Kit v2 (`docs/BRANDING.md`): original check-on-tile mark with the brand gradient `#0082FB → #0064E0 → #0040DC` (Muse-compatible palette, deliberately not Muse's trademarked squiggle); refined 16/32/48/128/512 icons; new promo tile + designed overview; every store asset regenerated.

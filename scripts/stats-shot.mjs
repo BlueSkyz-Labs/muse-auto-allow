@@ -198,7 +198,7 @@ try {
   out.popup = path.join(OUT, 'screenshot3-popup.png');
 
   // ---- dark-mode QA captures (scratch only, never store assets) ----
-  const QADIR = 'C:/Users/<local-user>/AppData/Local/hermes/cache/scratch/maa-dark';
+  const QADIR = path.join(os.tmpdir(), 'maa-dark');
   fs.mkdirSync(QADIR, { recursive: true });
   const DARK = { features: [{ name: 'prefers-color-scheme', value: 'dark' }] };
   await send('Emulation.setEmulatedMedia', DARK, s1);

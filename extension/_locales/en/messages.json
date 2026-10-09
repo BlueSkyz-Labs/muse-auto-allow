@@ -91,5 +91,17 @@
   },
   "museTabsFoundOne": {
     "message": "1 muse.ai tab open"
+  },
+  "exportData": {
+    "message": "Export data"
+  },
+  "importData": {
+    "message": "Import data"
+  },
+  "importConfirm": {
+    "message": "Restore this backup? Current settings, log and statistics will be replaced."
+  },
+  "importBad": {
+    "message": "Not a Muse Auto-Allow backup file."
   }
 }

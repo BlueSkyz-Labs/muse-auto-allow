@@ -91,5 +91,17 @@
   },
   "museTabsFoundOne": {
     "message": "1 tab muse.ai đang mở"
+  },
+  "exportData": {
+    "message": "Xuất dữ liệu"
+  },
+  "importData": {
+    "message": "Nhập dữ liệu"
+  },
+  "importConfirm": {
+    "message": "Khôi phục bản sao lưu? Cài đặt, nhật ký và thống kê hiện tại sẽ bị thay thế."
+  },
+  "importBad": {
+    "message": "Không phải tệp sao lưu của Muse Auto-Allow."
   }
 }
