@@ -276,7 +276,7 @@ try {
     <div class="blob b1"></div><div class="blob b2"></div>
     <div class="stage">
       <div class="col pop">
-        <div class="cap"><b>Live popup</b> — real click log, counter, on/off, delay</div>
+        <div class="cap"><b>Live popup</b> — real click log, counter, auto follow-up, on/off</div>
         <img src="data:image/png;base64,${popupB64}">
       </div>
       <div class="col card">

@@ -57,15 +57,12 @@
   .kchip .n { font-size: 19px; font-weight: 600; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; color: #111112; }
   .kchip .t { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #5c6066; margin-top: 2px; }
   .kchip .t i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
-  .kchip .t i.blue { background: #0f63e6; } .kchip .t i.teal { background: #0e8571; } .kchip .t i.violet { background: #6d3ad6; }
+  .kchip .t i.blue { background: #0f63e6; } .kchip .t i.rose { background: #c2263f; } .kchip .t i.teal { background: #0e8571; }
   .bars { display: flex; align-items: flex-end; gap: 6px; height: 62px; border-bottom: 1px solid rgba(17,17,18,.18);
           margin-bottom: 4px; }
-  .bars i { flex: 1; border-radius: 3px 3px 0 0; display: block; }
-  .bars i.c1 { background: linear-gradient(180deg, #0f63e6, #0a4fc4); }
-  .bars i.c2 { background: linear-gradient(180deg, #c2263f, #a51e35); }
-  .bars i.c3 { background: linear-gradient(180deg, #0e8571, #0a6d5d); }
-  .bars i.c4 { background: linear-gradient(180deg, #bf5700, #a34705); }
-  .bars i.c5 { background: linear-gradient(180deg, #6d3ad6, #5c2fb8); }
+  .bars i { flex: 1; border-radius: 3px 3px 0 0; display: block;
+            background: linear-gradient(180deg, #0f63e6, #0a4fc4); }
+  .bars i.now { background: linear-gradient(180deg, #0040DC, #0030b0 62%, #00289c); }
 </style></head>
 <body>
   <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
@@ -119,18 +116,18 @@
         <div class="head">
           <svg class="mini" viewBox="0 0 512 512"><rect x="16" y="16" width="480" height="480" rx="133" fill="#0064E0"/><path d="M124 284 L214 374 L368 182" fill="none" stroke="#fff" stroke-width="76" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <b>Statistics</b>
-          <span class="range">Last 14 days</span>
+          <span class="range">Day &middot; Last 14 days</span>
         </div>
         <div class="kstrip">
           <div class="kchip"><div class="n">489</div><div class="t"><i class="blue"></i>Total</div></div>
-          <div class="kchip"><div class="n">14</div><div class="t"><i class="teal"></i>Today</div></div>
-          <div class="kchip"><div class="n">77</div><div class="t"><i class="violet"></i>This week</div></div>
+          <div class="kchip"><div class="n">14</div><div class="t"><i class="rose"></i>Today</div></div>
+          <div class="kchip"><div class="n">77</div><div class="t"><i class="teal"></i>This week</div></div>
         </div>
         <div class="bars">
-          <i class="c1" style="height:32%"></i><i class="c2" style="height:42%"></i><i class="c3" style="height:84%"></i><i class="c4" style="height:47%"></i>
-          <i class="c5" style="height:58%"></i><i class="c1" style="height:68%"></i><i class="c2" style="height:79%"></i><i class="c3" style="height:26%"></i>
-          <i class="c4" style="height:37%"></i><i class="c5" style="height:79%"></i><i class="c1" style="height:89%"></i><i class="c2" style="height:100%"></i>
-          <i class="c3" style="height:63%"></i><i class="c4" style="height:74%"></i>
+          <i style="height:32%"></i><i style="height:42%"></i><i style="height:84%"></i><i style="height:47%"></i>
+          <i style="height:58%"></i><i style="height:68%"></i><i style="height:79%"></i><i style="height:26%"></i>
+          <i style="height:37%"></i><i style="height:79%"></i><i style="height:89%"></i><i style="height:100%"></i>
+          <i style="height:63%"></i><i class="now" style="height:74%"></i>
         </div>
       </div>
     </div>

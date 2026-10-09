@@ -7,28 +7,31 @@
   :root { color-scheme: light dark;
           --blue: #005abf; --ink: #111112; --muted: #4a4e54; --bg: #fcfcfc; --surface: #ffffff;
           --line: rgba(17,17,18,.08); --fill: rgba(17,17,18,.05);
-          --axis: rgba(17,17,18,.32); --hairline: rgba(17,17,18,.07); --divide: rgba(17,17,18,.16); --focus: #005abf;
+          --axis: rgba(17,17,18,.32); --hairline: rgba(17,17,18,.07); --divide: rgba(17,17,18,.16); --grid: rgba(17,17,18,.34); --focus: #005abf;
           /* data-viz palette — light stops (every stop >= 4.5:1 on --surface) */
           --c-blue: #0f63e6;   --c-blue-b: #0a4fc4;
           --c-rose: #c2263f;   --c-rose-b: #a51e35;
           --c-teal: #0e8571;   --c-teal-b: #0a6d5d;
           --c-amber: #bf5700;  --c-amber-b: #a34705;
           --c-violet: #6d3ad6; --c-violet-b: #5c2fb8;
+          /* trend chart: single-hue bars + brand-deep accent for the latest ('today') bar */
+          --c-now: #0040DC; --c-now-m: #0030b0; --c-now-b: #00289c; --now-ink: #005abf;
           /* glyph ink for tinted chips (deeper in light, brighter in dark) */
-          --c-blue-g: #0a4fc4; --c-teal-g: #0a6d5d; --c-violet-g: #5c2fb8; --c-amber-g: #a34705;
+          --c-blue-g: #0a4fc4; --c-rose-g: #a51e35; --c-teal-g: #0a6d5d; --c-violet-g: #5c2fb8; --c-amber-g: #a34705;
           --sh-1: 0 1px 2px rgba(17,17,18,.05);
           --sh-2: 0 1px 2px rgba(17,17,18,.04), 0 16px 36px -24px rgba(17,17,18,.30); }
   @media (prefers-color-scheme: dark) {
     :root { --blue: #0a5ce0; --ink: #e4e6eb; --muted: #b0b3b8; --bg: #18191a; --surface: #242526;
             --line: #3e4042; --fill: #3a3b3c;
-            --axis: rgba(228,230,235,.36); --hairline: rgba(228,230,235,.08); --divide: rgba(228,230,235,.20); --focus: #7cb0ff;
+            --axis: rgba(228,230,235,.36); --hairline: rgba(228,230,235,.08); --divide: rgba(228,230,235,.20); --grid: rgba(228,230,235,.50); --focus: #7cb0ff;
             /* data-viz palette — dark stops (every stop >= 4.5:1 on --surface) */
             --c-blue: #5aa5ff;   --c-blue-b: #3f8ceb;
             --c-rose: #ff8296;   --c-rose-b: #f06680;
             --c-teal: #35d2b8;   --c-teal-b: #22b89e;
             --c-amber: #f2b435;  --c-amber-b: #dfa11c;
             --c-violet: #ab93fb; --c-violet-b: #9a83f5;
-            --c-blue-g: #5aa5ff; --c-teal-g: #35d2b8; --c-violet-g: #ab93fb; --c-amber-g: #f2b435;
+            --c-now: #a9caff; --c-now-m: #97c0ff; --c-now-b: #7fb0ff; --now-ink: #7cb0ff;
+            --c-blue-g: #5aa5ff; --c-rose-g: #ff8296; --c-teal-g: #35d2b8; --c-violet-g: #ab93fb; --c-amber-g: #f2b435;
             --sh-1: 0 1px 2px rgba(0,0,0,.35);
             --sh-2: 0 1px 2px rgba(0,0,0,.30), 0 20px 44px -28px rgba(0,0,0,.85); }
   }
@@ -64,6 +67,7 @@
   .kpi .v { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; color: var(--ink); font-variant-numeric: tabular-nums; }
   .kpi .l { font-size: 12px; color: var(--muted); margin-top: 3px; letter-spacing: .01em; }
   .k-blue   { --kc: var(--c-blue);   --kc-g: var(--c-blue-g); }
+  .k-rose   { --kc: var(--c-rose);   --kc-g: var(--c-rose-g); }
   .k-teal   { --kc: var(--c-teal);   --kc-g: var(--c-teal-g); }
   .k-violet { --kc: var(--c-violet); --kc-g: var(--c-violet-g); }
   .k-amber  { --kc: var(--c-amber);  --kc-g: var(--c-amber-g); }
@@ -73,17 +77,20 @@
   .chart .ccap { font-size: 12.5px; font-weight: 500; letter-spacing: .01em; color: var(--muted); margin-bottom: 8px; }
   .chart svg { display: block; width: 100%; height: auto; }
   .chart line.base { stroke: var(--axis); stroke-width: 1.25; }
+  .chart line.grid { stroke: var(--grid); stroke-width: 1; stroke-dasharray: 3 4; }
   .chart rect.bar { transition: filter .15s ease; }
+  .chart rect.bar.now { stroke: var(--now-ink); stroke-width: 1.5; }
   .chart rect.bar:hover { filter: brightness(1.06); }
   .chart text { fill: var(--muted); font-size: 11px; letter-spacing: .01em; }
   .chart text.val { fill: var(--ink); font-size: 11px; font-weight: 500; }
+  .chart text.tick { font-size: 10.5px; letter-spacing: .02em; paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round; }
+  .chart text.now { fill: var(--now-ink); font-weight: 600; }
+  .chart text.val.now { fill: var(--now-ink); }
 
-  /* data-viz color classes (shared by chart gradient stops + topic bars/dots) */
-  .sc-blue { stop-color: var(--c-blue); }     .sc-blue-b { stop-color: var(--c-blue-b); }
-  .sc-rose { stop-color: var(--c-rose); }     .sc-rose-b { stop-color: var(--c-rose-b); }
-  .sc-teal { stop-color: var(--c-teal); }     .sc-teal-b { stop-color: var(--c-teal-b); }
-  .sc-amber { stop-color: var(--c-amber); }   .sc-amber-b { stop-color: var(--c-amber-b); }
-  .sc-violet { stop-color: var(--c-violet); } .sc-violet-b { stop-color: var(--c-violet-b); }
+  /* data-viz color classes: trend-chart gradient stops (single hue + brand accent).
+     The five-hue palette below (t-*) is categorical only — topics + KPI chips. */
+  .sc-blue { stop-color: var(--c-blue); }  .sc-blue-b { stop-color: var(--c-blue-b); }
+  .sc-now { stop-color: var(--c-now); }    .sc-now-m { stop-color: var(--c-now-m); }  .sc-now-b { stop-color: var(--c-now-b); }
   .t-blue   { --tc: var(--c-blue);   --tcb: var(--c-blue-b); }
   .t-rose   { --tc: var(--c-rose);   --tcb: var(--c-rose-b); }
   .t-teal   { --tc: var(--c-teal);   --tcb: var(--c-teal-b); }
@@ -100,14 +107,14 @@
   .topic .name { width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); }
   .topic .bar { flex: 1; height: 10px; background: var(--fill); border-radius: 999px; overflow: hidden; }
   .topic .bar i { display: block; height: 100%; width: 0; border-radius: 999px;
-                  background: linear-gradient(90deg, var(--tc, var(--blue)), var(--tcb, var(--blue)));
+                  background: var(--tc, var(--blue));
                   transition: width .35s ease; }
   .topic .n { width: 56px; text-align: right; color: var(--ink); font-weight: 600; font-size: 13px; font-variant-numeric: tabular-nums; }
   .empty { color: var(--muted); padding: 10px 0; }
 
   /* ---- footer ---- */
   .footrow { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
-  .foot { color: var(--muted); font-size: 12px; letter-spacing: .01em; }
+  .foot { color: color-mix(in srgb, var(--muted) 35%, var(--ink)); font-size: 13px; font-weight: 500; letter-spacing: .01em; }
   .tools { display: flex; gap: 8px; }
   .tool { background: var(--fill); color: var(--ink); border: 1px solid var(--line); border-radius: 999px;
           padding: 7px 16px; cursor: pointer; font: inherit; font-weight: 500; box-shadow: var(--sh-1);
@@ -144,11 +151,11 @@
       <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.6l4.4 4.4L19 6.4"/></svg></span>
       <span class="kv"><span class="v" id="kTotal">0</span><span class="l" data-i18n="totalLabel">Total</span></span>
     </div>
-    <div class="kpi k-teal">
+    <div class="kpi k-rose">
       <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.4V12l3.1 2.1"/></svg></span>
       <span class="kv"><span class="v" id="kToday">0</span><span class="l" data-i18n="todayLabel">Today</span></span>
     </div>
-    <div class="kpi k-violet">
+    <div class="kpi k-teal">
       <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3.5"/><path d="M3.5 9.8h17"/><circle cx="12" cy="14.8" r="1.9"/></svg></span>
       <span class="kv"><span class="v" id="kWeek">0</span><span class="l" data-i18n="weekLabel">This week</span></span>
     </div>
@@ -168,8 +175,8 @@
   <div class="footrow">
     <span class="foot" data-i18n="onlyMuse">Works only on muse.ai</span>
     <span class="tools">
-      <button class="tool primary" id="exportData" data-i18n="exportData">Export data</button>
       <button class="tool" id="importData" data-i18n="importData">Import data</button>
+      <button class="tool primary" id="exportData" data-i18n="exportData">Export data</button>
     </span>
   </div>
   <input type="file" id="importFile" accept="application/json" style="display:none">

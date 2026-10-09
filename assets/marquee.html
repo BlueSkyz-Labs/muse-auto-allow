@@ -55,12 +55,9 @@
   .mini-card .head b { font-size: 12.5px; font-weight: 600; }
   .mini-card .head span { margin-left: auto; font-size: 11px; color: #6a6e74; }
   .mbars { display: flex; align-items: flex-end; gap: 5px; height: 56px; border-bottom: 1px solid rgba(17,17,18,.12); }
-  .mbars i { flex: 1; border-radius: 3px 3px 0 0; display: block; }
-  .mbars i.c1 { background: linear-gradient(180deg, #0f63e6, #0a4fc4); }
-  .mbars i.c2 { background: linear-gradient(180deg, #c2263f, #a51e35); }
-  .mbars i.c3 { background: linear-gradient(180deg, #0e8571, #0a6d5d); }
-  .mbars i.c4 { background: linear-gradient(180deg, #bf5700, #a34705); }
-  .mbars i.c5 { background: linear-gradient(180deg, #6d3ad6, #5c2fb8); }
+  .mbars i { flex: 1; border-radius: 3px 3px 0 0; display: block;
+             background: linear-gradient(180deg, #0f63e6, #0a4fc4); }
+  .mbars i.now { background: linear-gradient(180deg, #0040DC, #0030b0 62%, #00289c); }
   .mfoot { display: flex; align-items: baseline; gap: 7px; margin-top: 10px; }
   .mfoot .v { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
   .mfoot .t { font-size: 12px; color: #6a6e74; }
@@ -101,7 +98,7 @@
         <div class="crow"><span class="cbx"></span>Auto-click Allow</div>
         <div class="clog">
           <div class="cli"><span class="t">15:01</span><span class="pill">allow</span><span class="ctx">Approved pull request read &mdash; demo-project</span></div>
-          <div class="cli"><span class="t">14:57</span><span class="pill">allow</span><span class="ctx">Approved branch create &mdash; sample-app</span></div>
+          <div class="cli"><span class="t">14:57</span><span class="pill">allow</span><span class="ctx">Approved branch creation &mdash; sample-app</span></div>
           <div class="cli"><span class="t">14:52</span><span class="pill expand">expand</span><span class="ctx">Expanded pending queue &mdash; 2 tasks</span></div>
           <div class="cli"><span class="t">14:49</span><span class="pill open">open panel</span><span class="ctx">Opened the approvals panel</span></div>
         </div>
@@ -111,13 +108,13 @@
         <div class="head">
           <svg class="lg" viewBox="0 0 512 512"><rect x="16" y="16" width="480" height="480" rx="133" fill="#0064E0"/><path d="M124 284 L214 374 L368 182" fill="none" stroke="#fff" stroke-width="76" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <b>Statistics</b>
-          <span>Last 14 days</span>
+          <span>Day &middot; Last 14 days</span>
         </div>
         <div class="mbars">
-          <i class="c1" style="height:32%"></i><i class="c2" style="height:42%"></i><i class="c3" style="height:84%"></i><i class="c4" style="height:47%"></i>
-          <i class="c5" style="height:58%"></i><i class="c1" style="height:68%"></i><i class="c2" style="height:79%"></i><i class="c3" style="height:26%"></i>
-          <i class="c4" style="height:37%"></i><i class="c5" style="height:79%"></i><i class="c1" style="height:89%"></i><i class="c2" style="height:100%"></i>
-          <i class="c3" style="height:63%"></i><i class="c4" style="height:74%"></i>
+          <i style="height:32%"></i><i style="height:42%"></i><i style="height:84%"></i><i style="height:47%"></i>
+          <i style="height:58%"></i><i style="height:68%"></i><i style="height:79%"></i><i style="height:26%"></i>
+          <i style="height:37%"></i><i style="height:79%"></i><i style="height:89%"></i><i style="height:100%"></i>
+          <i style="height:63%"></i><i class="now" style="height:74%"></i>
         </div>
         <div class="mfoot"><span class="v">489</span><span class="t">Total allows &middot; trending up</span></div>
       </div>

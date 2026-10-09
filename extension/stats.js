@@ -67,46 +67,63 @@ const CAP = {
   month: ['last12m', 'Last 12 months'],
   year: ['allYears', 'All years'],
 };
+// The caption pairs the ACTIVE range's own word (read back from the localized control) with
+// its window, so 'Day' + 'Last 14 days' can never be misread as contradicting each other.
+const RANGE_KEY = { day: 'rangeDay', week: 'rangeWeek', month: 'rangeMonth', year: 'rangeYear' };
 
 function renderChart() {
   const svg = $('chart');
   const data = series();
-  $('ccap').textContent = t(CAP[RANGE][0], CAP[RANGE][1]);
+  const segBtn = document.querySelector('#seg button[data-range="' + RANGE + '"]');
+  $('ccap').textContent = t(RANGE_KEY[RANGE], segBtn ? segBtn.textContent : RANGE) + ' \u00b7 ' + t(CAP[RANGE][0], CAP[RANGE][1]);
   const W = 720, H = 158, padL = 8, padR = 8, padT = 26, padB = 22;
   const innerW = W - padL - padR, innerH = H - padT - padB;
   const n = data.length || 1;
   const gap = Math.max(3, Math.floor(innerW / n * 0.22));
   const bw = Math.max(4, Math.floor((innerW - gap * (n - 1)) / n));
   const max = Math.max(1, ...data.map((x) => x.v));
-  let out = '<defs>';
-  for (const c of PALETTE) out += '<linearGradient id="g-' + c + '" x1="0" y1="0" x2="0" y2="1"><stop class="sc-' + c + '" offset="0"/><stop class="sc-' + c + '-b" offset="1"/></linearGradient>';
-  out += '</defs>';
+  // Single-hue trend (comparable heights — colour encodes nothing): every bar shares the
+  // brand-blue value gradient; the latest ('today') bar carries the brand-gradient accent.
+  let out = '<defs>' +
+    '<linearGradient id="g-trend" x1="0" y1="0" x2="0" y2="1"><stop class="sc-blue" offset="0"/><stop class="sc-blue-b" offset="1"/></linearGradient>' +
+    '<linearGradient id="g-now" x1="0" y1="0" x2="0" y2="1"><stop class="sc-now" offset="0"/><stop class="sc-now-m" offset="0.62"/><stop class="sc-now-b" offset="1"/></linearGradient>' +
+    '</defs>';
+  // y-max gridline + tick anchor the vertical scale (skipped when there is nothing to scale)
+  const yMax = Math.max(0, ...data.map((x) => x.v));
+  if (yMax > 0) out += '<line class="grid" x1="' + padL + '" y1="' + padT + '" x2="' + (W - padR) + '" y2="' + padT + '"/>' +
+    '<text class="tick" x="' + padL + '" y="' + (padT - 1) + '">' + yMax + '</text>';
   out += '<line class="base" x1="' + padL + '" y1="' + (padT + innerH) + '" x2="' + (W - padR) + '" y2="' + (padT + innerH) + '"/>';
   data.forEach((x, i) => {
-    const c = PALETTE[i % PALETTE.length];
+    const last = i === data.length - 1;
+    const now = last && !!x.v; // the accent marks the latest bucket only when it has data
     const h = x.v ? Math.max(2, Math.round(innerH * (x.v / max))) : 1;
     const xx = padL + i * (bw + gap);
     const y = padT + innerH - h;
-    out += '<rect class="bar" x="' + xx + '" y="' + y + '" width="' + bw + '" height="' + h + '" rx="4" fill="url(#g-' + c + ')" opacity="' + (x.v ? 1 : 0.15) + '"><title>' + x.label + ': ' + x.v + '</title></rect>';
-    if (x.v) out += '<text class="val" x="' + (xx + bw / 2) + '" y="' + (y - 5) + '" text-anchor="middle">' + x.v + '</text>';
-    out += '<text x="' + (xx + bw / 2) + '" y="' + (H - 8) + '" text-anchor="middle">' + x.label + '</text>';
+    // subtle value gradient: taller bars sit a touch more solid; accent + empty stubs are fixed
+    const op = x.v ? (now ? 1 : (0.84 + 0.16 * (x.v / max)).toFixed(2)) : 0.15;
+    out += '<rect class="bar' + (now ? ' now' : '') + '" x="' + xx + '" y="' + y + '" width="' + bw + '" height="' + h + '" rx="4" fill="url(#' + (now ? 'g-now' : 'g-trend') + ')" opacity="' + op + '"><title>' + x.label + ': ' + x.v + '</title></rect>';
+    if (x.v) out += '<text class="val' + (now ? ' now' : '') + '" x="' + (xx + bw / 2) + '" y="' + (y - 5) + '" text-anchor="middle">' + x.v + '</text>';
+    out += '<text' + (last ? ' class="now"' : '') + ' x="' + (xx + bw / 2) + '" y="' + (H - 8) + '" text-anchor="middle">' + x.label + '</text>';
   });
   svg.innerHTML = out;
 }
 
 function renderTopics() {
   const wrap = $('topics');
-  const entries = Object.entries(STATS.byTopic).map(([k, v]) => [String(k), num(v)]).sort((a, b) => b[1] - a[1]).slice(0, 12);
+  const all = Object.entries(STATS.byTopic).map(([k, v]) => [String(k), num(v)]).sort((a, b) => b[1] - a[1]);
+  const entries = all.slice(0, 12);
   if (!entries.length) {
     wrap.innerHTML = '<div class="empty">' + t('noData', 'No data yet') + '</div>';
     return;
   }
-  const max = entries[0][1] || 1;
+  // share-of-total bars (every recorded topic counts): 231 of 489 reads as a true 47 % track,
+  // never a misleading "100 %"
+  const sum = all.reduce((s, e) => s + e[1], 0) || 1;
   wrap.innerHTML = entries.map(([name, v], i) => {
     const c = PALETTE[i % PALETTE.length];
     return '<div class="topic"><span class="dot t-' + c + '"></span>' +
       '<span class="name" title="' + name.replace(/"/g, '&quot;') + '">' + name.replace(/[<>&]/g, '') + '</span>' +
-      '<span class="bar"><i class="t-' + c + '" style="width:' + Math.max(4, Math.round(v / max * 100)) + '%"></i></span>' +
+      '<span class="bar"><i class="t-' + c + '" style="width:' + Math.max(4, Math.round(v / sum * 100)) + '%"></i></span>' +
       '<span class="n">' + v + '</span></div>';
   }).join('');
 }

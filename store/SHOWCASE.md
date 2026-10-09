@@ -8,7 +8,7 @@ files.example.com) — never real projects or personal data.
 |---|---|---|---|
 | Extension icon | `extension/icons/icon128.png` | 128×128 | required (in package) |
 | Screenshot 1 — live popup + approval cards (real runtime capture) | `store/screenshot1.png` | 1280×800 | required (≥1; 1280×800 or 640×400) |
-| Screenshot 2 — Statistics dashboard (real render, premium colorful data-viz — `docs/BRANDING.md` §3.1) | `store/screenshot2-stats.png` | 1280×800 | up to 5 total |
+| Screenshot 2 — Statistics dashboard (real render — single-hue trend + topic palette, `docs/BRANDING.md` §3.1) | `store/screenshot2-stats.png` | 1280×800 | up to 5 total |
 | Screenshot 3 — popup (real render) | `store/screenshot3-popup.png` | 1280×800 | up to 5 total |
 | Screenshot 4 — designed overview (approval card + layered mini Statistics card) | `store/screenshot4-overview.png` | 1280×800 | up to 5 total |
 | Small promo tile (palette-dot chips) | `store/promo440x280.png` | 440×280 | optional (featured placement) |
@@ -16,7 +16,7 @@ files.example.com) — never real projects or personal data.
 | Listing copy (6 locales) | `store/LISTING.md` | — | title / short / full description per locale |
 | Permission justifications | `store/LISTING.md` §5 | — | required in dashboard |
 | Privacy policy | `store/PRIVACY.md` | — | required (public URL before submit) |
-| Package | `dist/muse-auto-allow-v1.5.0.zip` | 18 files | built by `scripts/build.mjs`, byte-verified by `scripts/verify-zip.py` |
+| Package | `dist/muse-auto-allow-v1.6.0.zip` | 18 files | built by `scripts/build.mjs`, byte-verified by `scripts/verify-zip.py` |
 | Brand spec | `docs/BRANDING.md` | — | internal reference (tokens, mark, rules) |
 
 ## Regenerate everything
@@ -38,4 +38,4 @@ store images are light-theme (Muse language).
 - [ ] Paste listing copy per locale from `store/LISTING.md`
 - [ ] Paste permission justifications (storage / alarms / host)
 - [ ] Host the privacy policy at a public URL and paste it into the dashboard
-- [ ] Build + verify the zip; upload `dist/muse-auto-allow-v1.5.0.zip`
+- [ ] Build + verify the zip; upload `dist/muse-auto-allow-v1.6.0.zip`

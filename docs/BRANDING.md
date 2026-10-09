@@ -54,17 +54,18 @@ Evidence base (recon 2026-10-09, captured from the live site):
 | Success dot | `#31a24c` | `#45c463` |
 
 Contrast (computed from these tokens): `--ink` on `--bg` 18.39:1; `--muted` on `--bg` 8.16:1
-(light); white on `--blue` 6.0:1 (light) / 5.80:1 (dark `#0a5ce0`). The dark accent is a
+(light); white on `--blue` 6.53:1 (light) / 5.80:1 (dark `#0a5ce0`). The dark accent is a
 filled-control background (paired with white text, 5.80:1), not body text on `--bg`.
 All shipped text pairs ≥ 5.30:1 (WCAG AA).
 
 ### 3.1 Data-visualization palette (Statistics dashboard + designed assets)
 
-Charts, topic bars/dots and KPI chips cycle a curated five-hue palette. Each hue has a lighter
-"top" and a deeper "bottom" gradient stop; the segmented control, focus ring and designed-asset
-accents reuse the same hues. Every stop is ≥ 4.5:1 against the card surface it sits on — the
-3:1 non-text minimum (WCAG 1.4.11) is met with headroom, so the same tokens stay safe for small
-glyphs (KPI chips, dots) as well.
+Topic bars/dots and KPI chips cycle a curated five-hue palette; the trend chart is deliberately
+single-hue (brand blue + one "today" accent). Each hue has a lighter "top" and a deeper "bottom"
+gradient stop; the segmented control, focus ring and designed-asset accents reuse the same hues.
+Every stop is ≥ 4.5:1 against the card surface it sits on — the 3:1 non-text minimum
+(WCAG 1.4.11) is met with headroom, so the same tokens stay safe for small glyphs
+(KPI chips, dots) as well.
 
 | Hue | Light top / bottom stop | vs `#ffffff` (card) | Dark top / bottom stop | vs `#242526` (card) |
 |---|---|---|---|---|
@@ -74,11 +75,17 @@ glyphs (KPI chips, dots) as well.
 | Amber | `#bf5700` / `#a34705` | 4.59:1 / 6.07:1 | `#f2b435` / `#dfa11c` | 8.30:1 / 6.77:1 |
 | Violet | `#6d3ad6` / `#5c2fb8` | 6.51:1 / 8.22:1 | `#ab93fb` / `#9a83f5` | 6.07:1 / 5.07:1 |
 
-- Cycle order (positional, deliberately decorative — one metric over time, so colour carries no
-  categorical claim): blue → rose → teal → amber → violet.
-- KPI chips: Total = blue, Today = teal, This week = violet, This month = amber. Chip glyph ink
-  is the deeper stop on a 13 % tint in light (5.10–6.72:1) and the bright stop on a 13 % tint in
-  dark (4.83–6.28:1).
+- Trend chart (single series → single hue; colour encodes nothing): every bar shares the
+  brand-blue value gradient (light `#0f63e6 → #0a4fc4`, dark `#5aa5ff → #3f8ceb`); the latest
+  ("today") bar carries the brand-gradient accent — light stops `#0040DC / #0030b0 / #00289c`
+  (7.59:1 / 10.25:1 / 11.77:1 on `#ffffff`), dark stops `#a9caff / #97c0ff / #7fb0ff`
+  (9.20:1 / 8.26:1 / 6.99:1 on `#242526`) — with a `#005abf` (light) / `#7cb0ff` (dark) outline
+  and matching "now" value/label ink (6.53:1 on white / 6.95:1 on `#242526`). A dashed y-max
+  gridline + tick (34 % alpha light / 50 % dark) anchors the vertical scale.
+- Cycle order (positional): blue → rose → teal → amber → violet. Topic rows take the next hue by
+  rank (decorative — bar length is the datum); KPI chips fix it as Total = blue, Today = rose,
+  This week = teal, This month = amber. Chip glyph ink is the deeper stop on a 13 % tint in light
+  (5.10–6.02:1) and the bright stop on a 13 % tint in dark (4.83–6.28:1).
 - Segmented control: white on `#005abf` 6.53:1 (light) / `#0a5ce0` 5.80:1 (dark).
   Focus ring: `#005abf` on `#fcfcfc` 6.37:1 (light) / `#7cb0ff` on `#18191a` 7.97:1 (dark).
 - Chart baseline and topic-row dividers are decorative (non-informational) hairlines

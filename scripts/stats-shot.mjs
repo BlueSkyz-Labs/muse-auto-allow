@@ -50,11 +50,12 @@ const stats = {
   byTopic: Object.fromEntries(_topicNames.map((n, i) => [n, i ? _topicRest[i - 1] : total - _topicRest.reduce((s, v) => s + v, 0)])),
 };
 
-// realistic click log for the popup shot (fictional org/repos only)
+// realistic click log for the popup shot (fictional only; short-form contexts so each
+// entry renders fully — the popup's 78-char clamp does not cut them mid-thought)
 const isoMinus = (mins) => new Date(Date.now() - mins * 60000).toISOString();
 const log = [
-  { at: isoMinus(2), kind: 'allow', label: 'Allow', context: 'Allow Muse to perform this action on your GitHub account? Action Pull request read on GitHub Repository owner Example Org Pull request 42 Repository demo-project Method get' },
-  { at: isoMinus(6), kind: 'allow', label: 'Allow', context: 'Allow Muse to perform this action on your GitHub account? Action Create a GitHub branch on GitHub Repository owner Example Org Repository sample-app Branch feature/new-docs Method post' },
+  { at: isoMinus(2), kind: 'allow', label: 'Allow', context: 'Allow Muse to perform this action on your GitHub account? Pull request read' },
+  { at: isoMinus(6), kind: 'allow', label: 'Allow', context: 'Allow Muse to perform this action on your GitHub account? Create branch' },
 ];
 
 const chromePath = process.env.MAA_CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
@@ -150,7 +151,9 @@ try {
   if (!extId) throw new Error('loadUnpacked returned no id');
   out.extId = extId;
 
-  const seedExpr = `new Promise((r) => chrome.storage.local.set(${JSON.stringify({ stats, clickCount: total, log })}, r))`;
+  // followupEnabled:true — the popup shot must show the Auto follow-up section in its
+  // ON state (ungated panel, live controls), not the collapsed off-state.
+  const seedExpr = `new Promise((r) => chrome.storage.local.set(${JSON.stringify({ stats, clickCount: total, log, followupEnabled: true })}, r))`;
 
   // ---- stats page ----
   const t1 = await send('Target.createTarget', { url: `chrome-extension://${extId}/stats.html` });
@@ -179,6 +182,11 @@ try {
   await send('Runtime.evaluate', { expression: seedExpr, awaitPromise: true, returnByValue: true }, s2);
   await send('Page.reload', {}, s2);
   await sleep(1200);
+  // Screenshot framing only: lift the popup's 600px scroll cap and expand the log viewport to
+  // its content, so the store shot shows the complete popup (no half-sliced row, no scrollbar).
+  // The shipped popup keeps both — this only changes what the capture shows.
+  await send('Runtime.evaluate', { expression: '(() => { document.body.style.maxHeight = "none"; const lg = document.getElementById("log"); if (lg) lg.style.maxHeight = (lg.scrollHeight + 8) + "px"; return "ok"; })()', returnByValue: true }, s2);
+  await sleep(250);
   // capture the popup at its full natural height (2x) — the popup page keeps growing with new
   // features, so the viewport is tall enough to render all of it and the stage below fits it.
   const bh = await send('Runtime.evaluate', { expression: 'document.body.scrollHeight', returnByValue: true }, s2);
@@ -196,12 +204,12 @@ try {
     .b2 { width: 460px; height: 460px; background: #cfe2ff; right: -130px; bottom: -150px; opacity: .8; }
     .wrap { position: relative; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
     .cap { font-size: 15px; color: #4a4e54; } .cap b { color: #005abf; font-weight: 500; }
-    img { display: block; max-width: 430px; max-height: 700px; width: auto; height: auto; border-radius: 16px;
+    img { display: block; max-width: 430px; max-height: 740px; width: auto; height: auto; border-radius: 16px;
           box-shadow: 0 18px 60px rgba(17,17,18,.16), 0 0 0 1px rgba(17,17,18,.08); }
   </style></head><body>
     <div class="blob b1"></div><div class="blob b2"></div>
     <div class="wrap">
-      <div class="cap"><b>Live popup</b> &mdash; real click log, counter, on/off, delay</div>
+      <div class="cap"><b>Live popup</b> — real click log, counter, auto follow-up, on/off</div>
       <img src="data:image/png;base64,${shot2.data}">
     </div>
   </body></html>`;
@@ -224,7 +232,7 @@ try {
   fs.writeFileSync(path.join(QADIR, 'stats-dark.png'), Buffer.from(s1d.data, 'base64'));
   await send('Emulation.setEmulatedMedia', DARK, s2);
   await sleep(600);
-  const s2d = await send('Page.captureScreenshot', { format: 'png' }, s2);
+  const s2d = await send('Page.captureScreenshot', { format: 'png', clip: { x: 0, y: 0, width: 340, height: bodyH, scale: 2 } }, s2);
   fs.writeFileSync(path.join(QADIR, 'popup-dark.png'), Buffer.from(s2d.data, 'base64'));
   out.dark = [path.join(QADIR, 'stats-dark.png'), path.join(QADIR, 'popup-dark.png')];
 
