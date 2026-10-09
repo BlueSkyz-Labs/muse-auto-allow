@@ -2,11 +2,11 @@
 
 **Date:** 2026-10-08 · **Revised:** 2026-10-09
 **Scope:** `extension/` (content.js, background.js, popup.html/js, manifest.json, _locales), `test/` harness, `scripts/` build tooling.
-**Method:** adversarial static review (per the vibe-code-security checklist: injection, XSS, permission misuse, races, fail-closed logic) + runtime verification on real Chrome 154 (CDP `Extensions.loadUnpacked`, scratch profile) + **mutation proof** (each new guard disabled in turn — suite must go RED; restored — GREEN).
+**Method:** adversarial static review (per the vibe-code-security checklist: injection, XSS, permission misuse, races, fail-closed logic) + runtime verification on real Chrome 154 (CDP `Extensions.loadUnpacked`, scratch profile) + **mutation proof** (new guards disabled in combined batches — every defect must produce its distinct red signal; restored — GREEN).
 
 ## Verdict
 
-7 defects found and fixed (R1–R7). 4 residual risks accepted and documented (R8–R11). 6 classes verified clean (R12–R17). The e2e suite that proves the fixes is itself mutation-proven (V1–V5). No unfixed defect is known to remain in the shipped surface.
+7 defects found and fixed (R1–R7). 4 residual risks accepted and documented (R8–R11). 6 classes verified clean (R12–R17). The e2e suite that proves the fixes is itself mutation-proven (V1–V5). An **independent redteam v2** (2026-10-09) then challenged this report and found 16 further issues: 15 fixed (F1–F3, F5–F16) and 1 accepted with rationale (F4) — see the v2 section below. No unfixed defect is known to remain in the shipped surface.
 
 ## Findings — fixed
 
@@ -79,3 +79,45 @@ node test/e2e.mjs        # real Chrome 154, scratch profile; exit 0 = pass
 ```
 
 Environment: Windows 11, Chrome 154 (installed), Node 24, CDP `Extensions.loadUnpacked` (installed Chrome ignores `--load-extension`). The harness never touches the user's real profile (scratch profile reaped by path).
+
+---
+
+## Independent redteam v2 (2026-10-09) — findings + fixes
+
+A separate adversarial review agent (read-only) attacked this report's claims and found 16 issues. Each was verified against the code; 15 fixed, 1 accepted with rationale. Every fix is covered by a new fixture case, falsified RED-first.
+
+| ID | Sev | Finding | Status |
+|----|-----|---------|--------|
+| F1 | HIGH | Path-dependent dedup fingerprint (Path A used card text, Path B the matched row's) — a marked card whose button row carries its own text (e.g. `· 2m`) yielded two different fingerprints, so a re-rendered card was clicked again | FIXED — fingerprint context computed from one shared button-anchored scope (`contextScope`) in every path. Mutation (path-dependent ctx restored) → `n11count: 2`, RED |
+| F2 | MED | "Lone Allow" rule weaker than documented: the deny could be distant, nested, or non-clickable; the fixture control could not detect it | FIXED — the deny must sit in the same button container and be clickable; climb capped at 4 levels. Mutation → `forbiddenHit ['12','13']`, RED |
+| F3 | MED | Allow clicks had no global ceiling (only aux clicks were capped) | FIXED — allow clicks rate-capped at 30/min (`allowRateOk`) |
+| F4 | MED | All guards are per-frame under `all_frames: true` | ACCEPTED — multi-frame multiplication requires a hostile page rendering fake approvals (its clicks land on its own buttons — no privilege gained); duplicate-approval needs Muse to render one card in two frames (no evidence). Bounded further by the F3 cap. Revisit if Muse ships iframe approvals |
+| F5 | LOW | Consent filter bypassable — "…change this permission…" satisfied the approval override; several consent wordings escaped | FIXED — "permission" removed from the approval override; consent list extended (alerts/reminders/tips). Mutation → `forbiddenHit ['10']`, RED |
+| F6 | LOW | `isVisible` was layout-box only — `visibility:hidden`, `opacity:0`, `pointer-events:none` elements stayed clickable | FIXED — computed-style checks added. Mutation → `forbiddenHit ['14']`, RED |
+| F7 | LOW | Surface intent filter was a broad verb allowlist ("Open and delete all projects" matched `open`); only the first surface was ever considered | FIXED — destructive verbs rejected; the surface search now iterates all surfaces. Mutation → `forbiddenHit ['surface3']`, RED |
+| F8 | LOW | Anchor-skip didn't cover form-associated buttons (implicit submit) | FIXED — `unsafeTarget` also rejects `el.form`. Mutation → `forbiddenHit ['16']`, RED |
+| F9 | LOW | Log read-modify-write race could silently drop entries | FIXED — serialized write queue (one in-flight get→set per frame) |
+| F10 | LOW | Harness: forbidden/deny assertions were phase-1 only — a late click could not fail the suite | FIXED — `forbiddenHit`/`denyCount` now computed from the final snapshot (proven: the mutated run's late `surface3` click was caught) |
+| F11 | LOW | Phase-2 timing margin could miss a broken filter's first eligible click | FIXED — wait extended to `surfaceAt + 12s` (worst case 10s throttle + 1s heartbeat) |
+| F12 | LOW | Fixture lacked discriminating controls for several guards | FIXED — 7 new cases (card10, card11, card12, card13, card14, surface3, form16), each falsified RED-first |
+| F13 | LOW | v1 mutation proof disabled all guards at once while claiming "each in turn" | FIXED (wording) — the method line now states exactly what ran; both combined-disabling runs produced every defect's distinct red signal |
+| F14 | INFO | `CustomEvent.detail` crosses worlds (Chrome 102+ structured-clone) — v1's "no leak" rationale was wrong (payload benign: the page's own text) | FIXED — event dispatch removed; R8/R17 rationale corrected (the `data-muse-auto-allow` attribute stays for the e2e check; benign fingerprinting only) |
+| F15 | INFO | No `minimum_chrome_version` | FIXED — `"minimum_chrome_version": "110"` added |
+| F16 | INFO | e2e server: path check lacked a separator; `decodeURIComponent` could throw | FIXED — `startsWith(ROOT + path.sep)` + try/catch |
+
+**Mutation proof v2** (all six new guards disabled simultaneously; every defect produced its distinct red signal):
+
+```
+ok: False
+forbiddenHit: ['10','12','13','14','16','surface3']
+dupes: ['11'] · n11count: 2 · lateClicks: ['7','surface3']   ← the late click was caught by the F10 fix
+```
+
+Restored → GREEN on the exact head:
+
+```
+ok: True
+clicked: ['4','11','1','2','7','pending5','5','surface','6','3']
+missing/extra/forbiddenHit/dupes: [] · denyCount: 0 · n7count: 1 · n11count: 1
+orderOk: True · museAttr: True · surface2Hit: False · lateClicks: ['11','7'] (legitimate retries after the 5s windows)
+```

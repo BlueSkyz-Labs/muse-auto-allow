@@ -11,16 +11,16 @@
 //  D. "N tasks need your approval" banner (background approval surface) -> click a
 //     button whose text reads like "review/open/show/view" to open the approvals panel.
 //
-// Safety rails (redteam-hardened):
-//  - Never clicks Deny/Reject/Decline; never clicks a lone "Allow" (no deny pair).
-//  - Never clicks a candidate inside an <a> element (no navigation side effects).
-//  - Consent-only pairs (notifications/newsletter/subscribe/cookies/marketing without
-//    approval wording) are skipped — they are not approval cards.
-//  - Allow clicks carry a 5s fingerprint dedup on (button label + card text, buttons
-//    excluded) — a node recreated with identical text is not clicked twice; cards
-//    with no context text get no dedup, so distinct requests are never blocked.
-//  - Auxiliary clicks (expand / open-panel) are rate-capped at 30 per minute and
-//    per-text cooldown-guarded (30s) — no unbounded click loops.
+// Safety rails (redteam-hardened, v2):
+//  - Never clicks Deny/Reject/Decline; never clicks a lone "Allow" — the deny must sit
+//    in the same button container and be clickable (adjacent-pair rule).
+//  - Never clicks a candidate inside an <a> or tied to a <form> (no navigation/submit).
+//  - Consent-only pairs (notifications/newsletter/subscribe/cookies/marketing/alerts/
+//    reminders/tips without explicit approval wording) are skipped.
+//  - Allow clicks carry a 5s fingerprint dedup whose context is computed from the same
+//    button-anchored scope in every detection path (no path-dependent bypass).
+//  - Allow clicks are globally rate-capped at 30/min; auxiliary clicks (expand /
+//    open-panel) at 30/min with 30s per-text cooldowns — no unbounded click loops.
 //  - Liveness guard: if the extension context is invalidated (reload/disable), the
 //    script stops itself instead of continuing to click.
 //  - Every click is logged to chrome.storage.local (see popup).
@@ -37,12 +37,14 @@
   const DONE_STATUS_RE = /(allowed|denied|rejected|expired)\s*·/i;
   const NEED_APPROVAL_RE = /need(s)? your approval/i;
   const SURFACE_BTN_RE = /\b(review|open|show|view|details|see)\b/i;
-  const CONSENT_ONLY_RE = /\b(notifications?|newsletter|subscribe|cookies?|marketing)\b/i;
-  const APPROVAL_CONTEXT_RE = /\b(approv|perform this action|permission|allow muse\b)/i;
+  const DESTRUCTIVE_RE = /\b(delete|remove|deny|reject|decline|clear|reset|dismiss|block)\b/i;
+  const CONSENT_ONLY_RE = /\b(notifications?|newsletter|subscribe|cookies?|marketing|alerts?|reminders?|tips?)\b/i;
+  const APPROVAL_CONTEXT_RE = /\b(approv|perform this action|allow muse\b)/i;
   const EXPAND_THROTTLE_MS = 800;
   const SURFACE_THROTTLE_MS = 10000;
   const TEXT_COOLDOWN_MS = 30000;
   const ALLOW_DEDUP_MS = 5000;
+  const ALLOW_RATE_MAX = 30;
   const AUX_RATE_MAX = 30;
   const AUX_RATE_WINDOW_MS = 60000;
   const DEFAULT = { enabled: true, minDelayMs: 300, clickCount: 0 };
@@ -52,6 +54,7 @@
   const recentTexts = new Map(); // cooldown key -> ts (expand / open-panel)
   const recentAllowKeys = new Map(); // allow fingerprint -> ts (re-render dedup)
   const auxClicks = []; // timestamps of expand/open-panel clicks (rate cap)
+  const allowClicks = []; // timestamps of allow clicks (global ceiling)
   let pendingTimer = null;
   let obs = null;
   let heartbeat = null;
@@ -59,9 +62,17 @@
   const txt = (el) => ((el.innerText || el.textContent || '').replace(/\s+/g, ' ')).trim();
   const isBtn = (el) => !!el && (el.tagName === 'BUTTON' || el.getAttribute('role') === 'button');
   const isEnabled = (el) => !el.disabled && el.getAttribute('aria-disabled') !== 'true';
-  const isVisible = (el) => { const r = el.getBoundingClientRect(); return r.width > 2 && r.height > 2; };
+  const isVisible = (el) => {
+    const r = el.getBoundingClientRect();
+    if (!(r.width > 2 && r.height > 2)) return false;
+    try {
+      const cs = getComputedStyle(el);
+      return cs.visibility !== 'hidden' && cs.display !== 'none' && cs.pointerEvents !== 'none' && Number(cs.opacity) > 0;
+    } catch { return true; }
+  };
   const clickable = (el) => isBtn(el) && isEnabled(el) && isVisible(el);
-  const inAnchor = (el) => !!el.closest('a');
+  // Never click something that navigates or submits: anchors, or buttons tied to a <form>.
+  const unsafeTarget = (el) => !!el.closest('a') || !!el.form;
   const buttonsIn = (scope) => [...scope.querySelectorAll('button, [role="button"]')];
   const allowBtnsIn = (scope) => buttonsIn(scope).filter((b) => ALLOW_RE.test(txt(b)));
   const denyBtnsIn = (scope) => buttonsIn(scope).filter((b) => DENY_RE.test(txt(b)));
@@ -100,6 +111,20 @@
     }
     return '';
   }
+  // Fingerprint scope: climb from the ALLOW BUTTON — the one reference every detection
+  // path shares — while the ancestor holds exactly one allow + one deny. Path A and
+  // Path B then always compute the same context for the same button, so the dedup
+  // cannot be bypassed by a path-dependent fingerprint (redteam F1).
+  function contextScope(btn) {
+    let scope = btn;
+    for (let up = 0; up < 4; up++) {
+      const p = scope.parentElement;
+      if (!p || p === document.body || p === document.documentElement) break;
+      if (allowBtnsIn(p).length !== 1 || denyBtnsIn(p).length !== 1) break;
+      scope = p;
+    }
+    return scope;
+  }
   function allowFp(btn, ctx) { return ctx ? (txt(btn) + '|' + ctx).slice(0, 220) : null; }
   function allowOnCooldown(fp) { if (!fp) return false; const t = recentAllowKeys.get(fp); return !!t && Date.now() - t < ALLOW_DEDUP_MS; }
   function markAllowFp(fp) {
@@ -113,6 +138,11 @@
     return auxClicks.length < AUX_RATE_MAX;
   }
   function markAux() { auxClicks.push(Date.now()); }
+  function allowRateOk() {
+    const now = Date.now();
+    while (allowClicks.length && now - allowClicks[0] > AUX_RATE_WINDOW_MS) allowClicks.shift();
+    return allowClicks.length < ALLOW_RATE_MAX;
+  }
   function consentOnly(cardText) { return CONSENT_ONLY_RE.test(cardText) && !APPROVAL_CONTEXT_RE.test(cardText); }
 
   // Path A — Muse-marked approval cards.
@@ -120,11 +150,13 @@
     for (const card of document.querySelectorAll(CARD_SEL)) {
       if (card.matches(SURFACE_SEL) || !isVisible(card)) continue;
       if (!denyBtnsIn(card).some(clickable)) continue;
-      const ctx = contextText(card);
-      if (consentOnly(ctx)) continue;
-      const allow = pickAllow(allowBtnsIn(card).filter((b) =>
-        !clickedNodes.has(b) && !inAnchor(b) && !allowOnCooldown(allowFp(b, ctx))));
-      if (allow) return { btn: allow, card, ctx };
+      const allow = pickAllow(allowBtnsIn(card).filter((b) => {
+        if (clickedNodes.has(b) || unsafeTarget(b)) return false;
+        const c = contextText(contextScope(b));
+        if (consentOnly(c)) return false;
+        return !allowOnCooldown(allowFp(b, c));
+      }));
+      if (allow) return { btn: allow, card, ctx: contextText(contextScope(allow)) };
     }
     return null;
   }
@@ -132,20 +164,23 @@
   // Path B — text pair heuristic (cards without the marker).
   function findPairAllow() {
     for (const b of buttonsIn(document)) {
-      if (clickedNodes.has(b) || !clickable(b) || !ALLOW_RE.test(txt(b)) || inAnchor(b)) continue;
+      if (clickedNodes.has(b) || !clickable(b) || !ALLOW_RE.test(txt(b)) || unsafeTarget(b)) continue;
       let node = b;
-      for (let depth = 0; depth < 8 && node; depth++) {
+      for (let depth = 0; depth < 4 && node; depth++) {
         node = node.parentElement;
         if (!node) break;
         const btns = buttonsIn(node);
-        if (!btns.some((x) => DENY_RE.test(txt(x)))) continue;
+        if (!btns.length) continue; // climb to the first button container
+        // The pair must sit in the SAME button container and the deny must be clickable —
+        // a lone Allow next to a distant/hidden Deny is not an approval card (F2).
+        if (!btns.some((x) => DENY_RE.test(txt(x)) && clickable(x))) break;
         const allows = btns.filter((x) => ALLOW_RE.test(txt(x)));
         if (allows.length === 1 && allows[0] === b) {
-          const ctx = contextText(node);
+          const ctx = contextText(contextScope(b));
           if (consentOnly(ctx) || allowOnCooldown(allowFp(b, ctx))) break; // skip this candidate
           return { btn: b, card: node, ctx };
         }
-        break; // first deny-holding ancestor is already too broad -> fail safe
+        break;
       }
     }
     return null;
@@ -155,7 +190,7 @@
   function findCollapsedPending() {
     if (!auxRateOk()) return null;
     for (const b of buttonsIn(document)) {
-      if (clickedNodes.has(b) || !clickable(b) || inAnchor(b)) continue;
+      if (clickedNodes.has(b) || !clickable(b) || unsafeTarget(b)) continue;
       const t = txt(b);
       if (!PENDING_CARD_RE.test(t)) continue;
       if (/hide details/i.test(t) || DONE_STATUS_RE.test(t)) continue;
@@ -169,25 +204,40 @@
   // Path D — background approval surface: open the approvals panel.
   function findSurfaceButton() {
     if (!auxRateOk()) return null;
-    const surface = document.querySelector(SURFACE_SEL);
-    if (!surface || !isVisible(surface)) return null;
-    const t = txt(surface);
-    if (!NEED_APPROVAL_RE.test(t)) return null;
-    const key = 'surface:' + t.slice(0, 160);
-    if (onCooldown(key)) return null;
-    const btn = buttonsIn(surface).find((b) => clickable(b) && !inAnchor(b) && SURFACE_BTN_RE.test(txt(b)));
-    if (!btn || clickedNodes.has(btn)) return null;
-    return { btn, key };
+    for (const surface of document.querySelectorAll(SURFACE_SEL)) {
+      if (!isVisible(surface)) continue;
+      const t = txt(surface);
+      if (!NEED_APPROVAL_RE.test(t)) continue;
+      const key = 'surface:' + t.slice(0, 160);
+      if (onCooldown(key)) continue;
+      const btn = buttonsIn(surface).find((b) =>
+        clickable(b) && !unsafeTarget(b) && SURFACE_BTN_RE.test(txt(b)) && !DESTRUCTIVE_RE.test(txt(b)));
+      if (!btn || clickedNodes.has(btn)) continue;
+      return { btn, key };
+    }
+    return null;
   }
 
-  function log(entry) {
+  // Log writes are serialized: entries queue up and flush one get->set at a time, so
+  // concurrent writers cannot lose entries to a read-modify-write race (redteam F9).
+  const logQueue = [];
+  let logFlushing = false;
+  function flushLog() {
+    if (logFlushing || !logQueue.length) return;
+    logFlushing = true;
     try {
       chrome.storage.local.get({ log: [] }, (s) => {
         const log = Array.isArray(s.log) ? s.log : [];
-        log.unshift(entry);
-        chrome.storage.local.set({ log: log.slice(0, 50) });
+        while (logQueue.length) log.unshift(logQueue.shift());
+        try { chrome.storage.local.set({ log: log.slice(0, 50) }); } catch { /* invalidated */ }
+        logFlushing = false;
       });
-    } catch { /* extension context invalidated */ }
+    } catch { logFlushing = false; }
+  }
+  function log(entry) {
+    logQueue.push(entry);
+    if (logQueue.length > 60) logQueue.splice(0, logQueue.length - 60);
+    flushLog();
   }
 
   function doClick(btn, card, kind, cooldownKey, ctx) {
@@ -197,14 +247,16 @@
     state.lastClickAt = Date.now();
     if (kind === 'expand') { state.lastExpandAt = state.lastClickAt; markAux(); }
     if (kind === 'open-panel') { state.lastSurfaceAt = state.lastClickAt; markAux(); }
-    if (kind === 'allow') markAllowFp(allowFp(btn, ctx !== undefined ? ctx : (card ? contextText(card) : '')));
+    if (kind === 'allow') {
+      markAllowFp(allowFp(btn, ctx !== undefined ? ctx : (card ? contextText(card) : '')));
+      allowClicks.push(state.lastClickAt);
+    }
     if (cooldownKey) markCooldown(cooldownKey);
     state.clickCount += 1;
     state.lastResult = { at: new Date().toISOString(), kind, label, context };
     try { chrome.storage.local.set({ clickCount: state.clickCount }); } catch {}
     log(state.lastResult);
     console.log('[muse-auto-allow] ' + kind + ' "' + label.slice(0, 60) + '" | ' + context.slice(0, 90));
-    try { window.dispatchEvent(new CustomEvent('muse-auto-allow:click', { detail: state.lastResult })); } catch {}
     try { btn.click(); } catch (e) { console.warn('[muse-auto-allow] click failed', e); }
   }
 
@@ -228,7 +280,11 @@
     }
 
     const hit = findMarkedAllow() || findPairAllow();
-    if (hit) { doClick(hit.btn, hit.card, 'allow', null, hit.ctx); return; }
+    if (hit) {
+      if (!allowRateOk()) return; // global ceiling — a page cannot drive unbounded real approvals (F3)
+      doClick(hit.btn, hit.card, 'allow', null, hit.ctx);
+      return;
+    }
 
     if (now - state.lastExpandAt >= EXPAND_THROTTLE_MS) {
       const c = findCollapsedPending();

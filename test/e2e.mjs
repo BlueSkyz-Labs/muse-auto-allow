@@ -52,10 +52,11 @@ fs.mkdirSync(profileDir, { recursive: true });
 
 // ---------- fixture server (project root) ----------
 const server = http.createServer((req, res) => {
-  const urlPath = decodeURIComponent((req.url || '/').split('?')[0]);
+  let urlPath = '/';
+  try { urlPath = decodeURIComponent((req.url || '/').split('?')[0]); } catch { res.writeHead(400); res.end(); return; }
   const rel = urlPath === '/' ? 'test/fixture.html' : urlPath.replace(/^\/+/, '');
   const file = path.join(ROOT, rel);
-  if (!file.startsWith(ROOT)) { res.writeHead(403); res.end(); return; }
+  if (!file.startsWith(ROOT + path.sep)) { res.writeHead(403); res.end(); return; }
   fs.readFile(file, (e, buf) => {
     if (e) { res.writeHead(404); res.end('not found'); return; }
     res.writeHead(200, { 'content-type': file.endsWith('.html') ? 'text/html; charset=utf-8' : 'application/octet-stream' });
@@ -158,8 +159,8 @@ function killMyChrome() {
   } catch { /* nothing to kill */ }
 }
 
-const EXPECTED = ['1', '2', '3', '4', '5', '6', '7', 'pending5', 'surface'];
-const FORBIDDEN = ['8', '9', 'surface2', 'lone', 'notif'];
+const EXPECTED = ['1', '2', '3', '4', '5', '6', '7', '11', 'pending5', 'surface'];
+const FORBIDDEN = ['8', '9', '10', '12', '13', '14', '16', 'surface2', 'surface3', 'lone', 'notif'];
 
 let ws = null;
 let send = null;
@@ -194,23 +195,16 @@ try {
     await sleep(400);
   }
 
-  // Settle: let the extension run a few extra sweep cycles so late-evaluated guards
-  // are actually exercised before asserting. Phase 1 covers everything whose timing
-  // window is short (dedup is asserted inside its 5s window). Phase 2 then waits out
-  // the 10s open-panel throttle before checking surface2, whose negative test is only
-  // reachable after surface -> card6 (without it the surface2 test is vacuous).
-  await sleep(2000);
-  try {
-    const rr2 = await send('Runtime.evaluate', { expression: 'JSON.stringify(window.__clicks || [])', returnByValue: true }, sessionId);
-    clicks = JSON.parse(rr2?.result?.value || '[]');
-  } catch { /* keep last known clicks */ }
-
+  // Phase-1 snapshot is taken AT loop exit — the dedup counts (n7/n11) are asserted
+  // inside their 5s windows, so the snapshot must be as early as possible. Phase 2
+  // then samples until the open-panel throttle (10s) has certainly elapsed before
+  // checking surface2/surface3 and the late forbidden set (F10/F11).
   const got = clicks.map((c) => String(c.n)); // phase-1 snapshot
   const missing = EXPECTED.filter((n) => !got.includes(n));
   const extra = got.filter((n) => !EXPECTED.includes(n));
   const dupes = got.filter((n, i) => got.indexOf(n) !== i);
-  const denyCount = clicks.filter((c) => c.deny).length;
   const n7count = got.filter((n) => n === '7').length; // re-render dedup: must be exactly 1
+  const n11count = got.filter((n) => n === '11').length; // cross-path dedup (row-text card): exactly 1
   const idx = (n) => got.indexOf(n);
   const orderOk = idx('pending5') >= 0 && idx('5') > idx('pending5') && idx('surface') >= 0 && idx('6') > idx('surface');
 
@@ -218,7 +212,7 @@ try {
   // Sampled every 1s so the diagnostics show whether the page stayed alive through
   // the idle window (ticks) and when late clicks actually happen.
   const surfaceAt = (clicks.find((c) => c.n === 'surface') || {}).t || 0;
-  const waitUntil = surfaceAt + 10500;
+  const waitUntil = surfaceAt + 12000; // > worst-case first-eligible sweep (10s throttle + 1s heartbeat)
   const timeline2 = [];
   while (Date.now() < waitUntil) {
     try {
@@ -237,7 +231,8 @@ try {
   const surface2Hit = gotFinal.includes('surface2');
   const lateClicks = gotFinal.slice(got.length); // appended clicks after the phase-1 snapshot
   const retryFired = gotFinal.filter((n) => n === '7').length >= 2; // dedup window expired -> legitimate retry
-  const forbiddenHit = [...FORBIDDEN.filter((n) => got.includes(n)), ...(surface2Hit ? ['surface2'] : [])];
+  const denyCount = clicksFinal.filter((c) => c.deny).length; // from the FINAL snapshot (late denies must fail too)
+  const forbiddenHit = FORBIDDEN.filter((n) => gotFinal.includes(n)); // late clicks cannot slip past (F10)
 
   // ---- muse.ai smoke (logged out; WARN-only if the network is blocked) ----
   let museAttr = null;
@@ -258,7 +253,7 @@ try {
   }
 
   const pass = missing.length === 0 && extra.length === 0 && dupes.length === 0 && denyCount === 0 && orderOk
-    && forbiddenHit.length === 0 && n7count === 1 && !surface2Hit;
+    && forbiddenHit.length === 0 && n7count === 1 && n11count === 1 && !surface2Hit;
   Object.assign(results, {
     ok: pass,
     extId,
@@ -270,6 +265,7 @@ try {
     dupes,
     denyCount,
     n7count,
+    n11count,
     orderOk,
     museAttr,
     surface2Hit,

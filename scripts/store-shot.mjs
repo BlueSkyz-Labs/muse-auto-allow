@@ -174,7 +174,7 @@ try {
 
   // ---- fixture: tidy the stage — keep only a clean showcase card (replica of Muse's approval card) ----
   const inject = `(() => {
-    for (const id of ['card8', 'card9', 'surface2', 'lone', 'notif', 'block']) { const el = document.getElementById(id); if (el) el.remove(); }
+    for (const id of ['card8', 'card9', 'card10', 'card11', 'card12', 'card13', 'card14', 'surface2', 'surface3', 'f16', 'lone', 'notif', 'block']) { const el = document.getElementById(id); if (el) el.remove(); }
     document.body.style.maxWidth = '820px';
     const wrap = document.createElement('div'); wrap.id = 'shotwrap';
     wrap.innerHTML =

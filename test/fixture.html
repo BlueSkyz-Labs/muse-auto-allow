@@ -88,6 +88,64 @@
   <button type="button" id="surfaceBtn2">Delete everything</button>
 </div>
 
+<!-- redteam v2 case: consent copy with a 'permission' override must NOT be clicked -->
+<div class="card" id="card10">
+  <p>Allow notifications? You can change this permission at any time.</p>
+  <div class="row">
+    <button type="button" class="allow" id="allow10">Allow</button>
+    <button type="button" class="deny" id="deny10">Deny</button>
+  </div>
+</div>
+
+<!-- redteam v2 case: marked card with row text + self re-render -> dedup must hold across paths -->
+<div class="card" data-testid="hatch-inline-approval-card" id="card11">
+  <p>Marked dedup probe</p>
+  <div class="row">
+    <button type="button" class="allow" id="allow11">Allow</button>
+    <button type="button" class="deny" id="deny11">Deny</button>
+    <span class="stamp">&middot; 2m</span>
+  </div>
+</div>
+
+<!-- redteam v2 case: allow and deny in DIFFERENT containers must NOT be clicked -->
+<div class="card" id="card12">
+  <p>Split container probe</p>
+  <div class="row"><button type="button" class="allow" id="allow12">Allow</button></div>
+  <div class="row"><button type="button" class="deny" id="deny12">Deny</button></div>
+</div>
+
+<!-- redteam v2 case: pair with a disabled Deny must NOT be clicked -->
+<div class="card" id="card13">
+  <p>Disabled deny probe</p>
+  <div class="row">
+    <button type="button" class="allow" id="allow13">Allow</button>
+    <button type="button" class="deny" id="deny13" disabled>Deny</button>
+  </div>
+</div>
+
+<!-- redteam v2 case: invisible (opacity:0) Allow must NOT be clicked -->
+<div class="card" id="card14">
+  <p>Hidden allow probe</p>
+  <div class="row">
+    <button type="button" class="allow" id="allow14" style="opacity:0">Allow</button>
+    <button type="button" class="deny" id="deny14">Deny</button>
+  </div>
+</div>
+
+<!-- redteam v2 case: surface whose button mixes 'open' with a destructive verb must NOT be clicked -->
+<div id="surface3" data-testid="hatch-inline-approval-card" data-hatch-background-approval-surface="true" class="card">
+  <span>4 tasks need your approval</span>
+  <button type="button" id="surfaceBtn3">Open and delete all projects</button>
+</div>
+
+<!-- redteam v2 case: pair tied to a <form> must NOT be clicked -->
+<form id="f16" onsubmit="return false">
+  <div class="row" style="margin:0">
+    <button type="button" class="allow" id="allow16">Allow</button>
+    <button type="button" class="deny" id="deny16">Deny</button>
+  </div>
+</form>
+
 <script>
 window.__clicks = [];
 window.__errors = [];
@@ -169,6 +227,43 @@ document.getElementById('allow9').addEventListener('click', function () { rec(9,
 
 // redteam case: dangerous surface button must never be clicked
 document.getElementById('surfaceBtn2').addEventListener('click', function () { rec('surface2'); });
+
+// redteam v2 cases
+wirePair(document, 10);
+wirePair(document, 12);
+wirePair(document, 13);
+wirePair(document, 14);
+wirePair(document, 16);
+
+// redteam v2 case: marked card with row text + self re-render (dedup must hold across paths).
+// Clicking Allow replaces the card with an IDENTICAL one (new nodes, same text incl. the
+// row's span) — the fingerprint must be identical in Path A and Path B, so the replacement
+// is NOT clicked again within the window.
+var replaced11 = false;
+function wire11() {
+  document.getElementById('allow11').addEventListener('click', function () {
+    rec(11, { allow: true });
+    if (!replaced11) {
+      replaced11 = true;
+      var old = document.getElementById('card11');
+      var d = document.createElement('div');
+      d.className = 'card'; d.id = 'card11';
+      d.setAttribute('data-testid', 'hatch-inline-approval-card');
+      d.innerHTML = '<p>Marked dedup probe</p><div class="row">' +
+        '<button type="button" class="allow" id="allow11">Allow</button>' +
+        '<button type="button" class="deny" id="deny11">Deny</button>' +
+        '<span class="stamp">&middot; 2m</span></div>';
+      old.replaceWith(d);
+      wire11();
+    } else {
+      var c = document.getElementById('card11'); if (c) c.remove();
+    }
+  });
+}
+wire11();
+
+// redteam v2 case: destructive surface button must never be clicked
+document.getElementById('surfaceBtn3').addEventListener('click', function () { rec('surface3'); });
 
 // late card (MutationObserver)
 setTimeout(function () {
