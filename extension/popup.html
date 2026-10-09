@@ -106,24 +106,98 @@
   .fstat.sent { background: var(--ok-bg); color: var(--ok); }
   @media (prefers-color-scheme: dark) { .fstat.on { background: rgba(10,92,224,.25); color: #8ab8ff; } }
   .fhint { font-size: 11.5px; margin: 3px 0 0; }
-  .fpanel { margin-top: 4px; padding: 6px 0; background: var(--panel); border-radius: 14px; }
+  .fpanel { margin-top: 4px; padding: 5px 0; background: var(--panel); border-radius: 14px; position: relative; }
   /* off = collapsed settings + the disabled Send-now pill (explicit treatment + tooltip);
      the tinted panel shows only while the settings are open */
   .fpanel.gated { background: transparent; }
-  .fpanel.gated > .fblock:not(.sendrow), .fpanel.gated > .row { display: none; }
-  .fblock { margin: 3px 0; }
+  .fpanel.gated > .fblock:not(.sendrow), .fpanel.gated > .row, .fpanel.gated > .fsheet { display: none; }
+  .fblock { margin: 2px 0; }
   .fblock:first-child { margin-top: 0; }
   .fblock:last-child { margin-bottom: 0; }
   .flabel { display: block; margin-bottom: 2px; }
   .sendrow { display: flex; justify-content: flex-end; }
+  /* one compact wait+cooldown pair — both settings share a row to keep the popup <=600px;
+     the unit glyphs (s / min) carry the meaning */
+  .fset { gap: 6px; }
+  .fset > label { flex: 0 0 auto; }
   select.sel { width: 100%; box-sizing: border-box; background: var(--fill); color: var(--ink); border: 1px solid var(--stroke);
                border-radius: 12px; padding: 4px 30px 4px 10px; font: inherit; appearance: none; -webkit-appearance: none;
                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%234a4e54' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
                background-repeat: no-repeat; background-position: right 10px center; }
+  textarea.tbox::placeholder { color: var(--muted); opacity: 1; }
   textarea.tbox { width: 100%; box-sizing: border-box; background: var(--fill); color: var(--ink); border: 1px solid var(--stroke);
                   border-radius: 12px; padding: 6px 10px; font: inherit; resize: vertical; min-height: 34px; }
   @media (prefers-color-scheme: dark) {
     select.sel { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23b0b3b8' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+  }
+  /* v1.7.0 — follow-up builder: quick combos, phrase-library sheet, rotation */
+  .fquick { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+  .fqlabel { flex: none; font-size: 10.5px; }
+  .qbtn { font: inherit; font-size: 10.5px; line-height: 1.4; background: var(--fill); color: var(--ink);
+          border: 1px solid transparent; border-radius: 999px; padding: 2px 7px; cursor: pointer; white-space: nowrap; }
+  .qbtn:hover { background: rgba(0,90,191,.12); }
+  .qbtn.on { background: rgba(0,90,191,.16); border-color: rgba(0,90,191,.30); color: var(--blue); font-weight: 500; }
+  .flibbtn { display: flex; align-items: center; gap: 6px; width: 100%; box-sizing: border-box; font: inherit;
+             font-size: 12px; text-align: left; background: var(--fill); color: var(--ink);
+             border: 1px solid var(--stroke); border-radius: 12px; padding: 3px 10px; cursor: pointer; }
+  .flibbtn .chev { margin-left: auto; font-size: 10px; color: var(--muted); transition: transform .15s ease; }
+  .flibbtn[aria-expanded="true"] .chev { transform: rotate(90deg); }
+  .fcount { font-size: 10.5px; font-weight: 500; padding: 0 6px; border-radius: 999px;
+            background: rgba(0,90,191,.14); color: var(--blue); }
+  /* the library/list sheet overlays the rows below it, so the popup height never grows
+     while browsing (W1 discipline: <=600px). The sheet CLIPS to its own box and the
+     phrase/selection area scrolls internally, so a long selection can never push the
+     Preview out of the sheet or the sheet out of the popup (owner-reported overflow:
+     "tràn mất lựa chọn", 2026-10-09). */
+  .fsheet { position: absolute; left: 0; right: 0; top: 30px; z-index: 6; display: flex; flex-direction: column;
+           box-sizing: border-box; padding: 6px; max-height: 250px; overflow: hidden;
+           background: var(--bg); border: 1px solid var(--stroke); border-radius: 14px;
+           box-shadow: 0 12px 28px -14px rgba(0,0,0,.5); }
+  .fbighint { font-size: 10.5px; color: var(--muted); margin: 0 0 3px; flex: none; }
+  .ftabs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; flex: none; }
+  .ftab { font: inherit; font-size: 10.5px; line-height: 1.4; background: var(--fill); color: var(--muted);
+          border: 1px solid transparent; border-radius: 999px; padding: 1px 8px; cursor: pointer; }
+  .ftab:hover { color: var(--ink); }
+  .ftab.on { background: rgba(0,90,191,.16); border-color: rgba(0,90,191,.30); color: var(--blue); font-weight: 500; }
+  .ftab .n { opacity: .85; }
+  #fsheetLib, #fsheetRot { display: flex; flex-direction: column; min-height: 0; flex: 1 1 auto; }
+  /* the phrase/selection area owns its max-height and scrolls internally (visible
+     scrollbar); a selected row always keeps its × (flex: 0 0 auto on .x) */
+  .fchips { flex: 1 1 auto; min-height: 72px; max-height: 128px; overflow-y: auto; overscroll-behavior: contain;
+            display: flex; flex-direction: column; gap: 3px; }
+  .chipbtn { display: flex; align-items: flex-start; gap: 6px; width: 100%; box-sizing: border-box; text-align: left;
+             font: inherit; font-size: 11.5px; line-height: 1.35; background: var(--fill); color: var(--ink);
+             border: 1px solid transparent; border-radius: 10px; padding: 3px 9px; cursor: pointer; }
+  .chipbtn:hover { background: rgba(0,90,191,.12); }
+  .chipbtn.on { background: rgba(0,90,191,.14); border-color: rgba(0,90,191,.32); color: var(--blue); }
+  .chipbtn .x { margin-left: auto; flex: 0 0 auto; font-size: 10px; opacity: .8; }
+  /* per-group save: one tap appends THIS group's selected phrases to the rotation */
+  .fgsave { display: flex; flex: none; margin-top: 4px; }
+  .fgsave .qbtn { width: 100%; box-sizing: border-box; text-align: left; }
+  .qbtn:disabled { color: var(--muted); background: var(--panel); cursor: default; }
+  .fsheet .fprev { flex: none; border-top: 1px solid var(--divider); margin-top: 4px; padding-top: 4px; }
+  .fprev { display: flex; gap: 5px; font-size: 12px; line-height: 1.35; }
+  .fprev .plabel { flex: none; color: var(--muted); }
+  .fprevtext { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+               min-width: 0; word-break: break-word; }
+  .frot { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+  .frotnext { font: inherit; font-size: 11px; background: none; border: 0; padding: 0 2px; margin-left: auto;
+              color: var(--muted); cursor: pointer; white-space: nowrap; }
+  .frotnext:hover { color: var(--blue); text-decoration: underline; }
+  .froti { display: flex; align-items: center; gap: 6px; padding: 2px 0; border-bottom: 1px solid var(--divider); }
+  .froti:last-child { border-bottom: 0; }
+  .froti .src { flex: 0 0 auto; font-size: 10px; font-weight: 500; color: var(--blue);
+                background: rgba(0,90,191,.10); border-radius: 999px; padding: 0 6px; }
+  .froti .txt { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11.5px; }
+  .froti .rm { flex: 0 0 auto; font: inherit; font-size: 11px; line-height: 1.3; background: var(--fill); color: var(--muted);
+               border: 0; border-radius: 999px; padding: 1px 8px; cursor: pointer; }
+  .froti .rm:hover { color: var(--ink); }
+  @media (prefers-color-scheme: dark) {
+    .qbtn:hover, .chipbtn:hover { background: rgba(10,92,224,.30); }
+    .qbtn.on, .ftab.on { background: rgba(10,92,224,.32); border-color: rgba(10,92,224,.50); color: #8ab8ff; }
+    .fcount { background: rgba(10,92,224,.30); color: #8ab8ff; }
+    .froti .src { background: rgba(10,92,224,.30); color: #8ab8ff; }
+    .fsheet { box-shadow: 0 12px 28px -14px rgba(0,0,0,.8); }
   }
   .log { margin-top: 6px; border-top: 1px solid var(--divider); padding-top: 4px; min-height: 36px; box-sizing: border-box;
          overflow: auto; overscroll-behavior: contain; flex: 0 1 auto; }
@@ -177,19 +251,51 @@
   </div>
   <div class="mini"><div class="mcap muted" data-i18n="last7">Last 7 days</div><svg id="mini" width="292" height="46" aria-hidden="true"></svg></div>
   <!-- v1.6.0 — Auto follow-up: keep Muse working long-run when it goes idle -->
+  <!-- v1.7.0 — phrase library + combo builder + round-robin prompt rotation -->
   <div class="sect" id="followupSect">
     <div class="secthead"><span data-i18n="followupTitle">Auto follow-up</span>
       <span class="fstat" id="fstat" hidden><i class="fd" aria-hidden="true"></i><span id="fstatText" aria-live="polite"></span></span></div>
     <label class="sw"><input type="checkbox" id="followupEnabled"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="followupToggle">Continue when Muse is idle</span></label>
     <div class="fhint muted" id="fhint" hidden>Enable Auto follow-up to change these settings</div>
     <div class="fpanel" id="fpanel">
-      <div class="fblock"><label class="flabel muted" for="fpreset" data-i18n="followupPromptLabel" data-nc>Follow-up prompt:</label>
-        <select id="fpreset" class="sel"></select></div>
-      <div class="fblock" id="fpromptRow" hidden><textarea id="fprompt" class="tbox" rows="2" placeholder="Type your follow-up prompt…" data-i18n-ph="followupCustomPlaceholder"></textarea></div>
-      <div class="row field"><label class="muted" for="fidle" data-i18n="followupIdleLabel" data-nc>Wait before sending (seconds):</label>
-        <span class="numwrap"><input type="number" id="fidle" min="1" max="3600" step="1"><span class="unit muted">s</span></span></div>
-      <div class="row field"><label class="muted" for="fcool" data-i18n="followupCooldownLabel" data-nc>Cooldown (minutes):</label>
-        <span class="numwrap"><input type="number" id="fcool" min="1" max="1440" step="1"><span class="unit muted">min</span></span></div>
+      <div class="fblock fquick">
+        <span class="fqlabel muted" data-i18n="followupQuickLabel">Quick combos</span>
+        <button type="button" class="qbtn" id="fq0" data-i18n="followupQuick1">Keep going</button>
+        <button type="button" class="qbtn" id="fq1" data-i18n="followupQuick2">Long-run</button>
+        <button type="button" class="qbtn" id="fq2" data-i18n="followupQuick3">Best practice</button>
+      </div>
+      <div class="fblock">
+        <button type="button" class="flibbtn" id="flibbtn" aria-expanded="false" aria-controls="flibsheet">
+          <span data-i18n="followupLibrary">Phrase library</span><span class="fcount" id="flibcount" hidden></span>
+          <span class="chev" aria-hidden="true">&#9654;</span></button>
+      </div>
+      <div class="fsheet" id="flibsheet" hidden>
+        <div id="fsheetLib">
+          <div class="fbighint" data-i18n="followupCombineHint">Tap phrases to combine them — they join in library order</div>
+          <div class="ftabs" id="ftabs"></div>
+          <div class="fchips" id="fchips"></div>
+          <div class="fgsave"><button type="button" class="qbtn" id="fgsave" disabled
+            data-i18n="followupGroupSave">Save group combo</button></div>
+        </div>
+        <div id="fsheetRot" hidden>
+          <div class="fchips" id="frotitems"></div>
+        </div>
+        <div class="fprev"><span class="plabel" data-i18n="followupPreview">Preview</span><span class="fprevtext" id="fprevA"></span></div>
+      </div>
+      <div class="fblock"><textarea id="fprompt" class="tbox" rows="1" placeholder="Type your follow-up prompt…" data-i18n-ph="followupCustomPlaceholder"></textarea></div>
+      <div class="fblock fprev"><span class="plabel" data-i18n="followupPreview">Preview</span><span class="fprevtext" id="fprevB"></span></div>
+      <div class="fblock frot" id="frotrow">
+        <span class="fqlabel muted" data-i18n="followupRotateLabel">Rotation</span>
+        <button type="button" class="qbtn" id="frotadd" data-i18n="followupRotateSave">Save combo</button>
+        <button type="button" class="qbtn" id="frotstarter" data-i18n="followupRotateStarter">Starter rotation</button>
+        <button type="button" class="frotnext" id="frotnext" hidden></button>
+      </div>
+      <div class="row field fset">
+        <label class="muted" for="fidle" data-i18n="followupIdleShort">Wait</label>
+        <span class="numwrap"><input type="number" id="fidle" min="1" max="3600" step="1"><span class="unit muted">s</span></span>
+        <label class="muted" for="fcool" data-i18n="followupCooldownShort">Cooldown</label>
+        <span class="numwrap"><input type="number" id="fcool" min="1" max="1440" step="1"><span class="unit muted">min</span></span>
+      </div>
       <div class="fblock sendrow" id="fsendrow"><button class="btn tonal" id="fsendnow" data-i18n="followupSendNow">Send now</button></div>
     </div>
   </div>

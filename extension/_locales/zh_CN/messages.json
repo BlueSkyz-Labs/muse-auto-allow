@@ -110,12 +110,6 @@
   "followupToggle": {
     "message": "Muse 空闲时自动继续"
   },
-  "followupPromptLabel": {
-    "message": "跟进提示词："
-  },
-  "followupCustomOption": {
-    "message": "自定义…"
-  },
   "followupCustomPlaceholder": {
     "message": "输入跟进提示词…"
   },
@@ -124,6 +118,12 @@
   },
   "followupCooldownLabel": {
     "message": "冷却时间（分钟）："
+  },
+  "followupIdleShort": {
+    "message": "等待"
+  },
+  "followupCooldownShort": {
+    "message": "间隔"
   },
   "followupSendNow": {
     "message": "立即发送"
@@ -139,5 +139,98 @@
   },
   "followupUnknown": {
     "message": "状态未知"
+  },
+  "followupQuickLabel": {
+    "message": "快捷组合"
+  },
+  "followupQuick1": {
+    "message": "继续推进"
+  },
+  "followupQuick2": {
+    "message": "长时间运行"
+  },
+  "followupQuick3": {
+    "message": "最佳实践"
+  },
+  "followupLibrary": {
+    "message": "短语库"
+  },
+  "followupCombineHint": {
+    "message": "点按短语即可组合 — 按库中顺序拼接"
+  },
+  "followupPreview": {
+    "message": "预览"
+  },
+  "followupGroupContinue": {
+    "message": "继续"
+  },
+  "followupGroupVerify": {
+    "message": "验证"
+  },
+  "followupGroupQuality": {
+    "message": "质量"
+  },
+  "followupGroupWorkflow": {
+    "message": "工作流"
+  },
+  "followupGroupScope": {
+    "message": "范围"
+  },
+  "followupGroupReport": {
+    "message": "汇报"
+  },
+  "followupGroupSecurity": {
+    "message": "安全"
+  },
+  "followupGroupDesign": {
+    "message": "设计/UX"
+  },
+  "followupGroupSave": {
+    "message": "保存「$1」组合"
+  },
+  "followupGroupSaveHint": {
+    "message": "将本组已选短语加入轮换列表"
+  },
+  "followupGroupSaved": {
+    "message": "已加入轮换 ✓"
+  },
+  "followupRotateLabel": {
+    "message": "轮换"
+  },
+  "followupRotateSave": {
+    "message": "保存组合"
+  },
+  "followupRotateStarter": {
+    "message": "起始轮换"
+  },
+  "followupRotateNext": {
+    "message": "下一项：$1/$2"
+  },
+  "followupRotateList": {
+    "message": "已保存列表（$1）"
+  },
+  "followupRotateRemove": {
+    "message": "移除"
+  },
+  "followupWaiting": {
+    "message": "等待中"
+  },
+  "followupIdle": {
+    "message": "空闲"
+  },
+  "followupHintWorking": {
+    "message": "Muse 正在工作"
+  },
+  "followupHintWaiting": {
+    "message": "Muse 处于空闲 — 等待时间过后会自动发送跟进"
+  },
+  "followupHintIdle": {
+    "message": "Muse 处于空闲"
+  },
+  "followupGateNote": {
+    "message": "开启自动跟进后可修改这些设置"
+  },
+  "followupSendNowHint": {
+    "message": "请先开启自动跟进"
   }
 }

@@ -110,12 +110,6 @@
   "followupToggle": {
     "message": "Continuar cuando Muse esté inactivo"
   },
-  "followupPromptLabel": {
-    "message": "Mensaje de seguimiento:"
-  },
-  "followupCustomOption": {
-    "message": "Personalizado…"
-  },
   "followupCustomPlaceholder": {
     "message": "Escribe tu mensaje de seguimiento…"
   },
@@ -124,6 +118,12 @@
   },
   "followupCooldownLabel": {
     "message": "Intervalo entre envíos (minutos):"
+  },
+  "followupIdleShort": {
+    "message": "Espera"
+  },
+  "followupCooldownShort": {
+    "message": "Intervalo"
   },
   "followupSendNow": {
     "message": "Enviar ahora"
@@ -139,5 +139,98 @@
   },
   "followupUnknown": {
     "message": "Estado desconocido"
+  },
+  "followupQuickLabel": {
+    "message": "Combinaciones rápidas"
+  },
+  "followupQuick1": {
+    "message": "Sigue adelante"
+  },
+  "followupQuick2": {
+    "message": "Larga duración"
+  },
+  "followupQuick3": {
+    "message": "Buenas prácticas"
+  },
+  "followupLibrary": {
+    "message": "Biblioteca de frases"
+  },
+  "followupCombineHint": {
+    "message": "Toca frases para combinarlas — se unen en el orden de la biblioteca"
+  },
+  "followupPreview": {
+    "message": "Vista previa"
+  },
+  "followupGroupContinue": {
+    "message": "Continuar"
+  },
+  "followupGroupVerify": {
+    "message": "Verificar"
+  },
+  "followupGroupQuality": {
+    "message": "Calidad"
+  },
+  "followupGroupWorkflow": {
+    "message": "Flujo de trabajo"
+  },
+  "followupGroupScope": {
+    "message": "Alcance"
+  },
+  "followupGroupReport": {
+    "message": "Informe"
+  },
+  "followupGroupSecurity": {
+    "message": "Seguridad"
+  },
+  "followupGroupDesign": {
+    "message": "Diseño/UX"
+  },
+  "followupGroupSave": {
+    "message": "Guardar combo $1"
+  },
+  "followupGroupSaveHint": {
+    "message": "Añade las frases seleccionadas de este grupo a la rotación"
+  },
+  "followupGroupSaved": {
+    "message": "Añadido a la rotación ✓"
+  },
+  "followupRotateLabel": {
+    "message": "Rotación"
+  },
+  "followupRotateSave": {
+    "message": "Guardar combo"
+  },
+  "followupRotateStarter": {
+    "message": "Rotación inicial"
+  },
+  "followupRotateNext": {
+    "message": "Siguiente: $1/$2"
+  },
+  "followupRotateList": {
+    "message": "Lista guardada ($1)"
+  },
+  "followupRotateRemove": {
+    "message": "Quitar"
+  },
+  "followupWaiting": {
+    "message": "En espera"
+  },
+  "followupIdle": {
+    "message": "Inactivo"
+  },
+  "followupHintWorking": {
+    "message": "Muse está trabajando"
+  },
+  "followupHintWaiting": {
+    "message": "Muse está inactivo — se enviará un seguimiento cuando pase el tiempo de espera"
+  },
+  "followupHintIdle": {
+    "message": "Muse está inactivo"
+  },
+  "followupGateNote": {
+    "message": "Activa el seguimiento automático para cambiar estos ajustes"
+  },
+  "followupSendNowHint": {
+    "message": "Activa primero el seguimiento automático"
   }
 }

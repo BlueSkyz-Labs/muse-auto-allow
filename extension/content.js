@@ -22,6 +22,10 @@
 //  - Never clicks a candidate inside an <a> or tied to a <form> (no navigation/submit).
 //  - Consent-only pairs (notifications/newsletter/subscribe/cookies/marketing/alerts/
 //    reminders/tips without explicit approval wording) are skipped.
+//  - Standing-grant labels ("Always allow", "Allow for this site/task") are not recognized
+//    as the positive option — the engine clicks only plain/one-shot forms, so it can never
+//    silently escalate the granted scope (a card offering only a standing grant is left to
+//    the user). Trailing decoration on the label (an options-menu chevron) is tolerated.
 //  - Allow clicks carry a 5s fingerprint dedup whose context is computed from the same
 //    button-anchored scope in every detection path (no path-dependent bypass).
 //  - Allow clicks are globally rate-capped at 30/min; auxiliary clicks (expand /
@@ -39,10 +43,21 @@
   if (!ON_MUSE) return;
 
   const ALLOW_RE = /^\s*(allow|approve)(\s+(once|always|this time))?\s*$/i;
+  // The positive option can carry a trailing chevron/decoration (an options-menu control,
+  // observed live as an "allow options" affordance). Trailing DECORATION is tolerated;
+  // the WORDING is deliberately not widened: standing-grant labels ("Always allow",
+  // "Allow for this site/task") are NOT recognized — auto-clicking those would silently
+  // escalate the granted scope, so such cards are left to the user (fail closed).
+  const DECOR_TAIL_RE = /[\s\u25be\u25b4\u2304\u2303\u02c5\u02c4\u2228\u2227\u203a\u00bb\u2192\u2325\u25bf\u25b5]+$/;
+  const isAllowText = (t) => ALLOW_RE.test(String(t || '').replace(DECOR_TAIL_RE, ''));
   const DENY_RE = /^\s*(deny|reject|decline)(\s+(once|this time))?\s*$/i;
   const CARD_SEL = '[data-testid="hatch-inline-approval-card"]';
   const SURFACE_SEL = '[data-testid="hatch-inline-approval-card"][data-hatch-background-approval-surface="true"]';
-  const PENDING_CARD_RE = /^\s*allow muse to perform this action\b/i;
+  // Collapsed pending cards open with the approval title. A live card can carry a short
+  // leading badge INSIDE the same clickable element (e.g. "Needs review · <title>"), so the
+  // title may start within the first 24 characters — the phrase itself stays mandatory
+  // (that phrase IS the context rail) and the element must still be a real button.
+  const PENDING_CARD_RE = /^\s*[\s\S]{0,24}?allow muse to perform this action\b/i;
   const DONE_STATUS_RE = /(allowed|denied|rejected|expired)\s*·/i;
   const NEED_APPROVAL_RE = /need(s)? your approval/i;
   const SURFACE_BTN_RE = /\b(review|open|show|view|details|see)\b/i;
@@ -84,7 +99,7 @@
   // Never click something that navigates or submits: anchors, or buttons tied to a <form>.
   const unsafeTarget = (el) => !!el.closest('a') || !!el.form;
   const buttonsIn = (scope) => [...scope.querySelectorAll('button, [role="button"]')];
-  const allowBtnsIn = (scope) => buttonsIn(scope).filter((b) => ALLOW_RE.test(txt(b)));
+  const allowBtnsIn = (scope) => buttonsIn(scope).filter((b) => isAllowText(txt(b)));
   const denyBtnsIn = (scope) => buttonsIn(scope).filter((b) => DENY_RE.test(txt(b)));
 
   // Prefer plain "Allow"; then "Allow once"; then "Allow always".
@@ -174,7 +189,7 @@
   // Path B — text pair heuristic (cards without the marker).
   function findPairAllow() {
     for (const b of buttonsIn(document)) {
-      if (clickedNodes.has(b) || !clickable(b) || !ALLOW_RE.test(txt(b)) || unsafeTarget(b)) continue;
+      if (clickedNodes.has(b) || !clickable(b) || !isAllowText(txt(b)) || unsafeTarget(b)) continue;
       let node = b;
       for (let depth = 0; depth < 4 && node; depth++) {
         node = node.parentElement;
@@ -184,8 +199,12 @@
         // The pair must sit in the SAME button container and the deny must be clickable —
         // a lone Allow next to a distant/hidden Deny is not an approval card (F2).
         if (!btns.some((x) => DENY_RE.test(txt(x)) && clickable(x))) break;
-        const allows = btns.filter((x) => ALLOW_RE.test(txt(x)));
-        if (allows.length === 1 && allows[0] === b) {
+        // Cards can offer several positive options (e.g. "Allow once" next to a broader
+        // grant): click only the BEST-RANKED recognized allow in this container — and only
+        // if that is the candidate itself, so nothing below it is ever preferred.
+        const allows = btns.filter((x) => isAllowText(txt(x)) && clickable(x))
+          .sort((a, x) => rankAllow(a) - rankAllow(x));
+        if (allows.length && allows[0] === b) {
           const ctx = contextText(contextScope(b));
           if (consentOnly(ctx) || allowOnCooldown(allowFp(b, ctx))) break; // skip this candidate
           return { btn: b, card: node, ctx };
@@ -418,16 +437,24 @@
   // (default 10min); hard cap 6 automatic sends per rolling hour (per tab);
   // never while the composer already holds unsent text; a send only counts once
   // the composer verifiably empties/changes afterwards.
+  //
+  // v1.7.0 — round-robin prompt rotation: when a non-empty followupPrompts array is
+  // stored, each send uses followupPrompts[followupRotateIdx % len] and the index is
+  // advanced + persisted ONLY after a VERIFIED send (a blocked or failed attempt must
+  // never skip a prompt). An absent/empty array keeps the legacy single followupPrompt.
   // ===========================================================================
   const FOLLOWUP_DEFAULTS = {
     followupEnabled: false, // OFF by default — opt-in only
     followupPrompt: 'Approve and continue working', // first preset; popup offers presets + Custom…
     followupIdleMs: 60000,
     followupCooldownMs: 600000,
+    followupPrompts: [],    // rotation list (composed strings, user-ordered)
+    followupRotateIdx: 0,   // index of the NEXT prompt to send
   };
   const FOLLOWUP_HOUR_MAX = 6;            // hard cap: automatic sends per rolling hour (per tab)
   const FOLLOWUP_HOUR_WINDOW_MS = 3600000;
   const FOLLOWUP_VERIFY_MS = 600;         // window to observe the composer emptying/changing
+  const FOLLOWUP_ROTATION_MAX = 20;       // sanity bound for the persisted rotation list
   const BUSY_RE = /\b(is working|working|doing|thinking|running|analyzing|searching|reading|writing|implementing|generating)\b/i;
   const IDLE_RE = /\bconnected\b/i;
   const IDLE_STRICT_RE = /^[^\p{L}\p{N}_]*connected[^\p{L}\p{N}_]*$/iu; // the whole short text is 'connected'
@@ -437,6 +464,8 @@
   const followup = {
     enabled: false,
     prompt: FOLLOWUP_DEFAULTS.followupPrompt,
+    prompts: [],        // rotation list (v1.7.0); non-empty = round-robin mode
+    rotateIdx: 0,       // index of the NEXT prompt to send
     idleMs: FOLLOWUP_DEFAULTS.followupIdleMs,
     cooldownMs: FOLLOWUP_DEFAULTS.followupCooldownMs,
     state: 'unknown',   // last detected: working | idle | unknown
@@ -449,6 +478,27 @@
     lastAttr: '',
     lastResult: null,
   };
+
+  // ---- v1.7.0 rotation helpers ----
+  // The text a send would type right now: the rotation item when a list is stored,
+  // otherwise the legacy single prompt.
+  function followupActiveText() {
+    const list = followup.prompts;
+    if (list.length) return String(list[followup.rotateIdx % list.length] || '').trim();
+    return String(followup.prompt || '').trim();
+  }
+  function sanitizeFollowupPrompts(v) {
+    if (!Array.isArray(v)) return [];
+    return v.filter((p) => typeof p === 'string' && p.trim()).slice(0, FOLLOWUP_ROTATION_MAX);
+  }
+  // Advance ONLY on a verified send — an attempted-but-unverified or blocked send must
+  // not skip a prompt (the next attempt repeats the same one).
+  function advanceFollowupRotation() {
+    const n = followup.prompts.length;
+    if (!n) return;
+    followup.rotateIdx = (followup.rotateIdx + 1) % n;
+    try { chrome.storage.local.set({ followupRotateIdx: followup.rotateIdx }); } catch { /* ignore */ }
+  }
 
   function publishFollowupState() {
     if (followup.lastAttr === followup.state) return;
@@ -547,7 +597,7 @@
       for (const b of buttonsIn(document)) {
         if (!clickable(b)) continue;
         const t = txt(b);
-        if (ALLOW_RE.test(t)) return true;                                    // any clickable allow button
+        if (isAllowText(t)) return true;                                      // any clickable allow button
         if (PENDING_CARD_RE.test(t) && !DONE_STATUS_RE.test(t)) return true;  // collapsed pending card
       }
       for (const s of document.querySelectorAll(SURFACE_SEL)) {
@@ -700,7 +750,7 @@
     const composer = findComposer();
     if (!composer) return { ok: false, reason: 'no-composer' };
     if (composerValue(composer).trim()) return { ok: false, reason: 'composer-not-empty' };
-    const text = String(followup.prompt || '').trim();
+    const text = followupActiveText(); // rotation item when a list is stored, else the single prompt
     if (!text) return { ok: false, reason: 'no-prompt' };
     if (!typeIntoComposer(composer, text)) return { ok: false, reason: 'type-failed' };
     const now = Date.now();
@@ -728,6 +778,7 @@
         followup.sending = false;
         followup.lastSentAt = Date.now();
         if (followup.lastResult) followup.lastResult.verified = true;
+        advanceFollowupRotation(); // verified send only — blocked/failed attempts must not skip a prompt
         console.log('[muse-auto-allow] follow-up sent via ' + tried[tried.length - 1]);
         return;
       }
@@ -744,6 +795,9 @@
     if (!s || typeof s !== 'object') return;
     followup.enabled = s.followupEnabled === true;
     if (typeof s.followupPrompt === 'string') followup.prompt = s.followupPrompt;
+    followup.prompts = sanitizeFollowupPrompts(s.followupPrompts);
+    const fri = Number(s.followupRotateIdx);
+    if (Number.isInteger(fri) && fri >= 0) followup.rotateIdx = fri;
     const ni = Number(s.followupIdleMs);
     if (Number.isFinite(ni) && ni >= 0) followup.idleMs = ni;
     const nc = Number(s.followupCooldownMs);
@@ -760,7 +814,11 @@
         return;
       }
       if (m.type === 'followup-status') {
-        try { sendResponse({ state: followup.state, lastSentAt: followup.lastSentAt || null, enabled: followup.enabled }); } catch { /* ignore */ }
+        try {
+          const rn = followup.prompts.length; // v1.7.0: rotation position for the popup's 'Next: i/n'
+          sendResponse({ state: followup.state, lastSentAt: followup.lastSentAt || null, enabled: followup.enabled,
+                         rotateIdx: rn ? followup.rotateIdx % rn : 0, rotateCount: rn });
+        } catch { /* ignore */ }
       }
     });
   } catch { /* ignore */ }
@@ -834,6 +892,8 @@
       let fch = false;
       if (ch.followupEnabled) { followup.enabled = !!ch.followupEnabled.newValue; fch = true; }
       if (ch.followupPrompt && typeof ch.followupPrompt.newValue === 'string') { followup.prompt = ch.followupPrompt.newValue; fch = true; }
+      if (ch.followupPrompts) { followup.prompts = sanitizeFollowupPrompts(ch.followupPrompts.newValue); fch = true; }
+      if (ch.followupRotateIdx) { const fr = Number(ch.followupRotateIdx.newValue); if (Number.isInteger(fr) && fr >= 0) followup.rotateIdx = fr; }
       if (ch.followupIdleMs) { const fn = Number(ch.followupIdleMs.newValue); if (Number.isFinite(fn) && fn >= 0) followup.idleMs = fn; fch = true; }
       if (ch.followupCooldownMs) { const fc = Number(ch.followupCooldownMs.newValue); if (Number.isFinite(fc) && fc >= 0) followup.cooldownMs = fc; fch = true; }
       if (fch) { try { followupTick(); } catch { /* ignore */ } }
@@ -857,7 +917,8 @@
     sweep: () => sweep('manual'),
     get followup() {
       return { state: followup.state, enabled: followup.enabled, idleSince: followup.idleSince, lastSentAt: followup.lastSentAt,
-               lastAttemptAt: followup.lastAttemptAt, attempts: followup.attempts.length, sending: followup.sending, lastResult: followup.lastResult };
+               lastAttemptAt: followup.lastAttemptAt, attempts: followup.attempts.length, sending: followup.sending, lastResult: followup.lastResult,
+               rotateIdx: followup.rotateIdx, rotateCount: followup.prompts.length };
     },
   };
 })();

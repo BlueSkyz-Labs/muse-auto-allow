@@ -110,12 +110,6 @@
   "followupToggle": {
     "message": "Tự gửi tiếp khi Muse ngừng chạy"
   },
-  "followupPromptLabel": {
-    "message": "Tin nhắn gửi tiếp:"
-  },
-  "followupCustomOption": {
-    "message": "Tùy chỉnh…"
-  },
   "followupCustomPlaceholder": {
     "message": "Nhập tin nhắn gửi tiếp…"
   },
@@ -124,6 +118,12 @@
   },
   "followupCooldownLabel": {
     "message": "Chờ giữa các lần gửi (phút):"
+  },
+  "followupIdleShort": {
+    "message": "Chờ"
+  },
+  "followupCooldownShort": {
+    "message": "Giãn cách"
   },
   "followupSendNow": {
     "message": "Gửi ngay"
@@ -139,5 +139,98 @@
   },
   "followupUnknown": {
     "message": "Không rõ trạng thái"
+  },
+  "followupQuickLabel": {
+    "message": "Combo nhanh"
+  },
+  "followupQuick1": {
+    "message": "Chạy tiếp"
+  },
+  "followupQuick2": {
+    "message": "Dài hơi"
+  },
+  "followupQuick3": {
+    "message": "Chuẩn tốt nhất"
+  },
+  "followupLibrary": {
+    "message": "Thư viện câu lệnh"
+  },
+  "followupCombineHint": {
+    "message": "Chạm vào câu lệnh để ghép — nối theo thứ tự trong thư viện"
+  },
+  "followupPreview": {
+    "message": "Xem trước"
+  },
+  "followupGroupContinue": {
+    "message": "Tiếp tục"
+  },
+  "followupGroupVerify": {
+    "message": "Kiểm chứng"
+  },
+  "followupGroupQuality": {
+    "message": "Chất lượng"
+  },
+  "followupGroupWorkflow": {
+    "message": "Quy trình"
+  },
+  "followupGroupScope": {
+    "message": "Phạm vi"
+  },
+  "followupGroupReport": {
+    "message": "Báo cáo"
+  },
+  "followupGroupSecurity": {
+    "message": "Bảo mật"
+  },
+  "followupGroupDesign": {
+    "message": "Thiết kế/UX"
+  },
+  "followupGroupSave": {
+    "message": "Lưu combo $1"
+  },
+  "followupGroupSaveHint": {
+    "message": "Thêm các câu đã chọn của nhóm này vào danh sách luân phiên"
+  },
+  "followupGroupSaved": {
+    "message": "Đã thêm vào luân phiên ✓"
+  },
+  "followupRotateLabel": {
+    "message": "Luân phiên"
+  },
+  "followupRotateSave": {
+    "message": "Lưu combo"
+  },
+  "followupRotateStarter": {
+    "message": "Bộ khởi đầu"
+  },
+  "followupRotateNext": {
+    "message": "Tiếp: $1/$2"
+  },
+  "followupRotateList": {
+    "message": "Danh sách đã lưu ($1)"
+  },
+  "followupRotateRemove": {
+    "message": "Xóa"
+  },
+  "followupWaiting": {
+    "message": "Đang chờ"
+  },
+  "followupIdle": {
+    "message": "Rảnh"
+  },
+  "followupHintWorking": {
+    "message": "Muse đang làm việc"
+  },
+  "followupHintWaiting": {
+    "message": "Muse đang rảnh — tin gửi tiếp sẽ được gửi sau khi hết thời gian chờ"
+  },
+  "followupHintIdle": {
+    "message": "Muse đang rảnh"
+  },
+  "followupGateNote": {
+    "message": "Bật Tự động gửi tiếp để thay đổi các cài đặt này"
+  },
+  "followupSendNowHint": {
+    "message": "Hãy bật Tự động gửi tiếp trước"
   }
 }

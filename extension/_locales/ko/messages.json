@@ -110,12 +110,6 @@
   "followupToggle": {
     "message": "Muse가 대기 중일 때 계속하기"
   },
-  "followupPromptLabel": {
-    "message": "후속 프롬프트:"
-  },
-  "followupCustomOption": {
-    "message": "사용자 지정…"
-  },
   "followupCustomPlaceholder": {
     "message": "후속 프롬프트를 입력하세요…"
   },
@@ -124,6 +118,12 @@
   },
   "followupCooldownLabel": {
     "message": "쿨다운(분):"
+  },
+  "followupIdleShort": {
+    "message": "대기"
+  },
+  "followupCooldownShort": {
+    "message": "간격"
   },
   "followupSendNow": {
     "message": "지금 보내기"
@@ -139,5 +139,98 @@
   },
   "followupUnknown": {
     "message": "상태 알 수 없음"
+  },
+  "followupQuickLabel": {
+    "message": "빠른 조합"
+  },
+  "followupQuick1": {
+    "message": "계속 진행"
+  },
+  "followupQuick2": {
+    "message": "장기 실행"
+  },
+  "followupQuick3": {
+    "message": "모범 사례"
+  },
+  "followupLibrary": {
+    "message": "문구 라이브러리"
+  },
+  "followupCombineHint": {
+    "message": "문구를 눌러 조합하세요 — 라이브러리 순서로 연결됩니다"
+  },
+  "followupPreview": {
+    "message": "미리보기"
+  },
+  "followupGroupContinue": {
+    "message": "계속"
+  },
+  "followupGroupVerify": {
+    "message": "검증"
+  },
+  "followupGroupQuality": {
+    "message": "품질"
+  },
+  "followupGroupWorkflow": {
+    "message": "워크플로"
+  },
+  "followupGroupScope": {
+    "message": "범위"
+  },
+  "followupGroupReport": {
+    "message": "보고"
+  },
+  "followupGroupSecurity": {
+    "message": "보안"
+  },
+  "followupGroupDesign": {
+    "message": "디자인/UX"
+  },
+  "followupGroupSave": {
+    "message": "$1 조합 저장"
+  },
+  "followupGroupSaveHint": {
+    "message": "이 그룹에서 선택한 문구를 순환 목록에 추가합니다"
+  },
+  "followupGroupSaved": {
+    "message": "순환 목록에 추가됨 ✓"
+  },
+  "followupRotateLabel": {
+    "message": "순환"
+  },
+  "followupRotateSave": {
+    "message": "조합 저장"
+  },
+  "followupRotateStarter": {
+    "message": "스타터 세트"
+  },
+  "followupRotateNext": {
+    "message": "다음: $1/$2"
+  },
+  "followupRotateList": {
+    "message": "저장된 목록 ($1)"
+  },
+  "followupRotateRemove": {
+    "message": "제거"
+  },
+  "followupWaiting": {
+    "message": "대기 중"
+  },
+  "followupIdle": {
+    "message": "유휴"
+  },
+  "followupHintWorking": {
+    "message": "Muse가 작업 중입니다"
+  },
+  "followupHintWaiting": {
+    "message": "Muse가 유휴 상태입니다 — 대기 시간이 지나면 후속 요청을 보냅니다"
+  },
+  "followupHintIdle": {
+    "message": "Muse가 유휴 상태입니다"
+  },
+  "followupGateNote": {
+    "message": "설정을 변경하려면 자동 후속 요청을 켜세요"
+  },
+  "followupSendNowHint": {
+    "message": "먼저 자동 후속 요청을 켜세요"
   }
 }

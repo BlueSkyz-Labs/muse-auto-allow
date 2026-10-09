@@ -110,12 +110,6 @@
   "followupToggle": {
     "message": "Muse が待機中のとき続行する"
   },
-  "followupPromptLabel": {
-    "message": "フォローアップのプロンプト："
-  },
-  "followupCustomOption": {
-    "message": "カスタム…"
-  },
   "followupCustomPlaceholder": {
     "message": "フォローアップのプロンプトを入力…"
   },
@@ -124,6 +118,12 @@
   },
   "followupCooldownLabel": {
     "message": "クールダウン（分）："
+  },
+  "followupIdleShort": {
+    "message": "待機"
+  },
+  "followupCooldownShort": {
+    "message": "間隔"
   },
   "followupSendNow": {
     "message": "今すぐ送信"
@@ -139,5 +139,98 @@
   },
   "followupUnknown": {
     "message": "状態不明"
+  },
+  "followupQuickLabel": {
+    "message": "クイックコンボ"
+  },
+  "followupQuick1": {
+    "message": "続行"
+  },
+  "followupQuick2": {
+    "message": "長時間実行"
+  },
+  "followupQuick3": {
+    "message": "ベストプラクティス"
+  },
+  "followupLibrary": {
+    "message": "フレーズライブラリ"
+  },
+  "followupCombineHint": {
+    "message": "フレーズをタップして組み合わせ — ライブラリ順に連結されます"
+  },
+  "followupPreview": {
+    "message": "プレビュー"
+  },
+  "followupGroupContinue": {
+    "message": "継続"
+  },
+  "followupGroupVerify": {
+    "message": "検証"
+  },
+  "followupGroupQuality": {
+    "message": "品質"
+  },
+  "followupGroupWorkflow": {
+    "message": "ワークフロー"
+  },
+  "followupGroupScope": {
+    "message": "スコープ"
+  },
+  "followupGroupReport": {
+    "message": "報告"
+  },
+  "followupGroupSecurity": {
+    "message": "セキュリティ"
+  },
+  "followupGroupDesign": {
+    "message": "デザイン/UX"
+  },
+  "followupGroupSave": {
+    "message": "$1 コンボを保存"
+  },
+  "followupGroupSaveHint": {
+    "message": "このグループで選択中のフレーズをローテーションに追加します"
+  },
+  "followupGroupSaved": {
+    "message": "ローテーションに追加しました ✓"
+  },
+  "followupRotateLabel": {
+    "message": "ローテーション"
+  },
+  "followupRotateSave": {
+    "message": "コンボを保存"
+  },
+  "followupRotateStarter": {
+    "message": "スターターセット"
+  },
+  "followupRotateNext": {
+    "message": "次: $1/$2"
+  },
+  "followupRotateList": {
+    "message": "保存リスト（$1）"
+  },
+  "followupRotateRemove": {
+    "message": "削除"
+  },
+  "followupWaiting": {
+    "message": "待機中"
+  },
+  "followupIdle": {
+    "message": "アイドル"
+  },
+  "followupHintWorking": {
+    "message": "Muse は作業中です"
+  },
+  "followupHintWaiting": {
+    "message": "Muse は待機中 — 待機時間が過ぎるとフォローアップを送信します"
+  },
+  "followupHintIdle": {
+    "message": "Muse は待機中です"
+  },
+  "followupGateNote": {
+    "message": "設定を変更するには自動フォローアップを有効にしてください"
+  },
+  "followupSendNowHint": {
+    "message": "先に自動フォローアップを有効にしてください"
   }
 }

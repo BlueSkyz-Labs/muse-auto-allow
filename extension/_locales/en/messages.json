@@ -110,12 +110,6 @@
   "followupToggle": {
     "message": "Continue when Muse is idle"
   },
-  "followupPromptLabel": {
-    "message": "Follow-up prompt:"
-  },
-  "followupCustomOption": {
-    "message": "Custom…"
-  },
   "followupCustomPlaceholder": {
     "message": "Type your follow-up prompt…"
   },
@@ -124,6 +118,12 @@
   },
   "followupCooldownLabel": {
     "message": "Cooldown (minutes):"
+  },
+  "followupIdleShort": {
+    "message": "Wait"
+  },
+  "followupCooldownShort": {
+    "message": "Cooldown"
   },
   "followupSendNow": {
     "message": "Send now"
@@ -139,5 +139,98 @@
   },
   "followupUnknown": {
     "message": "Status unknown"
+  },
+  "followupQuickLabel": {
+    "message": "Quick combos"
+  },
+  "followupQuick1": {
+    "message": "Keep going"
+  },
+  "followupQuick2": {
+    "message": "Long-run"
+  },
+  "followupQuick3": {
+    "message": "Best practice"
+  },
+  "followupLibrary": {
+    "message": "Phrase library"
+  },
+  "followupCombineHint": {
+    "message": "Tap phrases to combine them — they join in library order"
+  },
+  "followupPreview": {
+    "message": "Preview"
+  },
+  "followupGroupContinue": {
+    "message": "Continue"
+  },
+  "followupGroupVerify": {
+    "message": "Verify"
+  },
+  "followupGroupQuality": {
+    "message": "Quality"
+  },
+  "followupGroupWorkflow": {
+    "message": "Workflow"
+  },
+  "followupGroupScope": {
+    "message": "Scope"
+  },
+  "followupGroupReport": {
+    "message": "Report"
+  },
+  "followupGroupSecurity": {
+    "message": "Security"
+  },
+  "followupGroupDesign": {
+    "message": "Design/UX"
+  },
+  "followupGroupSave": {
+    "message": "Save $1 combo"
+  },
+  "followupGroupSaveHint": {
+    "message": "Add this group's selected phrases to the rotation list"
+  },
+  "followupGroupSaved": {
+    "message": "Added to rotation ✓"
+  },
+  "followupRotateLabel": {
+    "message": "Rotation"
+  },
+  "followupRotateSave": {
+    "message": "Save combo"
+  },
+  "followupRotateStarter": {
+    "message": "Starter rotation"
+  },
+  "followupRotateNext": {
+    "message": "Next: $1/$2"
+  },
+  "followupRotateList": {
+    "message": "Saved list ($1)"
+  },
+  "followupRotateRemove": {
+    "message": "Remove"
+  },
+  "followupWaiting": {
+    "message": "Waiting"
+  },
+  "followupIdle": {
+    "message": "Idle"
+  },
+  "followupHintWorking": {
+    "message": "Muse is working"
+  },
+  "followupHintWaiting": {
+    "message": "Muse is idle — a follow-up is sent once the wait time passes"
+  },
+  "followupHintIdle": {
+    "message": "Muse is idle"
+  },
+  "followupGateNote": {
+    "message": "Enable Auto follow-up to change these settings"
+  },
+  "followupSendNowHint": {
+    "message": "Enable Auto follow-up first"
   }
 }

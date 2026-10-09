@@ -13,6 +13,10 @@
   #museTitle { font-weight: 600; }
   #museStatus { color: #9fd6a9; }
   .spinner { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #556; border-top-color: #9fd6a9; }
+  .chipwarn { display: inline-block; font-size: 11px; font-weight: 600; color: #e8c98a; background: rgba(243,217,180,.18);
+              border-radius: 999px; padding: 1px 8px; margin-bottom: 6px; }
+  .rows { font-size: 13px; color: #c8c8cc; margin: 6px 0; }
+  .rows b { color: #eee; font-weight: 600; margin-right: 6px; }
   #composerbar { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
   #composer { flex: 1; padding: 8px 14px; border-radius: 999px; border: 1px solid #333; background: #1b1b1e; color: #eee; font-size: 14px; }
 </style>
@@ -40,6 +44,48 @@
   </div>
 </div>
 
+<!-- v1.7.0 — the owner-reported LIVE card, captured text: "Allow Muse to perform this
+     action on your GitHub account? Action Pull". It is a standard approval card with the
+     live option set (Allow once / Always allow / Deny). Shown only while the click cases
+     run; clicks record and the card STAYS (an approval surface is present). -->
+<div class="card" data-testid="hatch-inline-approval-card" id="ghCard" style="display:none">
+  <span class="chipwarn">Needs review</span>
+  <p>Allow Muse to perform this action on your GitHub account?</p>
+  <div class="rows"><div><b>Action</b> Pull</div><div><b>Repository</b> owner/demo-repo</div></div>
+  <div class="row">
+    <button type="button" class="allow" id="ghAllowOnce">Allow once</button>
+    <button type="button" class="allow" id="ghAlways">Always allow</button>
+    <button type="button" class="deny" id="ghDeny">Deny</button>
+  </div>
+</div>
+
+<!-- unmarked twin of the same card: the pair heuristic must approve it too -->
+<div class="card" id="ghPair" style="display:none">
+  <p>Allow Muse to perform this action on your GitHub account? Action Pull</p>
+  <div class="row">
+    <button type="button" class="allow" id="ghPairAllowOnce">Allow once</button>
+    <button type="button" class="allow" id="ghPairAlways">Always allow</button>
+    <button type="button" class="deny" id="ghPairDeny">Deny</button>
+  </div>
+</div>
+
+<!-- negative control: the same title with a LONE allow (no deny pair) must never be clicked -->
+<div class="card" id="ghLone" style="display:none">
+  <p>Allow Muse to perform this action on your GitHub account? Action Pull</p>
+  <div class="row"><button type="button" class="allow" id="ghLoneAllow">Allow once</button></div>
+</div>
+
+<!-- collapsed pending variant: the title carries a leading badge INSIDE the clickable
+     element ("Needs review · <title>"); clicking it reveals the Allow/Deny pair. -->
+<button type="button" id="ghPending" class="pending" style="display:none">Needs review · Allow Muse to perform this action on your GitHub account? Action Pull</button>
+<div class="card" data-testid="hatch-inline-approval-card" id="ghPendingCard" style="display:none">
+  <p>Allow Muse to perform this action on your GitHub account? Action Pull</p>
+  <div class="row">
+    <button type="button" class="allow" id="ghPendingAllow">Allow once</button>
+    <button type="button" class="deny" id="ghPendingDeny">Deny</button>
+  </div>
+</div>
+
 <!-- composer bar: plus icon, input placeholder 'Message', mic icon, send button -->
 <div id="composerbar">
   <button type="button" id="plus" aria-label="Add attachment">+</button>
@@ -52,6 +98,7 @@
 window.__sent = [];            // { text, t, via } — one entry per submitted message
 window.__inputs = [];          // input events seen on the composer (React-safe typing probe)
 window.__approvalClicks = [];  // clicks on the approval card (record only; the card stays)
+window.__cardClicks = [];      // clicks on the GitHub-card family (one entry per button)
 window.__errors = [];
 window.addEventListener('error', function (e) { window.__errors.push(String(e.message)); });
 
@@ -64,6 +111,34 @@ window.__setState = setState;
 window.__setApproval = function (on) {
   document.getElementById('approvalCard').style.display = on ? '' : 'none';
 };
+// v1.7.0 GitHub-card family: show exactly one variant at a time (clicks record, cards stay
+// visible so the approval-present guard stays observable).
+window.__setGh = function (mode) {
+  var set = function (id, v) { var el = document.getElementById(id); if (el) el.style.display = v ? '' : 'none'; };
+  set('ghCard', mode === 'card');
+  set('ghPair', mode === 'pair');
+  set('ghLone', mode === 'lone');
+  set('ghPending', mode === 'pending');
+  set('ghPendingCard', false);
+};
+function wireGh(id, name) {
+  var el = document.getElementById(id);
+  if (el) el.addEventListener('click', function () { window.__cardClicks.push({ n: name, t: Date.now() }); });
+}
+wireGh('ghAllowOnce', 'gh-allow-once');
+wireGh('ghAlways', 'gh-always');
+wireGh('ghDeny', 'gh-deny');
+wireGh('ghPairAllowOnce', 'gh-pair-allow-once');
+wireGh('ghPairAlways', 'gh-pair-always');
+wireGh('ghPairDeny', 'gh-pair-deny');
+wireGh('ghLoneAllow', 'gh-lone');
+wireGh('ghPendingAllow', 'gh-pending-allow');
+wireGh('ghPendingDeny', 'gh-pending-deny');
+document.getElementById('ghPending').addEventListener('click', function () {
+  window.__cardClicks.push({ n: 'gh-pending-expand', t: Date.now() });
+  this.style.display = 'none';
+  document.getElementById('ghPendingCard').style.display = '';
+});
 window.__hideSend = function () {
   var b = document.getElementById('sendBtn');
   if (b) b.remove();
