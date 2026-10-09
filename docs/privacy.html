@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy — Muse Auto-Allow</title>
+<style>body{max-width:760px;margin:2rem auto;padding:0 1rem;font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;color:#111112}h1{font-size:1.6rem}h2{font-size:1.15rem;margin-top:1.6rem}ul{padding-left:1.2rem}footer{margin-top:2.5rem;color:#666;font-size:.85rem}</style>
+</head><body>
+<h1>Privacy Policy — Muse Auto-Allow</h1>
+<p>**Effective date:** TODO: fill before submit (e.g. 2026-01-01)</p>
+<p>**Last updated:** TODO: fill before submit</p>
+<p>This privacy policy applies to the **Muse Auto-Allow** browser extension for Google</p>
+<p>Chrome (&quot;the extension&quot;), published by **BlueSkyz Labs** (&quot;we&quot;, &quot;us&quot;).</p>
+<p>Contact: **TODO: fill before submit** (support email)</p>
+<p>Publisher / homepage: **TODO: fill before submit**</p>
+<p>Muse Auto-Allow has one job: on **muse.ai** pages, it automatically clicks the</p>
+<p>**Allow** button on Muse&#x27;s approval requests so your Muse agent does not stop for</p>
+<p>manual approvals. This policy explains exactly what that involves — which is very little,</p>
+<p>because the extension keeps everything on your own device.</p>
+<p>---</p>
+<h2>1. Summary (the short version)</h2>
+<ul>
+<li>The extension reads the content of **muse.ai** pages only, and only to find Muse</li>
+</ul>
+<p>  approval buttons.</p>
+<ul>
+<li>It stores your settings (on/off, click delay, click counter), a local log of the **last 50 clicks** (each with a timestamp), and **compact click statistics** (per day / month / year and per topic) in your browser.</li>
+<li>It **collects nothing** about you.</li>
+<li>It **transmits nothing** to us or anyone else.</li>
+<li>There is **no analytics**, **no tracking**, and **no advertising**.</li>
+<li>There is **no remote code** — all code is bundled inside the package.</li>
+</ul>
+<p>---</p>
+<h2>2. What the extension can access, and why</h2>
+<p>**Page content of muse.ai tabs.** To find and click the correct button, the extension&#x27;s</p>
+<p>content script reads the page structure (DOM) of Muse pages you have open. This access is</p>
+<p>limited to `https://muse.ai/*` and `https://*.muse.ai/*`. The extension requests no access</p>
+<p>to any other website.</p>
+<p>**Your browser storage.** The extension saves, locally in your browser</p>
+<p>(`chrome.storage.local`):</p>
+<ul>
+<li>your settings — whether auto-clicking is on or off, the delay between clicks, and a click counter;</li>
+<li>a click log — the **last 50 clicks** it performed, each described by timestamp, kind (allow /</li>
+</ul>
+<p>  expand / open panel), button label, and context;</p>
+<ul>
+<li>click statistics — compact counters only: clicks per day, per month, per year, and per topic</li>
+</ul>
+<p>  (a repository or host name, up to 40 characters, taken from the approval text). No page</p>
+<p>  content is stored.</p>
+<p>This information never leaves your device.</p>
+<p>**A once-a-minute timer.** The extension uses a one-minute alarm purely to check for</p>
+<p>approval requests in background tabs. It makes no network requests.</p>
+<p>---</p>
+<h2>3. What the extension does NOT do</h2>
+<ul>
+<li>It does **not** collect personal data of any kind (no names, emails, identifiers,</li>
+</ul>
+<p>  location, health, financial, or authentication data).</p>
+<ul>
+<li>It does **not** read, store, or send the content of any page other than the muse.ai</li>
+</ul>
+<p>  button detection described above.</p>
+<ul>
+<li>It does **not** collect your web history, keystrokes, or activity outside muse.ai.</li>
+<li>It does **not** transmit any data to our servers or to any third party — **there are no</li>
+</ul>
+<p>  servers**. The extension makes no outbound network calls.</p>
+<ul>
+<li>It does **not** sell, rent, or share data, because it holds no data to sell.</li>
+<li>It does **not** use data for advertising, profiling, creditworthiness, or lending.</li>
+<li>It does **not** load or execute remote code. All JavaScript ships inside the extension</li>
+</ul>
+<p>  package; nothing is downloaded or evaluated at runtime.</p>
+<p>---</p>
+<h2>4. Data storage, retention, and deletion</h2>
+<p>Everything the extension keeps is stored locally in your browser and stays under your</p>
+<p>control:</p>
+<ul>
+<li>**Retention:** the click log keeps only the most recent 50 entries; older entries are</li>
+</ul>
+<p>  discarded automatically.</p>
+<ul>
+<li>**Retention (statistics):** the statistics counters keep at most 400 days, 24 months and</li>
+</ul>
+<p>  100 topics; older entries are discarded automatically.</p>
+<ul>
+<li>**Deletion:** remove the extension from Chrome (`chrome://extensions` → Remove) to</li>
+</ul>
+<p>  delete all stored settings and logs. You can also clear the extension&#x27;s data from your</p>
+<p>  browser&#x27;s site/extension data controls.</p>
+<p>Because we never receive this data, there is nothing for us to delete on our side.</p>
+<p>---</p>
+<h2>5. Permissions explained</h2>
+<p>| Permission | Why it is needed |</p>
+<p>|---|---|</p>
+<p>| `storage` | Save your on/off setting, click delay, click counter, the local last-50 click log, and compact click statistics. |</p>
+<p>| `alarms` | Run a once-a-minute check so approvals in background tabs are handled. |</p>
+<p>| Host: `https://muse.ai/*`, `https://*.muse.ai/*` | Detect and click the Allow button on Muse pages. No other site is accessed. |</p>
+<p>The extension deliberately does **not** request `tabs`, `scripting`, `webRequest`,</p>
+<p>`cookies`, `downloads`, or `&lt;all_urls&gt;`.</p>
+<p>---</p>
+<h2>6. Changes to this policy</h2>
+<p>If we change how the extension handles data, we will update this policy and revise the</p>
+<p>&quot;Last updated&quot; date above, and we will reflect any change in the extension&#x27;s Chrome Web</p>
+<p>Store listing. Continued use after an update means you accept the revised policy.</p>
+<p>---</p>
+<h2>7. Contact</h2>
+<p>Questions about this policy or the extension&#x27;s data practices:</p>
+<p>**TODO: fill before submit** (support email)</p>
+<p>**TODO: fill before submit** (support / homepage URL)</p>
+<p>---</p>
+<h2>Ghi chú tiếng Việt (tóm tắt)</h2>
+<p>Muse Auto-Allow chỉ đọc nội dung trang **muse.ai** để tìm nút Allow của Muse. Tiện ích</p>
+<p>lưu cục bộ trong trình duyệt của bạn: cài đặt bật/tắt, độ trễ bấm, nhật ký 50 lần bấm</p>
+<p>gần nhất, và thống kê đếm gọn (theo ngày / tháng / năm và theo chủ đề). Tiện ích **không thu thập** dữ liệu nào, **không gửi** dữ liệu đi đâu, không có</p>
+<p>analytics, không có mã từ xa. Gỡ tiện ích khỏi Chrome là xoá sạch dữ liệu đã lưu. Liên hệ:</p>
+<p>TODO: fill before submit.</p>
+<h2>中文说明（摘要）</h2>
+<p>Muse Auto-Allow 仅读取 **muse.ai** 页面的内容，用于查找 Muse 的 Allow（允许）按钮。</p>
+<p>扩展在你的浏览器中本地保存：开关设置、点击间隔、最近 50 次点击的日志，以及精简的点击统计</p>
+<p>（按日 / 月 / 年与主题）。扩展</p>
+<p>**不收集**任何数据，**不向任何地方发送**数据，没有分析统计，也没有远程代码。从</p>
+<p>Chrome 移除该扩展即可清除已保存的数据。联系方式：TODO: fill before submit。</p>
+<footer>Muse Auto-Allow is an unofficial extension by BlueSkyz Labs and is not affiliated with Meta or Muse.</footer>
+</body></html>
