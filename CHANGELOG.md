@@ -1,6 +1,9 @@
 # Changelog
 
-## 1.6.0 (unreleased)
+## 1.6.0
+- **Auto follow-up**: detects Muse idle state ('Connected') vs busy ('is working') and — opt-in, default off — sends a user-chosen follow-up prompt into the chat composer so Muse keeps working long-run. Guards: continuous-idle wait (default 60 s), per-tab cooldown (default 10 min), hard cap 6/hour, never sends while an approval card/bar is present or a draft sits in the composer, and a send counts only after the composer verifiably clears. Preset + custom prompts; popup shows live Working/Connected/Sent status; `Send now` for manual sends. Tested by a dedicated CDP harness (34 assertions, mutation-proven on the approval guard and the idle-wait guard).
+- **Premium Statistics + store assets**: curated 5-hue chart palette (every pair WCAG-checked and recorded in `docs/BRANDING.md`), refined KPI cards with icon chips, colored topic bars, complete dark parity; all store images regenerated at exact specs with neutral demo data.
+- i18n: now 47 keys × 6 locales (12 new follow-up keys).
 - Chrome best practices: explicit `extension_pages` CSP + `minimum_chrome_version` 116; versioned idempotent SW migration runner; `unhandledrejection` console surface; zero-dependency lint gate (`scripts/lint.mjs` — syntax/JSON/i18n parity/no-remote-code/manifest hygiene) wired into the publish runbook; practices checklist in `docs/CHROME_BEST_PRACTICES.md`.
 - New detection path E: the chat-level "A task needs review" bar — its Review button is clicked (own kind `review-bar`, 1 s throttle) so the approval panel renders and the Allow/Deny pair is approved on the next sweep.
 - Redteam v4 hardening (V4-1..V4-8 disposition in `docs/REDTEAM_V4.md`).

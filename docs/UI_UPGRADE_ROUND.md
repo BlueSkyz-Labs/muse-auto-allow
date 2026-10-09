@@ -64,11 +64,40 @@ the frozen revision after all writers stop (pre-verdict rebind).
 9. `docs/SGPS_EXPERIENCE_ADOPTION.md` updated: adoption evidence table for this round.
 10. Store-asset exact sizes re-verified from PNG headers; neutral demo data only.
 
-## Non-goals
+## Known findings to fix in this round (from independent vision reviews, 2026-10-09)
 
-- No behavior/feature changes, no new permissions, no new APIs (UI/UX only).
-- No changes to detection paths, storage schema, crypto, or the test harnesses' assertions (may extend fixtures only if a UI change alters DOM the tests rely on — then keep tests strictly stronger).
-- No new locales, no store-listing rewrites beyond copy fixes.
+Recorded during v1.6.0 integration — these are the concrete polish lists this round must
+close (maker ≠ judge: reviewed independently, not by the implementing lanes).
+
+### W1 (popup) — from the popup review (6/10 → target 9)
+
+1. Disabled `Send now` affordance: dimmed blue keeps white text at ~2:1 — restyle the disabled state to stay readable (or mark it with an explicit disabled treatment + tooltip "Enable Auto follow-up first").
+2. Disable/visually group the whole follow-up controls block when the toggle is off (select, textarea, wait/cooldown, Send now read as live today); add one inline note.
+3. "Status unknown" pill is a dead end — map to informative states (Idle / Waiting / Sending / Last sent …) with tooltip.
+4. Header green dot + status pill = two competing status indicators; give the dot a legend/tooltip or remove.
+5. Log typography: entries ~10-11px grey with no row separator; raise size one step + hairline dividers; consider two-line clamp instead of hard ellipsis.
+6. "Today 14" pill placement ("1 muse.ai tab open" shares the line) — separate rows/scope.
+7. Label punctuation consistency ("Clicked:" vs "Today"); numeric-input alignment (300/60/10 not on one axis; `ms` baseline vs centered).
+8. Mini-chart: add day initials or drop to labelled sparkline; "Works only on muse.ai" placement.
+9. Consider collapsing the follow-up section when off (declutter) — optional.
+
+### W2 (stats + assets) — from the stats review (7/10 → target 9)
+
+1. **Trend chart rainbow regression**: 5 hues cycling on a single-series chart (color encodes nothing; collides with the topic palette; hurts comparability). Fix: single-hue bars with a subtle value gradient + accent on "today", OR add a legend + genuine encoding. Keep the 5-hue palette exclusively for topics/KPI chips.
+2. KPI row: align chip hues to the topic palette (consistency); consider period-over-period deltas or trend arrows ("premium substance").
+3. Range control vs "Last 14 days" label: make the caption reflect the active range dynamically or state granularity explicitly.
+4. Vocabulary drift "Day/Week/Month" vs "Today/This week/…" — unify.
+5. Bar chart: y-max/gridline or explicit "one series" note; value labels already exist (keep).
+6. Subject bars: consider total-normalized vs max-normalized clarity (231 fills 100% of track).
+7. Footer: primary/secondary button order (Export left of Import) — check convention.
+8. Re-render ALL store images from the final popup + stats (screenshot3 in particular) and re-run the vision QA loop to ≥9/10 each.
+
+### Notes
+
+- The v1.6.0 popup boot-refresh bug (follow-up textarea shown with a preset selected) was fixed during integration (`refresh()` boot call + HTML `hidden` default); the W1 list above is the polish layer on top.
+- Dark-mode parity claims: the light and dark renders are separate captures — review BOTH in W2 (do not let a light-only review stand in for dark).
+
+
 
 ## Sequencing
 
