@@ -20,7 +20,7 @@ because the extension keeps everything on your own device.
 
 - The extension reads the content of **muse.ai** pages only, and only to find Muse
   approval buttons.
-- It stores your settings and a local log of the **last 50 clicks** in your browser.
+- It stores your settings (on/off, click delay, click counter) and a local log of the **last 50 clicks** (each with a timestamp) in your browser.
 - It **collects nothing** about you.
 - It **transmits nothing** to us or anyone else.
 - There is **no analytics**, **no tracking**, and **no advertising**.
@@ -38,8 +38,8 @@ to any other website.
 **Your browser storage.** The extension saves, locally in your browser
 (`chrome.storage.local`):
 
-- your settings — whether auto-clicking is on or off, and the delay between clicks;
-- a click log — the **last 50 clicks** it performed, each described by kind (allow /
+- your settings — whether auto-clicking is on or off, the delay between clicks, and a click counter;
+- a click log — the **last 50 clicks** it performed, each described by timestamp, kind (allow /
   expand / open panel), button label, and context.
 
 This information never leaves your device.
@@ -84,7 +84,7 @@ Because we never receive this data, there is nothing for us to delete on our sid
 
 | Permission | Why it is needed |
 |---|---|
-| `storage` | Save your on/off setting, click delay, and the local last-50 click log. |
+| `storage` | Save your on/off setting, click delay, click counter, and the local last-50 click log. |
 | `alarms` | Run a once-a-minute check so approvals in background tabs are handled. |
 | Host: `https://muse.ai/*`, `https://*.muse.ai/*` | Detect and click the Allow button on Muse pages. No other site is accessed. |
 

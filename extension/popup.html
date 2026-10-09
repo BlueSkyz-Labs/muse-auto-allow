@@ -6,6 +6,9 @@
   :root { color-scheme: dark; --blue: #2f6df6; --cream: #f3d9b4; }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
+    /* the check mark is drawn via dashoffset animation — pin its final state so it
+       stays visible when animations are disabled (otherwise it would never appear) */
+    .head svg .ck { stroke-dashoffset: 0 !important; }
   }
   body { width: 320px; margin: 0; padding: 12px 14px; background: #14151a; color: #e8e8ea;
          font: 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }

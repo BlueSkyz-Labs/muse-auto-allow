@@ -7,6 +7,7 @@
 - Independent store-compliance checklist added (`store/COMPLIANCE_CHECKLIST.md`).
 - Security hardening (full redteam pass, see `docs/REDTEAM_REPORT.md`): surface buttons only clicked on review/open intent; 5s text-fingerprint dedup on allow clicks (re-render race guard); candidates inside `<a>` never clicked; consent-only pairs (notifications/newsletter/subscribe/cookies/marketing) skipped; expand/open-panel rate-capped at 30/min; `minDelayMs=0` persistence fixed; liveness guard stops clicking once the extension context is invalidated.
 - Queue pacing: blocked sweeps now reschedule at the configured delay — a pending queue is processed at `minDelayMs` pace (~3 clicks/s default) instead of crawling at the 1s heartbeat.
+- Popup shows the full 50-entry click log (scrollable); reduced-motion users now see the header check icon (it was animation-only and never appeared with `prefers-reduced-motion`); click-log context no longer includes button labels (`contextText`). Store screenshot replaced with a real runtime capture (`scripts/store-shot.mjs`).
 - e2e hardened + mutation-proven: anti-throttle Chrome flags, two-phase assertions (dedup asserted inside its 5s window; surface intent filter asserted after the 10s surface throttle), and a documented mutation run where disabling each new guard turns the suite RED.
 
 ## 1.1.0

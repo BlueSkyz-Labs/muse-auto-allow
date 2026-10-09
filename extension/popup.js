@@ -21,7 +21,7 @@ const kindLabel = (k) => t(KIND_KEY[k] || '', k);
 
 function renderLog(log) {
   $('log').innerHTML = log.length
-    ? log.slice(0, 12).map((e) => {
+    ? log.slice(0, 50).map((e) => {
         const k = e.kind || 'allow';
         return '<div class="item"><span class="t">' + esc((e.at || '').slice(11, 19)) + '</span>' +
           '<span class="k k-' + esc(k) + '">' + esc(kindLabel(k)) + '</span>' +

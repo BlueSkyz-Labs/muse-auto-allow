@@ -275,7 +275,7 @@ it does not interact with any site other than muse.ai.
 ## 5. Permission justifications (dashboard → Privacy practices)
 
 ### `storage`
-Saves the user's own settings (on/off state and click delay) and the local click log
+Saves the user's own settings (on/off state, click delay, click counter) and the local click log
 (the last 50 clicks) so the popup can show the current state and history. Data stays in
 `chrome.storage.local` on the user's device and is never transmitted.
 

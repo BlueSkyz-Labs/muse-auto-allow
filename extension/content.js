@@ -193,7 +193,7 @@
   function doClick(btn, card, kind, cooldownKey, ctx) {
     clickedNodes.add(btn);
     const label = txt(btn);
-    const context = (card ? txt(card) : label).slice(0, 240);
+    const context = (card ? contextText(card) : label).slice(0, 240);
     state.lastClickAt = Date.now();
     if (kind === 'expand') { state.lastExpandAt = state.lastClickAt; markAux(); }
     if (kind === 'open-panel') { state.lastSurfaceAt = state.lastClickAt; markAux(); }
