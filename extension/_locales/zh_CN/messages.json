@@ -1,11 +1,80 @@
 {
-  "extName": { "message": "Muse 自动批准" },
-  "extDesc": { "message": "自动点击 Muse（muse.ai）审批请求中的“Allow”。支持开关与点击日志，数据仅保存在本地。" },
-  "toggleLabel": { "message": "自动点击 Allow" },
-  "delayLabel": { "message": "点击间隔：" },
-  "clickedLabel": { "message": "已点击：" },
-  "noClicks": { "message": "暂无点击记录" },
-  "kindAllow": { "message": "批准" },
-  "kindExpand": { "message": "展开" },
-  "kindOpenPanel": { "message": "打开面板" }
+  "extName": {
+    "message": "Muse 自动批准"
+  },
+  "extDesc": {
+    "message": "自动点击 Muse（muse.ai）审批请求中的“Allow”。支持开关与点击日志，数据仅保存在本地。"
+  },
+  "toggleLabel": {
+    "message": "自动点击 Allow"
+  },
+  "delayLabel": {
+    "message": "点击间隔："
+  },
+  "clickedLabel": {
+    "message": "已点击："
+  },
+  "noClicks": {
+    "message": "暂无点击记录"
+  },
+  "kindAllow": {
+    "message": "批准"
+  },
+  "kindExpand": {
+    "message": "展开"
+  },
+  "kindOpenPanel": {
+    "message": "打开面板"
+  },
+  "statsOpen": {
+    "message": "统计"
+  },
+  "statsTitle": {
+    "message": "Muse Auto-Allow — 统计"
+  },
+  "totalLabel": {
+    "message": "总计"
+  },
+  "todayLabel": {
+    "message": "今天"
+  },
+  "weekLabel": {
+    "message": "本周"
+  },
+  "monthLabel": {
+    "message": "本月"
+  },
+  "yearLabel": {
+    "message": "今年"
+  },
+  "topicsTitle": {
+    "message": "按主题（仓库 / 项目）"
+  },
+  "noData": {
+    "message": "暂无数据"
+  },
+  "rangeDay": {
+    "message": "日"
+  },
+  "rangeWeek": {
+    "message": "周"
+  },
+  "rangeMonth": {
+    "message": "月"
+  },
+  "rangeYear": {
+    "message": "年"
+  },
+  "museTabsFound": {
+    "message": "已打开 $1 个 muse.ai 标签页"
+  },
+  "museTabsNone": {
+    "message": "未发现 muse.ai 标签页"
+  },
+  "onlyMuse": {
+    "message": "仅在 muse.ai 上运行"
+  },
+  "last7": {
+    "message": "最近 7 天"
+  }
 }

@@ -1,11 +1,80 @@
 {
-  "extName": { "message": "Muse Auto-Allow" },
-  "extDesc": { "message": "Tự động bấm Allow cho các yêu cầu phê duyệt của Muse (muse.ai). Có công tắc bật/tắt, nhật ký bấm, chỉ lưu cục bộ." },
-  "toggleLabel": { "message": "Tự động bấm Allow" },
-  "delayLabel": { "message": "Độ trễ giữa các lần bấm:" },
-  "clickedLabel": { "message": "Đã bấm:" },
-  "noClicks": { "message": "Chưa bấm lần nào" },
-  "kindAllow": { "message": "duyệt" },
-  "kindExpand": { "message": "mở rộng" },
-  "kindOpenPanel": { "message": "mở bảng" }
+  "extName": {
+    "message": "Muse Auto-Allow"
+  },
+  "extDesc": {
+    "message": "Tự động bấm Allow cho các yêu cầu phê duyệt của Muse (muse.ai). Có công tắc bật/tắt, nhật ký bấm, chỉ lưu cục bộ."
+  },
+  "toggleLabel": {
+    "message": "Tự động bấm Allow"
+  },
+  "delayLabel": {
+    "message": "Độ trễ giữa các lần bấm:"
+  },
+  "clickedLabel": {
+    "message": "Đã bấm:"
+  },
+  "noClicks": {
+    "message": "Chưa bấm lần nào"
+  },
+  "kindAllow": {
+    "message": "duyệt"
+  },
+  "kindExpand": {
+    "message": "mở rộng"
+  },
+  "kindOpenPanel": {
+    "message": "mở bảng"
+  },
+  "statsOpen": {
+    "message": "Thống kê"
+  },
+  "statsTitle": {
+    "message": "Muse Auto-Allow — Thống kê"
+  },
+  "totalLabel": {
+    "message": "Tổng"
+  },
+  "todayLabel": {
+    "message": "Hôm nay"
+  },
+  "weekLabel": {
+    "message": "Tuần này"
+  },
+  "monthLabel": {
+    "message": "Tháng này"
+  },
+  "yearLabel": {
+    "message": "Năm nay"
+  },
+  "topicsTitle": {
+    "message": "Theo chủ đề (repo / dự án)"
+  },
+  "noData": {
+    "message": "Chưa có dữ liệu"
+  },
+  "rangeDay": {
+    "message": "Ngày"
+  },
+  "rangeWeek": {
+    "message": "Tuần"
+  },
+  "rangeMonth": {
+    "message": "Tháng"
+  },
+  "rangeYear": {
+    "message": "Năm"
+  },
+  "museTabsFound": {
+    "message": "$1 tab muse.ai đang mở"
+  },
+  "museTabsNone": {
+    "message": "Chưa thấy tab muse.ai"
+  },
+  "onlyMuse": {
+    "message": "Chỉ hoạt động trên muse.ai"
+  },
+  "last7": {
+    "message": "7 ngày gần nhất"
+  }
 }

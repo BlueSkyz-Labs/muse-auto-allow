@@ -20,7 +20,7 @@ because the extension keeps everything on your own device.
 
 - The extension reads the content of **muse.ai** pages only, and only to find Muse
   approval buttons.
-- It stores your settings (on/off, click delay, click counter) and a local log of the **last 50 clicks** (each with a timestamp) in your browser.
+- It stores your settings (on/off, click delay, click counter), a local log of the **last 50 clicks** (each with a timestamp), and **compact click statistics** (per day / month / year and per topic) in your browser.
 - It **collects nothing** about you.
 - It **transmits nothing** to us or anyone else.
 - There is **no analytics**, **no tracking**, and **no advertising**.
@@ -40,7 +40,10 @@ to any other website.
 
 - your settings — whether auto-clicking is on or off, the delay between clicks, and a click counter;
 - a click log — the **last 50 clicks** it performed, each described by timestamp, kind (allow /
-  expand / open panel), button label, and context.
+  expand / open panel), button label, and context;
+- click statistics — compact counters only: clicks per day, per month, per year, and per topic
+  (a repository or host name, up to 40 characters, taken from the approval text). No page
+  content is stored.
 
 This information never leaves your device.
 
@@ -72,6 +75,8 @@ control:
 
 - **Retention:** the click log keeps only the most recent 50 entries; older entries are
   discarded automatically.
+- **Retention (statistics):** the statistics counters keep at most 400 days, 24 months and
+  100 topics; older entries are discarded automatically.
 - **Deletion:** remove the extension from Chrome (`chrome://extensions` → Remove) to
   delete all stored settings and logs. You can also clear the extension's data from your
   browser's site/extension data controls.
@@ -84,7 +89,7 @@ Because we never receive this data, there is nothing for us to delete on our sid
 
 | Permission | Why it is needed |
 |---|---|
-| `storage` | Save your on/off setting, click delay, click counter, and the local last-50 click log. |
+| `storage` | Save your on/off setting, click delay, click counter, the local last-50 click log, and compact click statistics. |
 | `alarms` | Run a once-a-minute check so approvals in background tabs are handled. |
 | Host: `https://muse.ai/*`, `https://*.muse.ai/*` | Detect and click the Allow button on Muse pages. No other site is accessed. |
 
@@ -113,14 +118,15 @@ Questions about this policy or the extension's data practices:
 ## Ghi chú tiếng Việt (tóm tắt)
 
 Muse Auto-Allow chỉ đọc nội dung trang **muse.ai** để tìm nút Allow của Muse. Tiện ích
-lưu cục bộ trong trình duyệt của bạn: cài đặt bật/tắt, độ trễ bấm, và nhật ký 50 lần bấm
-gần nhất. Tiện ích **không thu thập** dữ liệu nào, **không gửi** dữ liệu đi đâu, không có
+lưu cục bộ trong trình duyệt của bạn: cài đặt bật/tắt, độ trễ bấm, nhật ký 50 lần bấm
+gần nhất, và thống kê đếm gọn (theo ngày / tháng / năm và theo chủ đề). Tiện ích **không thu thập** dữ liệu nào, **không gửi** dữ liệu đi đâu, không có
 analytics, không có mã từ xa. Gỡ tiện ích khỏi Chrome là xoá sạch dữ liệu đã lưu. Liên hệ:
 TODO: fill before submit.
 
 ## 中文说明（摘要）
 
 Muse Auto-Allow 仅读取 **muse.ai** 页面的内容，用于查找 Muse 的 Allow（允许）按钮。
-扩展在你的浏览器中本地保存：开关设置、点击间隔，以及最近 50 次点击的日志。扩展
+扩展在你的浏览器中本地保存：开关设置、点击间隔、最近 50 次点击的日志，以及精简的点击统计
+（按日 / 月 / 年与主题）。扩展
 **不收集**任何数据，**不向任何地方发送**数据，没有分析统计，也没有远程代码。从
 Chrome 移除该扩展即可清除已保存的数据。联系方式：TODO: fill before submit。

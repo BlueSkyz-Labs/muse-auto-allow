@@ -28,6 +28,10 @@
   if (window.__museAutoAllowLoaded) return;
   window.__museAutoAllowLoaded = true;
   try { document.documentElement.setAttribute('data-muse-auto-allow', '1'); } catch {}
+  // Interact ONLY on muse.ai (defense-in-depth: the manifest matches already scope us;
+  // the localhost allowance exists solely for the test-harness copy).
+  const ON_MUSE = /(^|\.)muse\.ai$/.test(location.hostname) || location.hostname === '127.0.0.1' || location.hostname === 'localhost';
+  if (!ON_MUSE) return;
 
   const ALLOW_RE = /^\s*(allow|approve)(\s+(once|always|this time))?\s*$/i;
   const DENY_RE = /^\s*(deny|reject|decline)(\s+(once|this time))?\s*$/i;
@@ -218,26 +222,61 @@
     return null;
   }
 
-  // Log writes are serialized: entries queue up and flush one get->set at a time, so
-  // concurrent writers cannot lose entries to a read-modify-write race (redteam F9).
-  const logQueue = [];
-  let logFlushing = false;
-  function flushLog() {
-    if (logFlushing || !logQueue.length) return;
-    logFlushing = true;
-    try {
-      chrome.storage.local.get({ log: [] }, (s) => {
-        const log = Array.isArray(s.log) ? s.log : [];
-        while (logQueue.length) log.unshift(logQueue.shift());
-        try { chrome.storage.local.set({ log: log.slice(0, 50) }); } catch { /* invalidated */ }
-        logFlushing = false;
-      });
-    } catch { logFlushing = false; }
+  // Click recording is serialized: entries queue up and flush one get->set at a time
+  // (no lost writes — redteam F9), updating the log, the click counter and the
+  // day/month/year/topic aggregates in a single storage write.
+  const clickQueue = [];
+  let clickFlushing = false;
+  const pad2 = (n) => String(n).padStart(2, '0');
+  function dayKey(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+  function monthKey(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1); }
+  function extractTopic(context) {
+    const c = String(context || '').replace(/\s+/g, ' ').trim();
+    const repos = [...c.matchAll(/Repository\s+(?!owner\b)([A-Za-z0-9._-]{2,40})/gi)].map((m) => m[1]);
+    if (repos.length) return repos[repos.length - 1];
+    const host = c.match(/https?:\/\/([A-Za-z0-9.-]{2,60})/i);
+    if (host) return host[1].slice(0, 40);
+    return c ? c.slice(0, 40) : 'unknown';
   }
-  function log(entry) {
-    logQueue.push(entry);
-    if (logQueue.length > 60) logQueue.splice(0, logQueue.length - 60);
-    flushLog();
+  function pruneKeys(map, keep) {
+    const keys = Object.keys(map).sort();
+    while (keys.length > keep) delete map[keys.shift()];
+  }
+  function pruneTopics(map, keep) {
+    const keys = Object.keys(map);
+    if (keys.length <= keep) return;
+    keys.sort((a, b) => map[a] - map[b]);
+    for (const k of keys.slice(0, keys.length - keep)) delete map[k];
+  }
+  function flushClicks() {
+    if (clickFlushing || !clickQueue.length) return;
+    clickFlushing = true;
+    try {
+      chrome.storage.local.get({ log: [], stats: null, clickCount: 0 }, (s) => {
+        const log = Array.isArray(s.log) ? s.log : [];
+        let count = Number(s.clickCount) || 0;
+        const st = (s.stats && typeof s.stats === 'object') ? s.stats : {};
+        st.byDay = st.byDay || {}; st.byMonth = st.byMonth || {}; st.byYear = st.byYear || {}; st.byTopic = st.byTopic || {};
+        while (clickQueue.length) {
+          const item = clickQueue.shift();
+          log.unshift(item.entry);
+          count += 1;
+          st.byDay[item.day] = (st.byDay[item.day] || 0) + 1;
+          st.byMonth[item.month] = (st.byMonth[item.month] || 0) + 1;
+          st.byYear[item.year] = (st.byYear[item.year] || 0) + 1;
+          st.byTopic[item.topic] = (st.byTopic[item.topic] || 0) + 1;
+        }
+        pruneKeys(st.byDay, 400); pruneKeys(st.byMonth, 24); pruneTopics(st.byTopic, 100);
+        try { chrome.storage.local.set({ log: log.slice(0, 50), stats: st, clickCount: count }); } catch { /* invalidated */ }
+        clickFlushing = false;
+      });
+    } catch { clickFlushing = false; }
+  }
+  function recordClick(entry, context) {
+    const d = new Date();
+    clickQueue.push({ entry, day: dayKey(d), month: monthKey(d), year: String(d.getFullYear()), topic: extractTopic(context) });
+    if (clickQueue.length > 60) clickQueue.splice(0, clickQueue.length - 60);
+    flushClicks();
   }
 
   function doClick(btn, card, kind, cooldownKey, ctx) {
@@ -254,8 +293,7 @@
     if (cooldownKey) markCooldown(cooldownKey);
     state.clickCount += 1;
     state.lastResult = { at: new Date().toISOString(), kind, label, context };
-    try { chrome.storage.local.set({ clickCount: state.clickCount }); } catch {}
-    log(state.lastResult);
+    recordClick(state.lastResult, context);
     console.log('[muse-auto-allow] ' + kind + ' "' + label.slice(0, 60) + '" | ' + context.slice(0, 90));
     try { btn.click(); } catch (e) { console.warn('[muse-auto-allow] click failed', e); }
   }

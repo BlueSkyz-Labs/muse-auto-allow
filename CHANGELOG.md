@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.0
+- Usage statistics (user-facing): clicks by day / week / month / year, plus by topic — the topic is the GitHub repo (or host) extracted from each approval's context. Aggregates are compact local counters (`stats.byDay` / `byMonth` / `byYear` / `byTopic`; 400 days / 24 months / 100 topics retained).
+- New Statistics page (`stats.html`): dependency-free inline-SVG bar charts with a Day / Week / Month / Year switcher, KPI cards (total / today / this week / this month) and a top-topics list. Renders instantly; no libraries.
+- Popup: today's count, a 7-day mini chart, and a Statistics button. Toolbar badge shows today's click count (cleared at zero).
+- muse.ai-only interaction made visible and enforced: hard hostname guard in the content script (defense-in-depth on top of the manifest matches), live "N muse.ai tab(s) open / No muse.ai tab found" status chip in the popup, and the service worker sweeps a muse.ai tab the moment it finishes loading (`tabs.onUpdated`) on top of the per-minute alarm.
+- Click recording consolidated into ONE serialized storage write (log + counter + aggregates) — keeps the redteam F9 no-lost-write guarantee.
+- e2e: new fixture case 17 (GitHub-context card); the suite now reads storage back through the popup page and asserts `byDay[today] ≥ 10`, `byTopic['test-repo'] ≥ 1`, clickCount and log length.
+- i18n: 17 new strings × 6 locales (26 keys per locale).
+
 ## 1.2.0
 - i18n: English, Tiếng Việt, 简体中文, 日本語, 한국어, Español (popup UI + manifest name/description; store listing localized).
 - New icon + popup design with Muse-inspired motion (draw-in check, status pulse, count pop, log slide-in) — fully disabled under `prefers-reduced-motion: reduce`.

@@ -42,6 +42,17 @@
   .k-allow { background: #173a24; color: #6ee7a0; }
   .k-expand { background: #3a3317; color: #e7d76e; }
   .k-open-panel { background: #17253a; color: #7cc0ff; }
+  .chip { margin-left: auto; font-size: 11px; padding: 2px 8px; border-radius: 999px; border: 1px solid #2a3242; color: #9aa3b2; white-space: nowrap; }
+  .chip.on { color: #6ee7a0; border-color: #1f4a33; }
+  .chip.off { color: #e7d76e; border-color: #4a4426; }
+  .mini { margin-top: 8px; }
+  .mcap { font-size: 11px; margin-bottom: 2px; }
+  .mini svg { display: block; }
+  .mini rect { transition: opacity .15s ease; }
+  .mini rect:hover { opacity: .8; }
+  .btn { background: #1e2027; color: #e8e8ea; border: 1px solid #343742; border-radius: 8px; padding: 6px 12px; cursor: pointer; font: inherit; }
+  .btn:hover { border-color: var(--blue); }
+  .note { font-size: 11px; margin-left: auto; }
   .empty { color: #777; padding: 6px 0; }
 </style>
 </head>
@@ -59,6 +70,9 @@
   <div class="row"><span class="muted" data-i18n="delayLabel">Delay between clicks:</span>
     <input type="number" id="delay" min="0" max="10000" step="100"> <span class="muted">ms</span></div>
   <div class="row"><span class="muted" data-i18n="clickedLabel">Clicked:</span><b class="count" id="count">0</b></div>
+  <div class="row"><span class="muted" data-i18n="todayLabel">Today:</span><b class="count" id="today" style="font-size:13px">0</b><span class="chip" id="musestat">&hellip;</span></div>
+  <div class="mini"><div class="mcap muted" data-i18n="last7">Last 7 days</div><svg id="mini" width="292" height="46" aria-hidden="true"></svg></div>
+  <div class="row"><button class="btn" id="openstats" data-i18n="statsOpen">Statistics</button><span class="muted note" data-i18n="onlyMuse">Works only on muse.ai</span></div>
   <div class="log" id="log"></div>
   <script src="popup.js"></script>
 </body>

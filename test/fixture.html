@@ -146,6 +146,15 @@
   </div>
 </form>
 
+<!-- v1.3 case: GitHub-style context -> stats topic extraction must record 'test-repo' -->
+<div class="card" data-testid="hatch-inline-approval-card" id="card17">
+  <p>Allow Muse to perform this action on your GitHub account? Action Pull request read on GitHub Repository owner TestOrg Pull request 5 Repository test-repo Method get</p>
+  <div class="row">
+    <button type="button" class="allow" id="allow17">Allow</button>
+    <button type="button" class="deny" id="deny17">Deny</button>
+  </div>
+</div>
+
 <script>
 window.__clicks = [];
 window.__errors = [];
@@ -234,6 +243,8 @@ wirePair(document, 12);
 wirePair(document, 13);
 wirePair(document, 14);
 wirePair(document, 16);
+// v1.3: stats topic extraction (context contains "Repository test-repo")
+wirePair(document, 17);
 
 // redteam v2 case: marked card with row text + self re-render (dedup must hold across paths).
 // Clicking Allow replaces the card with an IDENTICAL one (new nodes, same text incl. the

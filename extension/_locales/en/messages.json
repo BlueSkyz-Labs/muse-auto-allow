@@ -1,11 +1,80 @@
 {
-  "extName": { "message": "Muse Auto-Allow" },
-  "extDesc": { "message": "Auto-clicks Allow on Muse (muse.ai) approval requests. On/off switch, click log, local-only." },
-  "toggleLabel": { "message": "Auto-click Allow" },
-  "delayLabel": { "message": "Delay between clicks:" },
-  "clickedLabel": { "message": "Clicked:" },
-  "noClicks": { "message": "No clicks yet" },
-  "kindAllow": { "message": "allow" },
-  "kindExpand": { "message": "expand" },
-  "kindOpenPanel": { "message": "open panel" }
+  "extName": {
+    "message": "Muse Auto-Allow"
+  },
+  "extDesc": {
+    "message": "Auto-clicks Allow on Muse (muse.ai) approval requests. On/off switch, click log, local-only."
+  },
+  "toggleLabel": {
+    "message": "Auto-click Allow"
+  },
+  "delayLabel": {
+    "message": "Delay between clicks:"
+  },
+  "clickedLabel": {
+    "message": "Clicked:"
+  },
+  "noClicks": {
+    "message": "No clicks yet"
+  },
+  "kindAllow": {
+    "message": "allow"
+  },
+  "kindExpand": {
+    "message": "expand"
+  },
+  "kindOpenPanel": {
+    "message": "open panel"
+  },
+  "statsOpen": {
+    "message": "Statistics"
+  },
+  "statsTitle": {
+    "message": "Muse Auto-Allow — Statistics"
+  },
+  "totalLabel": {
+    "message": "Total"
+  },
+  "todayLabel": {
+    "message": "Today"
+  },
+  "weekLabel": {
+    "message": "This week"
+  },
+  "monthLabel": {
+    "message": "This month"
+  },
+  "yearLabel": {
+    "message": "This year"
+  },
+  "topicsTitle": {
+    "message": "By topic (repo / project)"
+  },
+  "noData": {
+    "message": "No data yet"
+  },
+  "rangeDay": {
+    "message": "Day"
+  },
+  "rangeWeek": {
+    "message": "Week"
+  },
+  "rangeMonth": {
+    "message": "Month"
+  },
+  "rangeYear": {
+    "message": "Year"
+  },
+  "museTabsFound": {
+    "message": "$1 muse.ai tab(s) open"
+  },
+  "museTabsNone": {
+    "message": "No muse.ai tab found"
+  },
+  "onlyMuse": {
+    "message": "Works only on muse.ai"
+  },
+  "last7": {
+    "message": "Last 7 days"
+  }
 }

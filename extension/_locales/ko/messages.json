@@ -1,11 +1,80 @@
 {
-  "extName": { "message": "Muse 자동 승인" },
-  "extDesc": { "message": "Muse(muse.ai) 승인 요청에서 'Allow'를 자동으로 클릭합니다. 켜기/끄기 스위치와 클릭 로그 제공, 데이터는 로컬에만 저장." },
-  "toggleLabel": { "message": "Allow 자동 클릭" },
-  "delayLabel": { "message": "클릭 간격:" },
-  "clickedLabel": { "message": "클릭 수:" },
-  "noClicks": { "message": "아직 클릭 기록이 없습니다" },
-  "kindAllow": { "message": "승인" },
-  "kindExpand": { "message": "펼치기" },
-  "kindOpenPanel": { "message": "패널 열기" }
+  "extName": {
+    "message": "Muse 자동 승인"
+  },
+  "extDesc": {
+    "message": "Muse(muse.ai) 승인 요청에서 'Allow'를 자동으로 클릭합니다. 켜기/끄기 스위치와 클릭 로그 제공, 데이터는 로컬에만 저장."
+  },
+  "toggleLabel": {
+    "message": "Allow 자동 클릭"
+  },
+  "delayLabel": {
+    "message": "클릭 간격:"
+  },
+  "clickedLabel": {
+    "message": "클릭 수:"
+  },
+  "noClicks": {
+    "message": "아직 클릭 기록이 없습니다"
+  },
+  "kindAllow": {
+    "message": "승인"
+  },
+  "kindExpand": {
+    "message": "펼치기"
+  },
+  "kindOpenPanel": {
+    "message": "패널 열기"
+  },
+  "statsOpen": {
+    "message": "통계"
+  },
+  "statsTitle": {
+    "message": "Muse Auto-Allow — 통계"
+  },
+  "totalLabel": {
+    "message": "합계"
+  },
+  "todayLabel": {
+    "message": "오늘"
+  },
+  "weekLabel": {
+    "message": "이번 주"
+  },
+  "monthLabel": {
+    "message": "이번 달"
+  },
+  "yearLabel": {
+    "message": "올해"
+  },
+  "topicsTitle": {
+    "message": "주제별(저장소 / 프로젝트)"
+  },
+  "noData": {
+    "message": "아직 데이터 없음"
+  },
+  "rangeDay": {
+    "message": "일"
+  },
+  "rangeWeek": {
+    "message": "주"
+  },
+  "rangeMonth": {
+    "message": "월"
+  },
+  "rangeYear": {
+    "message": "년"
+  },
+  "museTabsFound": {
+    "message": "muse.ai 탭 $1개 열림"
+  },
+  "museTabsNone": {
+    "message": "muse.ai 탭을 찾을 수 없음"
+  },
+  "onlyMuse": {
+    "message": "muse.ai에서만 동작합니다"
+  },
+  "last7": {
+    "message": "최근 7일"
+  }
 }

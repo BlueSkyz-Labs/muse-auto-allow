@@ -159,7 +159,7 @@ function killMyChrome() {
   } catch { /* nothing to kill */ }
 }
 
-const EXPECTED = ['1', '2', '3', '4', '5', '6', '7', '11', 'pending5', 'surface'];
+const EXPECTED = ['1', '2', '3', '4', '5', '6', '7', '11', '17', 'pending5', 'surface'];
 const FORBIDDEN = ['8', '9', '10', '12', '13', '14', '16', 'surface2', 'surface3', 'lone', 'notif'];
 
 let ws = null;
@@ -234,6 +234,35 @@ try {
   const denyCount = clicksFinal.filter((c) => c.deny).length; // from the FINAL snapshot (late denies must fail too)
   const forbiddenHit = FORBIDDEN.filter((n) => gotFinal.includes(n)); // late clicks cannot slip past (F10)
 
+  // ---- stats aggregates (v1.3): day / topic counters must be recorded in storage ----
+  // Read back through the popup page — an extension context where chrome.storage works.
+  const statsCheck = { ok: false };
+  try {
+    const t3 = await send('Target.createTarget', { url: `chrome-extension://${extId}/popup.html` });
+    const { sessionId: s3 } = await send('Target.attachToTarget', { targetId: t3.targetId, flatten: true });
+    await sleep(900); // let the click queue flush
+    const r = await send('Runtime.evaluate', {
+      expression: `new Promise((res) => chrome.storage.local.get(['stats','clickCount','log'], (s) => res(JSON.stringify({ stats: s.stats || null, clickCount: s.clickCount || 0, logLen: (s.log || []).length, i18nFound: chrome.i18n.getMessage('museTabsFound', ['3']) }))))`,
+      returnByValue: true, awaitPromise: true,
+    }, s3);
+    const j = JSON.parse(r?.result?.value || '{}');
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const today = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
+    const byDay = (j.stats && j.stats.byDay) || {};
+    const byTopic = (j.stats && j.stats.byTopic) || {};
+    Object.assign(statsCheck, {
+      today,
+      todayCount: byDay[today] || 0,
+      topicTestRepo: byTopic['test-repo'] || 0,
+      topicCount: Object.keys(byTopic).length,
+      clickCount: j.clickCount,
+      logLen: j.logLen,
+      i18nFound: j.i18nFound,
+      ok: (byDay[today] || 0) >= 10 && (byTopic['test-repo'] || 0) >= 1 && j.clickCount >= 10 && j.logLen >= 10,
+    });
+  } catch (e) { statsCheck.error = e.message; }
+
   // ---- muse.ai smoke (logged out; WARN-only if the network is blocked) ----
   let museAttr = null;
   try {
@@ -253,7 +282,7 @@ try {
   }
 
   const pass = missing.length === 0 && extra.length === 0 && dupes.length === 0 && denyCount === 0 && orderOk
-    && forbiddenHit.length === 0 && n7count === 1 && n11count === 1 && !surface2Hit;
+    && forbiddenHit.length === 0 && n7count === 1 && n11count === 1 && !surface2Hit && statsCheck.ok;
   Object.assign(results, {
     ok: pass,
     extId,
@@ -271,6 +300,7 @@ try {
     surface2Hit,
     lateClicks,
     retryFired,
+    statsCheck,
     timeline: timeline.slice(-45),
     timeline2: timeline2.slice(-30),
     raw: clicks,

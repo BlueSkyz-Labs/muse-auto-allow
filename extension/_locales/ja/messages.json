@@ -1,11 +1,80 @@
 {
-  "extName": { "message": "Muse 自動承認" },
-  "extDesc": { "message": "Muse（muse.ai）の承認リクエストで「Allow」を自動クリック。オン/オフ切替とクリックログ付き、データはローカルのみ。" },
-  "toggleLabel": { "message": "Allow を自動クリック" },
-  "delayLabel": { "message": "クリック間隔：" },
-  "clickedLabel": { "message": "クリック数：" },
-  "noClicks": { "message": "まだクリックはありません" },
-  "kindAllow": { "message": "承認" },
-  "kindExpand": { "message": "展開" },
-  "kindOpenPanel": { "message": "パネルを開く" }
+  "extName": {
+    "message": "Muse 自動承認"
+  },
+  "extDesc": {
+    "message": "Muse（muse.ai）の承認リクエストで「Allow」を自動クリック。オン/オフ切替とクリックログ付き、データはローカルのみ。"
+  },
+  "toggleLabel": {
+    "message": "Allow を自動クリック"
+  },
+  "delayLabel": {
+    "message": "クリック間隔："
+  },
+  "clickedLabel": {
+    "message": "クリック数："
+  },
+  "noClicks": {
+    "message": "まだクリックはありません"
+  },
+  "kindAllow": {
+    "message": "承認"
+  },
+  "kindExpand": {
+    "message": "展開"
+  },
+  "kindOpenPanel": {
+    "message": "パネルを開く"
+  },
+  "statsOpen": {
+    "message": "統計"
+  },
+  "statsTitle": {
+    "message": "Muse Auto-Allow — 統計"
+  },
+  "totalLabel": {
+    "message": "合計"
+  },
+  "todayLabel": {
+    "message": "今日"
+  },
+  "weekLabel": {
+    "message": "今週"
+  },
+  "monthLabel": {
+    "message": "今月"
+  },
+  "yearLabel": {
+    "message": "今年"
+  },
+  "topicsTitle": {
+    "message": "トピック別（リポジトリ / プロジェクト）"
+  },
+  "noData": {
+    "message": "データはまだありません"
+  },
+  "rangeDay": {
+    "message": "日"
+  },
+  "rangeWeek": {
+    "message": "週"
+  },
+  "rangeMonth": {
+    "message": "月"
+  },
+  "rangeYear": {
+    "message": "年"
+  },
+  "museTabsFound": {
+    "message": "muse.ai タブ $1 件が開いています"
+  },
+  "museTabsNone": {
+    "message": "muse.ai タブが見つかりません"
+  },
+  "onlyMuse": {
+    "message": "muse.ai でのみ動作します"
+  },
+  "last7": {
+    "message": "直近 7 日間"
+  }
 }

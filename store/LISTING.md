@@ -63,6 +63,8 @@ keeps moving.
 - Adjustable delay between clicks (milliseconds).
 - A click counter and a log of the last 50 clicks, so you can see exactly what it did
   (kind, button label, and context).
+- A built-in Statistics page: clicks by day / week / month / year, and by topic
+  (repo / project) — light inline charts, instant load.
 
 **Private by design**
 - Everything happens on your device. Settings and the click log are stored locally in
@@ -100,6 +102,8 @@ bị ngắt quãng.
 - Chỉnh được độ trễ giữa các lần bấm (mili-giây).
 - Bộ đếm số lần bấm và nhật ký 50 lần bấm gần nhất, để bạn thấy rõ tiện ích đã làm gì
   (loại thao tác, nhãn nút, ngữ cảnh).
+- Trang Thống kê sẵn có: số lượt bấm theo ngày / tuần / tháng / năm và theo chủ đề
+  (repo / dự án) — biểu đồ nhẹ, hiển thị tức thì.
 
 **Riêng tư từ thiết kế**
 - Mọi thứ diễn ra trên máy bạn. Cài đặt và nhật ký bấm được lưu cục bộ trong trình duyệt.
@@ -133,6 +137,7 @@ Muse（muse.ai）在执行操作前会暂停并向你请求批准。你一旦离
 - 弹窗内置开关，随时可关闭。
 - 可调整点击间隔（毫秒）。
 - 点击计数器和最近 50 次点击的日志，清楚记录它做了什么（类型、按钮文字、上下文）。
+- 内置统计页：按日 / 周 / 月 / 年以及按主题（仓库 / 项目）的点击次数，轻量图表即时呈现。
 
 **隐私优先**
 - 一切都在你的设备上完成。设置和点击日志仅保存在浏览器本地。
@@ -167,6 +172,7 @@ Muse（muse.ai）は操作の前に承認を求めて一時停止します。席
 - クリック間隔（ミリ秒）を調整できます。
 - クリック回数と直近 50 件のクリックログで、何をしたかを確認できます
   （種類・ボタン名・コンテキスト）。
+- 内蔵の統計ページ：日 / 週 / 月 / 年別、トピック別（リポジトリ / プロジェクト）のクリック数を軽量チャートですぐ表示。
 
 **プライバシー重視の設計**
 - すべて端末上で完結します。設定とクリックログはブラウザ内にローカル保存されます。
@@ -203,6 +209,7 @@ Muse(muse.ai)는 작업 전에 승인을 요청하며 잠시 멈춥니다. 자�
 - 클릭 간 간격(밀리초)을 조절할 수 있습니다.
 - 클릭 횟수와 최근 50건의 클릭 로그로 무엇을 했는지 확인할 수 있습니다
   (종류, 버튼 이름, 맥락).
+- 내장 통계 페이지: 일 / 주 / 월 / 년 및 주제별(저장소 / 프로젝트) 클릭 수를 가벼운 차트로 즉시 표시.
 
 **설계부터 개인정보 보호**
 - 모든 동작은 사용자 기기에서 이루어집니다. 설정과 클릭 로그는 브라우저에 로컬로
@@ -240,6 +247,7 @@ se detenga.
 - Retardo ajustable entre clics (milisegundos).
 - Contador de clics y registro de los últimos 50, para que veas exactamente qué hizo
   (tipo, texto del botón y contexto).
+- Página de estadísticas integrada: clics por día / semana / mes / año y por tema (repositorio / proyecto), con gráficos ligeros.
 
 **Privacidad desde el diseño**
 - Todo ocurre en tu dispositivo. Los ajustes y el registro de clics se guardan localmente
@@ -275,8 +283,9 @@ it does not interact with any site other than muse.ai.
 ## 5. Permission justifications (dashboard → Privacy practices)
 
 ### `storage`
-Saves the user's own settings (on/off state, click delay, click counter) and the local click log
-(the last 50 clicks) so the popup can show the current state and history. Data stays in
+Saves the user's own settings (on/off state, click delay, click counter, compact click
+statistics) and the local click log (the last 50 clicks) so the popup and statistics page can
+show the current state and history. Data stays in
 `chrome.storage.local` on the user's device and is never transmitted.
 
 ### `alarms`
@@ -347,7 +356,7 @@ These map to the Chrome Web Store **Privacy practices** form.
 Muse Auto-Allow has a single purpose: on muse.ai pages only, it auto-clicks the
 "Allow" button on Muse's own approval-request UI so the user's Muse agent does not
 stop for manual approvals. It calls no remote servers, contains no remote code, and
-collects/transmits no data. Settings and a local last-50 click log live in
+collects/transmits no data. Settings, a local last-50 click log and compact click statistics live in
 chrome.storage.local. It never clicks Deny/Reject/Decline and never clicks lone
 "Allow" permission banners. Permissions: storage (local settings + log), alarms
 (once-a-minute check so background-tab approvals are handled), host permission

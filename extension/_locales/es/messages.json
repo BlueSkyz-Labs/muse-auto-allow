@@ -1,11 +1,80 @@
 {
-  "extName": { "message": "Muse Auto-Aprobar" },
-  "extDesc": { "message": "Hace clic automáticamente en Allow en las solicitudes de aprobación de Muse (muse.ai). Interruptor, registro de clics; todo local." },
-  "toggleLabel": { "message": "Clic automático en Allow" },
-  "delayLabel": { "message": "Retardo entre clics:" },
-  "clickedLabel": { "message": "Clics:" },
-  "noClicks": { "message": "Aún no hay clics" },
-  "kindAllow": { "message": "permitir" },
-  "kindExpand": { "message": "expandir" },
-  "kindOpenPanel": { "message": "abrir panel" }
+  "extName": {
+    "message": "Muse Auto-Aprobar"
+  },
+  "extDesc": {
+    "message": "Hace clic automáticamente en Allow en las solicitudes de aprobación de Muse (muse.ai). Interruptor, registro de clics; todo local."
+  },
+  "toggleLabel": {
+    "message": "Clic automático en Allow"
+  },
+  "delayLabel": {
+    "message": "Retardo entre clics:"
+  },
+  "clickedLabel": {
+    "message": "Clics:"
+  },
+  "noClicks": {
+    "message": "Aún no hay clics"
+  },
+  "kindAllow": {
+    "message": "permitir"
+  },
+  "kindExpand": {
+    "message": "expandir"
+  },
+  "kindOpenPanel": {
+    "message": "abrir panel"
+  },
+  "statsOpen": {
+    "message": "Estadísticas"
+  },
+  "statsTitle": {
+    "message": "Muse Auto-Allow — Estadísticas"
+  },
+  "totalLabel": {
+    "message": "Total"
+  },
+  "todayLabel": {
+    "message": "Hoy"
+  },
+  "weekLabel": {
+    "message": "Esta semana"
+  },
+  "monthLabel": {
+    "message": "Este mes"
+  },
+  "yearLabel": {
+    "message": "Este año"
+  },
+  "topicsTitle": {
+    "message": "Por tema (repositorio / proyecto)"
+  },
+  "noData": {
+    "message": "Aún no hay datos"
+  },
+  "rangeDay": {
+    "message": "Día"
+  },
+  "rangeWeek": {
+    "message": "Semana"
+  },
+  "rangeMonth": {
+    "message": "Mes"
+  },
+  "rangeYear": {
+    "message": "Año"
+  },
+  "museTabsFound": {
+    "message": "$1 pestaña(s) de muse.ai abierta(s)"
+  },
+  "museTabsNone": {
+    "message": "No se encontró ninguna pestaña de muse.ai"
+  },
+  "onlyMuse": {
+    "message": "Solo funciona en muse.ai"
+  },
+  "last7": {
+    "message": "Últimos 7 días"
+  }
 }
