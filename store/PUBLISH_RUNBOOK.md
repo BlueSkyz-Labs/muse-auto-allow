@@ -31,7 +31,18 @@ rebuild + verify zip → upload → resubmit.
 ## Step 2 — Build, verify, and upload the package
 
 1. Confirm the version in `extension/manifest.json` is correct (currently `1.5.0`).
-2. Build the store zip from the repo root:
+2. **Lint gate (mandatory, zero-dependency).** Run from the repo root:
+
+   ```bash
+   node scripts/lint.mjs
+   ```
+
+   Checks, all fail-closed (exit 1 with the finding list): JS syntax across `extension/`,
+   JSON validity (manifest + all locales), i18n key parity across the 6 locales, no remote
+   code / network primitives (`eval`, `new Function`, `fetch`, `XMLHttpRequest`, remote
+   `<script src>`, stray `alert` outside popup/stats), and manifest hygiene (MV3, minimal
+   permission allowlist, `__MSG_` name, pinned muse.ai host set, explicit CSP).
+3. Build the store zip from the repo root:
 
    ```bash
    node scripts/build.mjs
@@ -41,7 +52,7 @@ rebuild + verify zip → upload → resubmit.
    (not nested inside a folder). The build fails closed if the zip does not mirror the
    whole `extension/` tree (exit 3 = file missing from the zip, exit 4 = unexpected file
    in the zip).
-3. **Verify the package (mandatory).** Byte-compare the zip against `extension/`:
+4. **Verify the package (mandatory).** Byte-compare the zip against `extension/`:
 
    ```bash
    python scripts/verify-zip.py
@@ -51,10 +62,10 @@ rebuild + verify zip → upload → resubmit.
    non-zero on any mismatch, missing file, or extra file. Expected output for this
    release: `muse-auto-allow-v1.5.0.zip: 18 matched, 0 mismatched, 0 disk-only, 0
    zip-only` and exit 0. **Do not upload a zip that fails this check.**
-4. In the Developer Dashboard, click **New item** (first release) or open the existing
+5. In the Developer Dashboard, click **New item** (first release) or open the existing
    item (for updates).
-5. **Upload** `dist/muse-auto-allow-v1.5.0.zip`.
-6. Wait for the dashboard to parse the manifest. It will read the name/description from
+6. **Upload** `dist/muse-auto-allow-v1.5.0.zip`.
+7. Wait for the dashboard to parse the manifest. It will read the name/description from
    `__MSG_*__` keys resolved against `_locales/en/messages.json`; verify the default
    locale resolves cleanly (no blank name).
 

@@ -5,14 +5,39 @@
 // 3) Keeps the toolbar badge showing today's click count.
 const MUSE_URL_RE = /^https:\/\/([a-z0-9-]+\.)*muse\.ai(?=[:/])/i;
 
+// Surface worker errors in the console instead of silent promise deaths (debuggability;
+// local logging only — nothing is transmitted).
+self.addEventListener('unhandledrejection', (e) => {
+  try { console.warn('[Muse Auto-Allow] unhandled rejection:', e && e.reason && (e.reason.message || e.reason)); } catch { /* ignore */ }
+});
+
 function ensureAlarm() {
   chrome.alarms.get('muse-sweep', (a) => {
     if (!a) chrome.alarms.create('muse-sweep', { periodInMinutes: 1 });
   });
 }
-chrome.runtime.onInstalled.addListener(ensureAlarm);
 chrome.runtime.onStartup.addListener(ensureAlarm);
 ensureAlarm();
+
+// --- Upgrade-safe migrations (versioned, idempotent, never destructive) ---
+// The stamp lives in chrome.storage.local.schemaVersion, kept in lockstep with the
+// content script's flush write. Steps run only when the stored version is older and
+// PRESERVE every existing value (data inheritance — nothing is dropped on upgrade).
+const SCHEMA_VERSION = 2;
+async function migrate() {
+  try {
+    const raw = await chrome.storage.local.get(['schemaVersion', 'enabled', 'minDelayMs']);
+    const from = Number(raw.schemaVersion) || 0;
+    if (from >= SCHEMA_VERSION) return;
+    const seed = {};
+    if (!('enabled' in raw)) seed.enabled = true;      // absent only — `false` is a valid choice
+    if (!('minDelayMs' in raw)) seed.minDelayMs = 300;
+    // v0 -> v2: log/counter/aggregate shapes are read defensively everywhere; there is
+    // nothing to transform. Future steps: add one `if (from < N)` block per version.
+    seed.schemaVersion = SCHEMA_VERSION;
+    await chrome.storage.local.set(seed);
+  } catch { /* migrations must never block the worker */ }
+}
 
 function nudge(tabId) {
   if (tabId == null) return;
@@ -45,6 +70,10 @@ function updateBadge() {
   } catch { /* ignore */ }
 }
 chrome.storage.onChanged.addListener((ch) => { if (ch.stats || ch.clickCount) updateBadge(); });
-chrome.runtime.onInstalled.addListener(updateBadge);
+chrome.runtime.onInstalled.addListener(({ reason } = {}) => {
+  ensureAlarm();
+  migrate();
+  if (reason !== 'chrome_update') updateBadge();
+});
 chrome.runtime.onStartup.addListener(updateBadge);
 updateBadge();
