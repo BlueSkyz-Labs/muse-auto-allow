@@ -159,8 +159,8 @@ function killMyChrome() {
   } catch { /* nothing to kill */ }
 }
 
-const EXPECTED = ['1', '2', '3', '4', '5', '6', '7', '11', '17', 'pending5', 'surface'];
-const FORBIDDEN = ['8', '9', '10', '12', '13', '14', '16', 'surface2', 'surface3', 'lone', 'notif'];
+const EXPECTED = ['1', '2', '3', '4', '5', '6', '7', '11', '17', 'pending5', 'surface', 'reviewbar', '18'];
+const FORBIDDEN = ['8', '9', '10', '12', '13', '14', '16', 'surface2', 'surface3', 'lone', 'notif', 'plain-review'];
 
 let ws = null;
 let send = null;
@@ -202,11 +202,21 @@ try {
   const got = clicks.map((c) => String(c.n)); // phase-1 snapshot
   const missing = EXPECTED.filter((n) => !got.includes(n));
   const extra = got.filter((n) => !EXPECTED.includes(n));
-  const dupes = got.filter((n, i) => got.indexOf(n) !== i);
-  const n7count = got.filter((n) => n === '7').length; // re-render dedup: must be exactly 1
-  const n11count = got.filter((n) => n === '11').length; // cross-path dedup (row-text card): exactly 1
+  // Re-render / cross-path dedup invariant: never re-clicked WITHIN the 5s window
+  // (ALLOW_DEDUP_MS). A retry after the window expires is BY DESIGN (phase 2 tracks it as
+  // retryFired) — so count clicks inside the first window only, and require any later
+  // retry to be genuinely separated by the full window.
+  const DEDUP_MS = 5000;
+  const timesOf = (n) => clicks.filter((c) => String(c.n) === n).map((c) => Number(c.t) || 0).sort((a, b) => a - b);
+  const withinWindow = (n) => { const ts = timesOf(n); if (!ts.length) return 0; return ts.filter((t) => t - ts[0] < DEDUP_MS - 150).length; };
+  const lateRetryOk = (n) => { const ts = timesOf(n); if (ts.length < 2) return true; return ts.slice(1).every((t, i) => t - ts[i] >= DEDUP_MS - 150); };
+  const dedupSepOk = lateRetryOk('7') && lateRetryOk('11');
+  const dupes = got.filter((n, i) => got.indexOf(n) !== i && !(n === '7' || n === '11'));
+  const n7count = withinWindow('7'); // re-render dedup: exactly 1 inside the window
+  const n11count = withinWindow('11'); // cross-path dedup (row-text card): exactly 1 inside the window
   const idx = (n) => got.indexOf(n);
-  const orderOk = idx('pending5') >= 0 && idx('5') > idx('pending5') && idx('surface') >= 0 && idx('6') > idx('surface');
+  const orderOk = idx('pending5') >= 0 && idx('5') > idx('pending5') && idx('surface') >= 0 && idx('6') > idx('surface')
+    && idx('reviewbar') >= 0 && idx('18') > idx('reviewbar');
 
   // Phase 2: wait out the surface throttle, then confirm surface2 was still skipped.
   // Sampled every 1s so the diagnostics show whether the page stayed alive through
@@ -264,6 +274,36 @@ try {
     });
   } catch (e) { statsCheck.error = e.message; }
 
+  // ---- v1.5.0 encrypted-at-rest + inheritance stamp (redteam v4 / V4-6) ----
+  // A fresh popup context proves the newest entry is stored encrypted (ctx.iv/ct, no
+  // plaintext context), schemaVersion is stamped, the key is 32 bytes, and the stored
+  // key really decrypts the entry (round-trip).
+  const encCheck = { ok: false };
+  try {
+    const t5 = await send('Target.createTarget', { url: `chrome-extension://${extId}/popup.html` });
+    const { sessionId: s5 } = await send('Target.attachToTarget', { targetId: t5.targetId, flatten: true });
+    await sleep(900);
+    const re = await send('Runtime.evaluate', {
+      expression: `(async () => {
+        const s = await chrome.storage.local.get(['log', 'schemaVersion', 'cryptKeyRaw']);
+        const e0 = (s.log || [])[0];
+        const out = { sv: s.schemaVersion, hasCtx: !!(e0 && e0.ctx && e0.ctx.iv && e0.ctx.ct), hasPlain: !!(e0 && typeof e0.context === 'string'), keyLen: (s.cryptKeyRaw || '').length };
+        if (out.hasCtx) {
+          const b = (x) => Uint8Array.from(atob(x), (c) => c.charCodeAt(0));
+          const k = await crypto.subtle.importKey('raw', b(s.cryptKeyRaw), 'AES-GCM', false, ['decrypt']);
+          const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b(e0.ctx.iv) }, k, b(e0.ctx.ct));
+          out.plainLen = new TextDecoder().decode(pt).length;
+        }
+        return JSON.stringify(out);
+      })()`,
+      returnByValue: true, awaitPromise: true,
+    }, s5);
+    const je = JSON.parse(re?.result?.value || '{}');
+    Object.assign(encCheck, je, {
+      ok: je.sv === 2 && je.hasCtx === true && je.hasPlain === false && je.keyLen === 44 && (je.plainLen || 0) > 0,
+    });
+  } catch (e) { encCheck.error = e.message; }
+
   // ---- stats.html renders (v1.3): KPI + bars + topics with the recorded data ----
   const statsPage = { ok: false };
   try {
@@ -309,9 +349,9 @@ try {
     museAttr = 'error: ' + e.message;
   }
 
-  const pass = missing.length === 0 && extra.length === 0 && dupes.length === 0 && denyCount === 0 && orderOk
+  const pass = missing.length === 0 && extra.length === 0 && dupes.length === 0 && denyCount === 0 && orderOk && dedupSepOk
     && forbiddenHit.length === 0 && n7count === 1 && n11count === 1 && !surface2Hit && statsCheck.ok && statsPage.ok
-    && locksProbe === true;
+    && encCheck.ok && locksProbe === true;
   Object.assign(results, {
     ok: pass,
     extId,
@@ -325,11 +365,13 @@ try {
     n7count,
     n11count,
     orderOk,
+    dedupSepOk,
     museAttr,
     surface2Hit,
     lateClicks,
     retryFired,
     statsCheck,
+    encCheck,
     statsPage,
     locksProbe,
     timeline: timeline.slice(-45),

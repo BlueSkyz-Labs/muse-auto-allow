@@ -3,9 +3,11 @@
 ## 1.5.0
 - Upgrade-safe data inheritance: a `schemaVersion` stamp is written with every flush; all prior shapes (log, counters, aggregates) stay readable — nothing is dropped on upgrade. Legacy plaintext log entries keep rendering.
 - Encrypted at rest: the approval text in the click log is stored AES-GCM-256 encrypted (per-install key in `chrome.storage.local`; documented limitation — protects casual profile inspection, not a full local attacker). The popup decrypts for display; undecryptable entries degrade gracefully.
-- Backup / restore: the Statistics page gains "Export data" / "Import data" — one JSON file with settings, log (incl. the key so backups stay readable), statistics and counters; import validates the app marker and confirms before replacing.
+- Backup / restore: the Statistics page gains "Export data" / "Import data" — one JSON file with settings, log (incl. the key so backups stay readable), statistics and counters; import sanitizes every field (typed whitelist, size caps) and a supplied key must decrypt the first encrypted entry before anything is replaced (redteam v4 / V4-1).
 - Log timestamps now display the viewer's LOCAL system clock (stored values remain UTC ISO; hover shows the full local date-time).
 - Store showcase kit completed to Chrome Web Store standards: 4 screenshots (1280×800), promo 440×280, new marquee 1400×560, `store/SHOWCASE.md` index; all demo data strictly fictional.
+- New detection path E: the chat-level "A task needs review" bar — its Review button is clicked (1 s throttle, own kind `review-bar`) so the approval panel renders and the Allow/Deny pair is approved by paths A/B on the next sweep.
+- Redteam v4 hardening: import sanitizer (V4-1), null-safe log rendering (V4-3), key-cache invalidation on rotation (V4-4), first-install key race (V4-5), e2e encryption round-trip coverage (V4-6), epoch-safe timestamps (V4-8).
 
 ## 1.4.0
 - UI/UX overhaul in Muse's design language (tokens captured from the live site, 2026-10-09): light-first surfaces (`#fcfcfc` page, white cards, `#111112` ink, `#005abf` accent, pill controls, weight-500 tight-tracked headings) with a full dark theme via `prefers-color-scheme` (`#18191a` / `#242526` / `#0a5ce0`); popup + Statistics page rebuilt on shared tokens.

@@ -16,7 +16,7 @@ function esc(s) {
   return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 }
 
-const KIND_KEY = { allow: 'kindAllow', expand: 'kindExpand', 'open-panel': 'kindOpenPanel' };
+const KIND_KEY = { allow: 'kindAllow', expand: 'kindExpand', 'open-panel': 'kindOpenPanel', 'review-bar': 'kindOpenPanel' };
 const kindLabel = (k) => t(KIND_KEY[k] || '', k);
 
 // --- v1.5.0: decrypt at-rest context + show the user's LOCAL system time ---
@@ -31,6 +31,8 @@ async function popKey() {
     return popCryptKey;
   } catch { return null; }
 }
+// a restored backup (or any other writer) can rotate the key — drop the cache (V4-4)
+try { chrome.storage.onChanged.addListener((ch) => { if (ch.cryptKeyRaw) popCryptKey = null; }); } catch { /* ignore */ }
 async function decCtx(e) {
   if (e && e.ctx && e.ctx.iv && e.ctx.ct) {
     try {
@@ -44,15 +46,18 @@ async function decCtx(e) {
 }
 // log times always show the viewer's system clock (stored values are UTC ISO)
 function localTime(iso) {
+  if (!iso) return ''; // V4-8: never render epoch for missing timestamps
   try { const d = new Date(iso); if (isNaN(d.getTime())) return ''; return pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds()); } catch { return ''; }
 }
 function localFull(iso) {
+  if (!iso) return '';
   try { const d = new Date(iso); return isNaN(d.getTime()) ? '' : d.toLocaleString(); } catch { return ''; }
 }
 let renderSeq = 0;
 async function renderLog(log) {
   const seq = ++renderSeq;
-  const items = await Promise.all(log.slice(0, 50).map(async (e) => ({ e, plain: await decCtx(e) })));
+  const sane = (Array.isArray(log) ? log : []).filter((e) => e && typeof e === 'object'); // V4-3: junk entries never crash the render
+  const items = await Promise.all(sane.slice(0, 50).map(async (e) => ({ e, plain: await decCtx(e) })));
   if (seq !== renderSeq) return; // a newer render superseded this one
   $('log').innerHTML = items.length
     ? items.map(({ e, plain }) => {

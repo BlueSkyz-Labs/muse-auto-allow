@@ -146,6 +146,26 @@
   </div>
 </form>
 
+<!-- v1.5.1 case: chat-level review bar ("A task needs review" + Review). The approval
+     card only renders after the Review click; path E opens it, then path A approves it. -->
+<div id="reviewbar1" class="card">
+  <span>A task needs review</span>
+  <button type="button" id="reviewBtn1">Review</button>
+</div>
+<div class="card" data-testid="hatch-inline-approval-card" id="card18" style="display:none">
+  <p>Bar-opened approval</p>
+  <div class="row">
+    <button type="button" class="allow" id="allow18">Allow</button>
+    <button type="button" class="deny" id="deny18">Deny</button>
+  </div>
+</div>
+<!-- negative: a bare Review button whose container does NOT say a task needs review
+     must never be clicked -->
+<div id="reviewbar2" class="card">
+  <span>Review your order details</span>
+  <button type="button" id="reviewBtn2">Review</button>
+</div>
+
 <!-- v1.3 case: GitHub-style context -> stats topic extraction must record 'test-repo' -->
 <div class="card" data-testid="hatch-inline-approval-card" id="card17">
   <p>Allow Muse to perform this action on your GitHub account? Action Pull request read on GitHub Repository owner TestOrg Pull request 5 Repository test-repo Method get</p>
@@ -245,6 +265,16 @@ wirePair(document, 14);
 wirePair(document, 16);
 // v1.3: stats topic extraction (context contains "Repository test-repo")
 wirePair(document, 17);
+
+// v1.5.1: chat-level review bar opens a hidden marked card (path E -> path A)
+document.getElementById('reviewBtn1').addEventListener('click', function () {
+  rec('reviewbar');
+  var c = document.getElementById('card18');
+  if (c) { c.style.display = ''; }
+  wirePair(document, 18);
+});
+// negative: generic Review button (no task-needs-review wording) must never be clicked
+document.getElementById('reviewBtn2').addEventListener('click', function () { rec('plain-review'); });
 
 // redteam v2 case: marked card with row text + self re-render (dedup must hold across paths).
 // Clicking Allow replaces the card with an IDENTICAL one (new nodes, same text incl. the

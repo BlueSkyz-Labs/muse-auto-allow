@@ -159,7 +159,52 @@ $('seg').addEventListener('click', (e) => {
 // --- v1.5.0: backup / restore (upgrade-safe data inheritance) ---
 // Export bundles the full chrome.storage.local state (settings, log — including the
 // encryption key so the backup stays readable, stats aggregates, counters) into one
-// JSON file. Import validates the app marker, confirms, then replaces the stored state.
+// JSON file. Import VALIDATES and SANITIZES the file first (redteam v4 / V4-1): only
+// known keys with correct types survive, sizes are capped, and a supplied key must
+// actually decrypt the first encrypted entry before anything is replaced.
+const sanitizeBackup = (d) => {
+  const out = {}; let seen = 0;
+  if (typeof d.enabled === 'boolean') { out.enabled = d.enabled; seen++; }
+  if (typeof d.minDelayMs === 'number' && isFinite(d.minDelayMs)) { out.minDelayMs = Math.min(10000, Math.max(0, Math.round(d.minDelayMs))); seen++; }
+  if (typeof d.clickCount === 'number' && isFinite(d.clickCount)) { out.clickCount = Math.max(0, Math.floor(d.clickCount)); seen++; }
+  if (Array.isArray(d.log)) {
+    out.log = d.log.filter((e) => e && typeof e === 'object' && typeof e.at === 'string').slice(0, 50).map((e) => {
+      const o = { at: e.at, kind: typeof e.kind === 'string' ? e.kind.slice(0, 24) : 'allow',
+                  label: typeof e.label === 'string' ? e.label.slice(0, 60) : '' };
+      if (e.ctx && typeof e.ctx === 'object' && typeof e.ctx.iv === 'string' && typeof e.ctx.ct === 'string'
+          && /^[A-Za-z0-9+/=]{8,64}$/.test(e.ctx.iv) && /^[A-Za-z0-9+/=]{8,4096}$/.test(e.ctx.ct)) o.ctx = { iv: e.ctx.iv, ct: e.ctx.ct };
+      else if (typeof e.context === 'string') o.context = e.context.slice(0, 500);
+      return o;
+    });
+    seen++;
+  }
+  if (d.stats && typeof d.stats === 'object' && !Array.isArray(d.stats)) {
+    const st = {};
+    for (const k of ['byDay', 'byMonth', 'byYear', 'byTopic']) {
+      const b = d.stats[k];
+      if (!b || typeof b !== 'object' || Array.isArray(b)) continue;
+      const o = {};
+      for (const kk of Object.keys(b).slice(0, 500)) {
+        const v = Number(b[kk]);
+        if (isFinite(v) && v > 0) o[String(kk).slice(0, 64)] = Math.min(1e9, Math.floor(v));
+      }
+      st[k] = o;
+    }
+    out.stats = st; seen++;
+  }
+  if (typeof d.cryptKeyRaw === 'string' && /^[A-Za-z0-9+/]{43}=$/.test(d.cryptKeyRaw)) { out.cryptKeyRaw = d.cryptKeyRaw; seen++; }
+  if (!seen) return null;
+  out.schemaVersion = 2;
+  return out;
+};
+const testBackupKey = async (raw, ctx) => {
+  try {
+    const b = (x) => Uint8Array.from(atob(x), (c) => c.charCodeAt(0));
+    const k = await crypto.subtle.importKey('raw', b(raw), 'AES-GCM', false, ['decrypt']);
+    await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b(ctx.iv) }, k, b(ctx.ct));
+    return true;
+  } catch { return false; }
+};
 $('exportData').addEventListener('click', async () => {
   try {
     const s = await chrome.storage.local.get(null);
@@ -181,9 +226,20 @@ $('importFile').addEventListener('change', async (ev) => {
     const j = JSON.parse(await f.text());
     if (!j || j.app !== 'muse-auto-allow' || !j.data || typeof j.data !== 'object') {
       alert(t('importBad', 'Not a Muse Auto-Allow backup file.'));
-    } else if (confirm(t('importConfirm', 'Restore this backup? Current settings, log and statistics will be replaced.'))) {
-      await chrome.storage.local.set(j.data);
-      renderAll();
+    } else {
+      const clean = sanitizeBackup(j.data);
+      if (!clean) {
+        alert(t('importBad', 'Not a Muse Auto-Allow backup file.'));
+      } else {
+        const first = clean.log && clean.log[0];
+        const decOk = !clean.cryptKeyRaw || !(first && first.ctx) ? true : await testBackupKey(clean.cryptKeyRaw, first.ctx);
+        if (!decOk) {
+          alert(t('importBad', 'Not a Muse Auto-Allow backup file.'));
+        } else if (confirm(t('importConfirm', 'Restore this backup? Current settings, log and statistics will be replaced.'))) {
+          await chrome.storage.local.set(clean);
+          renderAll();
+        }
+      }
     }
   } catch {
     alert(t('importBad', 'Not a Muse Auto-Allow backup file.'));

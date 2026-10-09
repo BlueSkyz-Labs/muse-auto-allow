@@ -10,6 +10,8 @@
 //     expand, revealing the Allow/Deny pair which is approved on the next sweep.
 //  D. "N tasks need your approval" banner (background approval surface) -> click a
 //     button whose text reads like "review/open/show/view" to open the approvals panel.
+//  E. Chat-level "A task needs review" bar -> click its Review button; the approval
+//     panel (Allow/Deny) then renders and is approved by A/B on the next sweep.
 //
 // Safety rails (redteam-hardened, v2):
 //  - Never clicks Deny/Reject/Decline; never clicks a lone "Allow" — the deny must sit
@@ -46,6 +48,7 @@
   const APPROVAL_CONTEXT_RE = /\b(approv|perform this action|allow muse\b)/i;
   const EXPAND_THROTTLE_MS = 800;
   const SURFACE_THROTTLE_MS = 10000;
+  const REVIEW_BAR_THROTTLE_MS = 1000; // chat-level bar: snappy (the panel only renders after this click)
   const TEXT_COOLDOWN_MS = 30000;
   const ALLOW_DEDUP_MS = 5000;
   const ALLOW_RATE_MAX = 30;
@@ -53,7 +56,7 @@
   const AUX_RATE_WINDOW_MS = 60000;
   const DEFAULT = { enabled: true, minDelayMs: 300, clickCount: 0 };
 
-  const state = { enabled: true, minDelayMs: 300, clickCount: 0, lastClickAt: 0, lastExpandAt: 0, lastSurfaceAt: 0, lastResult: null };
+  const state = { enabled: true, minDelayMs: 300, clickCount: 0, lastClickAt: 0, lastExpandAt: 0, lastSurfaceAt: 0, lastReviewBarAt: 0, lastResult: null };
   const clickedNodes = new WeakSet();
   const recentTexts = new Map(); // cooldown key -> ts (expand / open-panel)
   const recentAllowKeys = new Map(); // allow fingerprint -> ts (re-render dedup)
@@ -222,6 +225,35 @@
     return null;
   }
 
+  // Path E — chat-level notification bar: "A task needs review" (singular or plural),
+  // "tasks need review", "N tasks need your approval" with a bare Review button. The
+  // approval panel only renders after this click, so the next sweep handles the
+  // Allow/Deny pair via paths A/B. Scoped strictly: the button text must be exactly
+  // "Review" and its short enclosing container must carry the task-needs-review
+  // wording (the chat message itself is far too long to match).
+  const REVIEW_BAR_RE = /(a task|one task|\d+\s*tasks?|tasks?)\s+need(s|ed)?\s+(review|your approval)/i;
+  function findReviewBarButton() {
+    if (!auxRateOk()) return null;
+    for (const b of buttonsIn(document)) {
+      if (clickedNodes.has(b) || !clickable(b) || unsafeTarget(b)) continue;
+      const bt = txt(b).trim();
+      if (!/^review$/i.test(bt) || DESTRUCTIVE_RE.test(bt)) continue;
+      let node = b, scope = null;
+      for (let i = 0; i < 4 && node; i++) {
+        node = node.parentElement;
+        if (!node) break;
+        const t = txt(node);
+        if (t.length > 220) break; // bar text is short; a big container means we overshot
+        if (REVIEW_BAR_RE.test(t)) { scope = node; break; }
+      }
+      if (!scope || !isVisible(scope)) continue;
+      const key = 'reviewbar:' + txt(scope).slice(0, 160);
+      if (onCooldown(key)) continue;
+      return { btn: b, key };
+    }
+    return null;
+  }
+
   // Click recording is serialized: entries queue up and flush one get->set at a time
   // (no lost writes — redteam F9), updating the log, the click counter and the
   // day/month/year/topic aggregates in a single storage write.
@@ -268,10 +300,19 @@
       const k = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']);
       const raw = await crypto.subtle.exportKey('raw', k);
       await chrome.storage.local.set({ cryptKeyRaw: b64(raw) });
+      // first-install race (V4-5): another tab may have won the write — if the stored
+      // key differs from ours, adopt the stored one so every entry stays readable
+      const chk = await chrome.storage.local.get({ cryptKeyRaw: null });
+      if (chk.cryptKeyRaw && chk.cryptKeyRaw !== b64(raw)) {
+        cryptKey = await crypto.subtle.importKey('raw', unb64(chk.cryptKeyRaw), 'AES-GCM', false, ['encrypt', 'decrypt']);
+        return cryptKey;
+      }
       cryptKey = k;
       return k;
     } catch { return null; }
   }
+  // a restored backup (or any other writer) can rotate the key — drop the cache (V4-4)
+  try { chrome.storage.onChanged.addListener((ch) => { if (ch.cryptKeyRaw) cryptKey = null; }); } catch { /* ignore */ }
   async function encryptCtx(text) {
     try {
       const k = await getKey();
@@ -338,6 +379,7 @@
     state.lastClickAt = Date.now();
     if (kind === 'expand') { state.lastExpandAt = state.lastClickAt; markAux(); }
     if (kind === 'open-panel') { state.lastSurfaceAt = state.lastClickAt; markAux(); }
+    if (kind === 'review-bar') { state.lastReviewBarAt = state.lastClickAt; markAux(); }
     if (kind === 'allow') {
       markAllowFp(allowFp(btn, ctx !== undefined ? ctx : (card ? contextText(card) : '')));
       allowClicks.push(state.lastClickAt);
@@ -379,6 +421,11 @@
     if (now - state.lastExpandAt >= EXPAND_THROTTLE_MS) {
       const c = findCollapsedPending();
       if (c) { doClick(c.btn, null, 'expand', c.key); return; }
+    }
+
+    if (now - state.lastReviewBarAt >= REVIEW_BAR_THROTTLE_MS) {
+      const rb = findReviewBarButton();
+      if (rb) { doClick(rb.btn, null, 'review-bar', rb.key); return; }
     }
 
     if (now - state.lastSurfaceAt >= SURFACE_THROTTLE_MS) {
