@@ -1,5 +1,7 @@
 # muse-auto-allow — Muse Auto-Allow
 
+[![CI](https://github.com/BlueSkyzLabs/muse-auto-allow/actions/workflows/ci.yml/badge.svg)](https://github.com/BlueSkyzLabs/muse-auto-allow/actions/workflows/ci.yml)
+
 Chrome (Manifest V3) extension that auto-clicks **Allow** on **Muse** (muse.ai) approval
 requests, so your Muse agent keeps working without stopping for manual approvals.
 
@@ -73,11 +75,15 @@ dist/               built store zips
 docs/               SGPS adoption notes, brand kit (BRANDING.md), redteam reports
 ```
 
-## Install (unpacked, dev)
+## Install (development)
+
+Requires Chrome 116+ (`minimum_chrome_version` in the manifest).
 
 1. `chrome://extensions` → enable **Developer mode**
-2. **Load unpacked** → select `C:\00. AI Project\muse-auto-allow\extension`
+2. **Load unpacked** → select the `extension/` directory of this repo
 3. Refresh any open muse.ai tab once so the content script injects.
+
+More (tests, code style, PR rules): `CONTRIBUTING.md`.
 
 ## Test
 

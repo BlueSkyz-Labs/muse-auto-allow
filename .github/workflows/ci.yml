@@ -1,0 +1,135 @@
+# CI — Muse Auto-Allow (Chrome MV3, zero-dependency)
+# =====================================================================================
+# lint : zero-dependency gate (scripts/lint.mjs) — REQUIRED.
+#        JS syntax, JSON validity, i18n key parity (6 locales), no remote-code /
+#        network primitives, manifest hygiene. Runs on ubuntu-latest: the gate is
+#        OS-independent (Node stdlib only) and ubuntu is the fastest image.
+# e2e  : real-Chrome runtime verification — test/e2e.mjs + test/followup-e2e.mjs.
+#
+# Why e2e runs on windows-latest (verified against test/e2e.mjs, 2026-10-09):
+#   Both harnesses launch Chrome through PowerShell `Start-Process`
+#   (launchChromeDetached, invoked at module top level) and reap processes by
+#   scratch-profile path via Get-CimInstance. That lane is Windows-only: on
+#   ubuntu-latest `execFileSync('powershell.exe', …)` fails with ENOENT before the
+#   harness try/catch even starts, so the suite cannot run there today.
+#   Everything else in the harness is already portable — scratch profile and temp
+#   extension copy live under os.tmpdir(), the fixture server binds 127.0.0.1 on a
+#   random port, and the teardown helpers are IS_WIN-guarded no-ops on POSIX.
+#   GitHub's windows-latest image ships Google Chrome at exactly the harness's
+#   default MAA_CHROME path, and current stable Chrome is well past the 137 floor
+#   required for `--enable-unsafe-extension-debugging` + CDP Extensions.loadUnpacked.
+#   Image software manifest: https://github.com/actions/runner-images (see
+#   images/windows/Windows2025-Readme.md).
+#   When the harness gains a POSIX launch path, switch to the ubuntu recipe at the
+#   bottom of this file.
+#
+# Launch path + flags (exact, read from test/e2e.mjs; test/followup-e2e.mjs is
+# identical except it adds --lang=en-US):
+#   Chrome starts detached via PowerShell `Start-Process` — a Node spawn handle is
+#   useless because the chrome.exe launcher exits 0 immediately and the browser keeps
+#   running as its own process tree; teardown reaps it by scratch-profile path via
+#   Get-CimInstance. Flags passed:
+#     --user-data-dir=<scratch dir under os.tmpdir()>  --remote-debugging-port=<9400-9899>
+#     --enable-unsafe-extension-debugging  --no-first-run  --no-default-browser-check
+#     --disable-features=Translate,MediaRouter,CalculateNativeWinOcclusion,OptimizationHints
+#     --disable-background-networking  --disable-background-timer-throttling
+#     --disable-backgrounding-occluded-windows  --disable-renderer-backgrounding
+#     --window-position=-32000,-32000  --window-size=1100,800  about:blank
+#
+# First-party actions are pinned by major tag. For a stricter supply-chain posture,
+# pin each `uses:` to a full commit SHA:
+#   https://docs.github.com/en/actions/reference/security/secure-use
+# =====================================================================================
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Least privilege: this workflow only needs to read the repository.
+# https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax
+permissions:
+  contents: read
+
+# One run per ref; a newer push cancels an in-progress run.
+# https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          # No `cache:` input on purpose — the repo is deliberately zero-dependency
+          # (no package.json, no lockfile), so there is nothing to cache.
+      - name: Zero-dependency lint gate
+        run: node scripts/lint.mjs
+
+  e2e:
+    name: e2e
+    needs: lint # never spend a Chrome runner when the static gate is red
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Preflight — installed Chrome >= 137
+        shell: pwsh
+        run: |
+          $chrome = Join-Path $env:ProgramFiles 'Google\Chrome\Application\chrome.exe'
+          if (-not (Test-Path $chrome)) {
+            throw "Chrome not found at '$chrome' (test/e2e.mjs default MAA_CHROME path)."
+          }
+          $pv = (Get-Item $chrome).VersionInfo.ProductVersion
+          if (-not ($pv -match '^(\d+)\.')) { throw "Cannot parse Chrome version from '$pv'." }
+          if ([int]$Matches[1] -lt 137) {
+            throw "Chrome $pv is too old: CDP Extensions.loadUnpacked requires Chrome 137+."
+          }
+          "MAA_CHROME=$($chrome -replace '\\','/')" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Host "Chrome $pv at $chrome"
+      - name: e2e — approval paths + safety invariants (real Chrome)
+        run: node test/e2e.mjs
+      - name: e2e — follow-up engine (real Chrome)
+        run: node test/followup-e2e.mjs
+
+# -------------------------------------------------------------------------------------
+# ubuntu recipe — enable (replace the `e2e` job above) once the harness has a POSIX
+# launch path. Chrome is preinstalled on ubuntu-latest too (`google-chrome` on PATH)
+# and xvfb-run is available on the image.
+#
+#   e2e:
+#     name: e2e
+#     needs: lint
+#     runs-on: ubuntu-latest
+#     timeout-minutes: 30
+#     steps:
+#       - uses: actions/checkout@v7
+#       - uses: actions/setup-node@v7
+#         with:
+#           node-version: '24'
+#       - name: e2e — approval paths + safety invariants (real Chrome)
+#         run: xvfb-run -a node test/e2e.mjs
+#         env:
+#           MAA_CHROME: /usr/bin/google-chrome
+#       - name: e2e — follow-up engine (real Chrome)
+#         run: xvfb-run -a node test/followup-e2e.mjs
+#         env:
+#           MAA_CHROME: /usr/bin/google-chrome
+# -------------------------------------------------------------------------------------
