@@ -103,5 +103,41 @@
   },
   "importBad": {
     "message": "Muse Auto-Allow のバックアップファイルではありません。"
+  },
+  "followupTitle": {
+    "message": "自動フォローアップ"
+  },
+  "followupToggle": {
+    "message": "Muse が待機中のとき続行する"
+  },
+  "followupPromptLabel": {
+    "message": "フォローアップのプロンプト:"
+  },
+  "followupCustomOption": {
+    "message": "カスタム…"
+  },
+  "followupCustomPlaceholder": {
+    "message": "フォローアップのプロンプトを入力…"
+  },
+  "followupIdleLabel": {
+    "message": "送信までの待機（秒）:"
+  },
+  "followupCooldownLabel": {
+    "message": "クールダウン（分）:"
+  },
+  "followupSendNow": {
+    "message": "今すぐ送信"
+  },
+  "followupWorking": {
+    "message": "作業中"
+  },
+  "followupConnected": {
+    "message": "接続済み"
+  },
+  "followupSentAt": {
+    "message": "フォローアップ送信 $1"
+  },
+  "followupUnknown": {
+    "message": "状態不明"
   }
 }

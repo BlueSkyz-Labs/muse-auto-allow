@@ -103,5 +103,41 @@
   },
   "importBad": {
     "message": "不是 Muse Auto-Allow 的备份文件。"
+  },
+  "followupTitle": {
+    "message": "自动跟进"
+  },
+  "followupToggle": {
+    "message": "Muse 空闲时自动继续"
+  },
+  "followupPromptLabel": {
+    "message": "跟进提示词："
+  },
+  "followupCustomOption": {
+    "message": "自定义…"
+  },
+  "followupCustomPlaceholder": {
+    "message": "输入跟进提示词…"
+  },
+  "followupIdleLabel": {
+    "message": "发送前等待（秒）："
+  },
+  "followupCooldownLabel": {
+    "message": "冷却时间（分钟）："
+  },
+  "followupSendNow": {
+    "message": "立即发送"
+  },
+  "followupWorking": {
+    "message": "工作中"
+  },
+  "followupConnected": {
+    "message": "已连接"
+  },
+  "followupSentAt": {
+    "message": "已于 $1 发送跟进"
+  },
+  "followupUnknown": {
+    "message": "状态未知"
   }
 }

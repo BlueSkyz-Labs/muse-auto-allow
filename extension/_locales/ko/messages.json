@@ -103,5 +103,41 @@
   },
   "importBad": {
     "message": "Muse Auto-Allow 백업 파일이 아닙니다."
+  },
+  "followupTitle": {
+    "message": "자동 후속 요청"
+  },
+  "followupToggle": {
+    "message": "Muse가 유휴 상태일 때 계속하기"
+  },
+  "followupPromptLabel": {
+    "message": "후속 프롬프트:"
+  },
+  "followupCustomOption": {
+    "message": "사용자 지정…"
+  },
+  "followupCustomPlaceholder": {
+    "message": "후속 프롬프트를 입력하세요…"
+  },
+  "followupIdleLabel": {
+    "message": "보내기 전 대기(초):"
+  },
+  "followupCooldownLabel": {
+    "message": "쿨다운(분):"
+  },
+  "followupSendNow": {
+    "message": "지금 보내기"
+  },
+  "followupWorking": {
+    "message": "작업 중"
+  },
+  "followupConnected": {
+    "message": "연결됨"
+  },
+  "followupSentAt": {
+    "message": "후속 요청 전송 $1"
+  },
+  "followupUnknown": {
+    "message": "상태 알 수 없음"
   }
 }

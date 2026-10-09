@@ -9,6 +9,10 @@ function applyI18n() {
     const msg = t(el.dataset.i18n, el.textContent);
     if (msg) el.textContent = msg;
   });
+  document.querySelectorAll('[data-i18n-ph]').forEach((el) => {
+    const msg = t(el.dataset.i18nPh, el.getAttribute('placeholder') || '');
+    if (msg) el.setAttribute('placeholder', msg);
+  });
   try { document.documentElement.lang = chrome.i18n.getUILanguage() || 'en'; } catch { /* keep */ }
 }
 
@@ -18,6 +22,93 @@ function esc(s) {
 
 const KIND_KEY = { allow: 'kindAllow', expand: 'kindExpand', 'open-panel': 'kindOpenPanel', 'review-bar': 'kindOpenPanel' };
 const kindLabel = (k) => t(KIND_KEY[k] || '', k);
+
+// ---- v1.6.0: Auto follow-up settings + live status -------------------------
+// Presets are the owner-specified follow-up prompts (exact strings); the select
+// offers them plus 'Custom…' with a free-text field. followupPrompt in storage is
+// the single source of truth the content script reads.
+const PRESETS = [
+  'Approve and continue working',
+  'Continues implementation — working long-run',
+  'follow best practice, Project Source of Truth, Do your best',
+];
+const FUP_SENT_RECENT_MS = 15 * 60 * 1000; // show 'Follow-up sent HH:MM' for the last 15 min
+let fCustomMode = false;
+let fSelectBuilt = false;
+
+function buildFollowupSelect() {
+  const sel = $('fpreset');
+  if (!sel || fSelectBuilt) return;
+  fSelectBuilt = true;
+  sel.innerHTML = PRESETS.map((p, i) => '<option value="p' + i + '">' + esc(p) + '</option>').join('') +
+    '<option value="custom">' + esc(t('followupCustomOption', 'Custom…')) + '</option>';
+}
+function applyFollowupUI(s) {
+  const on = s.followupEnabled === true;
+  const cb = $('followupEnabled');
+  if (cb) cb.checked = on;
+  const prompt = String(s.followupPrompt || PRESETS[0]);
+  const pIdx = PRESETS.indexOf(prompt);
+  const isCustom = fCustomMode || pIdx < 0;
+  const sel = $('fpreset');
+  if (sel) sel.value = isCustom ? 'custom' : 'p' + pIdx;
+  const row = $('fpromptRow');
+  if (row) row.hidden = !isCustom;
+  const ta = $('fprompt');
+  if (ta && document.activeElement !== ta) ta.value = prompt;
+  const idle = $('fidle');
+  if (idle && document.activeElement !== idle) idle.value = Math.max(1, Math.round((Number(s.followupIdleMs) || 60000) / 1000));
+  const cool = $('fcool');
+  if (cool && document.activeElement !== cool) cool.value = Math.max(1, Math.round((Number(s.followupCooldownMs) || 600000) / 60000));
+  const btn = $('fsendnow');
+  if (btn) btn.disabled = !on;
+}
+function fstatSet(text, on) {
+  const el = $('fstat');
+  if (!el) return;
+  el.textContent = text;
+  el.classList.toggle('on', !!on);
+}
+function renderFollowupStatus(agg) {
+  if (agg.state === 'working') return fstatSet(t('followupWorking', 'Working'), true);
+  if (agg.lastSentAt && Date.now() - agg.lastSentAt < FUP_SENT_RECENT_MS) {
+    const d = new Date(agg.lastSentAt);
+    return fstatSet(t('followupSentAt', 'Follow-up sent $1', [pad2(d.getHours()) + ':' + pad2(d.getMinutes())]), true);
+  }
+  if (agg.state === 'idle') return fstatSet(t('followupConnected', 'Connected'), true);
+  if (agg.state === 'none') return fstatSet(t('museTabsNone', 'No muse.ai tab found'), false);
+  return fstatSet(t('followupUnknown', 'Status unknown'), false);
+}
+// Ask every muse.ai tab for its engine state; aggregate (working wins, newest
+// lastSentAt wins). A tab that never answers is settled by the 700ms timeout.
+function refreshFollowupStatus() {
+  let done = false;
+  const finish = (agg) => { if (done) return; done = true; renderFollowupStatus(agg); };
+  try {
+    chrome.tabs.query({ url: ['https://muse.ai/*', 'https://*.muse.ai/*'] }, (tabs) => {
+      if (!tabs || !tabs.length) return finish({ state: 'none', lastSentAt: null });
+      const agg = { state: 'unknown', lastSentAt: null };
+      let pending = tabs.length;
+      tabs.forEach((tb) => {
+        let settled = false;
+        const settle = () => { if (settled) return; settled = true; if (--pending === 0) finish(agg); };
+        try {
+          chrome.tabs.sendMessage(tb.id, { type: 'followup-status' }, (r) => {
+            void chrome.runtime.lastError; // tab has no content script — static tab, ignore
+            if (r) {
+              if (r.state === 'working') agg.state = 'working';
+              else if (r.state === 'idle' && agg.state !== 'working') agg.state = 'idle';
+              const ts = Number(r.lastSentAt) || 0;
+              if (ts > (agg.lastSentAt || 0)) agg.lastSentAt = ts;
+            }
+            settle();
+          });
+        } catch { settle(); }
+        setTimeout(settle, 700);
+      });
+    });
+  } catch { finish({ state: 'unknown', lastSentAt: null }); }
+}
 
 // --- v1.5.0: decrypt at-rest context + show the user's LOCAL system time ---
 let popCryptKey = null;
@@ -115,7 +206,8 @@ function refreshMuseStat() {
 }
 
 function refresh() {
-  chrome.storage.local.get({ enabled: true, minDelayMs: 300, clickCount: 0, log: [], stats: null }, (s) => {
+  chrome.storage.local.get({ enabled: true, minDelayMs: 300, clickCount: 0, log: [], stats: null,
+    followupEnabled: false, followupPrompt: PRESETS[0], followupIdleMs: 60000, followupCooldownMs: 600000 }, (s) => {
     $('enabled').checked = s.enabled !== false;
     $('delay').value = s.minDelayMs ?? 300;
     const c = $('count');
@@ -134,6 +226,7 @@ function refresh() {
     if (today) today.textContent = Number(byDay[dayKeyOf(now)]) || 0;
     renderMini(byDay, now);
     $('dot').classList.toggle('off', s.enabled === false);
+    applyFollowupUI(s);
     renderLog(Array.isArray(s.log) ? s.log : []);
   });
 }
@@ -151,4 +244,57 @@ $('delay').addEventListener('change', () => {
   $('delay').value = v;
   chrome.storage.local.set({ minDelayMs: v });
 });
+// ---- v1.6.0: Auto follow-up wiring ----
+buildFollowupSelect();
+$('followupEnabled').addEventListener('change', () => {
+  const on = $('followupEnabled').checked;
+  const patch = { followupEnabled: on };
+  if (on && !String($('fprompt').value || '').trim()) { patch.followupPrompt = PRESETS[0]; $('fprompt').value = PRESETS[0]; }
+  chrome.storage.local.set(patch);
+});
+$('fpreset').addEventListener('change', () => {
+  const v = $('fpreset').value;
+  fCustomMode = v === 'custom';
+  $('fpromptRow').hidden = !fCustomMode;
+  if (fCustomMode) { try { $('fprompt').focus(); } catch { /* ignore */ } return; }
+  const idx = Number(v.replace(/^p/, ''));
+  if (Number.isInteger(idx) && PRESETS[idx]) {
+    $('fprompt').value = PRESETS[idx];
+    chrome.storage.local.set({ followupPrompt: PRESETS[idx] });
+  }
+});
+let fPromptTimer = null;
+$('fprompt').addEventListener('input', () => {
+  if (fPromptTimer) clearTimeout(fPromptTimer);
+  fPromptTimer = setTimeout(() => {
+    fPromptTimer = null;
+    try { chrome.storage.local.set({ followupPrompt: String($('fprompt').value || '').slice(0, 600) }); } catch { /* ignore */ }
+  }, 400);
+});
+$('fprompt').addEventListener('change', () => {
+  try { chrome.storage.local.set({ followupPrompt: String($('fprompt').value || '').slice(0, 600) }); } catch { /* ignore */ }
+});
+$('fidle').addEventListener('change', () => {
+  const v = Math.max(1, Math.min(3600, Math.round(Number($('fidle').value) || 60)));
+  $('fidle').value = v;
+  chrome.storage.local.set({ followupIdleMs: v * 1000 });
+});
+$('fcool').addEventListener('change', () => {
+  const v = Math.max(1, Math.min(1440, Math.round(Number($('fcool').value) || 10)));
+  $('fcool').value = v;
+  chrome.storage.local.set({ followupCooldownMs: v * 60000 });
+});
+$('fsendnow').addEventListener('click', () => {
+  try {
+    chrome.tabs.query({ url: ['https://muse.ai/*', 'https://*.muse.ai/*'] }, (tabs) => {
+      (tabs || []).forEach((tb) => {
+        try { chrome.tabs.sendMessage(tb.id, { type: 'followup-send-now' }, () => { void chrome.runtime.lastError; }); } catch { /* ignore */ }
+      });
+      setTimeout(refreshFollowupStatus, 1500);
+    });
+  } catch { /* ignore */ }
+});
+refresh(); // boot: apply the stored state immediately (was missing — popup rendered default DOM until the first storage event)
+refreshFollowupStatus();
+setInterval(refreshFollowupStatus, 2500);
 chrome.storage.onChanged.addListener(refresh);

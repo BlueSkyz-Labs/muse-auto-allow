@@ -1,5 +1,8 @@
-// Muse Auto-Allow — content script (v1.5.0, security-hardened — redteam v1–v3).
-// Automatically clicks "Allow" on Muse (muse.ai) approval requests.
+// Muse Auto-Allow — content script (v1.6.0 dev: auto follow-up + v1.5.0 approval engine).
+// Automatically clicks "Allow" on Muse (muse.ai) approval requests, and — when the
+// user enables Auto follow-up — keeps Muse working long-run by sending a chosen
+// prompt into the chat composer whenever Muse goes idle ('Connected' status).
+// See docs/FOLLOWUP.md for the engine, its guards, its tests and its limitations.
 //
 // Click paths, in priority order:
 //  A. Marked cards: [data-testid="hatch-inline-approval-card"] containing an allow-ish
@@ -392,11 +395,383 @@
     try { btn.click(); } catch (e) { console.warn('[muse-auto-allow] click failed', e); }
   }
 
+  // ===========================================================================
+  // v1.6.0 — Auto follow-up engine ("keep Muse working long-run").
+  // When Muse goes idle on muse.ai ('Muse' + 'Connected', no busy verb, no
+  // spinner) and the user enabled followupEnabled, the engine types the chosen
+  // prompt into the chat composer and submits it so the assistant continues.
+  //
+  // Idle detection — 3 fallback strategies (documented in docs/FOLLOWUP.md):
+  //   1. assistant header: a short element reading exactly 'Muse' (or a short
+  //      'Muse <status>' line) — classify the text in its small enclosing
+  //      container.
+  //   2. [aria-live] regions — short region text, strict idle match.
+  //   3. class / data-testid containing 'status' — short text, strict idle match.
+  // BUSY wins: /\b(is working|working|doing|thinking|running|analyzing|searching|
+  // reading|writing|implementing|generating)\b/i or a visible spinner/progressbar.
+  // IDLE only on /\bconnected\b/i with no busy match (strategies 2/3 require the
+  // region to be JUST 'connected'). Absent/ambiguous => NOT idle (fail closed).
+  //
+  // Trigger guards (all mandatory): followupEnabled; idle observed CONTINUOUSLY
+  // for followupIdleMs (default 60s); never while an approval surface is present
+  // (click paths A–E keep absolute priority); per-tab cooldown followupCooldownMs
+  // (default 10min); hard cap 6 automatic sends per rolling hour (per tab);
+  // never while the composer already holds unsent text; a send only counts once
+  // the composer verifiably empties/changes afterwards.
+  // ===========================================================================
+  const FOLLOWUP_DEFAULTS = {
+    followupEnabled: false, // OFF by default — opt-in only
+    followupPrompt: 'Approve and continue working', // first preset; popup offers presets + Custom…
+    followupIdleMs: 60000,
+    followupCooldownMs: 600000,
+  };
+  const FOLLOWUP_HOUR_MAX = 6;            // hard cap: automatic sends per rolling hour (per tab)
+  const FOLLOWUP_HOUR_WINDOW_MS = 3600000;
+  const FOLLOWUP_VERIFY_MS = 600;         // window to observe the composer emptying/changing
+  const BUSY_RE = /\b(is working|working|doing|thinking|running|analyzing|searching|reading|writing|implementing|generating)\b/i;
+  const IDLE_RE = /\bconnected\b/i;
+  const IDLE_STRICT_RE = /^[^\p{L}\p{N}_]*connected[^\p{L}\p{N}_]*$/iu; // the whole short text is 'connected'
+  const SPINNER_SEL = '[class*="spin" i], [class*="loading" i], [role="progressbar"]';
+  const SEND_RE = /^(send|send message|send prompt|submit|submit message|send a message)$/i;
+
+  const followup = {
+    enabled: false,
+    prompt: FOLLOWUP_DEFAULTS.followupPrompt,
+    idleMs: FOLLOWUP_DEFAULTS.followupIdleMs,
+    cooldownMs: FOLLOWUP_DEFAULTS.followupCooldownMs,
+    state: 'unknown',   // last detected: working | idle | unknown
+    idleSince: 0,       // timestamp idle was continuously observed from (0 = not idle)
+    lastAttemptAt: 0,
+    lastSentAt: 0,      // last VERIFIED send (composer emptied/changed) — answers followup-status
+    attempts: [],       // attempt timestamps (rolling-hour cap)
+    sending: false,     // typing/submit/verify in flight — no re-entry
+    pendingVerify: null,
+    lastAttr: '',
+    lastResult: null,
+  };
+
+  function publishFollowupState() {
+    if (followup.lastAttr === followup.state) return;
+    followup.lastAttr = followup.state;
+    try { document.documentElement.setAttribute('data-muse-followup', followup.state); } catch { /* ignore */ }
+  }
+  function classifyBusyIdle(text, strictIdle) {
+    if (!text) return 'unknown';
+    if (BUSY_RE.test(text)) return 'working';
+    if (strictIdle ? IDLE_STRICT_RE.test(String(text).trim()) : IDLE_RE.test(text)) return 'idle';
+    return 'unknown';
+  }
+  function spinnerIn(root) {
+    try { for (const el of root.querySelectorAll(SPINNER_SEL)) if (isVisible(el)) return true; } catch { /* ignore */ }
+    return false;
+  }
+
+  // Strategy 1 — assistant header: 'Muse' title/avatar + status line.
+  function statusViaTitle() {
+    let nodes;
+    try { nodes = document.querySelectorAll('h1,h2,h3,h4,div,span,p'); } catch { return 'unknown'; }
+    let checked = 0;
+    for (const el of nodes) {
+      if (++checked > 4000) break; // bound the scan on huge pages
+      const raw = el.textContent || '';
+      if (!raw || raw.length > 60) continue; // cheap pre-filter (no layout access)
+      let t;
+      try { t = txt(el); } catch { continue; }
+      if (!t || t.length > 60 || !/^muse\b/i.test(t)) continue;
+      const direct = classifyBusyIdle(t.replace(/^muse\b[\s:·—–-]*/i, ''), false);
+      if (direct !== 'unknown') return direct;   // single 'Muse <status>' element
+      if (!/^muse$/i.test(t)) continue;          // only a bare title climbs for the status
+      let node = el;
+      for (let up = 0; up < 4 && node && node !== document.body; up++) {
+        node = node.parentElement;
+        if (!node) break;
+        let scopeTxt;
+        try { scopeTxt = txt(node); } catch { break; }
+        if (scopeTxt.length > 160) break; // overshot — status containers are small
+        if (spinnerIn(node)) return 'working';
+        const st = classifyBusyIdle(scopeTxt.replace(/^[^\p{L}\p{N}]*muse\b[\s:·—–-]*/iu, ''), false);
+        if (st !== 'unknown') return st;
+      }
+    }
+    return 'unknown';
+  }
+
+  // Strategy 2 — [aria-live] regions (status announcements render here).
+  function statusViaLive() {
+    try {
+      for (const el of document.querySelectorAll('[aria-live]')) {
+        let t;
+        try { t = txt(el); } catch { continue; }
+        if (!t || t.length > 120) continue;
+        if (!isVisible(el)) continue;
+        if (spinnerIn(el)) return 'working';
+        const st = classifyBusyIdle(t, true);
+        if (st !== 'unknown') return st;
+      }
+    } catch { /* ignore */ }
+    return 'unknown';
+  }
+
+  // Strategy 3 — class/data-testid containing 'status'.
+  function statusViaClass() {
+    try {
+      for (const el of document.querySelectorAll('[class*="status" i], [data-testid*="status" i]')) {
+        let t;
+        try { t = txt(el); } catch { continue; }
+        if (!t || t.length > 60) continue;
+        if (!isVisible(el)) continue;
+        if (spinnerIn(el)) return 'working';
+        const st = classifyBusyIdle(t, true);
+        if (st !== 'unknown') return st;
+      }
+    } catch { /* ignore */ }
+    return 'unknown';
+  }
+
+  // Combine: busy from ANY strategy wins (fail closed); idle needs a positive hit.
+  function detectMuseState() {
+    const verdicts = [];
+    try { verdicts.push(statusViaTitle()); } catch { /* ignore */ }
+    try { verdicts.push(statusViaLive()); } catch { /* ignore */ }
+    try { verdicts.push(statusViaClass()); } catch { /* ignore */ }
+    if (verdicts.indexOf('working') !== -1) return 'working';
+    if (verdicts.indexOf('idle') !== -1) return 'idle';
+    return 'unknown';
+  }
+
+  // Approval surfaces take absolute priority — while any is present, never send.
+  // Reuses the click paths' selectors/rules (A–E) and fails closed on any error.
+  function approvalPresent() {
+    try {
+      for (const card of document.querySelectorAll(CARD_SEL)) if (isVisible(card)) return true;
+      for (const b of buttonsIn(document)) {
+        if (!clickable(b)) continue;
+        const t = txt(b);
+        if (ALLOW_RE.test(t)) return true;                                    // any clickable allow button
+        if (PENDING_CARD_RE.test(t) && !DONE_STATUS_RE.test(t)) return true;  // collapsed pending card
+      }
+      for (const s of document.querySelectorAll(SURFACE_SEL)) {
+        if (isVisible(s) && NEED_APPROVAL_RE.test(txt(s))) return true;       // "N tasks need your approval"
+      }
+      for (const b of buttonsIn(document)) {
+        if (!clickable(b) || !/^review$/i.test(txt(b).trim())) continue;      // chat-level review bar
+        let node = b;
+        for (let i = 0; i < 4 && node; i++) {
+          node = node.parentElement;
+          if (!node) break;
+          const t = txt(node);
+          if (t.length > 220) break;
+          if (REVIEW_BAR_RE.test(t)) return true;
+        }
+      }
+    } catch { return true; } // fail closed
+    return false;
+  }
+
+  // ---- composer: exact 'Message' placeholder (live UI) -> placeholder/aria-label
+  // mentioning message/prompt/chat (search fields excluded) -> contenteditable.
+  // No blind last resort: an unknown composer means no send (fail closed). ----
+  function isTextEntry(el) {
+    try {
+      return !!el && (el.tagName === 'TEXTAREA' ||
+        (el.tagName === 'INPUT' && (!el.type || el.type === 'text' || el.type === 'search')));
+    } catch { return false; }
+  }
+  function findComposer() {
+    try {
+      const entries = [...document.querySelectorAll('textarea, input')];
+      for (const el of entries) {
+        if (!isTextEntry(el) || !isVisible(el) || el.disabled || el.readOnly) continue;
+        if (/^\s*message\s*$/i.test(el.getAttribute('placeholder') || '')) return el;
+      }
+      for (const el of entries) {
+        if (!isTextEntry(el) || !isVisible(el) || el.disabled || el.readOnly) continue;
+        const meta = ((el.getAttribute('placeholder') || '') + ' ' + (el.getAttribute('aria-label') || '')).trim();
+        if (/\bsearch\b/i.test(meta)) continue;
+        if (/\b(message|prompt|chat)\b/i.test(meta)) return el;
+      }
+      for (const el of document.querySelectorAll('[contenteditable="true"], [role="textbox"]')) {
+        if (!isVisible(el)) continue;
+        const meta = ((el.getAttribute('aria-label') || '') + ' ' + (el.getAttribute('data-placeholder') || '') + ' ' + (el.getAttribute('placeholder') || '')).trim();
+        if (/\bsearch\b/i.test(meta)) continue;
+        if (/\b(message|prompt|chat)\b/i.test(meta)) return el;
+      }
+    } catch { /* ignore */ }
+    return null;
+  }
+  function composerValue(el) {
+    if (!el) return '';
+    try { if (typeof el.value === 'string') return el.value; } catch { /* ignore */ }
+    try { return txt(el); } catch { return ''; }
+  }
+  // React-safe typing: native value setter + InputEvent('input'); contenteditable
+  // falls back to execCommand('insertText') then textContent + input event.
+  function typeIntoComposer(el, text) {
+    try { el.focus(); } catch { /* ignore */ }
+    if (isTextEntry(el)) {
+      try {
+        const proto = el.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+        const desc = Object.getOwnPropertyDescriptor(proto, 'value');
+        if (desc && desc.set) desc.set.call(el, text); else el.value = text;
+      } catch { try { el.value = text; } catch { return false; } }
+      try { el.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: text })); }
+      catch { try { el.dispatchEvent(new Event('input', { bubbles: true })); } catch { /* ignore */ } }
+      try { el.dispatchEvent(new Event('change', { bubbles: true })); } catch { /* ignore */ }
+      return composerValue(el) === text;
+    }
+    if (el.isContentEditable || el.getAttribute('role') === 'textbox') {
+      let ok = false;
+      try {
+        const sel = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        if (sel) { sel.removeAllRanges(); sel.addRange(range); }
+        ok = document.execCommand('insertText', false, text);
+      } catch { ok = false; }
+      const probe = text.slice(0, Math.min(12, text.length));
+      if (!ok || !txt(el).includes(probe)) {
+        try {
+          el.textContent = text;
+          el.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: text }));
+          ok = txt(el).includes(probe);
+        } catch { ok = false; }
+      }
+      return ok;
+    }
+    return false;
+  }
+  // Submit strategies: a visible send/submit button (exact-ish aria-label/text) or
+  // Enter keydown/keypress/keyup. The verifier retries the other one if needed.
+  function findSendButton(composer) {
+    try {
+      const scope = (composer && composer.closest('form')) || document;
+      for (const b of buttonsIn(scope)) {
+        if (!clickable(b) || unsafeTarget(b)) continue;
+        const metas = [b.getAttribute('aria-label') || '', b.getAttribute('title') || '', txt(b)];
+        if (metas.some((m) => SEND_RE.test(m.trim()))) return b;
+      }
+    } catch { /* ignore */ }
+    return null;
+  }
+  function pressEnter(el) {
+    const opts = { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true, cancelable: true };
+    try { el.dispatchEvent(new KeyboardEvent('keydown', opts)); } catch { /* ignore */ }
+    try { el.dispatchEvent(new KeyboardEvent('keypress', opts)); } catch { /* ignore */ }
+    try { el.dispatchEvent(new KeyboardEvent('keyup', opts)); } catch { /* ignore */ }
+  }
+  function submitComposer(el, strategy) {
+    if (strategy === 'button') {
+      const b = findSendButton(el);
+      if (!b) return false;
+      try { b.click(); return true; } catch { return false; }
+    }
+    pressEnter(el);
+    return true;
+  }
+
+  // ---- guards + trigger ----
+  function followupEligible(now) {
+    if (!followup.enabled || followup.sending) return false;
+    if (followup.state !== 'idle' || !followup.idleSince) return false;
+    if (now - followup.idleSince < followup.idleMs) return false;       // continuous-idle window
+    if (now - followup.lastAttemptAt < followup.cooldownMs) return false;
+    while (followup.attempts.length && now - followup.attempts[0] > FOLLOWUP_HOUR_WINDOW_MS) followup.attempts.shift();
+    return followup.attempts.length < FOLLOWUP_HOUR_MAX;                // hard hourly cap
+  }
+  function followupTick() {
+    if (!alive()) return; // the main heartbeat / stopForever handles teardown
+    let st = 'unknown';
+    try { st = detectMuseState(); } catch { st = 'unknown'; }
+    if (st !== followup.state) { followup.state = st; publishFollowupState(); }
+    const now = Date.now();
+    if (st === 'idle') { if (!followup.idleSince) followup.idleSince = now; }
+    else followup.idleSince = 0;
+    if (!followupEligible(now)) return;
+    followupAttempt(false);
+  }
+  // One attempt. Manual (popup 'Send now') skips the idle wait, the cooldown and the
+  // hourly cap, but still respects: disabled, approval-present, composer-empty,
+  // no-composer and empty-prompt. Returns { ok, reason }.
+  function followupAttempt(manual) {
+    if (!alive()) { stopForever(); return { ok: false, reason: 'dead' }; }
+    if (!followup.enabled) return { ok: false, reason: 'disabled' };
+    if (followup.sending) return { ok: false, reason: 'sending' };
+    if (approvalPresent()) return { ok: false, reason: 'approval-present' };
+    const composer = findComposer();
+    if (!composer) return { ok: false, reason: 'no-composer' };
+    if (composerValue(composer).trim()) return { ok: false, reason: 'composer-not-empty' };
+    const text = String(followup.prompt || '').trim();
+    if (!text) return { ok: false, reason: 'no-prompt' };
+    if (!typeIntoComposer(composer, text)) return { ok: false, reason: 'type-failed' };
+    const now = Date.now();
+    followup.lastAttemptAt = now;
+    if (!manual) followup.attempts.push(now); // manual sends are user-explicit; only auto sends count toward the cap
+    followup.sending = true;
+    const first = findSendButton(composer) ? 'button' : 'enter';
+    submitComposer(composer, first);
+    verifyFollowupSend(text, [first]);
+    followup.lastResult = { at: new Date().toISOString(), kind: 'followup', via: first, text: text.slice(0, 120), verified: null };
+    return { ok: true, reason: 'attempted', via: first };
+  }
+  // Success is only counted when the composer verifiably emptied or changed (the app
+  // accepted the send). Otherwise the other submit strategy is tried once, then the
+  // attempt stays unverified and any leftover text blocks further sends (fail closed)
+  // until it is cleared.
+  function verifyFollowupSend(text, tried) {
+    if (followup.pendingVerify) clearTimeout(followup.pendingVerify);
+    followup.pendingVerify = setTimeout(() => {
+      followup.pendingVerify = null;
+      if (!alive()) { followup.sending = false; return; }
+      const c = findComposer();
+      const v = c ? composerValue(c) : null;
+      if (c && v !== text) { // emptied (v === '') or changed => delivered
+        followup.sending = false;
+        followup.lastSentAt = Date.now();
+        if (followup.lastResult) followup.lastResult.verified = true;
+        console.log('[muse-auto-allow] follow-up sent via ' + tried[tried.length - 1]);
+        return;
+      }
+      if (tried.length < 2 && c) {
+        const next = tried.indexOf('enter') !== -1 ? 'button' : 'enter';
+        if (submitComposer(c, next)) { tried.push(next); verifyFollowupSend(text, tried); return; }
+      }
+      followup.sending = false;
+      if (followup.lastResult) followup.lastResult.verified = false;
+      console.warn('[muse-auto-allow] follow-up not verified — composer still holds text; will not retry until it is cleared');
+    }, FOLLOWUP_VERIFY_MS);
+  }
+  function applyFollowupSettings(s) {
+    if (!s || typeof s !== 'object') return;
+    followup.enabled = s.followupEnabled === true;
+    if (typeof s.followupPrompt === 'string') followup.prompt = s.followupPrompt;
+    const ni = Number(s.followupIdleMs);
+    if (Number.isFinite(ni) && ni >= 0) followup.idleMs = ni;
+    const nc = Number(s.followupCooldownMs);
+    if (Number.isFinite(nc) && nc >= 0) followup.cooldownMs = nc;
+  }
+
+  // Popup messages: manual send-now + status ping. Sync responses (no async return).
+  try {
+    chrome.runtime.onMessage.addListener((m, _sender, sendResponse) => {
+      if (!m || typeof m.type !== 'string') return;
+      if (m.type === 'followup-send-now') {
+        const r = followupAttempt(true);
+        try { sendResponse(Object.assign({ state: followup.state, lastSentAt: followup.lastSentAt || null }, r)); } catch { /* ignore */ }
+        return;
+      }
+      if (m.type === 'followup-status') {
+        try { sendResponse({ state: followup.state, lastSentAt: followup.lastSentAt || null, enabled: followup.enabled }); } catch { /* ignore */ }
+      }
+    });
+  } catch { /* ignore */ }
+
   function alive() { try { return !!chrome.runtime?.id; } catch { return false; } }
   function stopForever() {
     try { if (obs) obs.disconnect(); } catch { /* ignore */ }
     try { if (heartbeat) clearInterval(heartbeat); } catch { /* ignore */ }
     try { if (pendingTimer) clearTimeout(pendingTimer); } catch { /* ignore */ }
+    try { if (followup.pendingVerify) clearTimeout(followup.pendingVerify); } catch { /* ignore */ }
+    followup.sending = false;
   }
 
   function sweep(reason) {
@@ -448,12 +823,20 @@
       state.clickCount = Number(s.clickCount) || 0;
       sweep('init');
     });
+    // v1.6.0 auto follow-up settings (independent of the approve engine's toggle)
+    chrome.storage.local.get(FOLLOWUP_DEFAULTS, (f) => { applyFollowupSettings(f); followupTick(); });
     chrome.storage.onChanged.addListener((ch) => {
       if (ch.enabled) state.enabled = !!ch.enabled.newValue;
       if (ch.minDelayMs) {
         const n = Number(ch.minDelayMs.newValue);
         if (Number.isFinite(n) && n >= 0) state.minDelayMs = n;
       }
+      let fch = false;
+      if (ch.followupEnabled) { followup.enabled = !!ch.followupEnabled.newValue; fch = true; }
+      if (ch.followupPrompt && typeof ch.followupPrompt.newValue === 'string') { followup.prompt = ch.followupPrompt.newValue; fch = true; }
+      if (ch.followupIdleMs) { const fn = Number(ch.followupIdleMs.newValue); if (Number.isFinite(fn) && fn >= 0) followup.idleMs = fn; fch = true; }
+      if (ch.followupCooldownMs) { const fc = Number(ch.followupCooldownMs.newValue); if (Number.isFinite(fc) && fc >= 0) followup.cooldownMs = fc; fch = true; }
+      if (fch) { try { followupTick(); } catch { /* ignore */ } }
     });
     chrome.runtime.onMessage.addListener((m) => { if (m && m.type === 'sweep') sweep('message'); });
   } catch {
@@ -467,7 +850,14 @@
   } catch {}
 
   // Fallback heartbeat (safe under background-tab throttling).
-  heartbeat = setInterval(() => sweep('interval'), 1000);
+  heartbeat = setInterval(() => { sweep('interval'); try { followupTick(); } catch { /* ignore */ } }, 1000);
 
-  window.__museAutoAllow = { get state() { return { ...state }; }, sweep: () => sweep('manual') };
+  window.__museAutoAllow = {
+    get state() { return { ...state }; },
+    sweep: () => sweep('manual'),
+    get followup() {
+      return { state: followup.state, enabled: followup.enabled, idleSince: followup.idleSince, lastSentAt: followup.lastSentAt,
+               lastAttemptAt: followup.lastAttemptAt, attempts: followup.attempts.length, sending: followup.sending, lastResult: followup.lastResult };
+    },
+  };
 })();

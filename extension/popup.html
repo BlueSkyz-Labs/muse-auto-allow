@@ -32,6 +32,7 @@
     100% { box-shadow: 0 0 0 0 rgba(49,162,76,0); }
   }
   .row { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
+  [hidden] { display: none !important; }
   label.sw { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
   input[type=checkbox] { position: absolute; opacity: 0; width: 1px; height: 1px; }
   .track { width: 38px; height: 22px; border-radius: 999px; background: var(--track); position: relative;
@@ -73,6 +74,18 @@
   .btn { background: var(--blue); color: #fff; border: 0; border-radius: 999px; padding: 7px 16px;
          cursor: pointer; font: inherit; font-weight: 500; }
   .btn:hover { filter: brightness(.94); }
+  .btn:disabled { opacity: .45; cursor: default; filter: none; }
+  /* v1.6.0 — Auto follow-up section */
+  .sect { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
+  .secthead { display: flex; align-items: center; gap: 8px; font-weight: 500; }
+  .fstat { margin-left: auto; font-size: 11px; font-weight: 500; padding: 2px 9px; border-radius: 999px;
+           background: var(--fill); color: var(--muted); white-space: nowrap; }
+  .fstat.on { background: rgba(0,90,191,.10); color: var(--blue); }
+  @media (prefers-color-scheme: dark) { .fstat.on { background: rgba(10,92,224,.25); color: #8ab8ff; } }
+  select.sel { width: 100%; box-sizing: border-box; background: var(--fill); color: var(--ink); border: 1px solid var(--line);
+               border-radius: 12px; padding: 6px 10px; font: inherit; }
+  textarea.tbox { width: 100%; box-sizing: border-box; background: var(--fill); color: var(--ink); border: 1px solid var(--line);
+                  border-radius: 12px; padding: 6px 10px; font: inherit; resize: vertical; min-height: 38px; }
   .note { font-size: 11px; margin-left: auto; }
   .empty { color: var(--muted); padding: 6px 0; }
   ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -101,6 +114,19 @@
   <div class="row"><span class="muted" data-i18n="todayLabel">Today:</span><b class="count" id="today" style="font-size:13px">0</b><span class="chip" id="musestat">&hellip;</span></div>
   <div class="mini"><div class="mcap muted" data-i18n="last7">Last 7 days</div><svg id="mini" width="292" height="46" aria-hidden="true"></svg></div>
   <div class="row"><button class="btn" id="openstats" data-i18n="statsOpen">Statistics</button><span class="muted note" data-i18n="onlyMuse">Works only on muse.ai</span></div>
+  <!-- v1.6.0 — Auto follow-up: keep Muse working long-run when it goes idle -->
+  <div class="sect" id="followupSect">
+    <div class="secthead"><span data-i18n="followupTitle">Auto follow-up</span><span class="fstat" id="fstat" aria-live="polite">&mdash;</span></div>
+    <label class="sw"><input type="checkbox" id="followupEnabled"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="followupToggle">Continue when Muse is idle</span></label>
+    <div class="row"><label class="muted" for="fpreset" data-i18n="followupPromptLabel">Follow-up prompt:</label></div>
+    <div class="row"><select id="fpreset" class="sel"></select></div>
+    <div class="row" id="fpromptRow" hidden><textarea id="fprompt" class="tbox" rows="2" placeholder="Type your follow-up prompt…" data-i18n-ph="followupCustomPlaceholder"></textarea></div>
+    <div class="row"><label class="muted" for="fidle" data-i18n="followupIdleLabel">Wait before sending (seconds):</label>
+      <input type="number" id="fidle" min="1" max="3600" step="1"></div>
+    <div class="row"><label class="muted" for="fcool" data-i18n="followupCooldownLabel">Cooldown (minutes):</label>
+      <input type="number" id="fcool" min="1" max="1440" step="1"></div>
+    <div class="row"><button class="btn" id="fsendnow" data-i18n="followupSendNow">Send now</button></div>
+  </div>
   <div class="log" id="log" aria-live="polite"></div>
   <script src="popup.js"></script>
 </body>

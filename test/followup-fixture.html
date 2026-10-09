@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Muse follow-up fixture</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: #0b0b0c; color: #eee; padding: 24px; }
+  .card { border: 1px solid #333; border-radius: 12px; padding: 16px; margin: 12px 0; background: #151517; }
+  button { padding: 8px 18px; border-radius: 999px; border: 0; margin-right: 8px; font-size: 14px; cursor: pointer; }
+  .allow { background: #2f6df6; color: #fff; }
+  .deny { background: #333; color: #ddd; }
+  #chatheader { display: flex; align-items: center; gap: 10px; }
+  #museTitle { font-weight: 600; }
+  #museStatus { color: #9fd6a9; }
+  .spinner { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #556; border-top-color: #9fd6a9; }
+  #composerbar { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
+  #composer { flex: 1; padding: 8px 14px; border-radius: 999px; border: 1px solid #333; background: #1b1b1e; color: #eee; font-size: 14px; }
+</style>
+</head>
+<body>
+<h2>Muse chat fixture</h2>
+
+<!-- assistant header: 'Muse' title + status line ('is working' = BUSY, 'Connected' = IDLE).
+     The status div is an aria-live region (detection strategy 2) inside the title
+     container (strategy 1); the spinner is only visible while working. -->
+<div id="chatheader" class="card">
+  <div id="avatar" aria-hidden="true">&#9673;</div>
+  <div id="museTitle">Muse</div>
+  <div id="museStatus" aria-live="polite">is working</div>
+  <div id="spin" class="spinner" aria-hidden="true"></div>
+</div>
+
+<!-- approval-card block for the guard case: shown only while the guard is being
+     tested; clicks on it record but the card STAYS (an approval surface is present). -->
+<div class="card" data-testid="hatch-inline-approval-card" id="approvalCard" style="display:none">
+  <p>Allow Muse to perform this action on your GitHub account?</p>
+  <div class="row">
+    <button type="button" class="allow" id="approveBtn">Allow</button>
+    <button type="button" class="deny" id="denyBtn">Deny</button>
+  </div>
+</div>
+
+<!-- composer bar: plus icon, input placeholder 'Message', mic icon, send button -->
+<div id="composerbar">
+  <button type="button" id="plus" aria-label="Add attachment">+</button>
+  <input id="composer" type="text" placeholder="Message" autocomplete="off">
+  <button type="button" id="mic" aria-label="Voice input">Mic</button>
+  <button type="button" id="sendBtn" aria-label="Send message">Send</button>
+</div>
+
+<script>
+window.__sent = [];            // { text, t, via } — one entry per submitted message
+window.__inputs = [];          // input events seen on the composer (React-safe typing probe)
+window.__approvalClicks = [];  // clicks on the approval card (record only; the card stays)
+window.__errors = [];
+window.addEventListener('error', function (e) { window.__errors.push(String(e.message)); });
+
+function setState(mode) {
+  var working = mode === 'working';
+  document.getElementById('museStatus').textContent = working ? 'is working' : 'Connected';
+  document.getElementById('spin').style.display = working ? '' : 'none';
+}
+window.__setState = setState;
+window.__setApproval = function (on) {
+  document.getElementById('approvalCard').style.display = on ? '' : 'none';
+};
+window.__hideSend = function () {
+  var b = document.getElementById('sendBtn');
+  if (b) b.remove();
+};
+window.__setComposer = function (v) {
+  document.getElementById('composer').value = String(v || '');
+};
+
+var composer = document.getElementById('composer');
+function record(text, via) {
+  window.__sent.push({ text: String(text || ''), t: Date.now(), via: via });
+  composer.value = '';
+}
+composer.addEventListener('input', function () {
+  window.__inputs.push({ len: composer.value.length, t: Date.now() });
+});
+composer.addEventListener('keydown', function (e) {
+  if (e.key === 'Enter') { e.preventDefault(); record(composer.value, 'enter'); }
+});
+document.getElementById('sendBtn').addEventListener('click', function () {
+  record(composer.value, 'button');
+});
+document.getElementById('approveBtn').addEventListener('click', function () {
+  window.__approvalClicks.push({ n: 'approve', t: Date.now() });
+});
+document.getElementById('denyBtn').addEventListener('click', function () {
+  window.__approvalClicks.push({ n: 'deny', t: Date.now() });
+});
+
+setState('working');
+</script>
+</body>
+</html>
