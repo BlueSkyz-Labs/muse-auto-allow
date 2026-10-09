@@ -1,6 +1,6 @@
-# muse-auto-allow — Muse Auto-Allow
+# Muse Auto-Allow
 
-[![CI](https://github.com/BlueSkyzLabs/muse-auto-allow/actions/workflows/ci.yml/badge.svg)](https://github.com/BlueSkyzLabs/muse-auto-allow/actions/workflows/ci.yml)
+[![CI](https://github.com/BlueSkyz-Labs/muse-auto-allow/actions/workflows/ci.yml/badge.svg)](https://github.com/BlueSkyz-Labs/muse-auto-allow/actions/workflows/ci.yml)
 
 Chrome (Manifest V3) extension that auto-clicks **Allow** on **Muse** (muse.ai) approval
 requests, so your Muse agent keeps working without stopping for manual approvals.

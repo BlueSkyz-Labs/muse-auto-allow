@@ -9,7 +9,7 @@ as a **public GitHub repository** and cut the first Release.
   scope here). Step 0 **verifies** the scrub before anything goes public.
 - Nothing in steps 0–3 is public until `gh repo create` (step 1) and `git push`
   (step 2). You can stop before those at any time.
-- The commands below assume the repo is published as **`BlueSkyzLabs/muse-auto-allow`**
+- The commands below assume the repo is published as **`BlueSkyz-Labs/muse-auto-allow`**
   (publisher: BlueSkyz Labs). If the publishing account/slug differs, replace the
   `OWNER/REPO` values everywhere below **and** update the CI badge URL in `README.md`
   (`https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg`).
@@ -119,7 +119,7 @@ brand-new public repo.
 gh auth status
 
 cd "path/to/muse-auto-allow"
-gh repo create BlueSkyzLabs/muse-auto-allow --public --source . --remote origin \
+gh repo create BlueSkyz-Labs/muse-auto-allow --public --source . --remote origin \
   --description "Auto-click Allow on Muse (muse.ai) approval requests so your AI agent keeps working — Manifest V3, local-only, zero dependencies."
 ```
 
@@ -132,12 +132,12 @@ gh repo create BlueSkyzLabs/muse-auto-allow --public --source . --remote origin 
 Topics (helps discovery; run after the repo exists):
 
 ```bash
-gh repo edit BlueSkyzLabs/muse-auto-allow \
+gh repo edit BlueSkyz-Labs/muse-auto-allow \
   --add-topic chrome-extension --add-topic manifest-v3 --add-topic chrome-web-store \
   --add-topic muse --add-topic ai-agent --add-topic automation --add-topic privacy
 ```
 
-Sanity check the slug now: open `https://github.com/BlueSkyzLabs/muse-auto-allow` — if
+Sanity check the slug now: open `https://github.com/BlueSkyz-Labs/muse-auto-allow` — if
 the account or name differs, fix the README badge URL before pushing.
 
 ---
@@ -205,7 +205,7 @@ Reference: <https://docs.github.com/en/repositories/configuring-branches-and-mer
    Reference: <https://docs.github.com/en/code-security/how-tos/report-and-fix-vulnerabilities/configure-vulnerability-reporting/configure-for-a-repository>
 2. **Enable secret scanning + push protection** (free for public repos):
    ```bash
-   gh repo edit BlueSkyzLabs/muse-auto-allow \
+   gh repo edit BlueSkyz-Labs/muse-auto-allow \
      --enable-secret-scanning --enable-secret-scanning-push-protection
    ```
 3. **Confirm community health files surface**: repo home should show links for
