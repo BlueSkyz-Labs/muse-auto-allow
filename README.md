@@ -82,11 +82,14 @@ docs/               SGPS adoption notes, brand kit (BRANDING.md), redteam report
 ## Test
 
 ```bash
+"/c/Program Files/nodejs/node" scripts/lint.mjs   # zero-dep gate: syntax, JSON, i18n parity, no remote code, manifest hygiene
 "/c/Program Files/nodejs/node" test/e2e.mjs
 ```
 
-Real installed Chrome + scratch profile + CDP `Extensions.loadUnpacked`. Asserts all four
+Real installed Chrome + scratch profile + CDP `Extensions.loadUnpacked`. Asserts all five
 paths, the late card, and that lone/permission-pair Allow buttons and Deny are never clicked.
+Lint must exit 0 before every build; see `docs/CHROME_BEST_PRACTICES.md` for the full
+applied-practices checklist.
 
 ## Build (store zip)
 

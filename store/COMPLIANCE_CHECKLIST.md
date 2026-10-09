@@ -206,7 +206,7 @@ Checked against the v1.5.0 revision (commits `d7084da` + `311f006`, 2026-10-09; 
 - [ ] **UNCERTAIN — reviewer testability of the real Muse approval flow** (see §9): account/entitlement requirements not verified from the repo.
 - [ ] **UNCERTAIN — Muse ToS reading** (see §6/§8): open item in `store/PUBLISH_RUNBOOK.md`; owner decision before public launch.
 - [ ] **Accepted residual risks remain documented, not hidden.** `docs/REDTEAM_REPORT.md` R8–R11 (extension fingerprinting cosmetic; `*.muse.ai` wildcard needed for app frames; local click log may contain approval text — disclosed in `store/PRIVACY.md`; auto-allow grants queued approvals if the account is compromised — mitigated by the popup toggle + log). Keep these accepted-risk notes with the submission record.
-- [ ] **Pre-submit final pass:** re-run `node test/e2e.mjs` (exit 0 = pass), re-run `node scripts/build.mjs`, confirm every `TODO` is replaced, confirm the privacy policy URL loads, then submit (`store/PUBLISH_RUNBOOK.md` open items; Step 4).
+- [ ] **Pre-submit final pass:** re-run `node scripts/lint.mjs` (exit 0), re-run `node test/e2e.mjs` (exit 0 = pass), re-run `node scripts/build.mjs`, confirm every `TODO` is replaced, confirm the privacy policy URL loads, then submit (`store/PUBLISH_RUNBOOK.md` open items; Step 4).
 
 ---
 
