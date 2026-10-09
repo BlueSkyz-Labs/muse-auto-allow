@@ -30,6 +30,18 @@ by-topic list (the repo or host taken from each approval's context). The popup a
 today's count and a 7-day mini chart, and the toolbar badge shows today's click count
 (cleared at zero).
 
+**Encrypted at rest, with backup/restore (v1.5.0).** The approval text in the click log
+is stored AES-GCM-256 encrypted (per-install key in `chrome.storage.local` — protects
+against casual browser-profile inspection, not a full local attacker). The popup decrypts
+for display. The Statistics page adds **Export data** / **Import data**: one JSON backup
+(settings, log including the key, statistics, counters); import validates the app marker
+and confirms before replacing.
+
+**Upgrade-safe inheritance + local-time log (v1.5.0).** A `schemaVersion` stamp is written
+with every flush, and legacy shapes — plaintext log entries, counters, statistics
+aggregates — stay readable; nothing is dropped on upgrade. Log timestamps show the viewer's
+local system time (stored values remain UTC ISO; hover shows the full local date-time).
+
 **Muse-style UI, light and dark.** v1.4.0 rebuilds the popup and Statistics page on
 Muse's design language: light-first (`#fcfcfc` surfaces, `#111112` ink, pill controls,
 `#005abf` accent) with a full dark theme via `prefers-color-scheme` (`#18191a`,
@@ -45,7 +57,7 @@ muse.ai-only matches, and the popup shows a live "N muse.ai tabs open" chip.
 ## Languages
 
 UI + manifest localized: English, Tiếng Việt, 简体中文, 日本語, 한국어, Español
-(`extension/_locales/`, 31 strings per locale).
+(`extension/_locales/`, 35 strings per locale).
 
 ## Layout
 
@@ -89,9 +101,11 @@ python scripts/verify-zip.py   # byte-compares the zip against extension/ (exit 
 - `store/PRIVACY.md` — privacy policy
 - `store/PUBLISH_RUNBOOK.md` — step-by-step launch runbook
 - `store/COMPLIANCE_CHECKLIST.md` — independent store-compliance review
+- `store/SHOWCASE.md` — showcase-kit index (asset inventory, sizes, regenerate commands)
 - `store/screenshot1.png` (1280x800, real runtime capture), `store/screenshot2-stats.png`
-  (1280x800), `store/screenshot3-popup.png` (popup render), `store/screenshot4-overview.png`
-  (1280x800, designed) + `store/promo440x280.png` (440x280) — store images
+  (1280x800), `store/screenshot3-popup.png` (1280x800, popup stage shot),
+  `store/screenshot4-overview.png` (1280x800, designed), `store/promo440x280.png` (440x280)
+  + `store/marquee1400x560.png` (1400x560) — store images
 
 ## SGPS
 

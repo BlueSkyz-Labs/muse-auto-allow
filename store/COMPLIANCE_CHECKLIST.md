@@ -7,6 +7,8 @@
 
 **v1.4.0 addendum:** the release packet is now **1.4.0** — `extension/manifest.json` line 4 (`"version": "1.4.0"`), package `dist/muse-auto-allow-v1.4.0.zip`. The addendum below supersedes the version-specific details in this header and in §3/§7/§10 wherever they conflict; §1–§11 remain the v1.2.0 baseline record.
 
+**v1.5.0 addendum:** the release packet is now **1.5.0** — `extension/manifest.json` line 4 (`"version": "1.5.0"`), package `dist/muse-auto-allow-v1.5.0.zip`. The v1.5.0 addendum below supersedes version-specific details in the v1.4.0 addendum and in §1–§11 wherever they conflict; the v1.4.0 addendum remains as history.
+
 ---
 
 ## v1.4.0 Addendum (2026-10-09)
@@ -35,7 +37,7 @@ Checked against the v1.4.0 revision (commit `8c76d2a`, 2026-10-09; manifest 1.4.
 | `store/screenshot4-overview.png` | 1280×800 | designed overview (`assets/store-screenshot.html`) | `scripts/render.mjs` lines 107–109 |
 | `store/promo440x280.png` | 440×280 | designed promo tile (`assets/promo-tile.html`) | `scripts/render.mjs` line 110 |
 
-- [ ] **`UNCERTAIN` — `store/screenshot3-popup.png` (680×1964, portrait) does not match the screenshot spec.** Chrome Web Store screenshots must be **1280×800 or 640×400** landscape (developer.chrome.com → "Supplying Images", checked 2026-10-09), and the packet's own §8 requires 1280×800 (`store/LISTING.md` line 379). 680×1964 matches neither. Re-render it at a valid size or exclude it from the dashboard screenshot slots before submitting. (The script header still labels it "(340x640 @2x)" — `scripts/stats-shot.mjs` line 7 — while the capture height is dynamic, lines 192–194.)
+- [x] **RESOLVED at v1.5.0 — the v1.4.0 `UNCERTAIN` flag on `store/screenshot3-popup.png` is closed.** The file was 680×1964 (portrait) and matched neither the CWS screenshot spec (1280×800 / 640×400) nor the packet's own §8 requirement (`store/LISTING.md` line 379). Commit `311f006` recomposed it as a **1280×800** stage shot — the real popup centered on a light stage (`scripts/stats-shot.mjs` lines 7, 188–215; PNG header re-verified 1280×800, 2026-10-09). See the v1.5.0 addendum §E for the corrected image list.
 - [ ] **At least one compliant screenshot exists.** `screenshot1.png` (1280×800) satisfies the mandatory screenshot; `screenshot2-stats.png` and `screenshot4-overview.png` are also 1280×800.
 
 ### D. i18n — 31 keys × 6 locales
@@ -56,6 +58,54 @@ Checked against the v1.4.0 revision (commit `8c76d2a`, 2026-10-09; manifest 1.4.
 - [ ] **Package `dist/muse-auto-allow-v1.4.0.zip` — 18 entries, manifest at root, byte-clean.** `scripts/verify-zip.py` run 2026-10-09: `18 matched, 0 mismatched, 0 disk-only, 0 zip-only` (exit 0); sha256 `3e22397c59de252b2eb1bf581ce13bda215b31c6831aecf476d3758b6a964061`, 125,067 bytes; the zip byte-matches the committed v1.4.0 revision `8c76d2a` for all 18 entries. `verify-zip.py` compares the zip against the **current working tree**, so any uncommitted edit landing after the build shows as `MISMATCH <file>` until rebuilt — rebuild + re-verify on the final release revision before uploading. Entries: `manifest.json`, `content.js`, `background.js`, `popup.html`, `popup.js`, `stats.html`, `stats.js`, 5 icons, 6 `_locales/*/messages.json`. Build guard: `scripts/build.mjs` lines 16 (item list), 32–43 (full-tree set equality), 47–54 (exit 2/3/4).
 - [ ] **Mandatory pre-submit: `node scripts/build.mjs` then `python scripts/verify-zip.py`, both exit 0** (now a required runbook step — `store/PUBLISH_RUNBOOK.md` Step 2).
 - [ ] **`FLAG (outside this checklist's write scope)` — `store/LISTING.md` still carries v1.2.0 references** (§1 "Version | 1.2.0" line 16; package line 18; §6 line 320) and its §8 asset table lists only `screenshot1.png` + promo (lines 378–381). Update it so the dashboard copy matches 1.4.0 before submitting.
+
+---
+
+## v1.5.0 Addendum (2026-10-09)
+
+Checked against the v1.5.0 revision (commits `d7084da` + `311f006`, 2026-10-09; manifest 1.5.0; package `dist/muse-auto-allow-v1.5.0.zip`). Every item cites the file and line it was verified against; items marked `UNCERTAIN` must be resolved by the owner before **Submit for review**. File-level checks only — no Chrome run in this pass (popup/e2e behavior is cited from code and `CHANGELOG.md`).
+
+### A. Encrypted at rest — and its documented limitation
+
+- [ ] **The log's approval text is stored AES-GCM-256 encrypted.** `extension/content.js` lines 252–283: a per-install key is generated on first use (`crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, …)`, line 268) and kept as `cryptKeyRaw` in `chrome.storage.local` (line 270); each log entry's context becomes `{ iv, ct }` (`ctx`, lines 279–281), written at line 305 (`entry.ctx = enc; delete entry.context`). The popup decrypts for display (`extension/popup.js` lines 22–44) with graceful fallback strings — `'(encrypted)'` (line 38) / `'(unable to decrypt)'` (line 41) — and never blocks rendering.
+- [ ] **The limitation is documented, not hidden.** `CHANGELOG.md` line 5: "documented limitation — protects casual profile inspection, not a full local attacker" (the key lives in the same `chrome.storage.local`, so full profile access defeats the encryption). The same limitation is stated in the code comment (`extension/content.js` lines 253–256). Do not claim more than this in any dashboard copy.
+- [ ] **No new data leaves the device.** Encryption is purely local (`crypto.subtle`); no network primitives were added (re-check of the v1.4.0 §E scans: no `fetch(`/`XMLHttpRequest` anywhere in `extension/`).
+
+### B. Backup / restore — data flow (what leaves the machine: nothing)
+
+- [ ] **Export is a local file the user creates; there is no upload path.** `extension/stats.js` lines 159–175: builds `{ app: 'muse-auto-allow', schemaVersion: 2, exportedAt, data }` where `data` = the full `chrome.storage.local` (via `get(null)`, line 165 — includes `cryptKeyRaw` so backups stay readable) and downloads it as `muse-auto-allow-backup-<date>.json` through a local Blob + `a.download` (lines 167–173). Nothing is transmitted; the file only moves if the user moves it.
+- [ ] **Import validates the app marker, confirms, then replaces state.** `extension/stats.js` lines 176–192: a file without `app === 'muse-auto-allow'` is rejected with the `importBad` message (line 183); otherwise the user confirms (`importConfirm`, line 184) and `chrome.storage.local.set(j.data)` replaces the stored state (line 185). Buttons/inputs: `extension/stats.html` lines 85–87.
+- [ ] **Dashboard answers unchanged.** The export/import feature adds no collection or transmission; `store/LISTING.md` §7 answers (collects nothing / nothing transmitted) remain accurate.
+
+### C. Upgrade-safe data inheritance (schemaVersion 2)
+
+- [ ] **Every flush stamps `schemaVersion: 2`.** `extension/content.js` line 315 — the single serialized storage write per flush (log + counter + aggregates together).
+- [ ] **Legacy shapes stay readable — nothing is dropped on upgrade.** Legacy plaintext log entries still render (`extension/popup.js` line 43: `return String((e && e.context) || ''); // legacy plaintext entries stay readable`); counters and aggregates are coerced defensively on read (`extension/content.js` lines 294–298; `extension/stats.js` lines 126–135). `CHANGELOG.md` line 4.
+- [ ] **An encryption failure never loses a record** — the entry falls back to plaintext (`extension/content.js` lines 302–306).
+
+### D. i18n — 35 keys × 6 locales
+
+- [ ] **All six locale files carry the identical 35-key set (Python JSON parse, 2026-10-09).** `extension/_locales/{en,es,ja,ko,vi,zh_CN}/messages.json`; key sets compared pairwise — no missing/extra keys. v1.5.0 adds 4 keys — `exportData` (line 95), `importData` (line 98), `importConfirm` (line 101), `importBad` (line 104) in `extension/_locales/en/messages.json`; previous count was 31 (`CHANGELOG.md` line 15, v1.4.0 entry).
+
+### E. Store images — corrected list (all exact-spec; PNG headers re-verified 2026-10-09)
+
+| File | Size | Produced by | Evidence |
+|---|---|---|---|
+| `store/screenshot1.png` | 1280×800 | real runtime capture (live popup + live card clicks) | `scripts/store-shot.mjs`; regenerated in `311f006` |
+| `store/screenshot2-stats.png` | 1280×800 | real render — Statistics page | `scripts/stats-shot.mjs` lines 6, 163 |
+| `store/screenshot3-popup.png` | 1280×800 | real render — popup centered on a light stage | `scripts/stats-shot.mjs` lines 7, 188–215; **recomposed at `311f006`** (was 680×1964) |
+| `store/screenshot4-overview.png` | 1280×800 | designed overview (`assets/store-screenshot.html`) | `scripts/render.mjs` line 109 |
+| `store/promo440x280.png` | 440×280 | designed promo tile (`assets/promo-tile.html`) | `scripts/render.mjs` line 110 |
+| `store/marquee1400x560.png` | 1400×560 | designed two-zone marquee (new at v1.5.0) | `scripts/render.mjs` line 111; `assets/marquee.html` |
+
+- [x] **The v1.4.0 `UNCERTAIN` screenshot3 flag is RESOLVED at v1.5.0** (the flag line in the v1.4.0 addendum §C now carries the resolution note). The v1.4.0 §C table is kept as history; the table above supersedes it.
+- [ ] **Full asset inventory lives in `store/SHOWCASE.md`** (new at v1.5.0): per-asset size + store requirement, regenerate commands and the pre-submit upload list — 4 screenshots + promo + optional marquee.
+
+### F. Package and pre-submit for this release
+
+- [ ] **Package `dist/muse-auto-allow-v1.5.0.zip` — 18 entries, manifest at root, byte-clean.** `python scripts/verify-zip.py` run 2026-10-09 (zip byte-verified against the committed v1.5.0 revision `311f006`): `muse-auto-allow-v1.5.0.zip: 18 matched, 0 mismatched, 0 disk-only, 0 zip-only` (exit 0); archive bytes are rebuild-dependent (embedded timestamps) — at the last build during this check: sha256 `386f156bd301511ff8a32f7b57721a3d9687c186617ceeb0e93ea199babf5d29`, 97,217 bytes. Same caveat as before: `verify-zip.py` compares the zip against the **current working tree** — rebuild + re-verify on the final release revision before uploading.
+- [ ] **The v1.4.0 `FLAG` on `store/LISTING.md` is resolved** — LISTING.md now carries v1.5.0 version/package refs (lines 16, 18, 320), the full asset table (lines 379–381: 4 screenshots 1280×800, promo 440×280, marquee 1400×560) and a `store/SHOWCASE.md` pointer (line 385).
+- [ ] **Mandatory pre-submit: `node scripts/build.mjs` then `python scripts/verify-zip.py`, both exit 0** (unchanged from v1.4.0; `store/PUBLISH_RUNBOOK.md` Step 2).
 
 ---
 

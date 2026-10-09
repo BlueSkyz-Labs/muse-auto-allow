@@ -4,7 +4,7 @@ Step-by-step launch and update procedure. Steps marked **[MANUAL/owner]** requir
 with the Google account and payment; everything else can be done from the repo.
 
 **One-line flow:** register developer account → `node scripts/build.mjs` +
-`python scripts/verify-zip.py` → upload `dist/muse-auto-allow-v1.4.0.zip` → fill every
+`python scripts/verify-zip.py` → upload `dist/muse-auto-allow-v1.5.0.zip` → fill every
 dashboard tab → submit → wait for review → publish → for updates: bump version →
 rebuild + verify zip → upload → resubmit.
 
@@ -30,14 +30,14 @@ rebuild + verify zip → upload → resubmit.
 
 ## Step 2 — Build, verify, and upload the package
 
-1. Confirm the version in `extension/manifest.json` is correct (currently `1.4.0`).
+1. Confirm the version in `extension/manifest.json` is correct (currently `1.5.0`).
 2. Build the store zip from the repo root:
 
    ```bash
    node scripts/build.mjs
    ```
 
-   Output: `dist/muse-auto-allow-v1.4.0.zip` with `manifest.json` at the **zip root**
+   Output: `dist/muse-auto-allow-v1.5.0.zip` with `manifest.json` at the **zip root**
    (not nested inside a folder). The build fails closed if the zip does not mirror the
    whole `extension/` tree (exit 3 = file missing from the zip, exit 4 = unexpected file
    in the zip).
@@ -49,11 +49,11 @@ rebuild + verify zip → upload → resubmit.
 
    It checks every zip entry against the on-disk file (sha-identical bytes) and exits
    non-zero on any mismatch, missing file, or extra file. Expected output for this
-   release: `muse-auto-allow-v1.4.0.zip: 18 matched, 0 mismatched, 0 disk-only, 0
+   release: `muse-auto-allow-v1.5.0.zip: 18 matched, 0 mismatched, 0 disk-only, 0
    zip-only` and exit 0. **Do not upload a zip that fails this check.**
 4. In the Developer Dashboard, click **New item** (first release) or open the existing
    item (for updates).
-5. **Upload** `dist/muse-auto-allow-v1.4.0.zip`.
+5. **Upload** `dist/muse-auto-allow-v1.5.0.zip`.
 6. Wait for the dashboard to parse the manifest. It will read the name/description from
    `__MSG_*__` keys resolved against `_locales/en/messages.json`; verify the default
    locale resolves cleanly (no blank name).
@@ -75,14 +75,15 @@ Work through all tabs before submitting; an incomplete listing cannot be submitt
   languages: copy verbatim from `store/LISTING.md` §2.
 - **Category:** Productivity.
 - **Language:** English (add the other five as localized listings).
-- **Graphic assets:** upload the 128×128 icon, the **1280×800** screenshots
-  (`store/screenshot1.png` — real runtime capture; `store/screenshot2-stats.png`;
-  `store/screenshot4-overview.png`), and the **440×280** promo tile
-  (`store/promo440x280.png`). See `store/LISTING.md` §8 and `docs/BRANDING.md` §5 for
-  the full asset map. Note: `store/screenshot3-popup.png` is 680×1964 and does **not**
-  meet the dashboard's 1280×800 / 640×400 screenshot spec — do not upload it as a
-  screenshot until re-rendered (flagged in `store/COMPLIANCE_CHECKLIST.md`, v1.4.0
-  addendum §C). Confirm all assets reflect the shipped 1.4.0 behavior before uploading.
+- **Graphic assets:** upload the 128×128 icon, all four **1280×800** screenshots
+  (`store/screenshot1.png` — real runtime capture; `store/screenshot2-stats.png` —
+  Statistics; `store/screenshot3-popup.png` — popup stage shot; `store/screenshot4-overview.png`
+  — designed overview), the **440×280** promo tile (`store/promo440x280.png`), and
+  optionally the **1400×560** marquee (`store/marquee1400x560.png`). See `store/LISTING.md`
+  §8, `store/SHOWCASE.md` and `docs/BRANDING.md` §5 for the full asset map. All six store
+  images are exact-spec (PNG headers verified 2026-10-09); `store/screenshot3-popup.png`
+  was recomposed to 1280×800 at v1.5.0. Confirm all assets reflect the shipped 1.5.0
+  behavior before uploading.
 - **Additional fields:** homepage/support URL and privacy policy URL — fill the
   `TODO: fill before submit` placeholders from `store/LISTING.md` §9.
 
@@ -131,7 +132,7 @@ Work through all tabs before submitting; an incomplete listing cannot be submitt
 ## Step 5 — Post-publish update flow
 
 1. Make the code change in `extension/`.
-2. **Bump the version** in `extension/manifest.json` (e.g. `1.4.0` → `1.4.1`); Chrome
+2. **Bump the version** in `extension/manifest.json` (e.g. `1.5.0` → `1.5.1`); Chrome
    rejects a re-upload with a version number that is not higher than the published one.
 3. Rebuild:
 
@@ -139,7 +140,7 @@ Work through all tabs before submitting; an incomplete listing cannot be submitt
    node scripts/build.mjs
    ```
 
-   Output: `dist/muse-auto-allow-v1.4.1.zip`.
+   Output: `dist/muse-auto-allow-v1.5.1.zip`.
 4. **Verify:** `python scripts/verify-zip.py` — must report 18 matched / 0 mismatched /
    0 disk-only / 0 zip-only (exit 0) before uploading (same mandatory check as Step 2).
 5. In the dashboard, open the item → **Package** → **Upload new package** → select the new
@@ -172,17 +173,18 @@ Work through all tabs before submitting; an incomplete listing cannot be submitt
 
 - [ ] Replace every `TODO: fill before submit` in `store/LISTING.md` and `store/PRIVACY.md`.
 - [ ] Host `store/PRIVACY.md` at a public URL and paste it into the dashboard.
-- [x] Store images present: `store/screenshot1.png` (1280×800), `store/screenshot2-stats.png`
-      (1280×800), `store/screenshot4-overview.png` (1280×800), `store/promo440x280.png`
-      (440×280) — verified dimensions; review content before upload. **Exception:**
-      `store/screenshot3-popup.png` is 680×1964 and does not meet the screenshot spec —
-      re-render or exclude (see `store/COMPLIANCE_CHECKLIST.md`, v1.4.0 addendum §C).
+- [x] Store images present: `store/screenshot1.png`, `store/screenshot2-stats.png`,
+      `store/screenshot3-popup.png`, `store/screenshot4-overview.png` (all 1280×800),
+      `store/promo440x280.png` (440×280), `store/marquee1400x560.png` (1400×560) — verified
+      dimensions; review content before upload. `screenshot3-popup.png` was recomposed to
+      1280×800 at v1.5.0 (the v1.4.0 exception is resolved — see
+      `store/COMPLIANCE_CHECKLIST.md`, v1.5.0 addendum §E).
 - [ ] Confirm the publisher display name and support email.
 - [ ] Sanity-check Muse's terms of service around helping a user auto-approve their own
       agent actions (or Agent Mode) before a public launch.
 - [ ] Run `node scripts/build.mjs` **and** `python scripts/verify-zip.py`; both must exit 0
       (verify-zip byte-compares the zip against `extension/` and fails on any mismatch).
-- [ ] Confirm `store/LISTING.md` reflects v1.4.0 (version/package references and the asset
-      list) — it carried v1.2.0 references at the time of this update.
+- [x] `store/LISTING.md` reflects v1.5.0 (version/package references and the asset list) —
+      refreshed at commit `311f006`; re-check it still matches if any later edit lands.
 - [ ] Load the unpacked extension and scroll the four detection paths once (see
       `test/e2e.mjs`) so the shipped build matches the description.

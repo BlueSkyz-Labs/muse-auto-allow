@@ -8,6 +8,8 @@
 **Not executed (per task constraints):** Chrome, `test/e2e.mjs`. No existing repo file was modified; this report is the only file created.
 
 > **v1.4.0 addendum:** the packet now ships as **v1.4.0** (`dist/muse-auto-allow-v1.4.0.zip`) — the addendum at the end of this document records what changed and the re-verification status per item. Everything above this line remains the v1.2.0 record.
+>
+> **v1.5.0 addendum:** the packet now ships as **v1.5.0** (`dist/muse-auto-allow-v1.5.0.zip`) — the v1.5.0 addendum at the end of this document re-verifies the items that changed since v1.4.0 (commits `d7084da` + `311f006`).
 
 ## Verdict
 
@@ -175,3 +177,41 @@ Entries carry an ISO `at` timestamp (`content.js:203`); PRIVACY §2 describes "k
 - **F3 — cosmetic:** `extension/content.js` line 1 header comment still reads "(v1.2.0, security-hardened)".
 
 **Bottom line:** all substantive v1.2.0 findings M1–M4 and M6 are addressed in the working tree; the two baseline FAILs (M1 screenshot mockup, M2 log count) are both resolved by file-level evidence. Remaining submission blockers are F1 (screenshot3) and F2 (LISTING.md staleness), plus the pre-existing owner-input TODOs (privacy URL, support email, publisher name).
+
+---
+
+## v1.5.0 Addendum (2026-10-09)
+
+**Verifier:** independent docs pass (maker ≠ judge). File-level re-verification only — **no Chrome / e2e execution was performed in this pass**; the e2e result is cited from the v1.5.0 commit message (`d7084da`: "e2e exit 0"), not re-executed. Store-image checks are PNG-header dimension parses; pixel content was not visually inspected in this pass.
+**Revision:** v1.5.0 = commits `d7084da` (feature) + `311f006` (polish), HEAD `311f0065bb8049f29beb0cbb1826fed992a09bad`, 2026-10-09; working tree clean at check time.
+**Method:** targeted reads of every file cited below; `python scripts/verify-zip.py` executed read-only (byte-compare, exit 0); Python zip listing + sha256; PNG-header dimension checks on all six store images; JSON locale-parity parse (6 files × 35 keys); targeted greps.
+
+### What changed since the v1.4.0 addendum
+
+- **Feature (`d7084da`)** — upgrade-safe data inheritance (`schemaVersion: 2` per flush; legacy shapes stay readable); AES-GCM-256 at-rest encryption for the log's approval text (per-install `cryptKeyRaw`; documented limitation); Statistics-page Export/Import data (full-storage JSON backup); log timestamps display the viewer's local system time; showcase kit: marquee 1400×560 + `store/SHOWCASE.md`; i18n 31 → 35 keys.
+- **Polish (`311f006`)** — `store/screenshot3-popup.png` recomposed as a 1280×800 stage shot (was 680×1964 — the v1.4.0 finding F1); marquee redesigned two-zone; popup micro-fixes; `store/LISTING.md` refreshed to v1.5.0 (F2); `extension/content.js` header now reads v1.5.0 (F3).
+- Manifest 1.4.0 → **1.5.0** (`extension/manifest.json` line 4); package **`dist/muse-auto-allow-v1.5.0.zip`** — still **18 entries**.
+
+### Re-verification of changed items (file-level)
+
+| Old item | v1.4.0 status | v1.5.0 re-check | Status |
+|---|---|---|---|
+| 1.2 | version 1.4.0 | `extension/manifest.json` line 4 = `"1.5.0"` | PASS (superseded) |
+| 1.7 / N5 | 6 locales, identical 31-key sets | all 6 locale files = identical **35-key** sets (Python parse); 4 new keys `exportData`/`importData`/`importConfirm`/`importBad` at `extension/_locales/en/messages.json` lines 95, 98, 101, 104 | PASS |
+| 2.1–2.3 / N1 | 18 entries, 18/18 byte-equal (v1.4.0) | **18 entries, 18/18 byte-equal at v1.5.0** — `scripts/verify-zip.py`: `muse-auto-allow-v1.5.0.zip: 18 matched, 0 mismatched, 0 disk-only, 0 zip-only` (exit 0; zip byte-verified against the committed `311f006` extension tree); last-build archive sha256 `386f156bd301511ff8a32f7b57721a3d9687c186617ceeb0e93ea199babf5d29`, 97,217 bytes (rebuild-dependent); manifest at root | PASS |
+| 1.20 / N4 / F1 | screenshots 1280×800 except screenshot3-popup 680×1964 | **all four screenshots 1280×800** (screenshot3 recomposed at `311f006`); promo 440×280; **new** marquee 1400×560 — PNG headers 2026-10-09 | PASS (F1 fixed) |
+| N4 | 4 screenshots + promo; no marquee, no index | 6 store images exact-spec; `store/SHOWCASE.md` index present (asset table + regenerate commands + pre-submit list) | PASS |
+| F2 | `store/LISTING.md` stale at v1.2.0 | refreshed to v1.5.0 — version/package refs lines 16, 18, 320; asset table lines 379–381; `store/SHOWCASE.md` linked line 385 | PASS (F2 fixed) |
+| F3 | content.js header read v1.2.0 | `extension/content.js` line 1 = "v1.5.0, security-hardened" | PASS (F3 fixed) |
+| N6 (new) | — | **Encryption at rest:** `extension/content.js` lines 252–283 (AES-GCM-256; `cryptKeyRaw` per install, lines 268–270), `ctx` per entry (lines 279–281, 305); popup decrypts (`extension/popup.js` lines 22–44) with graceful fallbacks; limitation documented (`CHANGELOG.md` line 5; `content.js` lines 253–256) | PASS (read) |
+| N7 (new) | — | **Backup/restore:** `extension/stats.js` lines 159–192 — export = local JSON incl. `cryptKeyRaw`; import validates `app` marker + confirms before replace; UI `extension/stats.html` lines 85–87 | PASS (read) |
+| N8 (new) | — | **Upgrade inheritance:** `schemaVersion: 2` per flush (`extension/content.js` line 315); legacy plaintext entries still render (`extension/popup.js` line 43); counters/aggregates coerced on read (`content.js` lines 294–298; `stats.js` lines 126–135) | PASS (read) |
+| N9 (new) | — | **Local-time log display:** `extension/popup.js` lines 45–51 (local `HH:MM:SS`); hover title = full local datetime (line 64) | PASS (read) |
+
+### Explicitly NOT re-run in this pass
+
+- **Chrome / `test/e2e.mjs`** — not executed here; "e2e exit 0" is cited from the v1.5.0 commit message (`d7084da`), not independently reproduced. Re-run before submit per the runbook.
+- **Sandbox rebuild of the zip** — not performed; the byte-compare against the working tree covers content identity.
+- **Visual content of store images** — only PNG-header dimensions were verified; the images were not visually reviewed in this pass.
+
+**Bottom line:** all three v1.4.0 addendum findings (F1 screenshot3 spec, F2 LISTING staleness, F3 header version) are closed at `311f006`; the v1.5.0 feature set (encryption at rest, backup/restore, upgrade inheritance, local-time log) is present per file-level evidence; the zip re-verifies 18/18 byte-equal at v1.5.0. Remaining submission blockers are the pre-existing owner-input TODOs (privacy URL, support email, publisher name) — unchanged.
