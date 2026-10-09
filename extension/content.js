@@ -232,7 +232,7 @@
   function monthKey(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1); }
   function extractTopic(context) {
     const c = String(context || '').replace(/\s+/g, ' ').trim();
-    const repos = [...c.matchAll(/Repository\s+(?!owner\b)([A-Za-z0-9._-]{2,40})/gi)].map((m) => m[1]);
+    const repos = [...c.matchAll(/Repository\s+(?!owner)([A-Za-z0-9._-]{2,40})/gi)].map((m) => m[1]);
     if (repos.length) return repos[repos.length - 1];
     const host = c.match(/https?:\/\/([A-Za-z0-9.-]{2,60})/i);
     if (host) return host[1].slice(0, 40);
@@ -248,29 +248,43 @@
     keys.sort((a, b) => map[a] - map[b]);
     for (const k of keys.slice(0, keys.length - keep)) delete map[k];
   }
+  const asObj = (v) => (v && typeof v === 'object' && !Array.isArray(v)) ? v : {};
+  // One get->set per flush, updating log + counter + aggregates together. Flushes are
+  // serialized per tab (clickFlushing) and, when the Web Locks API is available, across
+  // tabs of the same origin too (redteam V3-2: the 1-minute alarm can nudge several
+  // muse.ai tabs at once). Counts are coerced with Number() so a corrupt stored shape
+  // can never turn a write into a silent no-op or a string concatenation (V3-3).
   function flushClicks() {
     if (clickFlushing || !clickQueue.length) return;
     clickFlushing = true;
+    const run = () => new Promise((resolve) => {
+      try {
+        chrome.storage.local.get({ log: [], stats: null, clickCount: 0 }, (s) => {
+          const log = Array.isArray(s.log) ? s.log : [];
+          let count = Number(s.clickCount) || 0;
+          const st = asObj(s.stats);
+          st.byDay = asObj(st.byDay); st.byMonth = asObj(st.byMonth); st.byYear = asObj(st.byYear); st.byTopic = asObj(st.byTopic);
+          while (clickQueue.length) {
+            const item = clickQueue.shift();
+            log.unshift(item.entry);
+            count += 1;
+            st.byDay[item.day] = (Number(st.byDay[item.day]) || 0) + 1;
+            st.byMonth[item.month] = (Number(st.byMonth[item.month]) || 0) + 1;
+            st.byYear[item.year] = (Number(st.byYear[item.year]) || 0) + 1;
+            st.byTopic[item.topic] = (Number(st.byTopic[item.topic]) || 0) + 1;
+          }
+          pruneKeys(st.byDay, 400); pruneKeys(st.byMonth, 24); pruneTopics(st.byTopic, 100);
+          try { chrome.storage.local.set({ log: log.slice(0, 50), stats: st, clickCount: count }); } catch { /* invalidated */ }
+          resolve();
+        });
+      } catch { resolve(); }
+    }).finally(() => { clickFlushing = false; });
+    let started = false;
+    const once = () => { if (started) return; started = true; return run(); };
     try {
-      chrome.storage.local.get({ log: [], stats: null, clickCount: 0 }, (s) => {
-        const log = Array.isArray(s.log) ? s.log : [];
-        let count = Number(s.clickCount) || 0;
-        const st = (s.stats && typeof s.stats === 'object') ? s.stats : {};
-        st.byDay = st.byDay || {}; st.byMonth = st.byMonth || {}; st.byYear = st.byYear || {}; st.byTopic = st.byTopic || {};
-        while (clickQueue.length) {
-          const item = clickQueue.shift();
-          log.unshift(item.entry);
-          count += 1;
-          st.byDay[item.day] = (st.byDay[item.day] || 0) + 1;
-          st.byMonth[item.month] = (st.byMonth[item.month] || 0) + 1;
-          st.byYear[item.year] = (st.byYear[item.year] || 0) + 1;
-          st.byTopic[item.topic] = (st.byTopic[item.topic] || 0) + 1;
-        }
-        pruneKeys(st.byDay, 400); pruneKeys(st.byMonth, 24); pruneTopics(st.byTopic, 100);
-        try { chrome.storage.local.set({ log: log.slice(0, 50), stats: st, clickCount: count }); } catch { /* invalidated */ }
-        clickFlushing = false;
-      });
-    } catch { clickFlushing = false; }
+      const p = navigator.locks.request('maa-record-v1', () => once());
+      if (p && typeof p.catch === 'function') p.catch(() => once());
+    } catch { once(); }
   }
   function recordClick(entry, context) {
     const d = new Date();

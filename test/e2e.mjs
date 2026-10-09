@@ -248,6 +248,7 @@ try {
     const j = JSON.parse(r?.result?.value || '{}');
     const now = new Date();
     const pad = (n) => String(n).padStart(2, '0');
+    // known flake class: a run crossing local midnight can mismatch byDay[today]
     const today = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
     const byDay = (j.stats && j.stats.byDay) || {};
     const byTopic = (j.stats && j.stats.byTopic) || {};
@@ -259,9 +260,26 @@ try {
       clickCount: j.clickCount,
       logLen: j.logLen,
       i18nFound: j.i18nFound,
-      ok: (byDay[today] || 0) >= 10 && (byTopic['test-repo'] || 0) >= 1 && j.clickCount >= 10 && j.logLen >= 10,
+      ok: (byDay[today] || 0) >= 10 && (byTopic['test-repo'] || 0) >= 1 && j.clickCount >= 10 && j.logLen >= 10 && String(j.i18nFound || '').includes('3'),
     });
   } catch (e) { statsCheck.error = e.message; }
+
+  // ---- stats.html renders (v1.3): KPI + bars + topics with the recorded data ----
+  const statsPage = { ok: false };
+  try {
+    const t4 = await send('Target.createTarget', { url: `chrome-extension://${extId}/stats.html` });
+    const { sessionId: s4 } = await send('Target.attachToTarget', { targetId: t4.targetId, flatten: true });
+    await sleep(900);
+    const r4 = await send('Runtime.evaluate', {
+      expression: `JSON.stringify({ total: (document.getElementById('kTotal')||{}).textContent, today: (document.getElementById('kToday')||{}).textContent, bars: document.querySelectorAll('#chart rect.bar').length, topics: document.querySelectorAll('#topics .topic').length, cap: (document.getElementById('ccap')||{}).textContent })`,
+      returnByValue: true,
+    }, s4);
+    const j4 = JSON.parse(r4?.result?.value || '{}');
+    Object.assign(statsPage, {
+      ok: Number(j4.total) >= 10 && Number(j4.today) >= 1 && j4.bars >= 10 && j4.topics >= 1 && !!j4.cap,
+      total: j4.total, today: j4.today, bars: j4.bars, topics: j4.topics, cap: j4.cap,
+    });
+  } catch (e) { statsPage.error = e.message; }
 
   // ---- muse.ai smoke (logged out; WARN-only if the network is blocked) ----
   let museAttr = null;
@@ -282,7 +300,7 @@ try {
   }
 
   const pass = missing.length === 0 && extra.length === 0 && dupes.length === 0 && denyCount === 0 && orderOk
-    && forbiddenHit.length === 0 && n7count === 1 && n11count === 1 && !surface2Hit && statsCheck.ok;
+    && forbiddenHit.length === 0 && n7count === 1 && n11count === 1 && !surface2Hit && statsCheck.ok && statsPage.ok;
   Object.assign(results, {
     ok: pass,
     extId,
@@ -301,6 +319,7 @@ try {
     lateClicks,
     retryFired,
     statsCheck,
+    statsPage,
     timeline: timeline.slice(-45),
     timeline2: timeline2.slice(-30),
     raw: clicks,

@@ -29,15 +29,27 @@ const list = execFileSync('powershell.exe', ['-NoProfile', '-Command',
   { encoding: 'utf8' });
 const entries = list.trim().split(/\r?\n/).filter(Boolean);
 const hasManifestAtRoot = entries.includes('manifest.json');
-// Guard (learned 2026-10-09: stats.html/stats.js were silently missing from the zip):
-// every top-level .js/.html/.json file in extension/ must be present in the archive.
-const expectedTop = fs.readdirSync(EXT).filter((f) => /\.(js|html|json)$/.test(f));
-const missingTop = expectedTop.filter((f) => !entries.includes(f));
+// Guard (learned 2026-10-09: stats.html/stats.js were silently missing from the zip;
+// extended per redteam V3-8): the zip must mirror the ENTIRE extension/ tree — full set
+// equality in both directions, so a future top-level file or directory cannot ship
+// missing and nothing unexpected can slip in.
+const walk = (dir, base = '') => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+  const rel = base ? base + '/' + e.name : e.name;
+  return e.isDirectory() ? walk(path.join(dir, e.name), rel) : [rel];
+});
+const diskFiles = walk(EXT).sort();
+const zipNorm = new Set(entries.map((e) => e.replace(/\\/g, '/')));
+const missingAll = diskFiles.filter((f) => !zipNorm.has(f));
+const extraZip = [...zipNorm].filter((f) => !diskFiles.includes(f));
 console.log('zip:', zip);
 console.log('entries:', entries.length, '| manifest at root:', hasManifestAtRoot);
 for (const e of entries) console.log('  ' + e);
 if (!hasManifestAtRoot) process.exit(2);
-if (missingTop.length) {
-  console.error('zip is missing top-level files: ' + missingTop.join(', '));
+if (missingAll.length) {
+  console.error('zip is missing files: ' + missingAll.join(', '));
   process.exit(3);
+}
+if (extraZip.length) {
+  console.error('zip has unexpected files: ' + extraZip.join(', '));
+  process.exit(4);
 }

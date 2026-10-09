@@ -6,6 +6,7 @@ const t = (key, fallback) => {
 const pad2 = (n) => String(n).padStart(2, '0');
 const dayKeyOf = (d) => d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
 const monthKeyOf = (d) => d.getFullYear() + '-' + pad2(d.getMonth() + 1);
+const num = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
 
 function applyI18n() {
   document.querySelectorAll('[data-i18n]').forEach((el) => {
@@ -32,7 +33,7 @@ function series() {
   if (RANGE === 'day') {
     for (let i = 13; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
-      out.push({ label: pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1), v: STATS.byDay[dayKeyOf(d)] || 0 });
+      out.push({ label: pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1), v: num(STATS.byDay[dayKeyOf(d)]) });
     }
   } else if (RANGE === 'week') {
     for (let i = 11; i >= 0; i--) {
@@ -40,19 +41,19 @@ function series() {
       let v = 0;
       for (let k = 0; k < 7; k++) {
         const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + k);
-        v += STATS.byDay[dayKeyOf(d)] || 0;
+        v += num(STATS.byDay[dayKeyOf(d)]);
       }
       out.push({ label: pad2(start.getDate()) + '/' + pad2(start.getMonth() + 1), v });
     }
   } else if (RANGE === 'month') {
     for (let i = 11; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      out.push({ label: pad2(d.getMonth() + 1) + '/' + String(d.getFullYear()).slice(2), v: STATS.byMonth[monthKeyOf(d)] || 0 });
+      out.push({ label: pad2(d.getMonth() + 1) + '/' + String(d.getFullYear()).slice(2), v: num(STATS.byMonth[monthKeyOf(d)]) });
     }
   } else {
-    const years = Object.keys(STATS.byYear).sort();
+    const years = Object.keys(STATS.byYear).filter((y) => /^\d{4}$/.test(y)).sort();
     if (!years.length) years.push(String(now.getFullYear()));
-    for (const y of years) out.push({ label: y, v: STATS.byYear[y] || 0 });
+    for (const y of years) out.push({ label: y, v: num(STATS.byYear[y]) });
   }
   return out;
 }
@@ -88,7 +89,7 @@ function renderChart() {
 
 function renderTopics() {
   const wrap = $('topics');
-  const entries = Object.entries(STATS.byTopic).sort((a, b) => b[1] - a[1]).slice(0, 12);
+  const entries = Object.entries(STATS.byTopic).map(([k, v]) => [String(k), num(v)]).sort((a, b) => b[1] - a[1]).slice(0, 12);
   if (!entries.length) {
     wrap.innerHTML = '<div class="empty">' + t('noData', 'No data yet') + '</div>';
     return;
@@ -102,17 +103,17 @@ function renderTopics() {
 
 function renderKpis() {
   const now = new Date();
-  const today = STATS.byDay[dayKeyOf(now)] || 0;
+  const today = num(STATS.byDay[dayKeyOf(now)]);
   const ws = weekStart(now);
   let week = 0;
   for (let k = 0; k < 7; k++) {
     const d = new Date(ws.getFullYear(), ws.getMonth(), ws.getDate() + k);
-    week += STATS.byDay[dayKeyOf(d)] || 0;
+    week += num(STATS.byDay[dayKeyOf(d)]);
   }
-  $('kTotal').textContent = TOTAL;
+  $('kTotal').textContent = num(TOTAL);
   $('kToday').textContent = today;
   $('kWeek').textContent = week;
-  $('kMonth').textContent = STATS.byMonth[monthKeyOf(now)] || 0;
+  $('kMonth').textContent = num(STATS.byMonth[monthKeyOf(now)]);
 }
 
 function renderAll() {
@@ -135,8 +136,16 @@ chrome.storage.local.get({ stats: null, clickCount: 0 }, (s) => {
   renderAll();
 });
 chrome.storage.onChanged.addListener((ch) => {
-  if (ch.stats) { STATS = ch.stats.newValue || STATS; }
-  if (ch.clickCount) { TOTAL = Number(ch.clickCount.newValue) || 0; }
+  if (ch.stats) {
+    const nv = (ch.stats.newValue && typeof ch.stats.newValue === 'object') ? ch.stats.newValue : {};
+    STATS = {
+      byDay: (nv.byDay && typeof nv.byDay === 'object') ? nv.byDay : {},
+      byMonth: (nv.byMonth && typeof nv.byMonth === 'object') ? nv.byMonth : {},
+      byYear: (nv.byYear && typeof nv.byYear === 'object') ? nv.byYear : {},
+      byTopic: (nv.byTopic && typeof nv.byTopic === 'object') ? nv.byTopic : {},
+    };
+  }
+  if (ch.clickCount) { TOTAL = num(ch.clickCount.newValue); }
   renderAll();
 });
 $('seg').addEventListener('click', (e) => {

@@ -46,7 +46,7 @@ function renderMini(byDay, now) {
   const days = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
-    days.push({ key: dayKeyOf(d), v: byDay[dayKeyOf(d)] || 0 });
+    days.push({ key: dayKeyOf(d), v: Number(byDay[dayKeyOf(d)]) || 0 });
   }
   const W = 292, H = 46, gap = 4;
   const bw = Math.floor((W - gap * 6) / 7);
@@ -89,10 +89,10 @@ function refresh() {
     }
     lastCount = v;
     c.textContent = v;
-    const byDay = (s.stats && s.stats.byDay) || {};
+    const byDay = (s.stats && typeof s.stats.byDay === 'object' && s.stats.byDay) || {};
     const now = new Date();
     const today = $('today');
-    if (today) today.textContent = byDay[dayKeyOf(now)] || 0;
+    if (today) today.textContent = Number(byDay[dayKeyOf(now)]) || 0;
     renderMini(byDay, now);
     $('dot').classList.toggle('off', s.enabled === false);
     renderLog(Array.isArray(s.log) ? s.log : []);

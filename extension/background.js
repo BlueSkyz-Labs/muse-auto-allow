@@ -3,7 +3,7 @@
 //    throttled or otherwise quiet.
 // 2) Proactively sweeps a muse.ai tab the moment it finishes loading (tab detection).
 // 3) Keeps the toolbar badge showing today's click count.
-const MUSE_URL_RE = /^https:\/\/([a-z0-9-]+\.)*muse\.ai\//i;
+const MUSE_URL_RE = /^https:\/\/([a-z0-9-]+\.)*muse\.ai(?=[:/])/i;
 
 function ensureAlarm() {
   chrome.alarms.get('muse-sweep', (a) => {

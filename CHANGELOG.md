@@ -8,6 +8,7 @@
 - Click recording consolidated into ONE serialized storage write (log + counter + aggregates) — keeps the redteam F9 no-lost-write guarantee.
 - e2e: new fixture case 17 (GitHub-context card); the suite now reads storage back through the popup page and asserts `byDay[today] ≥ 10`, `byTopic['test-repo'] ≥ 1`, clickCount and log length.
 - i18n: 17 new strings × 6 locales (26 keys per locale).
+- Independent redteam v3 (`docs/REDTEAM_V3.md`): 1 HIGH (packaging — stats.* missing from the zip; fixed with a build-coverage guard + `scripts/verify-zip.py` byte-compare) + 6 LOW — cross-tab storage serialization via Web Locks, corrupt-shape coercion, non-numeric sink hardening, topic/sweep regex fixes, e2e i18n + stats-page render assertions (mutation-proven).
 
 ## 1.2.0
 - i18n: English, Tiếng Việt, 简体中文, 日本語, 한국어, Español (popup UI + manifest name/description; store listing localized).
