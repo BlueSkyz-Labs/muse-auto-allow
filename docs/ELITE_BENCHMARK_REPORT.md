@@ -73,6 +73,7 @@ unset, it measures the working tree.)
 | Metric | Measured (frozen `531cbca`) | Target | Target source |
 |---|---|---|---|
 | Popup open → painted, COLD (first open in a fresh profile) | **484 ms** FCP (DCL 260 ms; wall 540 ms) | ≤ 1000 ms ("first meaningful paint" in the page-load window) | web.dev RAIL — https://web.dev/articles/rail |
+| ↳ cold caveat (measured 2026-10-10) | the cold figure above is **one sample**; three identical runs on the same bytes swung **568–928 ms** — see §1.4. Cold is only resolvable with paired/interleaved variants; warm (below) is the stable metric. | | |
 | Popup open → painted, WARM (N=20 consecutive opens) | **median 100 ms · p95 112 ms** FCP (wall median 148 ms · p95 271) | ≤ 200 ms (p75 "good" responsiveness) | web.dev INP — https://web.dev/articles/inp |
 | Content-script scan cost per sweep (5,000 nodes · 200 approval-like cards · 700 buttons; worst case = no eligible hit, full traversal) | **median 11.3 ms · p95 15.1 ms** (min 10.1 · max 15.1, N=12) | ≤ 50 ms (long-task threshold) | web.dev "Optimize long tasks" — https://web.dev/articles/optimize-long-tasks |
 | Detect → click latency, quiet page (`minDelayMs=0`, 400 ms gap) | **median 121 ms · p95 131 ms** (N=12) | ≤ 100 ms (RAIL "respond to input") — *analogy*, see note | web.dev RAIL — https://web.dev/articles/rail |
@@ -171,6 +172,99 @@ invariants hold with the fast path enabled (`test/e2e.mjs`: `ok:true`, `n7count:
 (fixed-120 ms) copy — the debounce change is a latency change only, never a detection change. The
 optional service-worker boot deferral was **not** done (it cannot move the harness's
 `timeOrigin`-based SW metrics and would break `background-unit` S7) — `docs/ENGINE_V18.md` §12.5.
+
+### 1.4 Popup cold-path optimization — before/after (measured 2026-10-10) — **NOT_IMPROVED**
+
+Goal of this lane: cut the popup **cold** first paint (484 ms FCP vs 100 ms warm, §1.2) by deferring
+non-first-paint work — stats aggregation, the mini-chart render, the log render, the hidden overlays
+(built lazily on first open instead of living in the boot DOM) — plus any safe parse deferral, with
+**zero** visual or behavioural change.
+
+**Outcome: no code change was made, because no safe direction moves the number.** A false win is
+worse than an honest no-op, so this section records the measurement, not a change. `extension/popup.html`
+and `extension/popup.js` are byte-identical to `HEAD cd7c38b` after this lane.
+
+**Before / after (the requested harness pair).** `node scripts/bench/perf.mjs --only=popup` (N=20,
+defaults, harness untouched) on the live tree, three runs in one session. BEFORE = `HEAD cd7c38b`;
+AFTER = the same bytes (nothing was changed). Host was **not** idle — the user's own Chrome (19
+processes) was open for the whole session; one harness Chrome at a time.
+
+| run | cold FCP | cold DCL | cold wall | warm FCP median | warm FCP p95 | warm wall med/p95 |
+|---|---|---|---|---|---|---|
+| 1 | 928 ms | 704 ms | 973 ms | 100 ms | 116 ms | 145 / 228 ms |
+| 2 | 788 ms | 530 ms | 887 ms | 104 ms | 176 ms | 210 / 282 ms |
+| 3 | 568 ms | 311 ms | 703 ms | 96 ms | 120 ms | 151 / 291 ms |
+
+Read this correctly: **warm is stable** (median 96–104 ms, matching §1.2's 100 ms) while **cold is a
+single sample that swung 568–928 ms across three identical runs** on the same host and the same bytes.
+The cold figure is not a resolvable instrument at N=1 here; the rest of this section therefore uses
+only **paired, interleaved** comparisons (same session, same host, alternating variants), which cancel
+drift.
+
+**Attribution: what the cold cost actually is.** Each variant is the live payload with exactly one
+thing removed, built in a scratch copy and measured through the harness's own `MAA_EXT_DIR` switch
+(`node scripts/bench/perf.mjs --only=popup --popup-n=2`, interleaved rounds) — `scripts/bench/**` was
+never modified, and `MAA_EXT_DIR` is the documented way to point the harness at another tree.
+
+| Variant | What is removed vs the live tree | Cold FCP median | n |
+|---|---|---|---|
+| **A** live | — (control: the live payload, CD7C38B) | 862–922 ms (two blocks) | 14 / 10 |
+| **H** | `popup.js` is not loaded **at all** — no parse, no execute, no render | 830–898 ms | 14 / 10 |
+| **B** | the whole boot tail (`boot()`, `refresh()`, `refreshFollowupStatus()`, the 2.5 s interval) — an **upper bound** far beyond any safe deferral | 886 ms | 14 |
+| **M** | the hidden overlays are gone from the boot DOM: `#safetyPanel`, `#onboard`, the phrase-library sheet and the advanced group (−7.5 KB markup, ~120 fewer nodes) | 870–902 ms | 8 / 10 |
+| **K** | the markup is replaced by a 1-node body: the 37,597 B inline `<style>` alone remains | 440 ms | 8 |
+| **L** | the CSS is gone; the full 15 KB markup is present but unstyled | 614 ms | 8 |
+| **G** | everything: a 113-byte page in the same extension origin (no CSS, no markup, no JS) | 450 ms | 8 |
+| **N** (diagnostic only) | the 11 `box-shadow` declarations — a **visual** change, measured to locate the cost, never shipped | 648 ms (−274 ms vs A, lower in 9/10 rounds) | 10 |
+
+Paired deltas within one interleaved block (14 rounds, 95 % bootstrap CI, bootstrap over round pairs):
+
+| Comparison | Median Δ cold FCP | 95 % CI | Lower in |
+|---|---|---|---|
+| A − H (the **entire** popup.js: parse + execute + every pre-paint render) | **−8 ms** | [−100, +74] | 7/14 |
+| A − B (all boot render work, i.e. deferring strictly more than any safe change could) | **−60 ms** | [−212, +50] | 8/14 |
+| B − H (instrument control: B does strictly more work than H) | +28 ms | [−32, +152] | 7/14 |
+
+The third row is the honesty check on the instrument: **B performs strictly more work than H yet
+measures faster**, so the metric has no resolution below ≈ ±100 ms at this N on this host. The first
+row is therefore the ceiling for the whole direction: removing every line of `popup.js` — not
+deferring it, *removing* it — lands inside the noise.
+
+**Verdicts.**
+
+1. **Defer non-first-paint work (stats aggregation, mini-chart, log render, hidden overlays).**
+   **NOT_IMPROVED.** Every one of those renders lives in `popup.js`, and all of `popup.js` is worth
+   **−8 ms** (CI includes 0). Removing the hidden overlay markup from the boot DOM entirely is worth
+   ~0 (M 870 vs H 874; both ≈ A). Warm proves why: the same payload — CSS + markup + JS parse +
+   execute + every render — is only ~80 ms of work (warm DCL 71–95 ms, §1.2 and the runs above), so
+   no deferral inside it can be worth more than that, which is below this host's cold resolution.
+2. **Defer or trim the critical CSS.** **NOT_IMPROVED**, and the defer is unsafe. The 37,597 B
+   stylesheet costs ≈ 0 on the cold first paint (K 440 ms with a 1-node body vs G 450 ms with a
+   113-byte page), and making it non-render-blocking is exactly the FOUC risk the task forbids — the
+   popup is dark-themed and a flash of unstyled content is a regression, not a win.
+3. **Keep the manual-locale fetch lazy.** **Already satisfied, nothing to change.** `boot()` reads
+   `userLocale` first and only fetches `_locales/<lang>/messages.json` when it is not `'auto'`; a cold
+   open in a fresh profile has no `userLocale` key, so the fetch never happens on the cold path.
+
+**What the cold number is made of (measured).** A cold page in this extension origin costs ~450 ms
+before any content exists (G: a 113-byte page). A real styled popup costs ~420 ms on top of that
+(H: CSS + full markup, no JS), and the single largest *reducible* term inside it is the raster of the
+**frozen design's 11 `box-shadow` declarations** (−274 ms when they are removed). That is a visual
+change to a design frozen at `e0a2752`, so it is recorded here as the only measured lever and
+deliberately **not** taken: the lane's mandate is zero visual change. Cold popup first-paint for this
+revision is therefore cold-start cost plus first-paint raster of the shipped design, not deferrable
+payload work — the honest next step for anyone revisiting it is either a design decision about the
+shadow/paint budget or a much quieter measuring host with a much larger number of cold repeats.
+
+**Neutrality of this lane (nothing changed ⇒ nothing to regress).** All five suites were run
+**foreground, unpiped**, on the unchanged tree at `cd7c38b`: `node scripts/lint.mjs` (exit 0 — 24
+checks across 18 files) · `node test/e2e.mjs` (`"ok": true`, exit 0) · `node test/followup-e2e.mjs`
+(`"ok": true`, exit 0; the two nested `"ok": false` values are the expected engine refusals `'paused'`
+and `'composer-not-empty'`, not failed checks) · `node test/lang-switch-e2e.mjs` (`"ok": true`, 36
+passed / 0 failed) · `node test/background-unit.mjs` (29/29, `"failed": 0`). Heights measured by the
+suites are unchanged and still inside the 600 px discipline: `followup-e2e` **empty 594 / full 594 /
+sheet open 594** total (follow-up section 312, log 16; `lowestEdge` 594, sheet fits the popup);
+`lang-switch-e2e` **menu open lowest 420 (bodyH 426)** and **menu open + full log lowest 594**.
 
 ## Axis 2 — Design (UI)
 

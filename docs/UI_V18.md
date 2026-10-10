@@ -191,3 +191,35 @@ Suite results for this change: `node scripts/lint.mjs` **exit 0** (24 checks, i1
 **Heights (measured, real Chrome CDP).** Collapsed empty **515px body / 509px total** (was 571 / 565); full log / disclosure open / sheet open all 600; Safety overlay and language menu 515; `document.scrollWidth` stays 320. Full table + the contrast and i18n sweeps: `docs/QUIET_LUXURY_SPEC.md` §11.
 
 **Suites.** `lint` exit 0 · `e2e` exit 0 · `followup-e2e` exit 0 (119 checks, `"ok": true`, no failed check) · `lang-switch-e2e` exit 0 · `background-unit` 29/29.
+
+---
+
+## 9. Popup cold-path attempt (2026-10-10) — **no change shipped**
+
+A speed-axis lane asked whether the popup's **cold** first paint (484 ms FCP vs 100 ms warm; §1.2 of
+`docs/ELITE_BENCHMARK_REPORT.md`) could be cut by deferring non-first-paint work — the stats/chart
+aggregation, the log render, the hidden overlays (built on first open instead of living in the boot
+DOM) — with zero visual or behavioural change.
+
+**Verdict: NOT_IMPROVED. This file's surfaces were left byte-identical.** Measured with the repo's own
+harness (`scripts/bench/perf.mjs --only=popup`, unchanged, plus variants through its documented
+`MAA_EXT_DIR` switch): removing **every line of `popup.js`** — not deferring it — moved cold FCP by
+−8 ms (95 % CI [−100, +74]); removing the hidden overlay markup from the boot DOM changed nothing
+(870 vs 874 ms); the 37.6 KB inline stylesheet costs ≈ 0 (`<style>` + a 1-node body 440 ms vs a
+113-byte empty page 450 ms). Warm DCL (71–95 ms) is the proof of the ceiling: the whole payload's
+parse + execute + render is only ~80 ms of work, so no deferral inside it can exceed that, and this
+host's cold metric has no resolution below ≈ ±100 ms. Full attribution table:
+`docs/ELITE_BENCHMARK_REPORT.md` §1.4.
+
+**The one measured lever is visual and deliberately not taken:** stripping the 11 `box-shadow`
+declarations from the stylesheet cut cold FCP by 274 ms (648 vs 922 ms, lower in 9/10 paired rounds) —
+i.e. the cold first paint is dominated by cold-start cost (~450 ms for a 113-byte page in this origin)
+plus first-paint raster of the design frozen at `e0a2752`. Do not re-litigate this direction without
+either a design decision on the paint budget or a quieter host with many more cold repeats. The
+`userLocale !== 'auto'` locale fetch is already lazy (§7) and needs no change.
+
+**Neutrality evidence (unchanged tree).** `lint` exit 0 · `e2e` exit 0 (`"ok": true`) ·
+`followup-e2e` exit 0 (`"ok": true`; the two nested `"ok": false` values are the expected engine
+refusals `'paused'` / `'composer-not-empty'`; heights **594 / 594 / 594**, `lowestEdge` 594) ·
+`lang-switch-e2e` exit 0 (36 passed / 0 failed; menu-open lowest **420**, bodyH **426**; menu-open +
+full log lowest **594**) · `background-unit` 29/29.
