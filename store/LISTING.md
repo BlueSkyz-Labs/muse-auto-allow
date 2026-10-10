@@ -38,22 +38,21 @@ Auto-click Allow on Muse (muse.ai) approval requests so your agent keeps running
 | Locale | Short description | Characters |
 |---|---|---|
 | en | Auto-click Allow on Muse (muse.ai) approval requests so your agent keeps running. Local-only by default; optional settings sync. | 128 |
-| vi | Tự động bấm Allow cho các yêu cầu phê duyệt của Muse (muse.ai) để agent chạy liên tục. Mặc định chỉ lưu cục bộ, không gửi dữ liệu. | 130 |
-| zh_CN | 自动点击 Muse（muse.ai）批准请求中的“Allow”，让你的智能体持续运行。默认仅保存在本地，不发送任何数据。 | 60 |
-| ja | Muse（muse.ai）の承認リクエストで「Allow」を自動クリックし、あなたのエージェントを止めずに動かします。既定ではローカル保存のみ、データ送信なし。 | 80 |
-| ko | Muse(muse.ai)의 승인 요청에서 'Allow'를 자동으로 클릭해 에이전트가 계속 실행되도록 합니다. 기본적으로 로컬에만 저장되며 데이터는 전송되지 않습니다. | 92 |
-| es | Clic automático en Allow cuando Muse (muse.ai) pide aprobación, para que tu agente siga. Local por defecto, sin enviar datos. | 125 |
+| vi | Tự động bấm Allow cho yêu cầu phê duyệt của Muse (muse.ai) để agent chạy liên tục. Mặc định lưu cục bộ; tuỳ chọn đồng bộ cài đặt. | 129 |
+| zh_CN | 自动点击 Muse（muse.ai）批准请求中的“Allow”，让你的智能体持续运行。默认仅本地保存，可选同步设置。 | 58 |
+| ja | Muse（muse.ai）の承認リクエストで「Allow」を自動クリックし、エージェントを止めずに動かします。既定ではローカル保存のみ、設定の同期は任意。 | 77 |
+| ko | Muse(muse.ai)의 승인 요청에서 'Allow'를 자동으로 클릭해 에이전트가 계속 실행되도록 합니다. 기본적으로 로컬 저장만, 설정 동기화는 선택 사항입니다. | 92 |
+| es | Clic automático en Allow cuando Muse (muse.ai) pide aprobación, para que tu agente siga. Local por defecto; ajustes sincronizables. | 131 |
 
 ---
 
 ## 2. Detailed description (all six languages)
 
-> **v1.8 note — localized updates queued:** the **English** description below is
-> updated for the current release (pause, dry-run, allow-once, rules, digest,
-> smart/scheduled follow-ups, optional settings sync, onboarding). The localized
-> descriptions retain their core feature lists (accurate for what they describe, just
-> not yet listing the new options) and their privacy lines are updated for the
-> settings-sync disclosure. Localized feature-list additions are queued.
+> **v1.8 — localization done:** all six descriptions below now cover the current
+> release — pause, dry-run, allow-once, rules, smart/scheduled follow-ups, the startup
+> digest, optional settings sync, and onboarding — using the same in-product wording as
+> `extension/_locales/*/messages.json`. English is the reference text; every localized
+> feature list and privacy line makes the same claims as it.
 
 ### English (en)
 
@@ -136,9 +135,25 @@ bị ngắt quãng.
 
 **Bạn luôn nắm quyền kiểm soát**
 - Công tắc bật/tắt ngay trong popup — tắt bất cứ lúc nào.
+- Tạm dừng tự động bấm: ba lựa chọn một chạm — 15 phút, 1 giờ hoặc đến hết ngày mai;
+  phím tắt Alt+Shift+P tạm dừng 15 phút (bấm lại để tiếp tục). Popup và huy hiệu trên
+  thanh công cụ hiển thị trạng thái đang tạm dừng.
+- Chế độ Chạy thử: ghi log đúng những gì sẽ bấm mà không bấm gì cả.
+- Chế độ ưu tiên "Cho phép một lần": khi Muse đưa ra lựa chọn cấp một lần, tiện ích
+  chọn nó thay vì cấp thường trực.
+- Quy tắc: chỉ tự bấm cho những chủ đề bạn liệt kê, và danh sách từ khoá chặn (delete,
+  payment, deploy, …) không bao giờ bị bấm — thẻ bị chặn được ghi log kèm lý do.
 - Chỉnh được độ trễ giữa các lần bấm (mili-giây).
 - Bộ đếm số lần bấm và nhật ký 50 lần bấm gần nhất, để bạn thấy rõ tiện ích đã làm gì
   (loại thao tác, nhãn nút, ngữ cảnh).
+- Nhắc tiếp thông minh: tuỳ chọn nhắc Muse tiếp tục chạy — kể cả câu nhắc phục hồi khi
+  Muse có vẻ bị kẹt hoặc gặp lỗi — và chỉ gửi trong khung giờ bạn chọn.
+- Tóm tắt khi khởi động: thông báo trên máy tóm tắt hoạt động gần đây (lượt bấm, câu
+  nhắc, mục bị chặn) — tạo ngay trên thiết bị của bạn.
+- Tuỳ chọn đồng bộ cài đặt: mang cài đặt sang các hồ sơ Chrome khác qua tính năng đồng
+  bộ sẵn có của Chrome — mặc định tắt, chỉ cài đặt (nhật ký và thống kê không bao giờ
+  đồng bộ).
+- Trình hướng dẫn thiết lập 3 bước cho lần dùng đầu tiên.
 - Trang Thống kê tích hợp: số lượt bấm theo ngày / tuần / tháng / năm và theo chủ đề
   (repo / dự án) — biểu đồ nhẹ, hiển thị tức thì.
 
@@ -173,8 +188,16 @@ Muse（muse.ai）在执行操作前会暂停并向你请求批准。你一旦离
 
 **你始终掌控**
 - 弹窗内置开关，随时可关闭。
+- 暂停自动点击：一键选择 15 分钟、1 小时或到明天；快捷键 Alt+Shift+P 暂停 15 分钟（再按一次继续）。弹窗与工具栏徽章会显示暂停状态。
+- 试运行模式：只记录将会点击的内容，不实际点击。
+- “仅允许一次”模式：当 Muse 提供一次性批准选项时，优先选择它，而不是长期授权。
+- 规则：只自动点击你列出的主题，并可用拦截关键词列表（delete、payment、deploy……）——这些卡片绝不会被点击，被拦截的卡片会连同原因记入日志。
 - 可调整点击间隔（毫秒）。
 - 点击计数器和最近 50 次点击的日志，清楚记录它做了什么（类型、按钮文字、上下文）。
+- 智能跟进：可选择催促 Muse 继续工作——包括它看似卡住或出现错误时的恢复提示——并限制在你选择的时间段内发送。
+- 启动摘要：桌面通知汇总近期活动（点击、跟进、被拦截项）——在你的设备上生成。
+- 可选设置同步：通过 Chrome 内置同步把设置带到其他 Chrome 配置文件——默认关闭，仅同步设置（日志与统计绝不同步）。
+- 首次使用时提供三步设置向导。
 - 内置统计页：按日 / 周 / 月 / 年以及按主题（仓库 / 项目）的点击次数，轻量图表即时呈现。
 
 **隐私优先**
@@ -207,9 +230,17 @@ Muse（muse.ai）は操作の前に承認を求めて一時停止します。席
 
 **主導権はあなたに**
 - ポップアップのオン／オフスイッチでいつでも停止できます。
+- 自動クリックの一時停止：ワンタップで「15 分」「1 時間」「明日まで」から選べます。ショートカット Alt+Shift+P は 15 分間の一時停止（もう一度押すと再開）。ポップアップとツールバーのバッジに一時停止中と表示されます。
+- ドライラン：クリックされる内容だけを記録し、実際には何もクリックしません。
+- 「一度だけ許可」モード：Muse が 1 回限りの許可を提示したときは、常設の許可ではなくそちらを優先します。
+- ルール：指定したトピックだけを自動クリックし、ブロックするキーワード一覧（delete、payment、deploy など）に該当するカードは決してクリックしません — ブロックしたカードは理由付きで記録されます。
 - クリック間隔（ミリ秒）を調整できます。
 - クリック回数と直近 50 件のクリックログで、何をしたかを確認できます
   （種類・ボタン名・コンテキスト）。
+- スマートフォロー：Muse の続行をうながす通知（停止しているように見えるときやエラーが出たときの復帰プロンプトを含む）を任意で送信でき、送信する時間帯も指定できます。
+- 起動時のダイジェスト：最近の動き（クリック、フォロー、ブロック）をまとめたデスクトップ通知 — 端末上で作成されます。
+- 設定の同期（任意）：Chrome 標準の同期で設定を他の Chrome プロファイルへ引き継ぎます — 既定でオフ、同期するのは設定のみ（ログと統計は決して同期しません）。
+- 初回起動時の 3 ステップ設定ウィザード。
 - 内蔵の統計ページ：日 / 週 / 月 / 年別、トピック別（リポジトリ / プロジェクト）のクリック数を軽量チャートですぐ表示。
 
 **プライバシー重視の設計**
@@ -245,9 +276,17 @@ Muse(muse.ai)는 작업 전에 승인을 요청하며 잠시 멈춥니다. 자�
 
 **제어권은 사용자에게**
 - 팝업의 켜기/끄기 스위치로 언제든 중지할 수 있습니다.
+- 자동 클릭 일시정지: 15분, 1시간, 내일까지 중 한 번에 선택할 수 있습니다. 단축키 Alt+Shift+P는 15분 동안 일시정지합니다(다시 누르면 재개). 팝업과 도구 모음 배지에 일시정지 상태가 표시됩니다.
+- 드라이런 모드: 클릭될 내용만 기록하고 실제로는 아무것도 클릭하지 않습니다.
+- "한 번만 허용" 모드: Muse가 일회성 승인 옵션을 제시하면 상시 권한 대신 그것을 우선합니다.
+- 규칙: 지정한 주제만 자동으로 클릭하고, 차단 키워드 목록(delete, payment, deploy 등)에 해당하는 카드는 절대 클릭하지 않습니다 — 차단된 카드는 사유와 함께 기록됩니다.
 - 클릭 간 간격(밀리초)을 조절할 수 있습니다.
 - 클릭 횟수와 최근 50건의 클릭 로그로 무엇을 했는지 확인할 수 있습니다
   (종류, 버튼 이름, 맥락).
+- 스마트 팔로우: Muse가 계속 진행하도록 선택적으로 재촉하며(멈춘 것처럼 보이거나 오류가 날 때의 복구 프롬프트 포함), 보낼 시간대를 지정할 수 있습니다.
+- 시작 시 요약: 최근 활동(클릭, 팔로우, 차단 항목)을 정리한 데스크톱 알림 — 기기에서 생성됩니다.
+- 설정 동기화(선택): Chrome 기본 동기화로 설정을 다른 Chrome 프로필로 가져갑니다 — 기본 꺼짐, 설정만 동기화되며 로그와 통계는 절대 동기화되지 않습니다.
+- 첫 실행 시 3단계 설정 마법사.
 - 내장 통계 페이지: 일 / 주 / 월 / 년 및 주제별(저장소 / 프로젝트) 클릭 수를 가벼운 차트로 즉시 표시.
 
 **설계부터 개인정보 보호**
@@ -285,9 +324,17 @@ se detenga.
 
 **Tú tienes el control**
 - Interruptor de encendido/apagado en la ventana emergente: desactívalo cuando quieras.
+- Pausar el clic automático: tres opciones de un toque — 15 minutos, 1 hora o hasta mañana; el atajo Alt+Shift+P pausa 15 minutos (púlsalo otra vez para reanudar). La ventana y el distintivo de la barra muestran el estado de pausa.
+- Modo Prueba: registra exactamente lo que se pulsaría sin pulsar nada.
+- Modo «Permitir una vez»: cuando Muse ofrece una aprobación de una sola vez, la prefiere frente a un permiso permanente.
+- Reglas: pulsa solo los temas que indiques y una lista de palabras bloqueadas (delete, payment, deploy…) que nunca se pulsa: las tarjetas bloqueadas se registran con el motivo.
 - Retardo ajustable entre clics (milisegundos).
 - Contador de clics y registro de los últimos 50, para que veas exactamente qué hizo
   (tipo, texto del botón y contexto).
+- Seguimientos inteligentes: avisa opcionalmente a Muse para que siga trabajando —incluidos mensajes de recuperación cuando parece bloqueado o ha dado un error— y limita el envío a las horas que elijas.
+- Resumen al arrancar: una notificación de escritorio que resume la actividad reciente (clics, seguimientos, bloqueos), compuesta en tu dispositivo.
+- Sincronización de ajustes opcional: lleva tus ajustes a otros perfiles de Chrome mediante la sincronización propia de Chrome — desactivada por defecto, solo ajustes (los registros y las estadísticas nunca se sincronizan).
+- Un asistente de configuración de 3 pasos en el primer uso.
 - Página de estadísticas integrada: clics por día / semana / mes / año y por tema (repositorio / proyecto), con gráficos ligeros.
 
 **Privacidad desde el diseño**

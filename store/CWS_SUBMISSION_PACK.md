@@ -58,12 +58,14 @@ Sources: <https://developer.chrome.com/docs/webstore/cws-dashboard-privacy#list_
 <https://developer.chrome.com/docs/webstore/program-policies/permissions> ("Use of
 Permissions": request the *narrowest* permissions necessary; no future-proofing).
 
-Verified against `extension/manifest.json` (working tree, 2026-10-10): `permissions:
-["storage", "alarms", "notifications"]`; `commands: { toggle-pause (Alt+Shift+P),
-send-followup (Alt+Shift+F) }`; `host_permissions: ["https://muse.ai/*",
-"https://*.muse.ai/*"]`. Nothing else is declared.
-*(verify at integration — re-confirm this section against the frozen v1.8
-`extension/manifest.json` after the release freeze, before submitting.)*
+Verified against `extension/manifest.json` (working tree, HEAD `0f12a8b`, 2026-10-10):
+`permissions: ["storage", "alarms", "notifications"]`; `commands: { toggle-pause
+(Alt+Shift+P), send-followup (Alt+Shift+F) }`; `host_permissions: ["https://muse.ai/*",
+"https://*.muse.ai/*"]`. Nothing else is declared — exactly what the v1.8 feature set
+(pause, dry-run, rules, smart/scheduled follow-ups, digest, optional settings sync,
+onboarding) requires, and `scripts/lint.mjs` fails on any added permission.
+*(`manifest.version` still reads `1.7.0` in the working tree; the release freeze bumps
+it — re-confirm this section against the frozen package before submitting.)*
 
 ### `storage`
 
@@ -119,8 +121,8 @@ extension needs none of them.
 `storage`/`alarms`/`notifications` allowlist, any host set other than the two muse.ai
 patterns, or a missing explicit `extension_pages` CSP — so the packaged manifest can
 never silently drift from these answers. (Allowlist verified in the working tree,
-2026-10-10, lint exit 0; verify at integration — the allowlist and manifest move
-together in the v1.8 lane.)
+HEAD `0f12a8b`, 2026-10-10, lint exit 0 — the allowlist and the manifest moved together
+in the v1.8 lane.)
 
 ---
 
@@ -225,7 +227,7 @@ Dashboard reference: <https://developer.chrome.com/docs/webstore/cws-dashboard-l
 |---|---|---|---|
 | Item name | "Muse Auto-Allow" — resolved from manifest `name` = `__MSG_extName__` (`extension/_locales/en/messages.json`); 15 characters | Manifest `name` is "a short, plain text string (maximum of **75 characters**)". Note: older guides still cite a legacy 45-character store limit — this name satisfies both. Keep listing names consistent across locales. | [manifest/name](https://developer.chrome.com/docs/extensions/reference/manifest/name) · [prepare](https://developer.chrome.com/docs/webstore/prepare) |
 | Short description | EN: "Auto-click Allow on Muse (muse.ai) approval requests so your agent keeps running. Local-only by default; optional settings sync." (128 chars; all 6 localized variants in `LISTING.md` §1) | **≤ 132 characters** — "A string of no more than 132 characters"; "Your summary … (132 characters or less)". | [prepare](https://developer.chrome.com/docs/webstore/prepare) · [best-listing](https://developer.chrome.com/docs/webstore/best-listing) |
-| Detailed description | Per locale, from `store/LISTING.md` §2 (en, vi, zh_CN, ja, ko, es). EN updated for v1.8 (pause, dry-run, allow-once, rules, digest, smart/scheduled follow-ups, optional settings sync, onboarding); localized v1.8 feature-list additions queued — the localized v1.7 feature lists stay accurate and the localized privacy lines are updated for the sync disclosure. | No numeric limit is published in the official docs (the dashboard enforces its own bound at entry); keep it accurate, concise, and free of keyword stuffing. | [cws-dashboard-listing](https://developer.chrome.com/docs/webstore/cws-dashboard-listing) · [spam FAQ](https://developer.chrome.com/docs/webstore/program-policies/spam-faq#keyword-spam) |
+| Detailed description | Per locale, from `store/LISTING.md` §2 (en, vi, zh_CN, ja, ko, es). All six locales updated for v1.8 (pause, dry-run, allow-once, rules, digest, smart/scheduled follow-ups, optional settings sync, onboarding) — the localized v1.8 feature lists are done, using the in-product wording from `extension/_locales/*/messages.json`; the localized privacy lines carry the sync disclosure. | No numeric limit is published in the official docs (the dashboard enforces its own bound at entry); keep it accurate, concise, and free of keyword stuffing. | [cws-dashboard-listing](https://developer.chrome.com/docs/webstore/cws-dashboard-listing) · [spam FAQ](https://developer.chrome.com/docs/webstore/program-policies/spam-faq#keyword-spam) |
 | Category | **Productivity** (one primary category; rationale in `LISTING.md` §3) | "The primary category under which your item should be listed." | [cws-dashboard-listing](https://developer.chrome.com/docs/webstore/cws-dashboard-listing) |
 | Language(s) | Default English (en); localized listings for vi, zh_CN, ja, ko, es (copy in `LISTING.md`) | "Your item's language"; localized listings use the extension's `_locales` set. | [cws-dashboard-listing#localize_your_listing](https://developer.chrome.com/docs/webstore/cws-dashboard-listing#localize_your_listing) |
 | Homepage / support URL | `TODO` placeholders in `LISTING.md` §9 — fill before submit | Optional fields; appear on the listing. | [cws-dashboard-listing#additional-fields](https://developer.chrome.com/docs/webstore/cws-dashboard-listing#additional-fields) |
@@ -403,7 +405,7 @@ Source: <https://developer.chrome.com/docs/webstore/review-process#warning>
 - [ ] Build + verify the zip for the frozen release version; attach it to the GitHub Release (see `docs/GITHUB_PUBLISH_RUNBOOK.md`).
 - [ ] Sanity-check Muse's terms of service for user-side auto-approval before public launch.
 - [ ] Confirm the four screenshots and both promo images reflect the frozen build.
-- [ ] Re-verify §2 (permissions `storage`/`alarms`/`notifications` + `commands`) against the frozen v1.8 `extension/manifest.json` after the release freeze (verify at integration).
+- [ ] Re-verify §2 (permissions `storage`/`alarms`/`notifications` + `commands`) against the frozen v1.8 package after the release freeze — §2 already matches the working-tree `extension/manifest.json` at HEAD `0f12a8b`; the `manifest.version` bump is the only change expected.
 
 ---
 
