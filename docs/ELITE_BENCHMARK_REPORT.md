@@ -305,10 +305,240 @@ visible, no clip). `store/screenshot3-popup.png` was already correct (`max-heigh
 
 ## Axis 3 — Experience (trải nghiệm)
 
-PENDING — time-to-first-value, setup friction, trust signals, error recovery, digest
-usefulness, discoverability, keyboard-only and screen-reader paths are not measured yet. The
-keyboard/a11y floor is partially covered by the language switcher's Escape/focus behaviour
-(`test/lang-switch-e2e.mjs`) and the focus-visible rules in the Quiet Luxury spec.
+Status: **MEASURED** — this section supersedes the top-of-report "the experience axis is still
+PENDING" clause (the preamble is another lane's text and is left untouched). Harness:
+`scripts/bench/experience.mjs` (new; same CDP lane as §1.2 — installed Chrome `154.0.8037.99`,
+scratch profile, `Extensions.loadUnpacked`, extension loaded from a temp copy whose manifest also
+matches `http://127.0.0.1/*`). One Chrome instance at a time; **the host was NOT idle** (the user's
+own Chrome, 19 processes, was open for the whole session) — every *timing* below is a single cold
+sample and is load-directional; every *count* (user actions, interactions, controls, log entries)
+is deterministic and load-independent. Measured at `HEAD a782915` (the v1.9.0 freeze) ·
+`OBSERVED_AT 2026-10-10`.
+
+```
+node scripts/bench/experience.mjs                 # all six dimensions
+node scripts/bench/experience.mjs --only=ttff     # time-to-first-value
+node scripts/bench/experience.mjs --only=reach    # setup friction / discoverability
+node scripts/bench/experience.mjs --only=trust    # trust signals
+node scripts/bench/experience.mjs --only=errors   # error recovery
+node scripts/bench/experience.mjs --only=keyboard # keyboard-only path
+node scripts/bench/experience.mjs --only=ax       # accessibility tree
+```
+
+### 3.1 Time-to-first-value (fresh scratch profile, extension loaded unpacked)
+
+"How many user actions" = trusted pointer clicks/key gestures the harness had to dispatch from a
+**truly fresh profile** (`chrome.storage.local` cleared) to reach each goal. The engine ships
+enabled-by-default (`content.js` `DEFAULT.enabled = true`; the worker's `migrate()` seeds
+`enabled:true` — `background.js:56`), so goal 1 needs no user action at all.
+
+| Goal | Measured (ms) | User actions from fresh install | How measured | Verdict |
+|---|---|---|---|---|
+| First **auto-click** on a real approval card (`test/fixture.html`) | **1662.5 ms** from `performance.timeOrigin` (5 full-suite runs swung **1210–2023 ms** — a single cold sample, not a resolvable instrument at N=1) | **0** | `node scripts/bench/experience.mjs --only=ttff` | MET the product's own promise (install → working with zero setup); **no sourced target** for an extension's first auto-click — reported unmeasured-against |
+| First **follow-up send** | **968 ms** after the toggle (idle→send) | **2** (dismiss the first-run wizard, toggle "Continue when Muse is idle") | `… --only=ttff` | 2 actions; the engine ships follow-up OFF (`content.js` `FOLLOWUP_DEFAULTS.followupEnabled = false`), so it is opt-in by design |
+| First **mission step** | **1063 ms** after selecting a mission | **4** (wizard dismiss → follow-up ON → Missions sheet → select a mission) | `… --only=ttff` | 4 actions; missions ride the follow-up engine and are gated on it (`#missionGate`, `popup.js:1175`) |
+
+Fresh-profile storage after goal 1 = `[clickCount, cryptKeyRaw, digestCounters, log, schemaVersion,
+stats]` — the engine clicked with **no** `enabled`/`onboarded` key written by a user, and
+`onboarded` was absent (`onboarded_absent_fresh: true`).
+
+### 3.2 Setup friction / discoverability — reachability table (drives the REAL popup)
+
+One "interaction" = one trusted pointer click or one text-entry gesture. **Reach** = interactions
+from the default popup state until the surface is visible/operable; **operate** = the full path from
+that state that performs the surface's primary operation (it includes the reach steps). Default state
+= shipped defaults with the one-time wizard already dismissed. Every row's `operate_ok` is `true`
+(the harness verified the effect, not just the click).
+
+| Surface | Reach | Operate | >3 flag | How measured |
+|---|---|---|---|---|
+| Pause (15 min / 1 h / tomorrow) | 0 | 1 | | `… --only=reach` |
+| Auto-click Allow toggle | 0 | 1 | | ″ |
+| Safety & Control sheet (entry) | 0 | 1 | | ″ |
+| Dry-run (log only) | 1 | 2 | | ″ |
+| Rules — allowed topics | 1 | 3 | | ″ |
+| Rules — block keywords | 1 | 3 | | ″ |
+| Schedule (follow-up only during hours) | 1 | 2 | | ″ |
+| Stuck & error recovery | 1 | 2 | | ″ |
+| Sync settings across devices | 1 | 2 | | ″ |
+| "While you were away" digest | 0 | 0 | | ″ (renders automatically once `digestCounters` > 0) |
+| **Phrase library (combo builder)** | 2 | **4** | **FLAG** | ″ |
+| Prompt rotation | 2 | 3 | | ″ |
+| Missions (select + enable) | 0 | 3 | | ″ |
+| Language switcher | 0 | 2 | | ″ |
+| Statistics page (footer CTA) | 0 | 1 | | ″ |
+
+**Visible without opening anything:** pause, auto-click toggle, the Safety *entry*, the digest (once
+it has data), the Missions *entry*, the language switcher, the Statistics CTA. **Behind one open:**
+dry-run, rules (topics + keywords), schedule, smart recovery, settings sync (all behind the Safety
+sheet), and the phrase library + rotation (behind the Auto-follow-up section **and** its "Advanced"
+disclosure — the whole `.fadvhead`/`.fadvgroup` is `display:none` while follow-up is off:
+`popup.html:170-171`, `popup.html:570-608`).
+
+**The one >3 flag — the phrase library is 4 interactions deep** (enable follow-up → open Advanced →
+open Phrase library → tap a phrase): `popup.js:1284` (`#flibbtn`), `popup.js:1287` (`#fadvbtn`),
+`popup.js:1296` (`#fchips`). Its sibling "rotation" is 3. Nothing else exceeds 3.
+
+**First-run adds +1 to everything:** on a genuinely fresh install the 3-step onboarding wizard
+(`popup.html:716-734`, `popup.js:933-948`, shown while `onboarded !== true`) is a full-popup overlay
+that measured **320 × 428 px covering the whole popup**, with the header's topmost element resolving
+to `obTitle` *inside* the wizard — so every surface above costs one extra interaction on first run.
+
+### 3.3 Trust signals — every engine action leaves a visible, explained entry
+
+Enumerated from code (the log vocabulary) and verified at runtime by driving each path, then reading
+the storage log **and** the rendered popup log. Engine log kinds in code (13):
+`allow, allow-dry, blocked, expand, expand-dry, followup, followup-dry, mission, mission-dry,
+open-panel, open-panel-dry, review-bar, review-bar-dry`.
+
+| Engine action | Log kind | Visible trace | Evidence |
+|---|---|---|---|
+| Allow click | `allow` | ✓ storage log + rendered `k-allow` chip + `console.log '[muse-auto-allow] allow "Allow" \| …'` | `content.js:1499` → `doClick` `content.js:746-750`; rendered `popup.js:555-586` |
+| Dry-run click | `allow-dry` | ✓ log + `k-dry` chip (nothing clicked) | `content.js:729,746`; rendered `popup.js:97` |
+| Blocked with reason | `blocked` (+ `blockedReason`) | ✓ log + `k-blocked` chip + `console.log 'blocked (keyword:delete)'` | `content.js:365-376`; rendered `popup.js:559,585` |
+| Follow-up send | `followup` | ✓ log + chip (shares the `k-allow` class) + `console.log 'follow-up sent via button'` | `content.js:1381`; rendered `popup.js:98` |
+| Mission step | `mission` | ✓ log + `k-mission` chip with the localized step/cycle line | `content.js:933`; rendered `popup.js:572-580` |
+| Digest | `digestCounters` | ✓ "While you were away" band (auto-shown when counters > 0) | `content.js:696-703`; `popup.js:871-888` |
+
+Runtime result: **all six actions logged = true** (`--only=trust`); rendered classes =
+`[allow, blocked, dry, mission]` (a follow-up entry renders as `k-allow` by design —
+`popup.js:98` — so it is not separately classed). **No engine action was found that leaves no
+visible trace.** One caveat on *how much* is explained: the blocked **reason** is carried only as a
+`title` tooltip on the chip (`popup.js:585`); the chip's text is the localized word "blocked"
+(measured `blocked_chip = {title: "keyword:delete", text: "blocked"}`), so the *why* is a
+mouse-hover affordance, not visible text and not in the accessible name (defect #3 below).
+
+### 3.4 Error recovery — each failure path, surfaced? recovery path?
+
+Driven at runtime by sending the same `followup-send-now` message the popup's "Send now" sends
+(`--only=errors`) and recording the engine's `{ok, reason}`; the popup's user-facing mapping is read
+from source.
+
+| Failure path | Engine `{ok, reason}` (measured) | Popup surfaces the specific cause? | Recovery path | Evidence |
+|---|---|---|---|---|
+| Success (control) | `{ok:true, reason:'attempted'}` | — | — | `content.js:1358` |
+| Follow-up off | `{ok:false, reason:'disabled'}` | ✓ "Enable Auto follow-up first" | turn the toggle on | `content.js:1316`; `popup.js:1411` |
+| Paused | `{ok:false, reason:'paused'}` | ✗ **generic** "Couldn't send the follow-up" | wait / Resume | `content.js:1317`; missing from `popup.js:1404-1412` → generic at `popup.js:1436` |
+| Schedule closed | `{ok:false, reason:'schedule'}` | ✗ **generic** | change the window / disable the schedule | `content.js:1318`; `scheduleAllows` `content.js:336-344`; missing from `popup.js:1404-1412` |
+| Approval present | `{ok:false, reason:'approval-present'}` | ✓ "Muse is waiting for your approval" | clear the approval | `content.js:1320`; `popup.js:1405` |
+| Composer not empty | `{ok:false, reason:'composer-not-empty'}` | ✓ "Muse's message box already has text" | clear the draft | `content.js:1323`; `popup.js:1406` |
+| No composer | `{ok:false, reason:'no-composer'}` | ✓ "no message box found on the Muse page" | — | `content.js:1322`; `popup.js:1407` |
+| No prompt set | `{ok:false, reason:'no-prompt'}` | ✓ "no follow-up prompt is set" | set a prompt | `content.js:1326`; `popup.js:1409` |
+| Dry-run (allowed, logs only) | `{ok:true, reason:'dry-run'}` | ✓ dry-run banner in the log | turn dry-run off | `content.js:1342,1348` |
+| Send now, no muse.ai tab | note "No muse.ai tab found" | ✓ `#fsendnote` (role=status) | open muse.ai | `popup.js:1431,1414-1421` |
+| Oversized sync item | skipped + `console.warn "… over the 8192-byte per-item quota; kept local only"` | console only | local storage stays authoritative | `background.js:182-186` |
+| Sync write rejected | `console.warn "chrome.storage.sync.set failed — …"` | console only | — | `background.js:191-200` |
+| Import refused (bad file) | `alert "Not a Muse Auto-Allow backup file."` | ✓ blocking alert | pick a valid backup | `stats.js:293,297,304,320` |
+| Import refused (quota) | `alert "Could not restore the backup: browser storage is full."` | ✓ dedicated message | free storage | `stats.js:312-314` |
+| Storage quota on click flush | `chrome.storage.local.set` wrapped in try/catch | ✗ silent (record dropped) | — | `content.js:705` |
+| No cards found | nothing happens (no log entry) | n/a (no action taken) | — | by design |
+
+**Gaps (reported, not fixed):** (1) a **paused** or **schedule-closed** manual send shows the
+generic "Couldn't send the follow-up" instead of naming the cause — the two reasons exist in the
+engine but are absent from `popup.js:1404-1412`; (2) a failed log flush is silent
+(`content.js:705` catches and drops); (3) removing a v1.8 settings key from storage does **not**
+reset the engine — `content.js:1565-1567` applies only `newValue !== undefined`, so a key deleted
+out from under the page leaves the engine on its stale value until the page reloads (observed live:
+after a `storage.local.clear()` the engine kept refusing every send with `reason:'schedule'`).
+
+### 3.5 Keyboard-only path
+
+Every focusable interactive control in the popup was enumerated and swept with trusted CDP `Tab`
+key events; a sample of each control type was then operated with trusted `Enter`/`Space`/typing.
+
+- **Focusable controls in the default state: 11** — `langBtn, p15, p60, ptom, safetyBtn, enabled,
+  delay, misbtn, followupEnabled, fsendnow, openstats`.
+- **Unreachable by Tab, default state: `fsendnow` (disabled)** — correct behaviour for a disabled
+  control (`.btn:disabled`, `popup.html:145`; disabled by `applyFollowupUI` while follow-up is off).
+  **With follow-up ON: 0 unreachable.**
+- The visually-hidden toggle pattern (`input[type=checkbox]{position:absolute;opacity:0;width:1px;
+  height:1px}`, `popup.html:80`) keeps the *native* input focusable, so Space toggles it.
+
+| Control type (sample) | Key | Operated |
+|---|---|---|
+| button `#safetyBtn` | Enter | ✓ opens the Safety panel |
+| toggle `#enabled` | Space | ✓ flips |
+| toggle `#followupEnabled` | Space | ✓ flips |
+| disclosure `#fadvbtn` | Enter | ✓ opens Advanced |
+| sheet `#misbtn` | Enter + Escape | ✓ opens, Escape closes, focus returns to the entry |
+| select `#schStart` | ArrowDown | ✓ focus stays, value moves |
+| text `#topicInput` | type + Enter | ✓ text lands, Enter commits the rule |
+| menu `#langBtn` | Enter + Escape | ✓ opens, Escape closes |
+
+**No control was found that cannot be reached and operated by keyboard alone.** Focus containment
+while the Safety modal is open was also checked: 10 consecutive `Tab`s stayed inside the panel
+(`escaped_to_background: false`).
+
+### 3.6 Screen-reader path — accessibility tree per popup state
+
+`CDP Accessibility.getFullAXTree` in each main state.
+
+| Popup state | Interactive nodes | **Unnamed interactive** | Focusable & unnamed | Roles used |
+|---|---|---|---|---|
+| default | 16 | **0** | 0 | button, checkbox, spinbutton, textbox, status |
+| safety_open | 99 | **0** | 0 | + dialog, combobox, option |
+| mission_open | 22 | **0** | 0 | + dialog, radiogroup, radio |
+| advanced_open | 21 | **0** | 0 | button, checkbox, spinbutton, textbox |
+| onboarding (fresh) | 13 | **0** | 0 | button, dialog, status |
+
+**No interactive node with an empty or missing accessible name in any state.** Roles for the custom
+controls: toggles are native `checkbox` (real `<input type=checkbox>`, `checked` state exposed);
+the Safety / Mission / onboarding overlays are `role="dialog" aria-modal="true"`
+(`popup.html:636,662,716`); the mission list is `role="radiogroup"` with `role="radio"
+aria-checked` rows (`popup.html:655`, `popup.js:1148`); the schedule hours are native
+`combobox`+`option`; number fields are `spinbutton`. Every control carried a real name (e.g. the
+`#enabled` checkbox → "Auto-click Allow"; mission rows → "GOLIVE READY — Project Orchestrator 6
+steps …").
+
+**One a11y gap (defect #1):** in `safety_open` (99 interactive nodes) and `mission_open` (22) the
+tree still exposes the **background** popup controls (Statistics, Language, Auto-click Allow,
+Missions, the pause pills, …) — `aria-modal="true"` is set but nothing makes the background
+`inert`/`aria-hidden`, so a screen-reader user can navigate out of the modal into the obscured popup.
+
+### 3.7 Defects found (reported, not fixed — ranked)
+
+1. **Modal overlays do not hide the background from assistive tech (medium).** `#safetyPanel`,
+   `#missionSheet`, `#onboard` are `role="dialog" aria-modal="true"` (`popup.html:636,662,716`) but
+   the background stays in the AX tree and focusable — measured: safety_open = 99 interactive nodes
+   including every background control. No `inert`/`aria-hidden` on the background. (Keyboard Tab
+   happens to stay inside, so this is a screen-reader-only leak.)
+2. **A paused / schedule-closed manual send reports the wrong cause (medium).** The engine returns
+   `reason:'paused'` (`content.js:1317`) and `reason:'schedule'` (`content.js:1318`), but
+   `SEND_BLOCKED_KEY` (`popup.js:1404-1412`) has no entry for either, so `#fsendnote` shows the
+   generic "Couldn't send the follow-up" (`popup.js:1436`). Measured: both reasons
+   `surfaced_in_popup_message_map: false`.
+3. **The blocked reason is a tooltip only (low/medium).** `popup.js:585` renders `blockedReason` as
+   a `title` attribute on a chip whose text is the word "blocked"; it is neither visible text nor in
+   the accessible name (measured `blocked_chip = {title:"keyword:delete", text:"blocked"}`), so a
+   screen-reader user hears *that* a card was blocked but never *why*.
+4. **The engine ignores removal of a v1.8 settings key (low).** `content.js:1565-1567` only applies
+   a change when `newValue !== undefined`; a key deleted from storage (newValue `undefined`) never
+   resets the engine's in-memory value until reload. Observed live: after `storage.local.clear()`
+   the engine kept a closed schedule and refused every send with `reason:'schedule'`.
+5. **A failed log flush is silent (low).** `content.js:705` catches `chrome.storage.local.set`
+   failures with an empty handler — a dropped click record leaves no trace.
+6. **Phrase library discoverability (low).** 4 interactions from the default popup state (flag in
+   §3.2); its parent controls are `display:none` until follow-up is on *and* Advanced is expanded.
+7. **Follow-up entries are visually indistinguishable from allow clicks (info).** `popup.js:98`
+   maps kind `followup` to the `allow` chip class, so in the rendered log the two share a chip and
+   only the label differs.
+8. **"Send now" is disabled in the default state (info).** Not tabbable until follow-up is enabled
+   (`popup.html:611`, `popup.js` `applyFollowupUI`) — correct for a disabled control, listed for
+   completeness.
+
+### 3.8 NOT MEASURABLE (with reason — never estimated)
+
+- **The popup's own per-reason note text end-to-end.** The popup's "Send now" only messages
+  `https://muse.ai/*` tabs (`popup.js:1429`), and this repo's zero-network / no-new-permissions gate
+  keeps the fixtures on `127.0.0.1`, so the note that can actually be reached in the harness is the
+  "No muse.ai tab found" path (measured). The reason→message mapping is verified **in source**
+  (§3.4) but not driven end-to-end in the popup.
+- **Digest usefulness (does the "While you were away" summary change a user's behaviour?).** No
+  instrument for perceived usefulness; the harness can only prove the band renders and is correct.
+- **Real screen-reader output (NVDA/JAWS/VoiceOver speech).** No AT engine on this host; the CDP
+  accessibility tree is the closest available evidence and is what §3.6 reports.
+- **Field/real-user experience (first-session funnel, drop-off).** No RUM/analytics tag on this
+  product (zero-network gate), so there is no field source to read.
 
 ## Method notes / honesty rails
 
