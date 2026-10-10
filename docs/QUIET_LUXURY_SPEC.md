@@ -287,3 +287,63 @@ Explicit non-goals for Phase 2: no new components, no copy changes, no engine/lo
 - **Mockup:** `assets/quiet-luxury-mockup.html` — standalone page showing the popup at 320px CSS width in light + dark side by side and a Statistics fragment (KPI cards + chart). It is a *mockup*, not a source of truth: Phase 2 applies the tokens to the real files, and store/runtime evidence is re-rendered from the real product afterwards.
 - **Phase-1 vision QA (this mockup, rendered in real Chrome 154 via CDP at 2x, `--force-color-profile=srgb`, scratch profile + scratch output dir):** four review rounds. Final round — popup row **9/10 premium, 10/10 light↔dark coherence, 9/10 craft, "no defects"**; Statistics light **9/10 premium, 9/10 craft**; Statistics dark **9/10 premium, 8/10 craft**. Defects fixed across rounds: wrapped quick-combo chips (row geometry), crowded x-axis ticks, log context alignment, faint dark hairlines, over-prominent dark tints, filled log chips. Claims the reviewer made that pixel sampling disproved were recorded as misreads rather than "fixed": the dark tint is deep navy (`#192c4b` sampled, not a solid fill), the "14" value label *is* accent (`#005abf` glyph pixels), the chart has 14 bars (column count), and all four KPI icon tiles share the same tint+glyph treatment. Frozen-intent items the reviewer repeatedly listed (ink/ivory primary inversion, hairline dividers, no y-axis, brighter dark data stops) are design decisions, not defects.
 - **Limits:** (1) the mockup uses the local system font (Segoe UI on this host) because Optimistic is not installed — the real extension falls back the same way; (2) no dark-mode runtime capture of the *real* extension was taken in this phase (popup/stats files are owned by another lane); (3) the popup-height budget is computed, not measured — P2-3 must verify it against the harness; (4) vision QA of the mockup is qualitative (defect list + score), not a calibrated instrument; (5) hairlines and 1–2px details are hard for vision models to confirm — verify them by pixel sampling in Phase 2 if they matter.
+
+---
+
+## 9. Phase-2 application record (2026-10-10)
+
+Applied to the real extension files on top of HEAD `b6faaa0`. Popup markup is byte-identical (verified by diffing both files from `</style>` onward); LF endings preserved.
+
+### 9.1 What landed
+
+- **P2-1/P2-2/P2-3 `extension/popup.html`** — `:root` + the dark `@media` block replaced with the §2 tokens. Components per §3: graphite/ivory `.btn` (hover = 6 % step toward `--bg` + `--sh-1`, pressed 10 %), tonal `.btn.tonal` (tint `.10` + `--accent-line`), outlined neutral controls (`.qbtn`, `.ftab`, `.chipbtn`, `.flibbtn`, `.pbtn`, `.rbtn`, `.langbtn`, `.chip`, `.ovclose`, `.rchip`), ONE selected-state recipe (`--accent-tint` + `--accent-line` + `--accent-text` + 500) across `.chip.on`, `.fstat.on`, `.qbtn.on`, `.ftab.on`, `.chipbtn.on`, `.fcount`, `.froti .src`, `.pbtn.resume`, `.pstate`, `.schip`, `.rbtn.armed`, `.langitem.on`; toggle off = `--fill` + inset `--stroke`, on = `--accent-state`; `.fsheet` = `--surface` / 16px / `--sh-3` / padding 8; `.k-allow` = outline tag; `#mini rect.bar` + `.bar.today` + `.sc-now*` stops; scrollbar hues warmed. Rhythm per §2.5 (`.row` 5px, `.sect` 8/8, `.log` padding-top 6, `.foot` 8/8) + `.mcap` micro-caption. Motion per §4 (check draw `.5s --ease-out`, log `fadein` +2px/160ms replacing the 4px slide, sheet reveal 200ms, count pop 1.15) and the mandatory reduced-motion pins (`.count.pop`, `.fsheet/.fpanel`).
+- **P2-4/P2-5 `extension/stats.html`** — same token block; `.seg` active = ink pill (blue pill removed); `.kpi` 16px radius / `16px 20px` padding / icon tint 13 %→8 % + 16 % ring / value 30px `−0.025em` / label micro-caption; `.chart` 16px / gridline `.22`/`.40` / axis `.20`/`.36` / hover `brightness(1.04)`; `.topics` 16px / dot 8px + 12 % halo / bar 8px on a `--line`-bordered track / rules `--divide`; `.tool` outlined + `.tool.primary` graphite/ivory; footer `--muted` 12px; page padding 24/32; display h1 `−0.02em`/1.25; body `14px/1.55`; KPI/chart/topic captions micro-caps. Trend-chart gradient stops **frozen** (§6 rule 7 — they stay ≥4.5:1 on the card surface).
+- **P2-6 `extension/popup.js`** — `renderMini`: day rects get `class="bar"`, today `class="bar today"`; the two inline gradients collapse to one `#mg` whose stops carry `class="sc-now|sc-now-m|sc-now-b"`. The inline `fill`/`opacity` attributes are removed (CSS drives both). Geometry (`W = 292, H = 46, gap = 4, base = 32, top = 2`) and the `<title>` tooltips unchanged; no logic change.
+- **P2-7 `extension/stats.js`** — unchanged (verified: bars/topics are class-driven, colours come from CSS vars).
+- **P2-9 `extension/_locales/**`** — no change; key parity re-verified by `scripts/lint.mjs`.
+- **P2-10 `docs/BRANDING.md`** — §3 carries the Quiet Luxury token table + the §5.2/5.3/5.4 computed tables and the dark ON-track fix; §3.1's dark ratios recomputed against the new `#1f2023` card surface; §4 type/shape updated.
+- **P2-11** — `store/screenshot2-stats.png` regenerated by `scripts/stats-shot.mjs` (verified: graphite primary present, footer fully visible; page `scrollHeight` 811 vs the 800 viewport = 11px, entirely inside the 24px bottom padding). The two popup assets could not be regenerated — see 9.4.
+
+### 9.2 Measured heights (popup ≤600 in every state)
+
+`node test/followup-e2e.mjs` (follow-up ON — the harness's crowded state): **empty 594 / full-log 594 / sheet-open 594 px**, all ≤600, `"ok": true`, exit 0.
+`node test/lang-switch-e2e.mjs`: menu open **437**, menu open + full 12-entry log **594**; all six locales 437–454, title height 19px (≤22).
+Dedicated CDP probe of the default (follow-up OFF) popup: **443 empty / 600 full-log**, log viewport 192px. The identical probe against HEAD gave 417 / 600 with a 215px log viewport — i.e. the full-log state was **already at the 600 cap before this change**, and the log (shipped `flex: 0 1 auto; min-height: 0`) absorbs the new rhythm exactly as its comment says it must. The empty state grew 417 → 443 px, still far under the cap.
+
+### 9.3 Contrast evidence (sampled from the rendered output)
+
+Real popup rendered via CDP (light + dark), PNGs decoded and measured in Python (WCAG 2.x luminance + 8-bit alpha compositing):
+
+| Pair | Light | Dark |
+|---|---|---|
+| mini-chart day bar vs popup bg | **3.32:1** (spec 3.33) | **4.52:1** (spec 4.52) |
+| toggle ON track vs OFF track | **5.68:1** | **4.83:1** (shipped **1.85:1**) |
+| white knob vs ON track | 6.53:1 | 3.22:1 |
+| "today" gradient vs bg (top / bottom stop) | 7.80 / 10.65 | 10.41 / 8.70 |
+
+Every text pair in §5.2/§5.3 was independently recomputed from the shipped tokens and reproduced the spec's values exactly (light 16.86 … 5.22:1; dark 15.44 … 5.61:1; all ≥4.5:1).
+**Recorded deviation:** §5.4 illustrated the toggle OFF track as `#d6d5d4` / `#414244`, but §2.3 + §3 #5 define it as `--fill` + an inset `--stroke` hairline, which composites to `#f0efed` / `#232426`. The measured ratios are therefore *higher* than the spec's 4.46 / 3.13 — the fix intent (dark ON/OFF above the 3:1 floor, up from 1.85:1) holds and is exceeded.
+
+### 9.4 Deliberately skipped / not achieved
+
+- **P2-8 (16px padding variant) — SKIPPED.** Optional by the spec, and it would change `W 292 → 288` in two files plus require a re-measure. The 14px padding + 292px chart column is a contract with the follow-up panel geometry (§2.5); nothing in the render needs the extra 2px.
+- **P2-12 (designed store assets) — SKIPPED.** `assets/promo-tile.html`, `marquee.html`, `store-screenshot.html`, `readme-hero.html` are a separate art set with their own palette, the mark must not be redrawn, and the step is explicitly optional. `scripts/render.mjs` therefore produces byte-identical outputs and was not re-run.
+- **P2-11 popup assets — NOT REGENERATED.** `scripts/stats-shot.mjs` and `scripts/store-shot.mjs` seed demo data but not `onboarded: true`; since v1.8.0 the popup shows its onboarding wizard whenever `onboarded !== true`, so a fresh run captures the **wizard**, not the popup (confirmed by decoding the produced PNG: ~1.86 M background pixels, 8 mini-bar pixels). `scripts/` is outside this lane's write set, so `store/screenshot1.png` and `store/screenshot3-popup.png` were restored to their previous revision and the blocker + one-line fix are recorded in `docs/BRANDING.md` §5.
+- **P2-13 — no expectation changed.** Every measured height stayed ≤600 and every geometry contract held, so `test/followup-e2e.mjs` and `test/e2e.mjs` were not touched.
+
+### 9.5 Vision QA (real renders, CDP lane)
+
+Instrument: `vision_analyze` on the real popup (2x, 640×1200) and Statistics (1280×800) renders held in the scratch dir — the same qualitative instrument Phase 1 used.
+
+| Round | Target | Premium | Craft |
+|---|---|---|---|
+| 1 | popup light | 4/10 | 5/10 |
+| 1 | popup dark | 6/10 | 5.5/10 |
+| 2 | popup light | 5/10 | 4/10 |
+| 2 | popup dark | **7/10** | 6/10 |
+| — | Statistics light | **9/10** | 8/10 |
+| — | Statistics dark | 8/10 | 7/10 |
+| calibration | **shipped** popup light (same prompt) | 6/10 | 7/10 |
+| calibration | Phase-1 mockup popup | 8/10 | 8.5/10 |
+
+**Honest read: the ≥9/10 *popup* target was not met.** Across four rounds the re-skinned popup scores 4–7/10 premium — the same band as the **shipped** popup under the identical prompt (6/10 premium, 7/10 craft) — while the Statistics page reaches 9/10. The gap is structural, not a regression from this re-skin: the real popup carries the shipped pause row, "Safety" entry and language switcher (none of which the Phase-1 mockup has), which crowd the 320px header so the status chip ellipsises in *every* revision including shipped, and leave the log's 2-line context clamp visibly truncated. The recurring "defects" the reviewer lists are frozen-intent items Phase 1 already dispositioned (graphite/ivory primary, accent reserved for state, outlined neutral pills, no chart y-axis, micro-caps captions, the "19" y-max tick, "all four KPI tiles share one treatment" — a Phase-1 misread that recurred verbatim). The two items it found in *both* the shipped and the re-skinned render (textarea resize handle, scrollbar styling) are shipped behaviour §3 #8 / §3 #2 explicitly leave untouched.

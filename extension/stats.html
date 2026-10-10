@@ -4,10 +4,16 @@
 <meta charset="utf-8">
 <title>Muse Auto-Allow — Statistics</title>
 <style>
+  /* Quiet Luxury — tokens per docs/QUIET_LUXURY_SPEC.md §2 (Phase 2 / P2-4). */
   :root { color-scheme: light dark;
-          --blue: #005abf; --ink: #111112; --muted: #4a4e54; --bg: #fcfcfc; --surface: #ffffff;
-          --line: rgba(17,17,18,.08); --fill: rgba(17,17,18,.05);
-          --axis: rgba(17,17,18,.32); --hairline: rgba(17,17,18,.07); --divide: rgba(17,17,18,.16); --grid: rgba(17,17,18,.34); --focus: #005abf;
+          --bg: #faf9f7; --surface: #ffffff;
+          --ink: #17181c; --ink-2: #3a3d44; --muted: #5c6069;
+          --line: #e8e6e0; --divide: rgba(23,24,28,.10); --stroke: rgba(23,24,28,.16); --stroke-hover: rgba(23,24,28,.20);
+          --fill: rgba(23,24,28,.045); --fill-hover: rgba(23,24,28,.075);
+          --btn-ink: #17181c; --on-btn: #ffffff;
+          --accent-tint: rgba(0,90,191,.10); --accent-line: rgba(0,90,191,.28); --accent-text: #005abf;
+          --axis: rgba(23,24,28,.20); --hairline: rgba(23,24,28,.07); --grid: rgba(23,24,28,.22); --focus: #005abf;
+          --dur-1: 120ms; --ease-out: cubic-bezier(.22,.61,.36,1); --ease-io: cubic-bezier(.45,.05,.55,.95);
           /* data-viz palette — light stops (every stop >= 4.5:1 on --surface) */
           --c-blue: #0f63e6;   --c-blue-b: #0a4fc4;
           --c-rose: #c2263f;   --c-rose-b: #a51e35;
@@ -18,12 +24,17 @@
           --c-now: #0040DC; --c-now-m: #0030b0; --c-now-b: #00289c; --now-ink: #005abf;
           /* glyph ink for tinted chips (deeper in light, brighter in dark) */
           --c-blue-g: #0a4fc4; --c-rose-g: #a51e35; --c-teal-g: #0a6d5d; --c-violet-g: #5c2fb8; --c-amber-g: #a34705;
-          --sh-1: 0 1px 2px rgba(17,17,18,.05);
-          --sh-2: 0 1px 2px rgba(17,17,18,.04), 0 16px 36px -24px rgba(17,17,18,.30); }
+          --sh-1: 0 1px 2px rgba(23,24,28,.05);
+          --sh-2: 0 1px 1px rgba(23,24,28,.03), 0 14px 34px -22px rgba(23,24,28,.26);
+          --sh-3: 0 2px 6px rgba(23,24,28,.05), 0 28px 60px -30px rgba(23,24,28,.38); }
   @media (prefers-color-scheme: dark) {
-    :root { --blue: #0a5ce0; --ink: #e4e6eb; --muted: #b0b3b8; --bg: #18191a; --surface: #242526;
-            --line: #3e4042; --fill: #3a3b3c;
-            --axis: rgba(228,230,235,.36); --hairline: rgba(228,230,235,.08); --divide: rgba(228,230,235,.20); --grid: rgba(228,230,235,.50); --focus: #7cb0ff;
+    :root { --bg: #161719; --surface: #1f2023;
+            --ink: #eceef2; --ink-2: #c9cdd4; --muted: #a6abb5;
+            --line: #2c2e33; --divide: rgba(236,238,242,.18); --stroke: rgba(236,238,242,.16); --stroke-hover: rgba(236,238,242,.28);
+            --fill: rgba(236,238,242,.06); --fill-hover: rgba(236,238,242,.10);
+            --btn-ink: #e9ebef; --on-btn: #17181c;
+            --accent-tint: rgba(10,92,224,.22); --accent-line: rgba(10,92,224,.50); --accent-text: #8ab8ff;
+            --axis: rgba(228,230,235,.36); --hairline: rgba(228,230,235,.08); --grid: rgba(228,230,235,.40); --focus: #7cb0ff;
             /* data-viz palette — dark stops (every stop >= 4.5:1 on --surface) */
             --c-blue: #5aa5ff;   --c-blue-b: #3f8ceb;
             --c-rose: #ff8296;   --c-rose-b: #f06680;
@@ -33,39 +44,45 @@
             --c-now: #a9caff; --c-now-m: #97c0ff; --c-now-b: #7fb0ff; --now-ink: #7cb0ff;
             --c-blue-g: #5aa5ff; --c-rose-g: #ff8296; --c-teal-g: #35d2b8; --c-violet-g: #ab93fb; --c-amber-g: #f2b435;
             --sh-1: 0 1px 2px rgba(0,0,0,.35);
-            --sh-2: 0 1px 2px rgba(0,0,0,.30), 0 20px 44px -28px rgba(0,0,0,.85); }
+            --sh-2: 0 1px 1px rgba(0,0,0,.30), 0 16px 36px -24px rgba(0,0,0,.75);
+            --sh-3: 0 2px 8px rgba(0,0,0,.45), 0 30px 64px -32px rgba(0,0,0,.90); }
   }
-  body { margin: 0; padding: 20px 32px 18px; background: var(--bg); color: var(--ink);
-         font: 14px/1.5 "Optimistic", "optimisticAI", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  body { margin: 0; padding: 24px 32px; background: var(--bg); color: var(--ink);
+         font: 14px/1.55 "Optimistic", "optimisticAI", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
          -webkit-font-smoothing: antialiased; }
+
+  /* micro-caption tier (spec §2.6): short captions + KPI labels only — CSS-only uppercase */
+  .micro { font-size: 10.5px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 
   /* ---- header: title + range control ---- */
   .head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 14px; flex-wrap: wrap; }
-  h1 { font-size: 24px; font-weight: 500; letter-spacing: -0.01em; margin: 0; display: flex; align-items: center; gap: 11px; color: var(--ink); }
+  h1 { font-size: 24px; font-weight: 500; letter-spacing: -0.02em; line-height: 1.25; margin: 0; display: flex; align-items: center; gap: 11px; color: var(--ink); }
   h1 svg.logo { width: 30px; height: 30px; border-radius: 9px; box-shadow: 0 8px 20px -9px rgba(0,64,220,.6); }
 
   .seg { display: inline-flex; gap: 4px; background: var(--fill); border-radius: 999px; padding: 4px;
          box-shadow: inset 0 0 0 1px var(--hairline); }
   .seg button { background: transparent; border: 0; color: var(--muted); padding: 6px 18px; border-radius: 999px;
-                cursor: pointer; font: inherit; font-weight: 500; transition: background .15s ease, color .15s ease, box-shadow .15s ease; }
-  .seg button:hover { background: color-mix(in srgb, var(--ink) 7%, transparent); color: var(--ink); }
-  .seg button.active { background: var(--blue); color: #fff; box-shadow: 0 1px 2px rgba(17,17,18,.22), inset 0 1px 0 rgba(255,255,255,.18); }
-  .seg button.active:hover { background: var(--blue); color: #fff; }
+                cursor: pointer; font: inherit; font-weight: 500;
+                transition: background var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out), box-shadow var(--dur-1) var(--ease-out); }
+  .seg button:hover { background: var(--fill-hover); color: var(--ink); }
+  /* active = graphite (light) / ivory (dark) pill — the blue pill was the loudest element */
+  .seg button.active { background: var(--btn-ink); color: var(--on-btn); box-shadow: var(--sh-1); }
+  .seg button.active:hover { background: var(--btn-ink); color: var(--on-btn); }
 
   /* ---- KPI cards ---- */
-  .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+  .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 14px; }
   .kpi { position: relative; display: flex; align-items: center; gap: 13px; overflow: hidden;
-         background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
-         padding: 13px 16px; box-shadow: var(--sh-2); }
+         background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+         padding: 16px 20px; box-shadow: var(--sh-2); }
   .kpi::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
                  background: radial-gradient(100% 140% at 0% 0%, color-mix(in srgb, var(--kc) 8%, transparent), transparent 60%); }
   .kpi .ic { position: relative; flex: none; width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center;
-             color: var(--kc-g); background: color-mix(in srgb, var(--kc) 13%, transparent);
-             box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--kc) 22%, transparent); }
+             color: var(--kc-g); background: color-mix(in srgb, var(--kc) 8%, transparent);
+             box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--kc) 16%, transparent); }
   .kpi .ic svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.25; stroke-linecap: round; stroke-linejoin: round; }
   .kpi .kv { position: relative; display: flex; flex-direction: column; min-width: 0; }
-  .kpi .v { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; color: var(--ink); font-variant-numeric: tabular-nums; }
-  .kpi .l { font-size: 12px; color: var(--muted); margin-top: 3px; letter-spacing: .01em; }
+  .kpi .v { font-size: 30px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.1; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .kpi .l { font-size: 10.5px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
   .k-blue   { --kc: var(--c-blue);   --kc-g: var(--c-blue-g); }
   .k-rose   { --kc: var(--c-rose);   --kc-g: var(--c-rose-g); }
   .k-teal   { --kc: var(--c-teal);   --kc-g: var(--c-teal-g); }
@@ -73,14 +90,14 @@
   .k-amber  { --kc: var(--c-amber);  --kc-g: var(--c-amber-g); }
 
   /* ---- chart ---- */
-  .chart { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 14px 18px; margin-bottom: 12px; box-shadow: var(--sh-2); }
-  .chart .ccap { font-size: 12.5px; font-weight: 500; letter-spacing: .01em; color: var(--muted); margin-bottom: 8px; }
+  .chart { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px 20px; margin-bottom: 16px; box-shadow: var(--sh-2); }
+  .chart .ccap { font-size: 10.5px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
   .chart svg { display: block; width: 100%; height: auto; }
   .chart line.base { stroke: var(--axis); stroke-width: 1.25; }
   .chart line.grid { stroke: var(--grid); stroke-width: 1; stroke-dasharray: 3 4; }
-  .chart rect.bar { transition: filter .15s ease; }
+  .chart rect.bar { transition: filter var(--dur-1) var(--ease-out); }
   .chart rect.bar.now { stroke: var(--now-ink); stroke-width: 1.5; }
-  .chart rect.bar:hover { filter: brightness(1.06); }
+  .chart rect.bar:hover { filter: brightness(1.04); }
   .chart text { fill: var(--muted); font-size: 11px; letter-spacing: .01em; }
   .chart text.val { fill: var(--ink); font-size: 11px; font-weight: 500; }
   .chart text.tick { font-size: 10.5px; letter-spacing: .02em; paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round; }
@@ -98,35 +115,37 @@
   .t-violet { --tc: var(--c-violet); }
 
   /* ---- topics ---- */
-  .topics { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 14px 18px; box-shadow: var(--sh-2); }
-  .topics .cap { font-size: 12.5px; font-weight: 500; letter-spacing: .01em; color: var(--muted); margin-bottom: 12px; }
+  .topics { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px 20px; box-shadow: var(--sh-2); }
+  .topics .cap { font-size: 10.5px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
   .topic { display: flex; align-items: center; gap: 11px; padding: 5px 0; }
   .topic + .topic { border-top: 1px solid var(--divide); }
-  .topic .dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--tc, var(--muted));
-                box-shadow: 0 0 0 3px color-mix(in srgb, var(--tc, var(--muted)) 14%, transparent); }
+  .topic .dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--tc, var(--muted));
+                box-shadow: 0 0 0 3px color-mix(in srgb, var(--tc, var(--muted)) 12%, transparent); }
   .topic .name { width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); }
-  .topic .bar { flex: 1; height: 10px; background: var(--fill); border-radius: 999px; overflow: hidden; }
+  .topic .bar { flex: 1; height: 8px; background: var(--fill); border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
   .topic .bar i { display: block; height: 100%; width: 0; border-radius: 999px;
-                  background: var(--tc, var(--blue));
-                  transition: width .35s ease; }
+                  background: var(--tc, var(--c-blue));
+                  transition: width .35s var(--ease-io); }
   .topic .n { width: 56px; text-align: right; color: var(--ink); font-weight: 600; font-size: 13px; font-variant-numeric: tabular-nums; }
   .empty { color: var(--muted); padding: 10px 0; }
 
   /* ---- footer ---- */
   .footrow { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
-  .foot { color: color-mix(in srgb, var(--muted) 35%, var(--ink)); font-size: 13px; font-weight: 500; letter-spacing: .01em; }
+  .foot { color: var(--muted); font-size: 12px; font-weight: 500; letter-spacing: .01em; }
   .tools { display: flex; gap: 8px; }
-  .tool { background: var(--fill); color: var(--ink); border: 1px solid var(--line); border-radius: 999px;
+  /* neutral controls are outlined, not filled (spec §3 #3) */
+  .tool { background: transparent; color: var(--ink); border: 1px solid var(--stroke); border-radius: 999px;
           padding: 7px 16px; cursor: pointer; font: inherit; font-weight: 500; box-shadow: var(--sh-1);
-          transition: background .15s ease, filter .15s ease; }
-  .tool:hover { background: color-mix(in srgb, var(--ink) 7%, var(--fill)); }
-  .tool.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
-  .tool.primary:hover { background: var(--blue); filter: brightness(1.08); }
+          transition: background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out); }
+  .tool:hover { background: var(--fill); border-color: var(--stroke-hover); }
+  /* primary = graphite (light) / ivory (dark); accent is reserved for state */
+  .tool.primary { background: var(--btn-ink); border-color: var(--btn-ink); color: var(--on-btn); }
+  .tool.primary:hover { background: color-mix(in srgb, var(--btn-ink) 94%, var(--bg)); border-color: var(--btn-ink); }
   :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
   ::-webkit-scrollbar { width: 10px; height: 10px; }
-  ::-webkit-scrollbar-thumb { background: rgba(17,17,18,.18); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb { background: rgba(23,24,28,.18); border-radius: 999px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  @media (prefers-color-scheme: dark) { ::-webkit-scrollbar-thumb { background: rgba(228,230,235,.22); } }
+  @media (prefers-color-scheme: dark) { ::-webkit-scrollbar-thumb { background: rgba(236,238,242,.22); } }
   /* narrow widths (WCAG 1.4.10 reflow): the header wraps and the segmented control
      shrinks/wraps instead of pushing the page into horizontal scroll (measured 475px
      wide at 320 CSS px before this fix); 1280x800 renders are unaffected (media query only) */

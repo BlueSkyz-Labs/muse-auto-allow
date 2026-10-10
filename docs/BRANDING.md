@@ -40,28 +40,71 @@ Evidence base (recon 2026-10-09, captured from the live site):
 
 ## 3. Color tokens
 
+Quiet Luxury tokens (`docs/QUIET_LUXURY_SPEC.md` §2, applied in Phase 2):
+
 | Token | Light | Dark (`prefers-color-scheme: dark`) |
 |---|---|---|
-| `--bg` (page/popup) | `#fcfcfc` | `#18191a` |
-| `--surface` (cards) | `#ffffff` | `#242526` |
-| `--ink` (primary text) | `#111112` | `#e4e6eb` |
-| `--muted` (secondary) | `#4a4e54` | `#b0b3b8` |
-| `--line` (borders) | `rgba(17,17,18,.08)` | `#3e4042` |
-| `--fill` (controls) | `rgba(17,17,18,.05)` | `#3a3b3c` |
-| `--blue` (accent / buttons) | `#005abf` | `#0a5ce0` |
+| `--bg` (page/popup) | `#faf9f7` | `#161719` |
+| `--surface` (cards/overlays) | `#ffffff` | `#1f2023` |
+| `--ink` (primary text) | `#17181c` | `#eceef2` |
+| `--ink-2` (reserved intermediate tier) | `#3a3d44` | `#c9cdd4` |
+| `--muted` (secondary) | `#5c6069` | `#a6abb5` |
+| `--line` (card/component border) | `#e8e6e0` | `#2c2e33` |
+| `--divide` (in-flow rules) | `rgba(23,24,28,.10)` | `rgba(236,238,242,.18)` |
+| `--stroke` (control outline) | `rgba(23,24,28,.16)` | `rgba(236,238,242,.16)` |
+| `--fill` (controls) | `rgba(23,24,28,.045)` | `rgba(236,238,242,.06)` |
+| `--accent` (text/state) | `#005abf` | `#0a5ce0` |
+| `--accent-state` (toggle ON track) | `#005abf` | `#4d8ef7` |
+| `--accent-text` (selected text) | `#005abf` | `#8ab8ff` |
+| `--accent-tint` (one selection recipe) | `rgba(0,90,191,.10)` | `rgba(10,92,224,.22)` |
+| `--accent-line` (selection edge) | `rgba(0,90,191,.28)` | `rgba(10,92,224,.50)` |
+| `--btn-ink` (primary pill) | `#17181c` | `#e9ebef` |
+| `--bar-day` (mini-chart day bar) | `#0f63e6` @ .75 | `#5aa5ff` @ .75 |
+| `--focus` | `#005abf` | `#7cb0ff` |
 | Brand gradient | `#0082FB → #0064E0 → #0040DC` | same |
-| Cream accent (soft blobs) | `#f3d9b4` | — |
+| Cream accent (soft blobs, store art only) | `#f3d9b4` | — |
 | Success dot | `#31a24c` | `#45c463` |
 
-Contrast (computed from these tokens): `--ink` on `--bg` 18.39:1; `--muted` on `--bg` 8.16:1
-(light); white on `--blue` 6.53:1 (light) / 5.80:1 (dark `#0a5ce0`). The dark accent is a
-filled-control background (paired with white text, 5.80:1), not body text on `--bg`.
-All shipped text pairs ≥ 5.30:1 (WCAG AA).
+Contrast — recomputed from the shipped CSS (WCAG 2.x relative luminance + 8-bit alpha
+compositing). **Every rendered text pair ≥ 4.5:1 (light 16.86:1 … 5.22:1, dark 15.44:1 … 5.61:1).**
 
-Selected-state pills (popup: quick combos, library tabs, phrase chips): light `#005abf` on
-`rgba(0,90,191,.14)` over `#fcfcfc` **5.12:1**; dark `#8ab8ff` on `rgba(10,92,224,.32)` over
-`#18191a` **6.63:1** (recorded per rule 5; the dark phrase-chip pair was corrected in the
-v1.7.0 experience fix — it had fallen back to `#0a5ce0` on the same tint = 2.77:1).
+Light: `--ink` on page **16.86:1**, on card **17.74:1**; `--muted` on page **5.99:1**, on card
+**6.30:1**, on control fill `.045`/page **5.48:1**; ink on control fill `.045`/page (input
+value) **15.44:1**; white on the graphite primary **17.74:1**; accent on page **6.21:1**, on
+card **6.53:1**, on selected tint `.10`/page **5.33:1** / card **5.59:1**; "sent" pill text on
+its `.14` tint **5.38:1**; "expand" log chip text on its `.55` tint **5.22:1**; KPI glyph on
+the 8 % tile tint/card **6.42:1**; focus ring vs page **6.21:1** (non-text ≥ 3:1).
+
+Dark: `--ink` on page **15.44:1**, on card **14.02:1**; `--muted` on page **7.78:1**, on card
+**7.07:1**, on fill `.06`/page **6.74:1**; ink on fill `.06`/page **13.37:1**; ink on the ivory
+primary **14.86:1**; accent text `#8ab8ff` on page **8.87:1**, on tint `.22`/page **7.46:1** /
+card **6.80:1**; "today" label `#7cb0ff` on card **7.38:1**; "sent" pill text on its `.18` tint
+**6.70:1**; "expand" log chip text on its `.18` tint **7.07:1**; KPI glyph on the 8 % tile
+tint/card **5.61:1**; focus ring vs page **8.12:1** (non-text ≥ 3:1).
+
+State-defining non-text pairs (≥ 3:1), sampled from the rendered output:
+
+| Pair | Light | Dark |
+|---|---|---|
+| Toggle ON track vs OFF track | `#005abf` vs `#f0efed` = **5.68:1** | `#4d8ef7` vs `#232426` = **4.83:1** (shipped was **1.85:1** — this is the fix) |
+| White knob vs ON track | **6.53:1** | **3.22:1** |
+| Mini-chart day bar vs popup bg | shipped `#0082FB`@.5 = 1.88:1 → `#0f63e6`@.75 = **3.32:1** | shipped `#0082FB`@.5 = 2.06:1 → `#5aa5ff`@.75 = **4.52:1** |
+| Mini-chart "today" gradient vs popup bg | `#0040DC` **7.80:1** / `#00289c` **10.65:1** | `#a9caff` **10.41:1** / `#7fb0ff` **8.70:1** |
+
+Note (record accuracy): the Phase-1 spec §5.4 illustrated the toggle OFF track as `#d6d5d4`
+(light) / `#414244` (dark). The shipped CSS defines it as `--fill` + an inset `--stroke`
+hairline, which composites to `#f0efed` / `#232426` — the measured ratios above are taken from
+the rendered pixels, not from the spec's illustrative composites. The fix intent (dark ON/OFF
+above the 3:1 floor, up from 1.85:1) holds either way.
+
+`--ink-2` is defined but not consumed: no pair using it is rendered, so per rule 5 it carries
+no recorded ratio.
+
+Selected-state pills share ONE recipe — `--accent-tint` fill + 1px `--accent-line` + accent
+text + weight 500 (popup: quick combos, library tabs, phrase chips, `fcount`, `froti .src`,
+status chips; stats: none). Recorded pairs: light accent on tint `.10`/page **5.33:1**; dark
+accent text on tint `.22`/page **7.46:1** (the v1.7.0 dark phrase-chip fallback defect is
+structurally removed — the recipe now has a single dark definition).
 
 ### 3.1 Data-visualization palette (Statistics dashboard + designed assets)
 
@@ -74,29 +117,34 @@ Every stop is ≥ 4.5:1 against the card surface it sits on — the 3:1 non-text
 (WCAG 1.4.11) is met with headroom, so the same tokens stay safe for small glyphs
 (KPI chips, dots) as well.
 
-| Hue | Light top / bottom stop | vs `#ffffff` (card) | Dark top / bottom stop | vs `#242526` (card) |
+| Hue | Light top / bottom stop | vs `#ffffff` (card) | Dark top / bottom stop | vs `#1f2023` (card) |
 |---|---|---|---|---|
-| Blue (brand) | `#0f63e6` / `#0a4fc4` | 5.32:1 / 7.17:1 | `#5aa5ff` / `#3f8ceb` | 6.04:1 / 4.51:1 |
-| Rose | `#c2263f` / `#a51e35` | 5.76:1 / 7.40:1 | `#ff8296` / `#f06680` | 6.50:1 / 5.06:1 |
-| Teal | `#0e8571` / `#0a6d5d` | 4.55:1 / 6.25:1 | `#35d2b8` / `#22b89e` | 8.09:1 / 6.16:1 |
-| Amber | `#bf5700` / `#a34705` | 4.59:1 / 6.07:1 | `#f2b435` / `#dfa11c` | 8.30:1 / 6.77:1 |
-| Violet | `#6d3ad6` / `#5c2fb8` | 6.51:1 / 8.22:1 | `#ab93fb` / `#9a83f5` | 6.07:1 / 5.07:1 |
+| Blue (brand) | `#0f63e6` / `#0a4fc4` | 5.32:1 / 7.17:1 | `#5aa5ff` / `#3f8ceb` | 6.41:1 / 4.78:1 |
+| Rose | `#c2263f` / `#a51e35` | 5.76:1 / 7.40:1 | `#ff8296` / `#f06680` | 6.89:1 / 5.37:1 |
+| Teal | `#0e8571` / `#0a6d5d` | 4.55:1 / 6.25:1 | `#35d2b8` / `#22b89e` | 8.58:1 / 6.53:1 |
+| Amber | `#bf5700` / `#a34705` | 4.59:1 / 6.07:1 | `#f2b435` / `#dfa11c` | 8.81:1 / 7.18:1 |
+| Violet | `#6d3ad6` / `#5c2fb8` | 6.51:1 / 8.22:1 | `#ab93fb` / `#9a83f5` | 6.44:1 / 5.38:1 |
 
-- Trend chart (single series → single hue; colour encodes nothing): every bar shares the
+- Trend chart (single series → single hue; colour encodes nothing): the five-hue stops and the
+  brand-blue value gradient are **frozen** (Quiet Luxury spec §6 rule 7) — every bar keeps the
   brand-blue value gradient (light `#0f63e6 → #0a4fc4`, dark `#5aa5ff → #3f8ceb`); the latest
   ("today") bar carries the brand-gradient accent — light stops `#0040DC / #0030b0 / #00289c`
   (7.59:1 / 10.25:1 / 11.77:1 on `#ffffff`), dark stops `#a9caff / #97c0ff / #7fb0ff`
-  (9.20:1 / 8.26:1 / 6.99:1 on `#242526`) — with a `#005abf` (light) / `#7cb0ff` (dark) outline
-  and matching "now" value/label ink (6.53:1 on white / 6.95:1 on `#242526`). A dashed y-max
-  gridline + tick (34 % alpha light / 50 % dark) anchors the vertical scale.
+  (9.76:1 / 8.77:1 / 7.41:1 on `#1f2023`) — with a `#005abf` (light) / `#7cb0ff` (dark) outline
+  and matching "now" value/label ink (6.53:1 on white / 7.38:1 on `#1f2023`). A dashed y-max
+  gridline + tick (22 % alpha light / 40 % dark) anchors the vertical scale; the baseline
+  hairline is 20 % light / 36 % dark.
 - Cycle order (positional): blue → rose → teal → amber → violet. Topic rows take the next hue by
   rank (decorative — bar length is the datum); KPI chips fix it as Total = blue, Today = rose,
-  This week = teal, This month = amber. Chip glyph ink is the deeper stop on a 13 % tint in light
-  (5.10–6.72:1) and the bright stop on a 13 % tint in dark (4.83–6.28:1).
-- Segmented control: white on `#005abf` 6.53:1 (light) / `#0a5ce0` 5.80:1 (dark).
-  Focus ring: `#005abf` on `#fcfcfc` 6.37:1 (light) / `#7cb0ff` on `#18191a` 7.97:1 (dark).
+  This week = teal, This month = amber. KPI icon tile = an **8 %** tint + a 16 % inset hairline
+  (Quiet Luxury §3 #7), glyph ink = the deeper stop in light (5.48–7.27:1) and the bright stop in
+  dark (5.61–7.51:1).
+- Segmented control (Quiet Luxury §3 #12): the active pill is **ink**, not blue — white on
+  `#17181c` 17.74:1 (light) / `#17181c` on `#e9ebef` 14.86:1 (dark); inactive = `--muted`.
+  Focus ring: `#005abf` on `#faf9f7` 6.21:1 (light) / `#7cb0ff` on `#161719` 8.12:1 (dark).
 - Chart baseline and topic-row dividers are decorative (non-informational) hairlines
-  (26–32 % alpha light / 20–36 % dark) — not part of the data encoding.
+  (20–22 % alpha light / 36–40 % dark) — not part of the data encoding. Topic dots are 8px with
+  a 12 % halo, topic bars 8px on a `--line`-bordered track (Quiet Luxury §3 #13).
 - Designed-asset accent pairs (light theme): amber chip text `#8f4100` on an 11–12 % amber tint
   6.13–6.23:1; log pills `#0047a3` / `#8f4100` / `#57289f` on 12–14 % tints 7.02:1 / 6.13:1 /
   7.88:1; teal trust + badge text `#0a6d5d` on an 11–12 % teal tint 5.30–5.34:1.
@@ -105,9 +153,13 @@ Every stop is ≥ 4.5:1 against the card surface it sits on — the 3:1 non-text
 
 - Font stack: `"Optimistic", "optimisticAI", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif`
   (falls back to the platform UI font where Optimistic is absent — no font is bundled).
-- Headings: weight 500, letter-spacing −0.01em. Body 13–15px. Numbers tabular.
+- Headings: weight 500; −0.01em tracking at title size, −0.02em at display size (24px). Body
+  13px/1.5 (popup) and 14px/1.55 (Statistics). Micro-caption tier: 10.5px / 500 / +0.08em /
+  uppercase for short captions and KPI labels only — CSS `text-transform`, never localized
+  sentences. KPI value 30px / 600 / −0.025em. Numbers tabular.
 - Shape: **pills everywhere** (buttons, chips, inputs, segmented control — 999px);
-  cards 16–18px radius (18px on the Statistics page, 16–20px in designed assets); icon tile 26%.
+  cards **16px** radius (popup cards + sheets and the Statistics page; 16–20px in designed
+  assets); icon tile 26%.
 
 ## 5. Assets
 
@@ -119,11 +171,21 @@ Every stop is ≥ 4.5:1 against the card surface it sits on — the 3:1 non-text
 | `assets/marquee.html` | 1400×560 two-zone marquee → `store/marquee1400x560.png` (copy + layered popup/Statistics cards) |
 | `store/screenshot1.png` | REAL runtime capture (`scripts/store-shot.mjs`: live popup + live card clicks) |
 | `store/screenshot2-stats.png` | Statistics page, real render (`scripts/stats-shot.mjs`) — premium data-viz palette |
-| `store/screenshot3-popup.png` | popup, real render (`scripts/stats-shot.mjs`) |
+| `store/screenshot3-popup.png` | popup, real render (`scripts/stats-shot.mjs`) — **stale**: see note |
 
 All demo data in public assets is **fictional** (`Example Org`, `demo-project`,
 `sample-app`, `web-starter`, `notes-app`, `files.example.com`). Never use real projects,
 real repositories or personal data in store assets.
+
+**Store popup capture — known blocker (Quiet Luxury Phase 2, P2-11).** Both popup-capturing
+scripts (`scripts/stats-shot.mjs`, `scripts/store-shot.mjs`) seed `chrome.storage.local` with
+their demo data but do **not** seed `onboarded: true`. Since v1.8.0 the popup renders its
+3-step onboarding wizard whenever `onboarded !== true`, so a fresh run of either script captures
+the **wizard**, not the popup. The Quiet Luxury Phase-2 lane therefore regenerated
+`screenshot2-stats.png` (Statistics — unaffected by the wizard) and left `screenshot1.png` /
+`screenshot3-popup.png` at their previous revision. Fix: add `onboarded: true` to both scripts'
+seed objects, then re-run them; the popup assets will then show the Quiet Luxury UI (they
+currently also predate the v1.8.1 language switcher).
 
 ## 6. Rules
 

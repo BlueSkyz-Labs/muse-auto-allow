@@ -539,14 +539,18 @@ function renderMini(byDay, now) {
   const W = 292, H = 46, gap = 4, base = 32, top = 2;
   const bw = Math.floor((W - gap * 6) / 7);
   const max = Math.max(1, ...days.map((x) => x.v));
-  let out = '<defs><linearGradient id="mg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0082FB"/><stop offset="1" stop-color="#0064E0"/></linearGradient>' +
-    '<linearGradient id="mgd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0064E0"/><stop offset="1" stop-color="#0040DC"/></linearGradient></defs>' +
+  // theme-aware fills (Quiet Luxury spec §3 #11): day bars are the solid --bar-day token
+  // at 75% (light 3.33:1 / dark 4.52:1 on --bg); the brand gradient is reserved for the
+  // single "today" bar. Fills + opacities now come from CSS classes (.bar / .bar.today,
+  // .sc-now*), so light/dark switch with the theme and the geometry stays unchanged.
+  let out = '<defs><linearGradient id="mg" x1="0" y1="0" x2="0" y2="1">' +
+    '<stop class="sc-now" offset="0"/><stop class="sc-now-m" offset="0.62"/><stop class="sc-now-b" offset="1"/></linearGradient></defs>' +
     '<line class="baseline" x1="0" y1="' + (base + 0.5) + '" x2="' + W + '" y2="' + (base + 0.5) + '"/>';
   days.forEach((x, i) => {
     const cx = i * (bw + gap) + bw / 2;
     const h = x.v ? Math.max(3, Math.round((base - top) * (x.v / max))) : 4;
-    out += '<rect x="' + (i * (bw + gap)) + '" y="' + (base - h) + '" width="' + bw + '" height="' + h +
-      '" rx="4" fill="url(#' + (i === 6 ? 'mgd' : 'mg') + ')" opacity="' + (x.v ? (i === 6 ? 1 : 0.5) : 0.45) + '"><title>' +
+    out += '<rect class="bar' + (i === 6 ? ' today' : '') + '" x="' + (i * (bw + gap)) + '" y="' + (base - h) +
+      '" width="' + bw + '" height="' + h + '" rx="4"><title>' +
       esc(fmt(x.d, { weekday: 'long', day: 'numeric', month: 'short' }) + ' — ' + x.v) + '</title></rect>' +
       '<text x="' + cx + '" y="43" text-anchor="middle"' + (i === 6 ? ' class="today"' : '') + '>' + esc(dayLabel(x.d)) + '</text>';
   });
