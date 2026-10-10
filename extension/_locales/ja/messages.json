@@ -9,10 +9,10 @@
     "message": "Allow を自動クリック"
   },
   "delayLabel": {
-    "message": "クリック間隔："
+    "message": "クリック間隔"
   },
   "clickedLabel": {
-    "message": "クリック数："
+    "message": "クリック数"
   },
   "noClicks": {
     "message": "まだクリックはありません"

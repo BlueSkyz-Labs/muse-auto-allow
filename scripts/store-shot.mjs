@@ -222,8 +222,10 @@ try {
     await send('Runtime.evaluate', { expression: `chrome.storage.local.set(${seed}); "ok"`, returnByValue: true }, ppS);
   }
   // v1.8: the onboarding wizard (onboarded defaults to false) would cover the popup, and the
-  // pause/dry-run surfaces must be in their canonical OFF state for the store shot.
-  await send('Runtime.evaluate', { expression: 'chrome.storage.local.set({ enabled: true, onboarded: true, pauseUntil: 0, dryRun: false }); "ok"', returnByValue: true }, ppS);
+  // pause/dry-run surfaces must be in their canonical OFF state for the store shot. The
+  // Auto follow-up section is seeded ON with a real combo so the shot showcases the feature
+  // instead of its collapsed off-state.
+  await send('Runtime.evaluate', { expression: 'chrome.storage.local.set({ enabled: true, onboarded: true, pauseUntil: 0, dryRun: false, followupEnabled: true, followupPrompt: "Approve and continue working", followupChips: [{ id: "continue", text: "Keep going" }, { id: "longrun", text: "Long-run" }] }); "ok"', returnByValue: true }, ppS);
   // Nudge the content script with a DOM mutation so a sweep fires immediately
   // (otherwise we'd wait for the 1s heartbeat), then give it time to click the
   // showcase cards — their log entries carry real, meaningful context text.
@@ -232,7 +234,11 @@ try {
 
   // Crop the scrollable log viewport to its content (screenshot framing only — the real
   // popup keeps its 220px scroll area; this avoids a half-sliced row at the edge).
-  await send('Runtime.evaluate', { expression: '(() => { const lg = document.getElementById("log"); if (lg) lg.style.maxHeight = (lg.scrollHeight + 8) + "px"; return "ok"; })()', returnByValue: true }, ppS);
+  // v1.8: the popup's own contract caps it at 600px, and the 730px stage holds that with room
+  // to spare. Do NOT expand the log beyond the popup's natural height here — the old
+  // `maxHeight = scrollHeight + 8` framing hack pushed the capture to ~815px and the stage
+  // (overflow:hidden, 730px) then clipped ~42px off the header in the shipped store asset.
+  await send('Runtime.evaluate', { expression: '(() => { const lg = document.getElementById("log"); if (lg) { lg.style.maxHeight = ""; } return "ok"; })()', returnByValue: true }, ppS);
   await sleep(250);
 
   // ---- capture both, at 2x for crispness ----
@@ -266,7 +272,7 @@ try {
     .col.card { margin-top: 56px; }
     .cap { font-size: 15px; color: #5c6066; letter-spacing: .01em; }
     .cap b { color: #005abf; font-weight: 500; }
-    .pop img { display: block; width: 440px; border-radius: 16px; box-shadow: 0 18px 60px rgba(17,17,18,.16), 0 0 0 1px rgba(17,17,18,.08); }
+    .pop img { display: block; max-width: 440px; max-height: 660px; width: auto; height: auto; border-radius: 16px; box-shadow: 0 18px 60px rgba(17,17,18,.16), 0 0 0 1px rgba(17,17,18,.08); }
     .card img { display: block; width: 694px; border-radius: 16px; box-shadow: 0 18px 60px rgba(17,17,18,.16), 0 0 0 1px rgba(17,17,18,.08); }
     .chips { display: flex; gap: 10px; margin-top: 4px; flex-wrap: wrap; }
     .chip { background: rgba(17,17,18,.05); color: #2c2e33; font-size: 13px; font-weight: 500; padding: 7px 13px; border-radius: 999px; }

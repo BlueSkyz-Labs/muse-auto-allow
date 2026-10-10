@@ -47,7 +47,7 @@ Quiet Luxury tokens (`docs/QUIET_LUXURY_SPEC.md` §2, applied in Phase 2):
 | `--bg` (page/popup) | `#faf9f7` | `#161719` |
 | `--surface` (cards/overlays) | `#ffffff` | `#1f2023` |
 | `--ink` (primary text) | `#17181c` | `#eceef2` |
-| `--ink-2` (reserved intermediate tier) | `#3a3d44` | `#c9cdd4` |
+| `--ink-2` (section titles) | `#3a3d44` | `#c9cdd4` |
 | `--muted` (secondary) | `#5c6069` | `#a6abb5` |
 | `--line` (card/component border) | `#e8e6e0` | `#2c2e33` |
 | `--divide` (in-flow rules) | `rgba(23,24,28,.10)` | `rgba(236,238,242,.18)` |
@@ -60,6 +60,7 @@ Quiet Luxury tokens (`docs/QUIET_LUXURY_SPEC.md` §2, applied in Phase 2):
 | `--accent-line` (selection edge) | `rgba(0,90,191,.28)` | `rgba(10,92,224,.50)` |
 | `--btn-ink` (primary pill) | `#17181c` | `#e9ebef` |
 | `--bar-day` (mini-chart day bar) | `#0f63e6` @ .75 | `#5aa5ff` @ .75 |
+| `--grid` (mini-chart y-max gridline) | `rgba(23,24,28,.22)` | `rgba(228,230,235,.40)` |
 | `--focus` | `#005abf` | `#7cb0ff` |
 | Brand gradient | `#0082FB → #0064E0 → #0040DC` | same |
 | Cream accent (soft blobs, store art only) | `#f3d9b4` | — |
@@ -97,14 +98,28 @@ hairline, which composites to `#f0efed` / `#232426` — the measured ratios abov
 the rendered pixels, not from the spec's illustrative composites. The fix intent (dark ON/OFF
 above the 3:1 floor, up from 1.85:1) holds either way.
 
-`--ink-2` is defined but not consumed: no pair using it is rendered, so per rule 5 it carries
-no recorded ratio.
+`--ink-2` is now consumed by the popup's section title (Composition pass, below): `#3a3d44` on the
+page **10.34:1** (light) / `#c9cdd4` on the page **11.25:1** (dark).
 
 Selected-state pills share ONE recipe — `--accent-tint` fill + 1px `--accent-line` + accent
 text + weight 500 (popup: quick combos, library tabs, phrase chips, `fcount`, `froti .src`,
-status chips; stats: none). Recorded pairs: light accent on tint `.10`/page **5.33:1**; dark
-accent text on tint `.22`/page **7.46:1** (the v1.7.0 dark phrase-chip fallback defect is
+the log `allow` tag; stats: none). Recorded pairs: light accent on tint `.10`/page **5.33:1**;
+dark accent text on tint `.22`/page **7.46:1** (the v1.7.0 dark phrase-chip fallback defect is
 structurally removed — the recipe now has a single dark definition).
+
+**Status pills are NOT selections** (Composition pass): the header tab-count badge and the
+follow-up status pill use a neutral `--fill` + `--stroke` shell and carry their state in the
+DOT — `--ok` `#146c2e` on `--fill`/page **5.69:1** (light) / `#5fd07a` **7.98:1** (dark) when
+connected, `--accent-state` while working. This removes two of the six jobs the accent used to do.
+
+**Primary action** (Composition pass): the contextual `Send now` is the primary graphite/ivory
+pill (`--on-btn` on `--btn-ink` **17.74:1** / **14.86:1**); the footer `Statistics` navigation CTA
+is a new `.btn.ghost` (transparent + an inset 1px `--stroke` ring, so its height is unchanged).
+
+**Mini-chart scale** (Composition pass): the popup mini chart mirrors the Statistics chart — a
+dashed y-max gridline at `--grid` with its value as a muted tick numeral (5.99:1 / 7.78:1), plus a
+`●` legend reusing the existing `todayLabel` key. The `--grid` hairline is decorative (1.59:1
+light / 3.47:1 dark), the same class as `--axis`/`--divide`; the value is carried by the numeral.
 
 ### 3.1 Data-visualization palette (Statistics dashboard + designed assets)
 

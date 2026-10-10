@@ -9,10 +9,10 @@
     "message": "Tự động bấm Allow"
   },
   "delayLabel": {
-    "message": "Độ trễ giữa các lần bấm:"
+    "message": "Độ trễ giữa các lần bấm"
   },
   "clickedLabel": {
-    "message": "Đã bấm:"
+    "message": "Đã bấm"
   },
   "noClicks": {
     "message": "Chưa bấm lần nào"

@@ -536,16 +536,23 @@ function renderMini(byDay, now) {
   try { lang = chrome.i18n.getUILanguage() || 'en'; } catch { /* keep */ }
   const fmt = (d, o) => { try { return d.toLocaleDateString(lang, o); } catch { return ''; } };
   const dayLabel = (d) => { const sh = fmt(d, { weekday: 'short' }); return sh.includes(' ') ? fmt(d, { weekday: 'narrow' }) : sh; };
-  const W = 292, H = 46, gap = 4, base = 32, top = 2;
+  const W = 292, H = 46, gap = 4, base = 36, top = 12;
   const bw = Math.floor((W - gap * 6) / 7);
   const max = Math.max(1, ...days.map((x) => x.v));
   // theme-aware fills (Quiet Luxury spec §3 #11): day bars are the solid --bar-day token
   // at 75% (light 3.33:1 / dark 4.52:1 on --bg); the brand gradient is reserved for the
   // single "today" bar. Fills + opacities now come from CSS classes (.bar / .bar.today,
   // .sc-now*), so light/dark switch with the theme and the geometry stays unchanged.
+  // v1.9.0: a dashed y-max gridline + its tick anchor the vertical scale, matching the
+  // Statistics chart — the mini chart is no longer an unlabelled sparkline.
   let out = '<defs><linearGradient id="mg" x1="0" y1="0" x2="0" y2="1">' +
     '<stop class="sc-now" offset="0"/><stop class="sc-now-m" offset="0.62"/><stop class="sc-now-b" offset="1"/></linearGradient></defs>' +
     '<line class="baseline" x1="0" y1="' + (base + 0.5) + '" x2="' + W + '" y2="' + (base + 0.5) + '"/>';
+  const yMax = Math.max(0, ...days.map((x) => x.v));
+  if (yMax > 0) {
+    out += '<line class="grid" x1="0" y1="' + (top - 0.5) + '" x2="' + W + '" y2="' + (top - 0.5) + '"/>' +
+      '<text class="tick" x="0" y="' + (top - 3) + '">' + yMax + '</text>';
+  }
   days.forEach((x, i) => {
     const cx = i * (bw + gap) + bw / 2;
     const h = x.v ? Math.max(3, Math.round((base - top) * (x.v / max))) : 4;
@@ -564,10 +571,16 @@ function refreshMuseStat() {
       const tx = $('musestatText');
       if (!el || !tx) return;
       const n = tabs ? tabs.length : 0;
-      tx.textContent = n > 0
+      // v1.9.0: the header shows a COMPACT, locale-stable count badge — the localized
+      // sentence lives in the tooltip + accessible name. A long sentence ellipsised to
+      // "1 muse.ai …" in every locale was the reported defect (it cannot fit beside the
+      // title AND the language button in 292px, e.g. vi "Tiếng Việt" leaves ~26px).
+      const full = n > 0
         ? (n === 1 ? t('museTabsFoundOne', '1 muse.ai tab open') : t('museTabsFound', '$1 muse.ai tabs open', [String(n)]))
         : t('museTabsNone', 'No muse.ai tab found');
-      el.title = tx.textContent; // full text when the header clips it
+      tx.textContent = String(n);
+      el.title = full; // full text on hover
+      el.setAttribute('aria-label', full);
       el.classList.toggle('on', n > 0);
     });
   } catch { /* ignore */ }

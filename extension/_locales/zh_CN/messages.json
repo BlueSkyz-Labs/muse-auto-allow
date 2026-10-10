@@ -9,10 +9,10 @@
     "message": "自动点击 Allow"
   },
   "delayLabel": {
-    "message": "点击间隔："
+    "message": "点击间隔"
   },
   "clickedLabel": {
-    "message": "已点击："
+    "message": "已点击"
   },
   "noClicks": {
     "message": "暂无点击记录"

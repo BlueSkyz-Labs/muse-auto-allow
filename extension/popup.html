@@ -18,7 +18,7 @@
           --amber: #7a5a20; --amber-bg: rgba(243,217,180,.55);
           --bar-day: #0f63e6; --bar-day-o: .75;
           --c-now: #0040DC; --c-now-m: #0030b0; --c-now-b: #00289c;
-          --axis: rgba(23,24,28,.20);
+          --axis: rgba(23,24,28,.20); --grid: rgba(23,24,28,.22);
           --dur-1: 120ms; --dur-2: 180ms; --dur-3: 200ms;
           --ease-out: cubic-bezier(.22,.61,.36,1); --ease-io: cubic-bezier(.45,.05,.55,.95);
           --sh-1: 0 1px 2px rgba(23,24,28,.05);
@@ -37,7 +37,7 @@
             --amber: #e8c98a; --amber-bg: rgba(243,217,180,.18);
             --bar-day: #5aa5ff; --bar-day-o: .75;
             --c-now: #a9caff; --c-now-m: #97c0ff; --c-now-b: #7fb0ff;
-            --axis: rgba(228,230,235,.36);
+            --axis: rgba(228,230,235,.36); --grid: rgba(228,230,235,.40);
             --sh-1: 0 1px 2px rgba(0,0,0,.35);
             --sh-2: 0 1px 1px rgba(0,0,0,.30), 0 16px 36px -24px rgba(0,0,0,.75);
             --sh-3: 0 2px 8px rgba(0,0,0,.45), 0 30px 64px -32px rgba(0,0,0,.90); }
@@ -53,18 +53,27 @@
          background: var(--bg); color: var(--ink); display: flex; flex-direction: column; position: relative;
          font: 13px/1.5 "Optimistic", "optimisticAI", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
   body > * { flex: 0 0 auto; }
-  .head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-  .head svg { width: 24px; height: 24px; border-radius: 7px; display: block; flex: none;
+  .head { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+  .head > svg { width: 24px; height: 24px; border-radius: 7px; display: block; flex: none;
               box-shadow: 0 6px 14px -7px rgba(0,64,220,.55); }
-  .head svg .ck { stroke-dasharray: 420; stroke-dashoffset: 420; animation: draw .5s var(--ease-out) forwards .05s; }
+  .head > svg .ck { stroke-dasharray: 420; stroke-dashoffset: 420; animation: draw .5s var(--ease-out) forwards .05s; }
   @keyframes draw { to { stroke-dashoffset: 0; } }
-  h1 { font-size: 14px; font-weight: 500; margin: 0; letter-spacing: -0.01em; line-height: 1.35; color: var(--ink); min-width: 0; }
-  .chip { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; font-size: 11px; font-weight: 500;
-          letter-spacing: .01em; padding: 3px 9px; border-radius: 999px; background: transparent; color: var(--muted);
-          border: 1px solid var(--stroke); max-width: 158px; flex: 0 1 auto; min-width: 0; }
+  h1 { font-size: 15px; font-weight: 600; margin: 0; letter-spacing: -0.012em; line-height: 1.3; color: var(--ink); min-width: 0; }
+  /* header status: a STATUS, not a selection — neutral fill, the dot carries the state
+     (so the accent stops doing a status job). Text is deliberately short in every locale
+     so the pill never truncates. */
+  .chip { display: inline-flex; align-items: center; justify-content: center; gap: 5px; margin-left: auto; font-size: 11px; font-weight: 500;
+          letter-spacing: .01em; padding: 3px 7px; border-radius: 999px; background: var(--fill); color: var(--muted);
+          border: 1px solid var(--stroke); min-width: 30px; flex: 0 1 auto; }
   .chip .cd { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; opacity: .9; }
   #musestatText { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .chip.on { background: var(--accent-tint); border-color: var(--accent-line); color: var(--accent-text); }
+  .chip.on { color: var(--ink); border-color: var(--stroke-hover); }
+  .chip.on .cd { background: var(--ok); opacity: 1; }
+  /* one chevron language: an inline-SVG chevron that follows `color` — never a text triangle
+     (the shipped &#9654;/&#9662; glyphs rendered off-centre and read as browser defaults) */
+  .chev { width: 11px; height: 11px; flex: none; display: block; color: var(--muted); opacity: .9;
+          transition: transform var(--dur-1) var(--ease-out); }
+  .chev path { stroke: currentColor; }
   .row { display: flex; align-items: center; gap: 8px; margin: 5px 0; }
   [hidden] { display: none !important; }
   label.sw { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
@@ -82,7 +91,7 @@
   .numwrap { position: relative; flex: 0 0 86px; display: flex; align-items: center; box-sizing: border-box;
              background: var(--fill); border: 1px solid var(--stroke); border-radius: 999px; padding: 2px 8px 2px 4px; }
   .numwrap input { flex: 1 1 auto; width: 100%; min-width: 0; background: transparent; border: 0; padding: 2px 0;
-                   font: inherit; font-weight: 500; color: var(--ink); text-align: right; font-variant-numeric: tabular-nums; }
+                   font: inherit; font-size: 15px; line-height: 1.15; font-weight: 600; color: var(--ink); text-align: right; font-variant-numeric: tabular-nums; }
   .numwrap input:focus-visible { outline: none; }
   .numwrap:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
   .numwrap .unit { flex: 0 0 18px; font-size: 11px; color: var(--muted); }
@@ -92,16 +101,27 @@
   b.count { color: var(--ink); font-size: 15px; font-weight: 600; display: inline-block; transition: transform var(--dur-2) var(--ease-out);
             font-variant-numeric: tabular-nums; }
   b.count.pop { transform: scale(1.15); }
-  .stats { display: flex; align-items: baseline; gap: 14px; margin: 3px 0; }
+  .stats { display: flex; align-items: baseline; gap: 14px; margin: 2px 0; }
   .stat { display: inline-flex; align-items: baseline; gap: 6px; }
+  .stat .muted { font-size: 11px; font-weight: 500; letter-spacing: .01em; }
   .stat + .stat { border-left: 1px solid var(--divide); padding-left: 14px; margin-left: auto; }
-  .mini { margin-top: 4px; }
+  .mini { margin-top: 2px; }
   /* micro-caption tier (spec §2.6): short chart captions only — never localized sentences */
   .mcap { font-size: 10.5px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 0; }
   .mini svg { display: block; }
   #mini text { font-size: 11px; fill: var(--muted); letter-spacing: .01em; }
   #mini text.today { fill: var(--accent-text); font-weight: 600; }
   #mini line.baseline { stroke: var(--axis); stroke-width: 1; }
+  /* y-max gridline + tick anchor the vertical scale (same language as the Statistics chart) */
+  #mini line.grid { stroke: var(--grid); stroke-width: 1; stroke-dasharray: 3 4; }
+  #mini text.tick { font-size: 10.5px; fill: var(--muted); letter-spacing: .02em; paint-order: stroke;
+                    stroke: var(--bg); stroke-width: 3px; stroke-linejoin: round; }
+  /* caption row: the chart's name + a legend for the one highlighted datum */
+  .mcaprow { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .clegend { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 500;
+             letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .clegend .ldot { width: 8px; height: 8px; border-radius: 2px; flex: none;
+                   background: linear-gradient(180deg, var(--c-now) 0%, var(--c-now-m) 62%, var(--c-now-b) 100%); }
   /* data bars are theme-aware solids at 75%; the brand gradient is reserved for "today" */
   #mini rect.bar { fill: var(--bar-day); fill-opacity: var(--bar-day-o); transition: filter var(--dur-1) var(--ease-out); }
   #mini rect.bar:hover { filter: brightness(1.04); }
@@ -116,6 +136,10 @@
   .btn.tonal { background: var(--accent-tint); color: var(--accent-text); border: 1px solid var(--accent-line); }
   .btn.tonal:hover { background: var(--accent-tint-hover); box-shadow: none; }
   .btn.tonal:active { background: var(--accent-tint-hover); }
+  /* the contextual action (Send now) is the primary; a navigation CTA steps back to a ghost */
+  .btn.ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1px var(--stroke); }
+  .btn.ghost:hover { background: var(--fill); box-shadow: inset 0 0 0 1px var(--stroke-hover); }
+  .btn.ghost:active { background: var(--fill-hover); }
   /* disabled 'Send now': explicit inert treatment — readable, never a washed-out primary;
      the lock glyph marks it as unavailable rather than broken */
   .btn:disabled, .btn:disabled:hover, .btn:disabled:active { display: inline-flex; align-items: center; background: var(--fill); color: var(--muted);
@@ -125,16 +149,21 @@
                           mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='5' y='10.5' width='14' height='9.5' rx='2.5'/%3E%3Cpath d='M8.2 10.5V7.6a3.8 3.8 0 0 1 7.6 0v2.9' fill='none' stroke='black' stroke-width='2.6'/%3E%3C/svg%3E") center/contain no-repeat; }
   /* v1.6.0 — Auto follow-up section */
   .sect { margin-top: 8px; border-top: 1px solid var(--divide); padding-top: 8px; }
-  .secthead { display: flex; align-items: center; gap: 8px; font-weight: 500; }
+  .secthead { display: flex; align-items: center; gap: 8px; }
+  /* the section title steps OUT of the body tier into the editorial micro-caption tier AND
+     out of the muted sub-label tier (ink-2, 11px/600) — so it reads as a section header,
+     not as another field label (spec §2.6) */
+  .secttitle { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
   .sect .sw { margin-top: 5px; }
   .fstat { display: flex; align-items: center; gap: 5px; margin-left: auto; font-size: 11px; font-weight: 500;
            padding: 3px 9px; border-radius: 999px; background: var(--fill); color: var(--muted);
-           border: 1px solid transparent; white-space: nowrap; }
+           border: 1px solid var(--stroke); white-space: nowrap; }
   .fstat .fd { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; opacity: .9; }
-  .fstat.on { background: var(--accent-tint); border-color: var(--accent-line); color: var(--accent-text); }
+  .fstat.on { color: var(--ink); border-color: var(--stroke-hover); }
+  .fstat.on .fd { background: var(--accent-state); opacity: 1; }
   .fstat.sent { background: var(--ok-bg); border-color: transparent; color: var(--ok); }
   .fhint { font-size: 11.5px; margin: 3px 0 0; }
-  .fpanel { margin-top: 4px; padding: 7px 0; background: var(--panel); border-radius: 14px; position: relative; }
+  .fpanel { margin-top: 4px; padding: 6px 0; background: var(--panel); border-radius: 14px; position: relative; }
   /* off = collapsed settings + the disabled Send-now pill (explicit treatment + tooltip);
      the tinted panel shows only while the settings are open */
   .fpanel.gated { background: transparent; }
@@ -150,15 +179,19 @@
                overflow-wrap: anywhere; }
   /* one compact wait+cooldown pair — both settings share a row to keep the popup <=600px;
      the unit glyphs (s / min) carry the meaning */
+  /* the two settings share one row as a two-column grid: the labels absorb the slack, so the
+     second pill lands on the SAME right margin as the delay input, the stats, the Safety link
+     and Send now (measured: it sat 18px short) — with no hole between the two columns */
   .fset { gap: 6px; }
-  .fset > label { flex: 0 0 auto; }
+  .fset > label { flex: 1 1 auto; min-width: 0; }
+  .fset > .numwrap { flex: 0 0 86px; }
   select.sel { width: 100%; box-sizing: border-box; background: var(--fill); color: var(--ink); border: 1px solid var(--stroke);
                border-radius: 12px; padding: 4px 30px 4px 10px; font: inherit; appearance: none; -webkit-appearance: none;
                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%235c6069' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
                background-repeat: no-repeat; background-position: right 10px center; }
   textarea.tbox::placeholder { color: var(--muted); opacity: 1; }
   textarea.tbox { width: 100%; box-sizing: border-box; background: var(--fill); color: var(--ink); border: 1px solid var(--stroke);
-                  border-radius: 12px; padding: 6px 10px; font: inherit; resize: vertical; min-height: 34px; }
+                  border-radius: 12px; padding: 6px 10px; font: inherit; resize: none; min-height: 34px; }
   @media (prefers-color-scheme: dark) {
     select.sel { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23a6abb5' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
   }
@@ -176,8 +209,8 @@
              border: 1px solid var(--stroke); border-radius: 12px; padding: 3px 10px; cursor: pointer;
              transition: background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out); }
   .flibbtn:hover { background: var(--fill); border-color: var(--stroke-hover); }
-  .flibbtn .chev { margin-left: auto; font-size: 10px; color: var(--muted); transition: transform var(--dur-1) var(--ease-out); }
-  .flibbtn[aria-expanded="true"] .chev { transform: rotate(90deg); }
+  .flibbtn .chev { margin-left: auto; color: var(--muted); transform: rotate(-90deg); }
+  .flibbtn[aria-expanded="true"] .chev { transform: rotate(0deg); }
   .fcount { font-size: 10.5px; font-weight: 500; padding: 0 6px; border-radius: 999px;
             background: var(--accent-tint); color: var(--accent-text); }
   /* the library/list sheet overlays the rows below it, so the popup height never grows
@@ -231,11 +264,11 @@
   .froti .rm { flex: 0 0 auto; font: inherit; font-size: 11px; line-height: 1.3; background: var(--fill); color: var(--muted);
                border: 0; border-radius: 999px; padding: 1px 8px; cursor: pointer; }
   .froti .rm:hover { color: var(--ink); }
-  .log { margin-top: 4px; border-top: 1px solid var(--divide); padding-top: 6px; min-height: 0; box-sizing: border-box;
+  .log { margin-top: 3px; border-top: 1px solid var(--divide); padding-top: 5px; min-height: 0; box-sizing: border-box;
          overflow: auto; overscroll-behavior: contain; flex: 0 1 auto; }
   /* log row: timestamp column on the left; kind chip + message column on the right, so
      clamped context lines hang under the message column instead of the page margin */
-  .item { position: relative; padding: 5px 0 5px 52px; border-bottom: 1px solid var(--divide); animation: fadein 160ms var(--ease-out); }
+  .item { position: relative; padding: 5px 4px 5px 52px; border-bottom: 1px solid var(--divide); animation: fadein 160ms var(--ease-out); }
   .item:last-child { border-bottom: 0; }
   @keyframes fadein { from { opacity: 0; transform: translateY(-2px); } to { opacity: 1; transform: none; } }
   .item .top { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
@@ -246,7 +279,7 @@
   .item .c { color: var(--muted); font-size: 13px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2;
              -webkit-box-orient: vertical; overflow: hidden; }
   /* the amber "expand" and neutral kinds keep their tinted fills; an allow entry is an outline tag */
-  .k-allow { background: transparent; border: 1px solid var(--accent-line); color: var(--accent-text); }
+  .k-allow { background: var(--accent-tint); color: var(--accent-text); }
   .k-expand { background: var(--amber-bg); color: var(--amber); }
   .k-open-panel { background: var(--fill); color: var(--muted); }
   /* v1.8.0 log kinds: blocked (safety) + the dry-run variants (log-only) */
@@ -257,12 +290,14 @@
     .k-dry { background: rgba(10,92,224,.18); color: #8ab8ff; }
   }
   .empty { color: var(--muted); padding: 4px 0; }
-  .foot { margin: 8px 0 0; border-top: 1px solid var(--divide); padding-top: 8px; justify-content: space-between; }
+  .foot { margin: 7px 0 0; border-top: 1px solid var(--divide); padding-top: 7px; justify-content: space-between; }
   .foot .note { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-thumb { background: rgba(23,24,28,.26); border-radius: 999px; }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-thumb { background: rgba(23,24,28,.22); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(23,24,28,.34); }
   ::-webkit-scrollbar-track { background: transparent; }
-  @media (prefers-color-scheme: dark) { ::-webkit-scrollbar-thumb { background: rgba(236,238,242,.30); } }
+  @media (prefers-color-scheme: dark) { ::-webkit-scrollbar-thumb { background: rgba(236,238,242,.24); }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(236,238,242,.38); } }
 
   /* ======================================================================
      v1.8.0 — pause, Safety & Control, dry-run, digest, onboarding.
@@ -290,7 +325,7 @@
   .safetybtn { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; flex: none; font: inherit;
                font-size: 11.5px; background: none; border: 0; color: var(--muted); cursor: pointer; padding: 2px 0; white-space: nowrap; }
   .safetybtn:hover { color: var(--ink); }
-  .safetybtn .chev { font-size: 9px; }
+  .safetybtn .chev { transform: rotate(-90deg); }
   .schip { font-size: 10px; font-weight: 500; background: var(--accent-tint); color: var(--accent-text);
            border: 1px solid var(--accent-line); border-radius: 999px; padding: 0 6px; }
   /* dry-run banner + digest: inside #logTop, sticky at the top of the log's scroll area */
@@ -375,10 +410,10 @@
   .langwrap { position: relative; flex: none; }
   .langbtn { display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: 11px;
              line-height: 1.4; background: transparent; color: var(--ink); border: 1px solid var(--stroke);
-             border-radius: 999px; padding: 2px 8px; cursor: pointer; white-space: nowrap;
+             border-radius: 999px; padding: 2px 6px; cursor: pointer; white-space: nowrap;
              transition: background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out); }
   .langbtn:hover { background: var(--fill); border-color: var(--stroke-hover); }
-  .langbtn .chev { font-size: 8px; color: var(--muted); }
+  .langbtn .chev { color: var(--muted); }
   .langmenu { position: absolute; right: 0; top: calc(100% + 4px); z-index: 20; min-width: 156px;
               box-sizing: border-box; background: var(--surface); border: 1px solid var(--stroke);
               border-radius: 12px; padding: 4px; display: flex; flex-direction: column; gap: 1px;
@@ -406,13 +441,13 @@
             stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
     <h1 data-i18n="extName">Muse Auto-Allow</h1>
-    <span class="chip" id="musestat"><i class="cd" aria-hidden="true"></i><span id="musestatText">&hellip;</span></span>
+    <span class="chip" id="musestat" role="status"><i class="cd" aria-hidden="true"></i><span id="musestatText">&hellip;</span></span>
     <!-- v1.8.1 — Language switcher: button label = the active language's NATIVE name
          ('Auto' while following the browser); the dropdown lists 'Auto (browser)' + the
          6 native names, active one checked. aria-haspopup/aria-expanded + Escape. -->
     <span class="langwrap" id="langWrap">
       <button type="button" class="langbtn" id="langBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="langMenu">
-        <span id="langBtnText">Auto</span><span class="chev" aria-hidden="true">&#9662;</span>
+        <span id="langBtnText">Auto</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
       <div class="langmenu" id="langMenu" role="menu" aria-label="Language" hidden></div>
     </span>
@@ -430,7 +465,7 @@
       <button type="button" class="pbtn resume" id="presume" data-i18n="pauseResume">Resume</button>
     </span>
     <button type="button" class="safetybtn" id="safetyBtn" aria-expanded="false" aria-controls="safetyPanel">
-      <span data-i18n="safetyOpen">Safety</span><span class="schip" id="safetyChip" hidden></span><span class="chev" aria-hidden="true">&#9654;</span>
+      <span data-i18n="safetyOpen">Safety</span><span class="schip" id="safetyChip" hidden></span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
   </div>
   <label class="sw"><input type="checkbox" id="enabled"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="toggleLabel">Auto-click Allow</span></label>
@@ -440,11 +475,11 @@
     <span class="stat"><span class="muted" data-i18n="clickedLabel" data-nc>Clicked:</span><b class="count" id="count">0</b></span>
     <span class="stat"><span class="muted" data-i18n="todayLabel" data-nc>Today</span><b class="count" id="today">0</b></span>
   </div>
-  <div class="mini"><div class="mcap muted" data-i18n="last7">Last 7 days</div><svg id="mini" width="292" height="46" aria-hidden="true"></svg></div>
+  <div class="mini"><div class="mcaprow"><div class="mcap muted" data-i18n="last7">Last 7 days</div><span class="clegend"><i class="ldot" aria-hidden="true"></i><span data-i18n="todayLabel">Today</span></span></div><svg id="mini" width="292" height="46" aria-hidden="true"></svg></div>
   <!-- v1.6.0 — Auto follow-up: keep Muse working long-run when it goes idle -->
   <!-- v1.7.0 — phrase library + combo builder + round-robin prompt rotation -->
   <div class="sect" id="followupSect">
-    <div class="secthead"><span data-i18n="followupTitle">Auto follow-up</span>
+    <div class="secthead"><span class="secttitle" data-i18n="followupTitle">Auto follow-up</span>
       <span class="fstat" id="fstat" hidden><i class="fd" aria-hidden="true"></i><span id="fstatText" aria-live="polite"></span></span></div>
     <label class="sw"><input type="checkbox" id="followupEnabled"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="followupToggle">Continue when Muse is idle</span></label>
     <div class="fhint muted" id="fhint" hidden>Enable Auto follow-up to change these settings</div>
@@ -458,7 +493,7 @@
       <div class="fblock">
         <button type="button" class="flibbtn" id="flibbtn" aria-expanded="false" aria-controls="flibsheet">
           <span data-i18n="followupLibrary">Phrase library</span><span class="fcount" id="flibcount" hidden></span>
-          <span class="chev" aria-hidden="true">&#9654;</span></button>
+          <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
       <div class="fsheet" id="flibsheet" hidden>
         <div id="fsheetLib">
@@ -487,7 +522,7 @@
         <label class="muted" for="fcool" data-i18n="followupCooldownShort">Cooldown</label>
         <span class="numwrap"><input type="number" id="fcool" min="1" max="1440" step="1"><span class="unit muted">min</span></span>
       </div>
-      <div class="fblock sendrow" id="fsendrow"><span class="fsendnote" id="fsendnote" role="status"></span><button class="btn tonal" id="fsendnow" data-i18n="followupSendNow">Send now</button></div>
+      <div class="fblock sendrow" id="fsendrow"><span class="fsendnote" id="fsendnote" role="status"></span><button class="btn" id="fsendnow" data-i18n="followupSendNow">Send now</button></div>
     </div>
   </div>
   <div class="log" id="log" aria-live="polite">
@@ -506,7 +541,7 @@
     </div>
     <div id="logList"></div>
   </div>
-  <div class="row foot"><span class="note muted" data-i18n="onlyMuse">Works only on muse.ai</span><button class="btn" id="openstats" data-i18n="statsOpen">Statistics</button></div>
+  <div class="row foot"><span class="note muted" data-i18n="onlyMuse">Works only on muse.ai</span><button class="btn ghost" id="openstats" data-i18n="statsOpen">Statistics</button></div>
 
   <!-- v1.8.0 — Safety & Control panel (full-popup overlay: opening it never grows the popup) -->
   <div class="overlay" id="safetyPanel" hidden role="dialog" aria-modal="true" aria-labelledby="safetyH">

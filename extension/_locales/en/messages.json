@@ -9,10 +9,10 @@
     "message": "Auto-click Allow"
   },
   "delayLabel": {
-    "message": "Delay between clicks:"
+    "message": "Delay between clicks"
   },
   "clickedLabel": {
-    "message": "Clicked:"
+    "message": "Clicked"
   },
   "noClicks": {
     "message": "No clicks yet"

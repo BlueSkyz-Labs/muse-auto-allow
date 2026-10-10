@@ -9,10 +9,10 @@
     "message": "Allow 자동 클릭"
   },
   "delayLabel": {
-    "message": "클릭 간격:"
+    "message": "클릭 간격"
   },
   "clickedLabel": {
-    "message": "클릭 수:"
+    "message": "클릭 수"
   },
   "noClicks": {
     "message": "아직 클릭 기록이 없습니다"

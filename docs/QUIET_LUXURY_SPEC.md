@@ -347,3 +347,75 @@ Instrument: `vision_analyze` on the real popup (2x, 640×1200) and Statistics (1
 | calibration | Phase-1 mockup popup | 8/10 | 8.5/10 |
 
 **Honest read: the ≥9/10 *popup* target was not met.** Across four rounds the re-skinned popup scores 4–7/10 premium — the same band as the **shipped** popup under the identical prompt (6/10 premium, 7/10 craft) — while the Statistics page reaches 9/10. The gap is structural, not a regression from this re-skin: the real popup carries the shipped pause row, "Safety" entry and language switcher (none of which the Phase-1 mockup has), which crowd the 320px header so the status chip ellipsises in *every* revision including shipped, and leave the log's 2-line context clamp visibly truncated. The recurring "defects" the reviewer lists are frozen-intent items Phase 1 already dispositioned (graphite/ivory primary, accent reserved for state, outlined neutral pills, no chart y-axis, micro-caps captions, the "19" y-max tick, "all four KPI tiles share one treatment" — a Phase-1 misread that recurred verbatim). The two items it found in *both* the shipped and the re-skinned render (textarea resize handle, scrollbar styling) are shipped behaviour §3 #8 / §3 #2 explicitly leave untouched.
+
+
+---
+
+## 10. Design-iteration record (2026-10-10) — COMPOSITION pass
+
+**Context.** Phase 2 (commit `91f4c14`) applied §2's tokens and every §5 floor held, but vision QA on the
+REAL popup failed honestly: the tokens were right and the **composition** was the gap (4–7/10 premium on
+the same instrument that scored the shipped popup 6/10 and this spec's Phase-1 mockup 8/10). This pass
+fixes composition only. No new colour and no new type size is introduced; one token is added (`--grid`,
+§3 #11's already-documented value) and one previously-unused token (`--ink-2`) is now consumed.
+
+### 10.1 What changed (and why)
+
+| # | Change | Why |
+|---|---|---|
+| C1 | **One alignment grid.** The content column is `[14, 306]` (320 − 2×14). Every right-aligned control — the 300 ms input, `Today`, the Safety link, `Send now`, the `10 min` input, the footer `Statistics` — now ends on **306**. The Wait/Cooldown row was the one break (measured right edge **287.5**); it is now a two-column row whose labels absorb the slack, so the second pill lands on 306 with no hole between the columns. | §3 #8 alignment; the reported "everything sits on a different right margin" |
+| C2 | **Type hierarchy.** Title `14/500` → **`15px/600` −0.012em**. The section title leaves the body tier for the editorial tier: **`11px/600` +0.06em uppercase `--ink-2`** (measured 10.34:1 light / 11.25:1 dark). Stat labels `13px` → **11px/500**; numeric inputs `13/500` → **`15px/600` tabular** (the Numeral tier), units stay 11px muted; log timestamps 12 → 11px. | §2.6; "the title is barely larger than body, the numbers have no numeric scale" |
+| C3 | **Colour semantics — accent stops doing status.** The header status pill and the follow-up status pill become **neutral** (`--fill` + `--stroke`) and carry their state in the **dot**: `--ok` when connected (5.69:1 / 7.98:1) / `--accent-state` when working. The log `allow` tag becomes a soft `--accent-tint` tag (5.33:1 / 7.46:1) instead of an outlined pseudo-button. | §1 rule 1; "one blue does six jobs" |
+| C4 | **Action hierarchy un-inverted.** `Send now` (the contextual action) is now the **primary** graphite/ivory `.btn` (17.74:1 / 14.86:1); the footer `Statistics` navigation CTA steps back to a new **`.btn.ghost`** (outlined, inset ring — no layout growth). | §3 #1; "the contextual action reads secondary while the footer button reads primary" |
+| C5 | **Browser-default artifacts removed.** `textarea` `resize: vertical` → **`resize: none`** (the native handle broke the 12px corner); every `▶`/`▾` text triangle (language button, Safety, Phrase library) becomes **one inline-SVG chevron** that follows `color` and rotates on expand; the scrollbar drops 6 → 5px with a quieter thumb (and a hover step). | §3 #8; the reviewer's artifact list |
+| C6 | **Chart legibility.** The mini chart gains §3 #11's documented **dashed y-max gridline + tick** (`--grid`, same language as the Statistics chart) and a **legend** for the one highlighted datum (`●` + the existing `todayLabel` key — no new i18n key). Geometry: `H 46, top 12, base 36`, labels at y=43 — the scale costs **zero** extra height. | §3 #11; "no scale/legend at all, the today bar is unexplained" |
+| C7 | **Header status made intentional.** The localized sentence could not fit beside the title AND the language button in 292px (measured: vi `Tiếng Việt` leaves ~26px of text room), so the pill rendered as `1 muse.ai …` in every locale. It is now a **compact, locale-stable count badge** (dot + count, `min-width 30px`); the full sentence moves to `title` + `aria-label` (the same `museTabs*` keys, restored to their descriptive form). Verified in all six locales with a 2-digit count: no header overflow, right edge exactly 306. | the reported "domain badge looks BROKEN, not intentional" |
+| C8 | **Rhythm + the ≤600 cap.** Section/log/footer/log-panel padding and margins re-tuned on the §2.5 ladder. Net effect is *shorter*, not taller: the follow-up-ON empty state is **571px** (Phase-2 baseline 590) and the crowded states stay at the 600 cap with the log absorbing (its viewport is 62px vs the baseline's 69px). The 0-item log is not clipped (`clientHeight == scrollHeight`). | §2.5 budget rule; "the log's flex absorb is your lever" |
+
+### 10.2 Measured heights (≤600 in every state)
+
+| State | Phase-2 baseline | This pass |
+|---|---|---|
+| follow-up ON, empty log (CDP) | 590 | **571** |
+| follow-up ON, full log | 600 | **600** (log viewport 62, baseline 69) |
+| sheet open / language menu open | 600 | **600** |
+| `node test/followup-e2e.mjs` (empty / full / sheet) | 594 / 594 / 594 | **581 / 594 / 594** |
+| `node test/lang-switch-e2e.mjs` (menu open / menu+full log) | 437 / 594 | **425 / 594** |
+
+### 10.3 Contrast (measured — token math + real-render pixel verification)
+
+Every text pair ≥ 4.5:1 (light 16.86 … 5.33; dark 15.44 … 6.74). New/changed pairs:
+
+| Pair | Light | Dark |
+|---|---|---|
+| `--ink-2` section title on page (NEW consumption) | **10.34:1** | **11.25:1** |
+| `--ok` status dot on `--fill`/page (NEW) | **5.69:1** | **7.98:1** |
+| log `allow` tag: accent-text on `--accent-tint` | **5.33:1** | **7.46:1** |
+| `Send now` primary: `--on-btn` on `--btn-ink` | **17.74:1** | **14.86:1** |
+| mini bar @.75 vs page (unchanged, graphical) | **3.33:1** | **4.52:1** |
+| toggle ON vs OFF track | **5.68:1** | **4.83:1** |
+| `--grid` y-max dashed line vs page (decorative) | 1.59:1 | 3.47:1 |
+
+The `--grid` hairline is in the same decorative class §5.4 already records for `--axis` / `--divide`
+(1.16–1.68:1): the y-max **value** is carried by the tick numeral (muted, 5.99:1 / 7.78:1), not by the
+line. The flat colours above were verified to exist in the real 2× CDP captures by pixel counting
+(e.g. the composited day bar `rgb(74,136,234)` appears 56 415 times in the light render).
+
+### 10.4 i18n sweep (six locales)
+
+Per-locale CDP probe of the header with a worst-case 2-digit count: `en / vi / zh_CN / ja / ko / es` all
+report **no header overflow** and a header right edge of exactly **306**; `document.scrollWidth` stays
+320 in every locale. The chip is locale-stable (a numeral), so there is no string that can overflow.
+Only two label values changed in `_locales/**`: `clickedLabel` / `delayLabel` lose their trailing colon
+(so `Clicked 489` and `Today 11` match), with parity green.
+
+### 10.5 Honest limits (vision)
+
+The ≥8/10 *premium* bar was **not reached** on this session's instrument, and the instrument itself is
+the finding: on the identical prompt, the Phase-1 mockup scored **5/10 premium** (recorded 8/10 in
+Phase 1) and the Statistics page **5/10** (recorded 9/10) — the whole scale sits ~3–4 points lower than
+the run the Phase-2 calibration used, and the same popup render swung 6 → 4 → 7 → 3 premium across four
+rounds (one pass hallucinated a "vour" typo that is not in the DOM). What the rounds *do* show is a
+real craft gain on the axis the tokens could not reach: light craft **8/10** (twice) vs the 4/10 the
+baseline re-skin scored, with the recurring defects now being frozen-intent items (pill language,
+no per-bar values, uppercase captions) rather than composition breakage.

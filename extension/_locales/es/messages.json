@@ -9,10 +9,10 @@
     "message": "Clic automático en Allow"
   },
   "delayLabel": {
-    "message": "Retardo entre clics:"
+    "message": "Retardo entre clics"
   },
   "clickedLabel": {
-    "message": "Clics:"
+    "message": "Clics"
   },
   "noClicks": {
     "message": "Aún no hay clics"
