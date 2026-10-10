@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- README hero banner — 1400x440, rendered to store/readme-hero.png by scripts/render.mjs.
+     Muse design language (docs/BRANDING.md): light-first surfaces, brand gradient tile,
+     pill chips, Optimistic-style font stack. Original mark only — no Meta/Muse trademarks. -->
+<style>
+  html, body { margin: 0; width: 1400px; height: 440px; overflow: hidden; background: #fcfcfc;
+               color: #111112; font-family: "Optimistic", "optimisticAI", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+               -webkit-font-smoothing: antialiased; }
+  .blob { position: absolute; border-radius: 50%; filter: blur(80px); }
+  .b1 { width: 520px; height: 520px; background: #f3d9b4; left: -200px; top: -260px; opacity: .5; }
+  .b2 { width: 520px; height: 520px; background: #cfe2ff; right: -180px; bottom: -280px; opacity: .85; }
+  .b3 { width: 340px; height: 340px; background: #e3dbfa; right: 440px; top: -230px; opacity: .4; }
+  .wrap { position: relative; height: 100%; display: flex; align-items: center; gap: 56px;
+          padding: 0 104px; box-sizing: border-box; }
+  .copy { flex: 1 1 auto; min-width: 0; }
+  .tile { width: 96px; height: 96px; border-radius: 24px; box-shadow: 0 14px 40px rgba(0,64,220,.20); }
+  h1 { margin: 20px 0 0; font-size: 56px; font-weight: 500; letter-spacing: -0.015em; }
+  p { margin: 12px 0 0; color: #3c4046; font-size: 21px; max-width: 580px; }
+  .chips { display: flex; gap: 12px; margin-top: 24px; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; background: rgba(17,17,18,.08); color: #232527; font-size: 15.5px;
+          font-weight: 500; padding: 9px 18px; border-radius: 999px; border: 1px solid rgba(17,17,18,.12); white-space: nowrap; }
+  .chip .d { width: 9px; height: 9px; border-radius: 50%; }
+  .chip .d.blue { background: #0f63e6; } .chip .d.teal { background: #0e8571; } .chip .d.violet { background: #6d3ad6; }
+
+  .stage { position: relative; flex: 0 0 540px; height: 384px; }
+  .card { background: #fff; border-radius: 20px; box-shadow: 0 24px 70px rgba(17,17,18,.16), 0 0 0 1px rgba(17,17,18,.07); }
+  .pop { position: absolute; right: 0; top: 16px; width: 400px; padding: 18px 22px 26px; box-sizing: border-box; }
+  .chead { display: flex; align-items: center; gap: 10px; }
+  .chead .mini { width: 32px; height: 32px; border-radius: 9px; }
+  .chead b { font-size: 16px; font-weight: 600; }
+  .tchip { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; background: rgba(49,162,76,.13);
+           color: #17642e; font-size: 12px; font-weight: 500; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+  .tchip .td { width: 7px; height: 7px; border-radius: 50%; background: #31a24c; }
+  .crow { display: flex; align-items: center; gap: 10px; margin-top: 16px; font-size: 14px; color: #3c4046; }
+  .cbx { width: 32px; height: 18px; border-radius: 999px; background: #0064e0; position: relative; flex: 0 0 auto; }
+  .cbx::after { content: ""; position: absolute; right: 2px; top: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; }
+  .clog { margin-top: 12px; border-top: 1px solid rgba(17,17,18,.10); }
+  .cli { display: flex; align-items: baseline; gap: 8px; padding: 8px 0;
+         border-bottom: 1px solid rgba(17,17,18,.08); font-size: 14px; }
+  .cli:last-child { border-bottom: 0; }
+  .cli .t { color: #4a4e54; font-variant-numeric: tabular-nums; }
+  .pill { background: rgba(0,100,224,.14); color: #0047a3; font-size: 12px; font-weight: 600;
+          padding: 3px 9px; border-radius: 999px; }
+  .pill.expand { background: rgba(191,87,0,.14); color: #7d3a00; }
+  .cli .ctx { color: #3c4046; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1 1 auto; min-width: 0; }
+
+  /* overlapping mini statistics card — covers only the popup's bottom padding corner */
+  .mini-card { position: absolute; left: 0; bottom: 0; width: 272px; padding: 14px 18px; box-sizing: border-box;
+               background: #fff; border-radius: 18px; z-index: 2;
+               box-shadow: 0 26px 60px rgba(17,17,18,.26), 0 0 0 1px rgba(17,17,18,.06); }
+  .mini-card .head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .mini-card .head .lg { width: 20px; height: 20px; border-radius: 6px; }
+  .mini-card .head b { font-size: 13px; font-weight: 600; }
+  .mini-card .head span { margin-left: auto; font-size: 11.5px; color: #4a4e54; white-space: nowrap; }
+  .mbars { display: flex; align-items: flex-end; gap: 5px; height: 48px; border-bottom: 1px solid rgba(17,17,18,.14); }
+  .mbars i { flex: 1; border-radius: 3px 3px 0 0; display: block;
+             background: linear-gradient(180deg, #0f63e6, #0a4fc4); }
+  .mbars i.now { background: linear-gradient(180deg, #0040DC, #0030b0 62%, #00289c); }
+  .mfoot { display: flex; align-items: baseline; gap: 7px; margin-top: 8px; }
+  .mfoot .v { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+  .mfoot .t { font-size: 12.5px; color: #4a4e54; }
+</style>
+</head>
+<body>
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <div class="wrap">
+    <div class="copy">
+      <svg class="tile" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="bg" x1="72" y1="60" x2="452" y2="464" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#0082FB"/><stop offset="0.62" stop-color="#0064E0"/><stop offset="1" stop-color="#0040DC"/>
+        </linearGradient></defs>
+        <rect x="16" y="16" width="480" height="480" rx="133" fill="url(#bg)"/>
+        <path d="M118 284 L208 374 L362 182" fill="none" stroke="#fff" stroke-width="70" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <h1>Muse Auto-Allow</h1>
+      <p>Auto-accepts Muse approval cards &mdash; so your long-running agent keeps working.</p>
+      <div class="chips">
+        <span class="chip"><span class="d blue"></span>Allow only &mdash; never Deny</span>
+        <span class="chip"><span class="d teal"></span>Local-only</span>
+        <span class="chip"><span class="d violet"></span>6 UI languages</span>
+      </div>
+    </div>
+    <div class="stage">
+      <div class="card pop">
+        <div class="chead">
+          <svg class="mini" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+            <defs><linearGradient id="bg2" x1="72" y1="60" x2="452" y2="464" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stop-color="#0082FB"/><stop offset="0.62" stop-color="#0064E0"/><stop offset="1" stop-color="#0040DC"/>
+            </linearGradient></defs>
+            <rect x="16" y="16" width="480" height="480" rx="133" fill="url(#bg2)"/>
+            <path d="M118 284 L208 374 L362 182" fill="none" stroke="#fff" stroke-width="70" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <b>Muse Auto-Allow</b>
+          <span class="tchip"><span class="td"></span>1 muse.ai tab open</span>
+        </div>
+        <div class="crow"><span class="cbx"></span>Auto-click Allow</div>
+        <div class="clog">
+          <div class="cli"><span class="t">15:01</span><span class="pill">allow</span><span class="ctx">Approved PR read &mdash; demo-project</span></div>
+          <div class="cli"><span class="t">14:57</span><span class="pill">allow</span><span class="ctx">Approved branch creation &mdash; sample-app</span></div>
+          <div class="cli"><span class="t">14:52</span><span class="pill expand">expand</span><span class="ctx">Expanded pending queue &mdash; 2 tasks</span></div>
+        </div>
+      </div>
+      <div class="mini-card">
+        <div class="head">
+          <svg class="lg" viewBox="0 0 512 512"><rect x="16" y="16" width="480" height="480" rx="133" fill="#0064E0"/><path d="M124 284 L214 374 L368 182" fill="none" stroke="#fff" stroke-width="76" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <b>Statistics</b>
+          <span>Day &middot; Last 14 days</span>
+        </div>
+        <div class="mbars">
+          <i style="height:34%"></i><i style="height:46%"></i><i style="height:84%"></i><i style="height:52%"></i>
+          <i style="height:61%"></i><i style="height:72%"></i><i style="height:79%"></i><i style="height:28%"></i>
+          <i style="height:40%"></i><i style="height:64%"></i><i style="height:86%"></i><i class="now" style="height:100%"></i>
+        </div>
+        <div class="mfoot"><span class="v">489</span><span class="t">Total allows &middot; trending up</span></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

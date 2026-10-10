@@ -109,7 +109,14 @@ const JOBS = [
   { src: 'assets/store-screenshot.html', out: 'store/screenshot4-overview.png', w: 1280, h: 800, transparent: false },
   { src: 'assets/promo-tile.html', out: 'store/promo440x280.png', w: 440, h: 280, transparent: false },
   { src: 'assets/marquee.html', out: 'store/marquee1400x560.png', w: 1400, h: 560, transparent: false },
+  // README hero banner (the repo storefront image, 1400x440).
+  { src: 'assets/readme-hero.html', out: 'store/readme-hero.png', w: 1400, h: 440, transparent: false },
 ];
+
+// Optional filter — `node scripts/render.mjs readme-hero` renders only the jobs whose
+// src/out contains the argument (single-asset iteration); no argument renders all jobs.
+const only = process.argv[2];
+const jobsToRun = only ? JOBS.filter((j) => j.src.includes(only) || j.out.includes(only)) : JOBS;
 
 let ws = null;
 let send = null;
@@ -119,7 +126,7 @@ try {
   ws = await connect(info.webSocketDebuggerUrl);
   send = makeSend(ws);
 
-  for (const job of JOBS) {
+  for (const job of jobsToRun) {
     const { targetId } = await send('Target.createTarget', { url: 'about:blank' });
     const { sessionId } = await send('Target.attachToTarget', { targetId, flatten: true });
     await send('Page.enable', {}, sessionId);
