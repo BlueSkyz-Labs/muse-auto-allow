@@ -13,9 +13,9 @@ provided in all six supported languages (en, vi, zh_CN, ja, ko, es). Values mark
 | Item name | **Muse Auto-Allow** |
 | Category | **Productivity** |
 | Default language | English (en) |
-| Version | 1.7.0 |
+| Version | 1.8.0 |
 | Manifest version | Manifest V3 |
-| Extension package | `dist/muse-auto-allow-v1.7.0.zip` |
+| Extension package | `dist/muse-auto-allow-v1.8.0.zip` |
 | License | MIT © 2026 BlueSkyz Labs |
 | Homepage / support URL | `TODO: fill before submit` |
 | Privacy policy URL | `TODO: fill before submit` (host `store/PRIVACY.md` and paste the public link) |
@@ -420,7 +420,7 @@ Compliance notes for this declaration:
 - Manifest V3, no `content_security_policy` relaxation.
 - No analytics SDK, no CDN, no update endpoint. (The optional settings sync uses
   Chrome's built-in sync service — a browser feature, not an extension network call.)
-- `dist/muse-auto-allow-v1.7.0.zip` contains only static files with `manifest.json` at the
+- `dist/muse-auto-allow-v1.8.0.zip` contains only static files with `manifest.json` at the
   zip root.
 
 ---

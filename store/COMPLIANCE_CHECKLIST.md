@@ -1,6 +1,6 @@
 # Chrome Web Store Pre-Submission Compliance Checklist — Muse Auto-Allow
 
-**Prepared:** 2026-10-09 · **Item version:** 1.2.0 (`extension/manifest.json` → `"version": "1.2.0"`) · **Package:** `dist/muse-auto-allow-v1.2.0.zip` *(v1.2.0 baseline — superseded; current version references are in the v1.7.0/v1.8.0 current-state note below and in §10.)*
+**Prepared:** 2026-10-09 · **Item version:** 1.2.0 (`extension/manifest.json` → `"version": "1.2.0"`) · **Package:** `dist/muse-auto-allow-v1.2.0.zip` *(v1.2.0 baseline — superseded; current version references are in the v1.8.0 current-state note below and in §10.)*
 **Scope:** Independent pre-submission review for the Chrome Web Store dashboard. Every checkbox cites the exact file and value it was verified against on 2026-10-09. Items marked `UNCERTAIN` or `OWNER INPUT REQUIRED` must be resolved by the owner before clicking **Submit for review**.
 
 > Provenance: `CHANGELOG.md` (1.2.0 entry) already references this file: "Independent store-compliance checklist added (`store/COMPLIANCE_CHECKLIST.md`)."
@@ -9,7 +9,7 @@
 
 **v1.5.0 addendum:** the release packet is now **1.5.0** — `extension/manifest.json` line 4 (`"version": "1.5.0"`), package `dist/muse-auto-allow-v1.5.0.zip`. The v1.5.0 addendum below supersedes version-specific details in the v1.4.0 addendum and in §1–§11 wherever they conflict; the v1.4.0 addendum remains as history.
 
-**v1.7.0 / v1.8.0 current state (refreshed 2026-10-10, HEAD `0f12a8b`):** the packet now carries the **v1.8 feature set** in the working tree, and the shipped package is **v1.7.0** — `dist/muse-auto-allow-v1.7.0.zip`. `extension/manifest.json` `"version"` still reads **`1.7.0`**; the release freeze bumps it (`docs/ENGINE_V18.md` line 6). Current manifest: `permissions: ["storage", "alarms", "notifications"]` (line 8), `host_permissions` muse.ai only (line 9), and a `commands` block (line 34: `toggle-pause` Alt+Shift+P, `send-followup` Alt+Shift+F) — `commands` is a manifest key, **not** a permission. The refreshed §1–§11 and appendix below supersede every v1.2.0/v1.4.0/v1.5.0-era statement that no longer matches the code; the earlier addenda stay as history.
+**v1.8.0 current state (frozen 2026-10-10, HEAD `91b1726`):** the release freeze has happened — `extension/manifest.json` `"version"` reads **`1.8.0`**, the shipped package is **`dist/muse-auto-allow-v1.8.0.zip`** (162,471 bytes, 18 entries, sha256 `0300d2fa42fa2ea2235669b02dfeaba8a6ee6a06227091ad249f506c4228c53b`), git tag **v1.8.0** points at `91b1726` (remote `main`), and `CHANGELOG.md` carries the 1.8.0 entry. The package has **not** been uploaded to the Chrome Web Store (no CWS review, no store publish). Current manifest: `permissions: ["storage", "alarms", "notifications"]` (line 8), `host_permissions` muse.ai only (line 9), and a `commands` block (line 34: `toggle-pause` Alt+Shift+P, `send-followup` Alt+Shift+F) — `commands` is a manifest key, **not** a permission. The refreshed §1–§11 and appendix below supersede every v1.2.0/v1.4.0/v1.5.0-era statement that no longer matches the code; the earlier addenda stay as history.
 
 ---
 
@@ -133,7 +133,7 @@ Checked against the v1.5.0 revision (commits `d7084da` + `311f006`, 2026-10-09; 
 - [ ] **No network calls.** A second grep, `grep -rnE "https?://" extension/` (excluding `_locales`), returns a single hit: `extension/background.js` line 15 — a `chrome.tabs.query` URL **match pattern**, not a network request. The extension makes zero outbound calls (`store/PRIVACY.md` §3: "there are no servers").
 - [ ] **Only bundled scripts are loaded.** `extension/popup.html` line 573 and `extension/stats.html` line 193 carry the only script tags (`<script src="popup.js">` / `<script src="stats.js">`) — files shipped inside the package. No external `<script src>`, no CDN, no update endpoint (`store/LISTING.md` §6).
 - [ ] **Dashboard answer: "No, I am not using remote code"** (`store/PUBLISH_RUNBOOK.md` Step 3.2; declaration text in `store/LISTING.md` §6). Manifest V3 with an explicit `extension_pages` CSP (`script-src 'self'; object-src 'self'`, `extension/manifest.json` line 11) — a hardening CSP, not a relaxation.
-- [ ] **Shipped zip contains only static files.** `dist/muse-auto-allow-v1.7.0.zip` (current package): 18 entries, `manifest.json` at the zip root, contents = `manifest.json`, `content.js`, `background.js`, `popup.html`, `popup.js`, `stats.html`, `stats.js`, 5 icons, 6 `_locales/*/messages.json` (`scripts/build.mjs` fails with exit code 2 if `manifest.json` is not at the root).
+- [ ] **Shipped zip contains only static files.** `dist/muse-auto-allow-v1.8.0.zip` (current package): 18 entries, `manifest.json` at the zip root, contents = `manifest.json`, `content.js`, `background.js`, `popup.html`, `popup.js`, `stats.html`, `stats.js`, 5 icons, 6 `_locales/*/messages.json` (`scripts/build.mjs` fails with exit code 2 if `manifest.json` is not at the root).
 
 ## 4. Data Usage Disclosures (dashboard → Privacy practices)
 
@@ -198,10 +198,10 @@ Checked against the v1.5.0 revision (commits `d7084da` + `311f006`, 2026-10-09; 
 
 ## 10. Version & Update Process
 
-- [ ] **Current version is consistent everywhere.** `extension/manifest.json` `"version": "1.7.0"` = `store/LISTING.md` §1 "Version 1.7.0" = `dist/muse-auto-allow-v1.7.0.zip`. The **v1.8 feature set** is committed in the working tree at HEAD `0f12a8b`, but the manifest number is not bumped yet (`docs/ENGINE_V18.md` line 6: "the release task bumps it") — bump to `1.8.0`, rebuild and re-verify before uploading.
+- [ ] **Current version is consistent everywhere.** `extension/manifest.json` `"version": "1.8.0"` = `store/LISTING.md` §1 "Version 1.8.0" = `dist/muse-auto-allow-v1.8.0.zip`. The freeze is committed at HEAD `91b1726` (tag `v1.8.0`, remote `main`); the zip is deterministic (double-build byte-identical) and re-verified (`python scripts/verify-zip.py` → 18 matched / 0 mismatched / 0 disk-only / 0 zip-only; `node scripts/smoke-zip.mjs` → exit 0, `ok: true`). Not yet uploaded to the Chrome Web Store.
 - [ ] **Update flow documented: bump → build → upload → resubmit.** `store/PUBLISH_RUNBOOK.md` Step 5: (1) make the change in `extension/`; (2) bump the version in `extension/manifest.json` (Chrome rejects a re-upload with a version not higher than the published one); (3) run `node scripts/build.mjs` → output `dist/muse-auto-allow-v<version>.zip`; (4) dashboard → Package → Upload new package; (5) keep listing text accurate if behavior changed; (6) resubmit for review.
 - [ ] **Build script validates the package.** `scripts/build.mjs` verifies the zip and exits with code 2 if `manifest.json` is not at the zip root; it packages exactly `manifest.json, content.js, background.js, popup.html, popup.js, stats.html, stats.js, icons, _locales`.
-- [ ] **Keep `CHANGELOG.md` updated** on each shipped version (`store/PUBLISH_RUNBOOK.md` Step 5.7; the latest shipped entry in `CHANGELOG.md` is 1.7.0 — a 1.8.0 entry lands with the release freeze).
+- [ ] **Keep `CHANGELOG.md` updated** on each shipped version (`store/PUBLISH_RUNBOOK.md` Step 5.7; the latest shipped entry in `CHANGELOG.md` is 1.8.0, added with the release freeze).
 
 ## 11. Open Notes / UNCERTAIN Items
 
@@ -224,7 +224,7 @@ Checked against the v1.5.0 revision (commits `d7084da` + `311f006`, 2026-10-09; 
 | Image dimensions | PNG IHDR header parse (Python) | screenshot1.png 1280×800; promo440x280.png 440×280; icon128.png 128×128 |
 | Short description length | `len()` on the exact §1 strings (re-run 2026-10-10) | en 128, vi 129, zh_CN 58, ja 77, ko 92, es 131 — all ≤132 |
 | Locales | `ls extension/_locales/` | en, es, ja, ko, vi, zh_CN (6) |
-| Zip integrity | `zipfile` listing of `dist/muse-auto-allow-v1.7.0.zip` | 18 entries; `manifest.json` at root |
+| Zip integrity | `zipfile` listing of `dist/muse-auto-allow-v1.8.0.zip` | 18 entries; `manifest.json` at root |
 | popup.html scripts | `grep -n "<script" extension/popup.html` | 1 hit: bundled `popup.js` only |
 
 *This checklist is documentation-only; it was not executed against a live Chrome Web Store dashboard. E2e results are cited from `docs/REDTEAM_REPORT.md` (not re-run in this pass, per light-process constraint).*

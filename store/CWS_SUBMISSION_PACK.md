@@ -58,14 +58,15 @@ Sources: <https://developer.chrome.com/docs/webstore/cws-dashboard-privacy#list_
 <https://developer.chrome.com/docs/webstore/program-policies/permissions> ("Use of
 Permissions": request the *narrowest* permissions necessary; no future-proofing).
 
-Verified against `extension/manifest.json` (working tree, HEAD `0f12a8b`, 2026-10-10):
+Verified against `extension/manifest.json` (frozen tree, HEAD `91b1726`, 2026-10-10):
 `permissions: ["storage", "alarms", "notifications"]`; `commands: { toggle-pause
 (Alt+Shift+P), send-followup (Alt+Shift+F) }`; `host_permissions: ["https://muse.ai/*",
 "https://*.muse.ai/*"]`. Nothing else is declared — exactly what the v1.8 feature set
 (pause, dry-run, rules, smart/scheduled follow-ups, digest, optional settings sync,
 onboarding) requires, and `scripts/lint.mjs` fails on any added permission.
-*(`manifest.version` still reads `1.7.0` in the working tree; the release freeze bumps
-it — re-confirm this section against the frozen package before submitting.)*
+*(`manifest.version` now reads `1.8.0` on the frozen tree — the release freeze has
+happened; the package is `dist/muse-auto-allow-v1.8.0.zip`. This section matches the
+frozen package; it is not yet uploaded to the Chrome Web Store.)*
 
 ### `storage`
 
@@ -121,7 +122,7 @@ extension needs none of them.
 `storage`/`alarms`/`notifications` allowlist, any host set other than the two muse.ai
 patterns, or a missing explicit `extension_pages` CSP — so the packaged manifest can
 never silently drift from these answers. (Allowlist verified in the working tree,
-HEAD `0f12a8b`, 2026-10-10, lint exit 0 — the allowlist and the manifest moved together
+HEAD `91b1726`, 2026-10-10, lint exit 0 — the allowlist and the manifest moved together
 in the v1.8 lane.)
 
 ---
@@ -405,7 +406,7 @@ Source: <https://developer.chrome.com/docs/webstore/review-process#warning>
 - [ ] Build + verify the zip for the frozen release version; attach it to the GitHub Release (see `docs/GITHUB_PUBLISH_RUNBOOK.md`).
 - [ ] Sanity-check Muse's terms of service for user-side auto-approval before public launch.
 - [ ] Confirm the four screenshots and both promo images reflect the frozen build.
-- [ ] Re-verify §2 (permissions `storage`/`alarms`/`notifications` + `commands`) against the frozen v1.8 package after the release freeze — §2 already matches the working-tree `extension/manifest.json` at HEAD `0f12a8b`; the `manifest.version` bump is the only change expected.
+- [ ] Re-verify §2 (permissions `storage`/`alarms`/`notifications` + `commands`) against the frozen v1.8 package — §2 matches the frozen `extension/manifest.json` at HEAD `91b1726` (`manifest.version` reads `1.8.0`); the package is `dist/muse-auto-allow-v1.8.0.zip`.
 
 ---
 
