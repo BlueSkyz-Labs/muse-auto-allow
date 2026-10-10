@@ -36,6 +36,6 @@ store images are light-theme (Muse language).
 - [ ] Replace the `TODO: fill before submit` placeholders in `store/PRIVACY.md` (publisher legal name, support email/URL, effective date)
 - [ ] Upload screenshots 1–4, promo tile, marquee
 - [ ] Paste listing copy per locale from `store/LISTING.md`
-- [ ] Paste permission justifications (storage / alarms / host)
+- [ ] Paste permission justifications (storage / alarms / notifications / host)
 - [ ] Host the privacy policy at a public URL and paste it into the dashboard
 - [ ] Build + verify the zip; upload `dist/muse-auto-allow-v1.7.0.zip`

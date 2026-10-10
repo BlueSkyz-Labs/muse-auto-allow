@@ -24,10 +24,10 @@ provided in all six supported languages (en, vi, zh_CN, ja, ko, es). Values mark
 ### Short description (English, ≤132 characters)
 
 ```
-Auto-click Allow on Muse (muse.ai) approval requests so your agent keeps running. Local-only, no data sent.
+Auto-click Allow on Muse (muse.ai) approval requests so your agent keeps running. Local-only by default; optional settings sync.
 ```
 
-> Verified length: 107 characters (limit 132). The listing title stays **Muse
+> Verified length: 128 characters (limit 132). The listing title stays **Muse
 > Auto-Allow** as-is in every locale; the in-browser name is localized separately via
 > `extension/_locales/*/messages.json`. The Chrome Web Store lets you localize the
 > short description per language in the **Store listing → localized** tab — all six
@@ -37,16 +37,23 @@ Auto-click Allow on Muse (muse.ai) approval requests so your agent keeps running
 
 | Locale | Short description | Characters |
 |---|---|---|
-| en | Auto-click Allow on Muse (muse.ai) approval requests so your agent keeps running. Local-only, no data sent. | 107 |
-| vi | Tự động bấm Allow cho các yêu cầu phê duyệt của Muse (muse.ai) để agent của bạn chạy liên tục. Chỉ lưu cục bộ, không gửi dữ liệu. | 129 |
-| zh_CN | 自动点击 Muse（muse.ai）批准请求中的“Allow”，让你的智能体持续运行。仅保存在本地，不发送任何数据。 | 58 |
-| ja | Muse（muse.ai）の承認リクエストで「Allow」を自動クリックし、あなたのエージェントを止めずに動かします。ローカル保存のみ、データ送信なし。 | 76 |
-| ko | Muse(muse.ai)의 승인 요청에서 'Allow'를 자동으로 클릭해 에이전트가 계속 실행되도록 합니다. 로컬에만 저장되며 데이터는 전송되지 않습니다. | 86 |
-| es | Clic automático en Allow cuando Muse (muse.ai) pide aprobación, para que tu agente siga en marcha. Todo local, sin enviar datos. | 128 |
+| en | Auto-click Allow on Muse (muse.ai) approval requests so your agent keeps running. Local-only by default; optional settings sync. | 128 |
+| vi | Tự động bấm Allow cho các yêu cầu phê duyệt của Muse (muse.ai) để agent chạy liên tục. Mặc định chỉ lưu cục bộ, không gửi dữ liệu. | 130 |
+| zh_CN | 自动点击 Muse（muse.ai）批准请求中的“Allow”，让你的智能体持续运行。默认仅保存在本地，不发送任何数据。 | 60 |
+| ja | Muse（muse.ai）の承認リクエストで「Allow」を自動クリックし、あなたのエージェントを止めずに動かします。既定ではローカル保存のみ、データ送信なし。 | 80 |
+| ko | Muse(muse.ai)의 승인 요청에서 'Allow'를 자동으로 클릭해 에이전트가 계속 실행되도록 합니다. 기본적으로 로컬에만 저장되며 데이터는 전송되지 않습니다. | 92 |
+| es | Clic automático en Allow cuando Muse (muse.ai) pide aprobación, para que tu agente siga. Local por defecto, sin enviar datos. | 125 |
 
 ---
 
 ## 2. Detailed description (all six languages)
+
+> **v1.8 note — localized updates queued:** the **English** description below is
+> updated for the current release (pause, dry-run, allow-once, rules, digest,
+> smart/scheduled follow-ups, optional settings sync, onboarding). The localized
+> descriptions retain their core feature lists (accurate for what they describe, just
+> not yet listing the new options) and their privacy lines are updated for the
+> settings-sync disclosure. Localized feature-list additions are queued.
 
 ### English (en)
 
@@ -73,17 +80,34 @@ keeps moving.
 
 **You stay in control**
 - On/off switch in the popup — turn it off at any time.
+- Pause automation (keyboard shortcut Alt+Shift+P, 15 minutes; press again to resume)
+  — the popup and toolbar badge show the paused state.
+- Dry-run mode: log exactly what would be clicked without clicking anything.
+- Allow-once mode: when Muse offers an "Allow once" option, prefer that one-shot
+  approval over a standing "always" grant.
+- Rules: auto-click only the topics you list, and a block-keyword list (delete,
+  payment, deploy, …) that is never clicked — blocked cards are logged with the reason.
 - Adjustable delay between clicks (milliseconds).
 - A click counter and a log of the last 50 clicks, so you can see exactly what it did
   (kind, button label, and context).
+- Smart follow-ups: optionally nudge your Muse agent to keep going — including recovery
+  prompts when it looks stuck or has hit an error — and restrict sending to hours you
+  choose.
+- Startup digest: a desktop notification summarizing recent activity (clicks,
+  follow-ups, blocked items) — composed on your device.
+- Optional settings sync: carry your settings to other Chrome profiles through Chrome's
+  built-in sync — off by default, settings only (logs and statistics never sync).
+- A short first-run setup wizard.
 - A built-in Statistics page: clicks by day / week / month / year, and by topic
   (repo / project) — light inline charts, instant load.
 
 **Private by design**
 - Everything happens on your device. Settings and the click log are stored locally in
   your browser.
-- No account, no analytics, no tracking, no remote code, and nothing is ever sent to
-  any server.
+- No account, no analytics, no tracking, no remote code. By default nothing is sent to
+  any server. The one optional exception: if you enable settings sync (off by default),
+  a settings-only subset is mirrored through Chrome's own sync to your Google profile —
+  logs and statistics never sync.
 
 Muse Auto-Allow runs only on muse.ai pages, only while you have the extension enabled.
 
@@ -120,8 +144,9 @@ bị ngắt quãng.
 
 **Riêng tư ngay từ thiết kế**
 - Mọi thứ diễn ra trên máy bạn. Cài đặt và nhật ký bấm được lưu cục bộ trong trình duyệt.
-- Không tài khoản, không phân tích, không theo dõi, không mã từ xa, và không gửi gì lên
-  máy chủ nào.
+- Không tài khoản, không phân tích, không theo dõi, không mã từ xa, và mặc định không gửi
+  gì lên máy chủ nào. Nếu bạn bật tuỳ chọn Đồng bộ cài đặt (mặc định tắt), chỉ cài đặt
+  được đồng bộ qua Chrome — nhật ký và thống kê không bao giờ được đồng bộ.
 
 Muse Auto-Allow chỉ chạy trên các trang muse.ai, và chỉ khi bạn đang bật tiện ích.
 
@@ -154,7 +179,7 @@ Muse（muse.ai）在执行操作前会暂停并向你请求批准。你一旦离
 
 **隐私优先**
 - 一切都在你的设备上完成。设置和点击日志仅保存在浏览器本地。
-- 无需账号，无分析、无追踪、无远程代码，也不会向任何服务器发送数据。
+- 无需账号，无分析、无追踪、无远程代码，默认也不会向任何服务器发送数据。若开启“同步设置”（默认关闭），仅设置通过 Chrome 同步镜像——日志与统计绝不会同步。
 
 Muse Auto-Allow 仅在 muse.ai 页面上运行，且只在你启用该扩展时运行。
 
@@ -189,8 +214,9 @@ Muse（muse.ai）は操作の前に承認を求めて一時停止します。席
 
 **プライバシー重視の設計**
 - すべて端末上で完結します。設定とクリックログはブラウザ内にローカル保存されます。
-- アカウント不要、解析なし、トラッキングなし、リモートコードなし。サーバーへの送信は
-  一切ありません。
+- アカウント不要、解析なし、トラッキングなし、リモートコードなし。既定ではサーバーへの送信は
+  一切ありません。「設定の同期」（既定でオフ）を有効にした場合のみ、設定が Chrome の同期で
+  ミラーされます。ログと統計は同期されません。
 
 Muse Auto-Allow は muse.ai のページでのみ、あなたが拡張機能を有効にしている間だけ動作
 します。
@@ -227,7 +253,9 @@ Muse(muse.ai)는 작업 전에 승인을 요청하며 잠시 멈춥니다. 자�
 **설계부터 개인정보 보호**
 - 모든 동작은 사용자 기기에서 이루어집니다. 설정과 클릭 로그는 브라우저에 로컬로
   저장됩니다.
-- 계정도, 분석도, 추적도, 원격 코드도 없으며 어떤 서버로도 전송하지 않습니다.
+- 계정도, 분석도, 추적도, 원격 코드도 없으며 기본적으로 어떤 서버로도 전송하지 않습니다.
+  '설정 동기화'(기본 꺼짐)를 켜면 설정만 Chrome 동기화로 미러링되며, 로그와 통계는
+  동기화되지 않습니다.
 
 Muse Auto-Allow는 muse.ai 페이지에서만, 그리고 확장 기능을 켜 둔 동안에만 실행됩니다.
 
@@ -265,8 +293,10 @@ se detenga.
 **Privacidad desde el diseño**
 - Todo ocurre en tu dispositivo. Los ajustes y el registro de clics se guardan localmente
   en tu navegador.
-- Sin cuenta, sin analítica, sin rastreo, sin código remoto y sin enviar nada a ningún
-  servidor.
+- Sin cuenta, sin analítica, sin rastreo, sin código remoto y, por defecto, sin enviar nada
+  a ningún servidor. Si activas la sincronización de ajustes (desactivada por defecto),
+  solo los ajustes se replican mediante Chrome; los registros y estadísticas nunca se
+  sincronizan.
 
 Muse Auto-Allow solo se ejecuta en páginas de muse.ai, y solo mientras tengas la extensión
 activada.
@@ -296,16 +326,28 @@ it does not interact with any site other than muse.ai.
 ## 5. Permission justifications (dashboard → Privacy practices)
 
 ### `storage`
-Saves the user's own settings (on/off state, click delay, click counter, compact click
-statistics) and the local click log (the last 50 clicks) so the popup and statistics page can
-show the current state and history. Data stays in
-`chrome.storage.local` on the user's device and is never transmitted.
+Saves the user's own settings (on/off state, click delay, click counter, pause, rules,
+follow-up options, compact click statistics) and the local click log (the last 50 clicks)
+so the popup and statistics page can show the current state and history. Data stays in
+`chrome.storage.local` on the user's device and is never transmitted. Also backs the
+optional, off-by-default settings sync — a settings-only mirror through
+`chrome.storage.sync` into the user's own Google Account; logs and statistics never sync.
 
 ### `alarms`
 Schedules a once-a-minute nudge so the extension can process approval requests that
 appear in background tabs, not only the tab the user is looking at. The alarm only
 triggers local detection/clicking on already-open muse.ai pages; it makes no network
 requests.
+
+### `notifications`
+Shows the local activity digest — a short summary of recent clicks, follow-ups, and
+blocked items — as a desktop notification on browser startup. The digest is composed on
+the user's device from locally stored data; the permission is used only to display it.
+
+### `commands` (keyboard shortcuts — not a permission)
+The manifest declares two keyboard shortcuts: `toggle-pause` (Alt+Shift+P) and
+`send-followup` (Alt+Shift+F). `commands` is a manifest key, not a permission — there is
+no dashboard justification field for it, and it grants no extra access.
 
 ### Host permission — `https://muse.ai/*` and `https://*.muse.ai/*`
 Required to run the content script that detects and clicks the Allow button, and only on
@@ -329,7 +371,8 @@ The extension needs none of them.
 
 Compliance notes for this declaration:
 - Manifest V3, no `content_security_policy` relaxation.
-- No analytics SDK, no CDN, no update endpoint.
+- No analytics SDK, no CDN, no update endpoint. (The optional settings sync uses
+  Chrome's built-in sync service — a browser feature, not an extension network call.)
 - `dist/muse-auto-allow-v1.7.0.zip` contains only static files with `manifest.json` at the
   zip root.
 
@@ -340,7 +383,8 @@ Compliance notes for this declaration:
 These map to the Chrome Web Store **Privacy practices** form.
 
 **7.1 Data collection**
-- Does the extension collect or use user data? → **No.**
+- Does the extension collect or use user data? → **No** (nothing is sent to the developer;
+  the optional, off-by-default settings sync is disclosed in 7.2).
 - Data types collected (personally identifiable information, health, financial and
   payment, authentication, personal communications, location, web history, user activity,
   website content): → **None.**
@@ -352,8 +396,11 @@ These map to the Chrome Web Store **Privacy practices** form.
 - Is data used or transferred to determine creditworthiness or for lending purposes?
   → **No.**
 - Is data used to personalize ads or for advertising? → **No.**
-- Is data transmitted off the user's device? → **No.** Settings and the click log are
-  stored only in `chrome.storage.local`.
+- Is data transmitted off the user's device? → **No, by default.** Settings and the
+  click log are stored only in `chrome.storage.local`. If the user explicitly enables
+  the optional Sync settings feature, a settings-only subset mirrors via
+  `chrome.storage.sync` into the user's own Google Account; the click log, statistics,
+  and counters never sync.
 
 **7.3 Certifications to check in the dashboard**
 - [x] I do not sell or transfer user data to third parties, outside of the approved use
@@ -369,12 +416,16 @@ These map to the Chrome Web Store **Privacy practices** form.
 Muse Auto-Allow has a single purpose: on muse.ai pages only, it auto-clicks the
 "Allow" button on Muse's own approval-request UI so the user's Muse agent does not
 stop for manual approvals. It calls no remote servers, contains no remote code, and
-collects/transmits no data. Settings, a local last-50 click log and compact click statistics live in
-chrome.storage.local. It never clicks Deny/Reject/Decline and never clicks lone
-"Allow" permission banners. Permissions: storage (local settings + log), alarms
-(once-a-minute check so background-tab approvals are handled), host permission
-muse.ai (detect/click the Allow button). See [PRIVACY POLICY URL — TODO: fill before
-submit].
+sends no data to the developer. Settings, a local last-50 click log and compact click
+statistics live in chrome.storage.local. The optional "Sync settings" feature is off
+by default; when enabled it mirrors a settings-only subset through Chrome's built-in
+sync into the user's own Google Account (never logs or statistics). It never clicks
+Deny/Reject/Decline and never clicks lone "Allow" permission banners. Permissions:
+storage (local settings + log; optional settings sync), alarms (once-a-minute check so
+background-tab approvals are handled), notifications (show the locally-composed
+activity digest), host permission muse.ai (detect/click the Allow button). Keyboard
+shortcuts (commands: Alt+Shift+P pause, Alt+Shift+F follow-up) need no extra
+permission. See [PRIVACY POLICY URL — TODO: fill before submit].
 ```
 
 > **TODO: fill before submit** — replace `[PRIVACY POLICY URL …]` with the public URL

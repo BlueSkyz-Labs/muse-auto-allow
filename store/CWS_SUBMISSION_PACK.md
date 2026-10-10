@@ -58,16 +58,22 @@ Sources: <https://developer.chrome.com/docs/webstore/cws-dashboard-privacy#list_
 <https://developer.chrome.com/docs/webstore/program-policies/permissions> ("Use of
 Permissions": request the *narrowest* permissions necessary; no future-proofing).
 
-Verified against `extension/manifest.json` (this release): `permissions: ["storage",
-"alarms"]`; `host_permissions: ["https://muse.ai/*", "https://*.muse.ai/*"]`. Nothing
-else is declared.
+Verified against `extension/manifest.json` (working tree, 2026-10-10): `permissions:
+["storage", "alarms", "notifications"]`; `commands: { toggle-pause (Alt+Shift+P),
+send-followup (Alt+Shift+F) }`; `host_permissions: ["https://muse.ai/*",
+"https://*.muse.ai/*"]`. Nothing else is declared.
+*(verify at integration — re-confirm this section against the frozen v1.8
+`extension/manifest.json` after the release freeze, before submitting.)*
 
 ### `storage`
 
-Saves the user's own settings (on/off state, click delay, click counter, compact click
-statistics) and the local click log (the last 50 clicks) so the popup and statistics
-page can show the current state and history. Data stays in `chrome.storage.local` on
-the user's device and is never transmitted.
+Saves the user's own settings (on/off state, click delay, click counter, pause, rules,
+follow-up options, compact click statistics) and the local click log (the last 50
+clicks) so the popup and statistics page can show the current state and history. Data
+stays in `chrome.storage.local` on the user's device and is never transmitted. Also
+backs the optional, off-by-default settings sync — a settings-only mirror through
+`chrome.storage.sync` into the user's own Google Account (§3.2a has the full
+disclosure); logs and statistics never sync.
 
 ### `alarms`
 
@@ -75,6 +81,27 @@ Schedules a once-a-minute nudge so the extension can process approval requests t
 appear in background tabs, not only the tab the user is looking at. The alarm only
 triggers local detection/clicking on already-open muse.ai pages; it makes no network
 requests.
+
+### `notifications`
+
+Shows the local activity digest — a short summary of recent clicks, follow-ups, and
+blocked items — as a desktop notification on browser startup, and only when there is
+something to report. The digest is composed on the user's device from data already
+stored locally (no data is collected, fetched, or transmitted to build it); the
+permission is used only to display that notification. The permissions list documents
+`notifications` as giving access to the `chrome.notifications` API ("Display
+notifications" warning).
+Sources: <https://developer.chrome.com/docs/extensions/reference/permissions-list> ·
+<https://developer.chrome.com/docs/extensions/reference/api/notifications>
+
+### `commands` (keyboard shortcuts — not a permission)
+
+The manifest declares two keyboard shortcuts: `toggle-pause` (suggested
+Alt+Shift+P — pause or resume automation) and `send-followup` (suggested Alt+Shift+F —
+send the follow-up prompt to the active muse.ai tab). `commands` is a manifest key, not
+a permission: there is no dashboard justification field for it, and it grants no extra
+access. It is listed here so this pack matches the manifest exactly.
+Source: <https://developer.chrome.com/docs/extensions/reference/api/commands>
 
 ### Host permission — `https://muse.ai/*` and `https://*.muse.ai/*`
 
@@ -89,9 +116,11 @@ is requested.
 extension needs none of them.
 
 **Integrity guard:** `scripts/lint.mjs` fails on any manifest permission outside the
-`storage`/`alarms` allowlist, any host set other than the two muse.ai patterns, or a
-missing explicit `extension_pages` CSP — so the packaged manifest can never silently
-drift from these answers.
+`storage`/`alarms`/`notifications` allowlist, any host set other than the two muse.ai
+patterns, or a missing explicit `extension_pages` CSP — so the packaged manifest can
+never silently drift from these answers. (Allowlist verified in the working tree,
+2026-10-10, lint exit 0; verify at integration — the allowlist and manifest move
+together in the v1.8 lane.)
 
 ---
 
@@ -136,12 +165,28 @@ Also answer **No** wherever the form asks about advertising/personalized ads.
 
 Limited Use compliance note: the policy requires that data use be limited to the
 disclosed single purpose and that any collected data be handled securely — this
-extension collects nothing and transmits nothing, so it complies trivially. The
-disclosures here are identical to `store/PRIVACY.md` §1, §2, and §3 (settings, a local
-last-50 click log, and compact click statistics live in `chrome.storage.local` and
-never leave the device; no analytics, tracking, or advertising).
+extension collects nothing and sends nothing to the developer, so it complies
+trivially. The disclosures here are identical to `store/PRIVACY.md` §1, §2, and §3
+(settings, a local last-50 click log, and compact click statistics live in
+`chrome.storage.local`; no analytics, tracking, or advertising). The one optional
+data-flow surface — the off-by-default settings sync — is disclosed in §3.2a and in
+`store/PRIVACY.md` §2.
 Sources: <https://developer.chrome.com/docs/webstore/program-policies/limited-use> ·
 <https://developer.chrome.com/docs/webstore/cws-dashboard-privacy#certify_your_data_use_practices>
+
+### 3.2a Settings-sync surface (v1.8) — disclose it in the reviewer note
+
+New optional surface, **off by default**: when the user enables **Sync settings**, a
+compact settings-only subset (on/off, click delay, dry-run, allow-once, topic/keyword
+rules, follow-up options) mirrors through Chrome's built-in `chrome.storage.sync` into
+the user's own Google Account, so settings follow their Chrome profile. It never
+includes the click log, statistics, counters, digest timestamps, or any page content,
+and the developer receives nothing. Chrome enforces the sync quota — 8 KB per item,
+~100 KB total, 512 items max — which bounds the subset further. This is the only
+surface through which any data can leave the device, and only with explicit user
+opt-in.
+Sources: <https://developer.chrome.com/docs/extensions/reference/api/storage> (sync
+quotas) · <https://developer.chrome.com/docs/webstore/cws-dashboard-privacy>
 
 ### 3.3 Privacy policy URL
 
@@ -155,12 +200,16 @@ Source: <https://developer.chrome.com/docs/webstore/cws-dashboard-privacy#set-pr
 Muse Auto-Allow has a single purpose: on muse.ai pages only, it auto-clicks the
 "Allow" button on Muse's own approval-request UI so the user's Muse agent does not
 stop for manual approvals. It calls no remote servers, contains no remote code, and
-collects/transmits no data. Settings, a local last-50 click log and compact click
-statistics live in chrome.storage.local. It never clicks Deny/Reject/Decline and never
-clicks lone "Allow" permission banners. Permissions: storage (local settings + log),
-alarms (once-a-minute check so background-tab approvals are handled), host permission
-muse.ai (detect/click the Allow button). See [PRIVACY POLICY URL — TODO: fill before
-submit].
+sends no data to the developer. Settings, a local last-50 click log and compact click
+statistics live in chrome.storage.local. The optional "Sync settings" feature is off
+by default; when enabled it mirrors a settings-only subset through Chrome's built-in
+sync into the user's own Google Account (never logs or statistics). It never clicks
+Deny/Reject/Decline and never clicks lone "Allow" permission banners. Permissions:
+storage (local settings + log; optional settings sync), alarms (once-a-minute check so
+background-tab approvals are handled), notifications (show the locally-composed
+activity digest), host permission muse.ai (detect/click the Allow button). Keyboard
+shortcuts (commands: Alt+Shift+P pause, Alt+Shift+F follow-up) need no extra
+permission. See [PRIVACY POLICY URL — TODO: fill before submit].
 ```
 
 > The reviewer-facing equivalent of this pack's §5.2 walkthrough can go in the
@@ -175,8 +224,8 @@ Dashboard reference: <https://developer.chrome.com/docs/webstore/cws-dashboard-l
 | Field | Value (from this repo) | Official limit / requirement | Source |
 |---|---|---|---|
 | Item name | "Muse Auto-Allow" — resolved from manifest `name` = `__MSG_extName__` (`extension/_locales/en/messages.json`); 15 characters | Manifest `name` is "a short, plain text string (maximum of **75 characters**)". Note: older guides still cite a legacy 45-character store limit — this name satisfies both. Keep listing names consistent across locales. | [manifest/name](https://developer.chrome.com/docs/extensions/reference/manifest/name) · [prepare](https://developer.chrome.com/docs/webstore/prepare) |
-| Short description | EN: "Auto-click Allow on Muse (muse.ai) approval requests so your agent keeps running. Local-only, no data sent." (107 chars; all 6 localized variants in `LISTING.md` §1) | **≤ 132 characters** — "A string of no more than 132 characters"; "Your summary … (132 characters or less)". | [prepare](https://developer.chrome.com/docs/webstore/prepare) · [best-listing](https://developer.chrome.com/docs/webstore/best-listing) |
-| Detailed description | Per locale, from `store/LISTING.md` §2 (en, vi, zh_CN, ja, ko, es) | No numeric limit is published in the official docs (the dashboard enforces its own bound at entry); keep it accurate, concise, and free of keyword stuffing. | [cws-dashboard-listing](https://developer.chrome.com/docs/webstore/cws-dashboard-listing) · [spam FAQ](https://developer.chrome.com/docs/webstore/program-policies/spam-faq#keyword-spam) |
+| Short description | EN: "Auto-click Allow on Muse (muse.ai) approval requests so your agent keeps running. Local-only by default; optional settings sync." (128 chars; all 6 localized variants in `LISTING.md` §1) | **≤ 132 characters** — "A string of no more than 132 characters"; "Your summary … (132 characters or less)". | [prepare](https://developer.chrome.com/docs/webstore/prepare) · [best-listing](https://developer.chrome.com/docs/webstore/best-listing) |
+| Detailed description | Per locale, from `store/LISTING.md` §2 (en, vi, zh_CN, ja, ko, es). EN updated for v1.8 (pause, dry-run, allow-once, rules, digest, smart/scheduled follow-ups, optional settings sync, onboarding); localized v1.8 feature-list additions queued — the localized v1.7 feature lists stay accurate and the localized privacy lines are updated for the sync disclosure. | No numeric limit is published in the official docs (the dashboard enforces its own bound at entry); keep it accurate, concise, and free of keyword stuffing. | [cws-dashboard-listing](https://developer.chrome.com/docs/webstore/cws-dashboard-listing) · [spam FAQ](https://developer.chrome.com/docs/webstore/program-policies/spam-faq#keyword-spam) |
 | Category | **Productivity** (one primary category; rationale in `LISTING.md` §3) | "The primary category under which your item should be listed." | [cws-dashboard-listing](https://developer.chrome.com/docs/webstore/cws-dashboard-listing) |
 | Language(s) | Default English (en); localized listings for vi, zh_CN, ja, ko, es (copy in `LISTING.md`) | "Your item's language"; localized listings use the extension's `_locales` set. | [cws-dashboard-listing#localize_your_listing](https://developer.chrome.com/docs/webstore/cws-dashboard-listing#localize_your_listing) |
 | Homepage / support URL | `TODO` placeholders in `LISTING.md` §9 — fill before submit | Optional fields; appear on the listing. | [cws-dashboard-listing#additional-fields](https://developer.chrome.com/docs/webstore/cws-dashboard-listing#additional-fields) |
@@ -261,11 +310,18 @@ Verification steps (no extension-specific credentials required):
    log shows the entry (kind "allow", label, context). The Statistics page
    (popup → Statistics) shows the per-day count.
 5. Toggle the extension off in the popup: approval cards are no longer clicked.
-6. Safety demonstration: the extension never clicks Deny/Reject/Decline and never
+6. Pause / dry-run: press Alt+Shift+P to pause automation for 15 minutes (press again
+   to clear); enable dry-run mode to see log entries with a "-dry" suffix while nothing
+   is clicked.
+7. Safety demonstration: the extension never clicks Deny/Reject/Decline and never
    clicks lone "Allow" buttons (e.g. browser permission prompts); each button is
-   clicked at most once.
+   clicked at most once; cards matching the block-keyword list are logged as blocked.
+8. Digest: after a session with clicks, restart Chrome — a desktop notification
+   summarizes recent activity (composed locally on the device).
 Test data: the extension stores only local settings, a last-50 click log, and compact
-counters (chrome.storage.local). No account, no network calls.
+counters (chrome.storage.local). Settings sync is off by default; if enabled, a
+settings-only subset mirrors via Chrome's built-in sync. No account, no extension
+network calls.
 ```
 
 ### 5.3 Common rejection causes → why this submission avoids each
@@ -277,11 +333,11 @@ notification IDs) · <https://developer.chrome.com/docs/webstore/program-policie
 | Common cause (official category) | Why this submission is clear |
 |---|---|
 | **No / vague single purpose** | §1 statement names the exact site (muse.ai) and the exact action (click Allow on approval requests); every feature in the package serves it. |
-| **Broader permissions than needed / unused permissions** | Only `storage`, `alarms`, and the muse.ai hosts are requested, each justified in §2; the lint gate fails on any added permission. "Use of Permissions" policy: narrowest permissions only. |
+| **Broader permissions than needed / unused permissions** | Only `storage`, `alarms`, `notifications`, and the muse.ai hosts are requested, each justified in §2 (`commands` is a manifest key, not a permission). The lint gate fails on any added permission. "Use of Permissions" policy: narrowest permissions only. |
 | **Remote code in MV3** (Blue Argon) | None — bundled JS only; no `eval`/`new Function`/external scripts/network calls (lint-enforced); declared "No remote code" in §3.1. |
 | **Obfuscated code** (Red Titanium) | The package ships as-authored, unminified source — "Developers must not obfuscate code or conceal functionality"; submitting code "as authored" also shortens review time. Sources: [code-readability](https://developer.chrome.com/docs/webstore/program-policies/code-readability) · [review-process](https://developer.chrome.com/docs/webstore/review-process). |
 | **Inaccurate / misleading metadata** (Listing Requirements) | Listing copy describes exactly what the code does; screenshots are real captures of the extension (or designed overviews with fictional data); no overclaiming, no security-bypass promises. |
-| **Privacy disclosure mismatch** | Dashboard answers (§3) and `store/PRIVACY.md` are kept word-for-word consistent: collects nothing, transmits nothing, local-only, no remote code. |
+| **Privacy disclosure mismatch** | Dashboard answers (§3) and `store/PRIVACY.md` are kept word-for-word consistent: collects nothing, transmits nothing to the developer, no remote code. The one optional data-flow surface — the off-by-default settings sync — is disclosed in both (§3.2a / PRIVACY §2). |
 | **Functionality broken / packaging errors** (Yellow Magnesium) | `test/e2e.mjs` + `test/followup-e2e.mjs` verify the shipped behavior on real Chrome; `build.mjs` + `verify-zip.py` guarantee the zip mirrors the tree with the manifest at the root. |
 | **Automation against a site's terms** | The extension acts only inside the user's own logged-in browser session on muse.ai; there is no server-side automation, no scraping, and it never clicks destructive actions. Owner action: re-check this reading against Muse's terms before submitting (see `store/PUBLISH_RUNBOOK.md` open items). |
 | **Keyword spam in description** | Copy is plain and specific; no keyword stuffing. Source: [spam FAQ — keyword spam](https://developer.chrome.com/docs/webstore/program-policies/spam-faq#keyword-spam). |
@@ -347,12 +403,13 @@ Source: <https://developer.chrome.com/docs/webstore/review-process#warning>
 - [ ] Build + verify the zip for the frozen release version; attach it to the GitHub Release (see `docs/GITHUB_PUBLISH_RUNBOOK.md`).
 - [ ] Sanity-check Muse's terms of service for user-side auto-approval before public launch.
 - [ ] Confirm the four screenshots and both promo images reflect the frozen build.
+- [ ] Re-verify §2 (permissions `storage`/`alarms`/`notifications` + `commands`) against the frozen v1.8 `extension/manifest.json` after the release freeze (verify at integration).
 
 ---
 
 ## 8. Sources (official)
 
-All sources are `developer.chrome.com` / `docs.github.com` docs, retrieved 2026-10-09:
+All sources are `developer.chrome.com` / `docs.github.com` docs, re-verified 2026-10-10 (every URL below returned HTTP 200 on that date):
 
 - Register your developer account — <https://developer.chrome.com/docs/webstore/register>
 - Prepare your extension — <https://developer.chrome.com/docs/webstore/prepare>
@@ -372,3 +429,7 @@ All sources are `developer.chrome.com` / `docs.github.com` docs, retrieved 2026-
 - Troubleshooting violations — <https://developer.chrome.com/docs/webstore/troubleshooting>
 - Keyword spam FAQ — <https://developer.chrome.com/docs/webstore/program-policies/spam-faq>
 - Manifest `name` reference — <https://developer.chrome.com/docs/extensions/reference/manifest/name>
+- Permissions list (`notifications` — "Gives access to the chrome.notifications API") — <https://developer.chrome.com/docs/extensions/reference/permissions-list>
+- Notifications API — <https://developer.chrome.com/docs/extensions/reference/api/notifications>
+- Commands API (keyboard shortcuts; the `commands` manifest key) — <https://developer.chrome.com/docs/extensions/reference/api/commands>
+- Storage API — `chrome.storage.sync` quotas (8,192 bytes/item, 102,400 bytes total, 512 items) — <https://developer.chrome.com/docs/extensions/reference/api/storage>
