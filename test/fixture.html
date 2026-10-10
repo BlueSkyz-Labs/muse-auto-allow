@@ -185,6 +185,25 @@
   </div>
 </div>
 
+<!-- v1.8.0 OWNER-REPORTED CONNECTOR card (live shape: title 'Cloudflare', subtitle
+     'Connector', a full-width 'Connect' button). It is a USER-INPUT surface — the user
+     connects the service and pastes a token themselves — so the extension must NEVER
+     interact with it. The card also carries the "even if an Allow/Deny-like pair appears
+     within it" case: the WHOLE container is hard-blocked, nothing inside is ever clicked,
+     and the refusal is logged ('blocked' / blockedReason 'connector'). -->
+<div class="card" data-testid="hatch-inline-approval-card" id="card20">
+  <p>Cloudflare</p>
+  <p>Connector</p>
+  <button type="button" id="connect20" style="display:block;width:100%">Connect</button>
+  <div class="row">
+    <button type="button" class="allow" id="allow20">Allow</button>
+    <button type="button" class="deny" id="deny20">Deny</button>
+  </div>
+</div>
+
+<!-- negative twin: a LONE 'Connect' button (no connector container) must never be clicked -->
+<p><button type="button" id="loneconnect">Connect</button></p>
+
 <script>
 window.__clicks = [];
 window.__errors = [];
@@ -278,6 +297,16 @@ wirePair(document, 17);
 
 // OB-1: notification-style card carrying approval wording ("Allow Muse …") — never clicked
 wirePair(document, 19);
+
+// v1.8.0 OWNER-REPORTED connector card: NOTHING inside the container may ever be clicked —
+// Connect, the inner Allow and the inner Deny all record the same forbidden id '20' (so any
+// interaction with the container is visible as one id). The card is NOT removed on click, so
+// repeated interaction stays observable.
+document.getElementById('connect20').addEventListener('click', function () { rec('20'); });
+document.getElementById('allow20').addEventListener('click', function () { rec('20', { allow: true }); });
+document.getElementById('deny20').addEventListener('click', function () { rec('20', { deny: true }); });
+// negative twin: a lone Connect button (no connector container) must never be clicked either
+document.getElementById('loneconnect').addEventListener('click', function () { rec('lone-connect'); });
 
 // v1.5.1: chat-level review bar opens a hidden marked card (path E -> path A)
 document.getElementById('reviewBtn1').addEventListener('click', function () {

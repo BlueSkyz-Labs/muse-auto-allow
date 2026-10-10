@@ -244,5 +244,191 @@
   },
   "followupRotateStarterConfirm": {
     "message": "Thay thế $1 combo đã lưu? Chạm lần nữa"
+  },
+  "pauseLabel": {
+    "message": "Tạm dừng"
+  },
+  "pause15": {
+    "message": "15 phút"
+  },
+  "pause60": {
+    "message": "1 giờ"
+  },
+  "pauseTomorrow": {
+    "message": "Ngày mai"
+  },
+  "pauseTomorrowTitle": {
+    "message": "Tạm dừng đến ngày mai"
+  },
+  "pauseHint": {
+    "message": "Tạm dừng tự động bấm và nhắc tiếp"
+  },
+  "pauseResume": {
+    "message": "Tiếp tục"
+  },
+  "pauseStateUntil": {
+    "message": "Đã tạm dừng đến $1"
+  },
+  "dryRunTitle": {
+    "message": "Chạy thử (chỉ ghi log)"
+  },
+  "dryRunNote": {
+    "message": "Vẫn nhận diện và ghi log như thường — không bấm gì và không gửi nhắc nào."
+  },
+  "dryRunBanner": {
+    "message": "Chỉ ghi log — sẽ không bấm gì cả"
+  },
+  "dryRunChip": {
+    "message": "Chạy thử"
+  },
+  "allowOnceTitle": {
+    "message": "Ưu tiên \"Cho phép một lần\""
+  },
+  "allowOnceNote": {
+    "message": "Chỉ cấp quyền một lần thay vì cấp thường trực — phạm vi hẹp hơn thì an toàn hơn."
+  },
+  "safetyOpen": {
+    "message": "An toàn"
+  },
+  "safetyTitle": {
+    "message": "An toàn & Kiểm soát"
+  },
+  "safetyClose": {
+    "message": "Đóng"
+  },
+  "topicsLabel": {
+    "message": "Chủ đề được phép"
+  },
+  "topicsNote": {
+    "message": "Khi đặt, chỉ những thẻ có chủ đề khớp chính xác mới được bấm. Để trống để cho phép mọi chủ đề."
+  },
+  "topicsPlaceholder": {
+    "message": "Thêm chủ đề…"
+  },
+  "topicsEmpty": {
+    "message": "Chưa đặt chủ đề — mọi chủ đề đều được phép"
+  },
+  "keywordsLabel": {
+    "message": "Từ khoá chặn"
+  },
+  "keywordsNote": {
+    "message": "Thẻ chứa bất kỳ từ nào dưới đây sẽ không bao giờ bị bấm — chỉ ghi log là bị chặn."
+  },
+  "keywordsPlaceholder": {
+    "message": "Thêm từ khoá…"
+  },
+  "keywordsReset": {
+    "message": "Về mặc định"
+  },
+  "keywordsResetConfirm": {
+    "message": "Đặt lại danh sách? Bấm lần nữa"
+  },
+  "keywordsEmpty": {
+    "message": "Chưa có từ khoá — không chặn gì"
+  },
+  "rulesAdd": {
+    "message": "Thêm"
+  },
+  "rulesRemove": {
+    "message": "Xoá"
+  },
+  "scheduleTitle": {
+    "message": "Chỉ nhắc trong khung giờ"
+  },
+  "scheduleNote": {
+    "message": "Ngoài khung giờ địa phương này sẽ không gửi (khung qua đêm vẫn hoạt động)."
+  },
+  "scheduleOnlyActive": {
+    "message": "Chỉ tab đang mở"
+  },
+  "smartTitle": {
+    "message": "Cứu khi kẹt & lỗi"
+  },
+  "smartNote": {
+    "message": "Nhắc Muse khi có vẻ bị kẹt và tự xử lý khi thấy lỗi. Đặt 0 phút để tắt nhắc kẹt."
+  },
+  "smartStuckLabel": {
+    "message": "Nhắc khi kẹt sau"
+  },
+  "smartErrorLabel": {
+    "message": "Tự xử lý khi thấy lỗi"
+  },
+  "syncTitle": {
+    "message": "Đồng bộ cài đặt giữa các thiết bị"
+  },
+  "syncNote": {
+    "message": "Dùng Chrome Sync (giới hạn 8 KB mỗi mục). Danh sách vượt giới hạn chỉ ở lại thiết bị này; cài đặt cục bộ luôn thắng."
+  },
+  "digestTitle": {
+    "message": "Trong lúc bạn vắng"
+  },
+  "digestSince": {
+    "message": "từ $1"
+  },
+  "digestSinceStart": {
+    "message": "từ khi bắt đầu"
+  },
+  "digestClicks": {
+    "message": "lượt bấm"
+  },
+  "digestFollowups": {
+    "message": "lượt nhắc"
+  },
+  "digestBlocked": {
+    "message": "bị chặn"
+  },
+  "onbStep1Title": {
+    "message": "Bật tự động bấm"
+  },
+  "onbStep1Body": {
+    "message": "Muse hỏi phê duyệt khá thường xuyên. Hãy để tiện ích bấm Allow thay bạn — bạn có thể tạm dừng bất cứ lúc nào."
+  },
+  "onbEnable": {
+    "message": "Bật"
+  },
+  "onbStep2Title": {
+    "message": "Bắt đầu bằng Chạy thử"
+  },
+  "onbStep2Body": {
+    "message": "Khuyến nghị: để nó ghi log một ngày rồi xem. Sẽ không bấm gì cho đến khi bạn tắt Chạy thử."
+  },
+  "onbDryRun": {
+    "message": "Bật Chạy thử"
+  },
+  "onbStep3Title": {
+    "message": "Chọn một câu nhắc"
+  },
+  "onbStep3Body": {
+    "message": "Một lần bấm đặt câu nhắc giúp Muse tiếp tục làm khi rảnh. Có thể đổi sau."
+  },
+  "onbBack": {
+    "message": "Quay lại"
+  },
+  "onbSkip": {
+    "message": "Bỏ qua"
+  },
+  "onbDone": {
+    "message": "Xong"
+  },
+  "onbStepCount": {
+    "message": "Bước $1/$2"
+  },
+  "kindBlocked": {
+    "message": "bị chặn"
+  },
+  "kindFollowup": {
+    "message": "nhắc tiếp"
+  },
+  "kindAllowDry": {
+    "message": "duyệt (thử)"
+  },
+  "kindExpandDry": {
+    "message": "mở rộng (thử)"
+  },
+  "kindOpenPanelDry": {
+    "message": "mở bảng (thử)"
+  },
+  "kindFollowupDry": {
+    "message": "nhắc tiếp (thử)"
   }
 }

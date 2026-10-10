@@ -244,5 +244,191 @@
   },
   "followupRotateStarterConfirm": {
     "message": "替换已保存的 $1 个组合？再次点按"
+  },
+  "pauseLabel": {
+    "message": "暂停"
+  },
+  "pause15": {
+    "message": "15 分钟"
+  },
+  "pause60": {
+    "message": "1 小时"
+  },
+  "pauseTomorrow": {
+    "message": "明天"
+  },
+  "pauseTomorrowTitle": {
+    "message": "暂停到明天"
+  },
+  "pauseHint": {
+    "message": "暂停自动点击与自动跟进"
+  },
+  "pauseResume": {
+    "message": "继续"
+  },
+  "pauseStateUntil": {
+    "message": "已暂停至 $1"
+  },
+  "dryRunTitle": {
+    "message": "试运行（仅记录）"
+  },
+  "dryRunNote": {
+    "message": "照常检测并记录日志——不会点击，也不会发送跟进。"
+  },
+  "dryRunBanner": {
+    "message": "仅记录日志——不会点击任何内容"
+  },
+  "dryRunChip": {
+    "message": "试运行"
+  },
+  "allowOnceTitle": {
+    "message": "优先“仅允许一次”"
+  },
+  "allowOnceNote": {
+    "message": "使用一次性授权而不是长期授权——权限范围更小更安全。"
+  },
+  "safetyOpen": {
+    "message": "安全"
+  },
+  "safetyTitle": {
+    "message": "安全与控制"
+  },
+  "safetyClose": {
+    "message": "关闭"
+  },
+  "topicsLabel": {
+    "message": "允许的主题"
+  },
+  "topicsNote": {
+    "message": "设置后，只有主题完全匹配的卡片才会被点击。留空表示允许所有主题。"
+  },
+  "topicsPlaceholder": {
+    "message": "添加主题…"
+  },
+  "topicsEmpty": {
+    "message": "未设置主题——允许所有主题"
+  },
+  "keywordsLabel": {
+    "message": "拦截关键词"
+  },
+  "keywordsNote": {
+    "message": "包含以下任一词语的卡片绝不会被点击——只会记录为已拦截。"
+  },
+  "keywordsPlaceholder": {
+    "message": "添加关键词…"
+  },
+  "keywordsReset": {
+    "message": "恢复默认"
+  },
+  "keywordsResetConfirm": {
+    "message": "重置列表？再点一次"
+  },
+  "keywordsEmpty": {
+    "message": "未设置关键词——不会拦截"
+  },
+  "rulesAdd": {
+    "message": "添加"
+  },
+  "rulesRemove": {
+    "message": "删除"
+  },
+  "scheduleTitle": {
+    "message": "仅在时间段内跟进"
+  },
+  "scheduleNote": {
+    "message": "超出此本地时间范围将不发送（跨夜时间段同样有效）。"
+  },
+  "scheduleOnlyActive": {
+    "message": "仅当前标签页"
+  },
+  "smartTitle": {
+    "message": "卡住与错误恢复"
+  },
+  "smartNote": {
+    "message": "看起来卡住时提醒 Muse，并在出现错误时自动恢复。设为 0 分钟可关闭卡住提醒。"
+  },
+  "smartStuckLabel": {
+    "message": "卡住后提醒"
+  },
+  "smartErrorLabel": {
+    "message": "出现错误时自动恢复"
+  },
+  "syncTitle": {
+    "message": "跨设备同步设置"
+  },
+  "syncNote": {
+    "message": "使用 Chrome 同步（每项上限 8 KB）。超出上限的列表只保留在本设备；本地设置始终优先。"
+  },
+  "digestTitle": {
+    "message": "你离开期间"
+  },
+  "digestSince": {
+    "message": "自 $1"
+  },
+  "digestSinceStart": {
+    "message": "自开始使用"
+  },
+  "digestClicks": {
+    "message": "次点击"
+  },
+  "digestFollowups": {
+    "message": "次跟进"
+  },
+  "digestBlocked": {
+    "message": "次拦截"
+  },
+  "onbStep1Title": {
+    "message": "开启自动点击"
+  },
+  "onbStep1Body": {
+    "message": "Muse 经常请求审批。让扩展替你点击 Allow——你随时可以暂停。"
+  },
+  "onbEnable": {
+    "message": "开启"
+  },
+  "onbStep2Title": {
+    "message": "从试运行开始"
+  },
+  "onbStep2Body": {
+    "message": "建议：先让它记录一天并观察。在你关闭试运行前不会点击任何内容。"
+  },
+  "onbDryRun": {
+    "message": "开启试运行"
+  },
+  "onbStep3Title": {
+    "message": "选择一个跟进语"
+  },
+  "onbStep3Body": {
+    "message": "一键设置让 Muse 空闲时继续工作的提示语，之后可随时修改。"
+  },
+  "onbBack": {
+    "message": "返回"
+  },
+  "onbSkip": {
+    "message": "跳过"
+  },
+  "onbDone": {
+    "message": "完成"
+  },
+  "onbStepCount": {
+    "message": "第 $1 步，共 $2 步"
+  },
+  "kindBlocked": {
+    "message": "已拦截"
+  },
+  "kindFollowup": {
+    "message": "跟进"
+  },
+  "kindAllowDry": {
+    "message": "允许（试）"
+  },
+  "kindExpandDry": {
+    "message": "展开（试）"
+  },
+  "kindOpenPanelDry": {
+    "message": "打开面板（试）"
+  },
+  "kindFollowupDry": {
+    "message": "跟进（试）"
   }
 }

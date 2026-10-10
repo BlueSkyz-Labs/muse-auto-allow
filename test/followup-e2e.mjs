@@ -55,6 +55,30 @@
  *        never Deny, never a standing grant; the unmarked twin is approved by the pair
  *        heuristic; a LONE allow under the same title is never clicked; the prefixed
  *        pending variant expands and its pair is approved
+ *   v18-A click gates (pre-reload):
+ *        dry-run: detection runs, 'allow-dry' is logged, nothing is clicked — and turning
+ *          dryRun off re-arms the SAME node (the real click fires);
+ *        blocklist: a seed-keyword card ('delete') is NEVER clicked while the clean control
+ *          on screen IS; a custom list replaces the seed ('banana' blocks on path B);
+ *        topics: a case-insensitive exact match on extractTopic() clicks; a mismatch logs
+ *          'blocked'/'topic' and never clicks; an empty list disables the gate;
+ *        allow-once: mode OFF leaves 'Allow once only' alone; mode ON recognizes it and
+ *          prefers one-shot options ('Allow once' over plain 'Allow'/'Allow always'); the
+ *          legacy twin (mode OFF) clicks plain 'Allow' — the preference switch is proven;
+ *        pause: no click while pauseUntil is in the future; clearing it resumes; the status
+ *          ping carries paused/dryRun/allowOnceMode/scheduleAllowed
+ *   v18-B follow-up gates (each group starts from a page reload: fresh 6/hour budget):
+ *        pause: no send + manual send-now refused ('paused') + badge '||'; clearing resumes;
+ *        schedule: outside [start,end) no send; inside (run-time computed, wrap-aware) the
+ *          send fires; onlyActiveTab: no send while the fixture tab is a background tab
+ *          (Target.activateTarget makes it genuinely hidden), fires again when visible;
+ *        errorRecovery: off => nothing; on => the default prompt; the same text is never
+ *          answered twice; a different text fires; after the error clears it fires again;
+ *        stuck: stuckMin=0 => nothing; 0.05 min of silence => the default prompt; a custom
+ *          stuckPrompt is honored; never while an approval card is present;
+ *        dry-run (follow-up): 'followup-dry' logged, nothing typed/sent; real sends resume
+ *          when dryRun turns off
+ *   v18-C digest counters: clicks / blocked / followups recorded for the startup digest
  *
  * Exit 0 = all checks pass, 2 = failure. Prints a JSON summary.
  */
@@ -67,7 +91,9 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
-const EXT_DIR = path.join(ROOT, 'extension');
+// MAA_EXT_DIR lets a falsification run point the harness at a MUTATED copy of the extension
+// (reverse-mutation proof: disable a guard -> the matching checks go RED; restore -> GREEN).
+const EXT_DIR = process.env.MAA_EXT_DIR ? path.resolve(process.env.MAA_EXT_DIR) : path.join(ROOT, 'extension');
 const IS_WIN = process.platform === 'win32';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -99,6 +125,14 @@ const S3 = 'Commit and push with clear messages; Keep the PR/issue updated with 
 // must be removed from this list (both directions are asserted). EMPTY since v1.7.0 —
 // every label (status pill, hints, gate note) now has a real key in all 6 locales.
 const KNOWN_FALLBACK_ONLY = new Set([]);
+
+// v1.8.0 probes (frozen contracts, docs/ENGINE_V18.md)
+const V18_PROMPT = 'V18 follow-up probe — continue where you left off';
+const STUCK_DEFAULT = 'Looks like you may be stuck — check the last error or continue where you left off.';
+const ERROR_DEFAULT = 'An error occurred. Read the error, fix the root cause, then continue.';
+const BLOCK_SEED = ['delete', 'remove', 'drop', 'wipe', 'format', 'billing', 'payment', 'invoice',
+  'pay', 'transfer', 'refund', 'production', 'deploy', 'revoke', 'rm -rf', 'sudo',
+  'credential', 'password', 'secret', 'token'];
 
 // ---------- pre-flight (no browser): locale key parity + popup i18n coverage ----------
 function preflightChecks() {
@@ -403,6 +437,27 @@ async function fixtureMsg(message) {
   })`, true);
   try { return JSON.parse(out); } catch { return { error: 'bad-json:' + String(out) }; }
 }
+// v1.8.0: a reload restarts the content script with a FRESH hourly-attempt budget (the hard
+// 6/hour cap) and a fresh fixture — used to isolate each follow-up gate group below.
+async function reloadFixture(tag) {
+  try { await send('Page.reload', {}, fxSession); } catch { try { await fEval('location.reload()'); } catch { /* ignore */ } }
+  await waitUntil(async () => (await fEval("document.documentElement.getAttribute('data-muse-auto-allow')")) === '1', 15000, 're-injection after reload (' + tag + ')');
+  await sleep(500);
+}
+// v1.8.0: find a log entry by kind (optionally by blockedReason)
+async function findLog(kind, reason) {
+  const l = await popStore(['log']);
+  return ((l && l.log) || []).find((x) => x && x.kind === kind && (reason === undefined || x.blockedReason === reason)) || null;
+}
+// v1.8.0: the popup page stays open for storage access and RE-COMPOSES followupPrompt from
+// its chips whenever storage changes — so the v18 phases seed the chip state and read back
+// the settled prompt, then assert the engine sends exactly that stored value.
+async function settlePrompt(text) {
+  await seed({ followupChips: [], followupPrompt: text });
+  await sleep(700);
+  const st = await popStore(['followupPrompt', 'followupChips']);
+  return { prompt: st && st.followupPrompt, chips: st && st.followupChips };
+}
 
 try {
   const pre = preflightChecks();
@@ -604,6 +659,7 @@ try {
 
   // ---- fixture ----
   const fx = await send('Target.createTarget', { url: fixtureUrl });
+  const fxTargetId = fx.targetId; // v1.8.0: kept for tab-activation (onlyActiveTab case)
   fxSession = (await send('Target.attachToTarget', { targetId: fx.targetId, flatten: true })).sessionId;
   const injected = await waitUntil(async () => (await fEval("document.documentElement.getAttribute('data-muse-auto-allow')")) === '1', 15000, 'injection');
   check('0b. content script injected into the fixture', injected === true, {});
@@ -889,6 +945,11 @@ try {
   check('rot-falsify. baseline: idx 1 => the next send is item 2 (GREEN)',
     !!(f1 && f1[fBase] && f1[fBase].text === S2), { text: f1 && f1[fBase] ? f1[fBase].text : null });
   if (f1) await waitSendVerified(f1[fBase].t, 'falsify send A verified');
+  // The engine's own advance write must SETTLE before the mutation forces the index: the
+  // content script (fixture tab) and the popup page write from different renderer processes,
+  // so an unsettled engine write could land after the forced seed (cross-context race —
+  // observed once in this round; the settle wait removes it).
+  await waitUntil(async () => ((await popStore(['followupRotateIdx'])) || {}).followupRotateIdx === 0, 4000, 'rotation advance settled');
   // MUTATION — the index is frozen at the previous send's value: a correct engine would now
   // send item 1, so seeing item 2 again is exactly the RED state of the rotation assertion.
   await seed({ followupRotateIdx: 1 });
@@ -934,6 +995,284 @@ try {
     { clicks: (gh4 || []).map((x) => x.n) });
   await fEval("window.__setGh('off')");
   results.ghClicks = (await cardClicks()).map((x) => x.n);
+
+  // ======================================================================
+  // v18-A. CLICK gates — dry-run / blocklist / topics / allow-once / pause
+  // (follow-up engine disabled so only the click paths are in play; config is always
+  //  seeded BEFORE a probe card is shown, so the probe can never be clicked by a race)
+  // ======================================================================
+  await seed({ followupEnabled: false, pauseUntil: 0, dryRun: false, allowOnceMode: false,
+    rules: { allowTopics: [], blockKeywords: BLOCK_SEED },
+    followupSchedule: { enabled: false, start: 8, end: 18, onlyActiveTab: false },
+    followupSmart: { stuckMin: 0, errorRecovery: false },
+    onboarded: true }); // UI-only key: the whole v18-A phase runs with it set and must not care
+  await sleep(400);
+
+  // ---- dry-run: detection + 'allow-dry' log, NO click; toggling off re-arms the node ----
+  await seed({ dryRun: true });
+  await sleep(200);
+  await fEval("window.__setV18('dry')");
+  const dryEntry = await waitUntil(async () => findLog('allow-dry'), 9000, 'allow-dry log entry');
+  check('v18 dry-run. detection runs: log entry kind "allow-dry" with dryRun:true', !!dryEntry && dryEntry.dryRun === true, { entry: dryEntry });
+  await sleep(1500);
+  const dryNames = (await cardClicks()).map((x) => x.n);
+  check('v18 dry-run. the card is NOT clicked while dryRun is on', !dryNames.includes('v18-dry-allow') && !dryNames.includes('v18-dry-deny'), { names: dryNames });
+  await seed({ dryRun: false });
+  const dryHit = await waitUntil(async () => { const c = await cardClicks(); return c.some((x) => x.n === 'v18-dry-allow') ? c : null; }, 12000, 'click after dryRun off');
+  check('v18 dry-run. dryRun off re-arms the SAME node — the real click fires', !!dryHit, { clicks: (dryHit || []).map((x) => x.n) });
+  await fEval("window.__setV18('off')");
+
+  // ---- blocklist: seed keyword never clicked (dangerous + clean control on screen), custom list replaces the seed ----
+  await fEval("window.__setV18('both')");
+  const blEntry = await waitUntil(async () => findLog('blocked', 'keyword:delete'), 9000, 'blocked keyword:delete');
+  check('v18 blocklist. seed keyword in the card text logs kind "blocked" + blockedReason "keyword:delete"', !!blEntry, { entry: blEntry });
+  const cleanHit = await waitUntil(async () => { const c = await cardClicks(); return c.some((x) => x.n === 'v18-clean-allow') ? c : null; }, 9000, 'clean control clicked');
+  check('v18 blocklist. the clean control card is still approved while the dangerous one is on screen', !!cleanHit, {});
+  await sleep(1500);
+  const blNames = (await cardClicks()).map((x) => x.n);
+  check('v18 blocklist. the dangerous card is NEVER clicked (no allow, no deny)',
+    !blNames.includes('v18-blocked-allow') && !blNames.includes('v18-blocked-deny'), { names: blNames.filter((n) => /blocked|clean/.test(n)) });
+  await fEval("window.__setV18('off')");
+  await seed({ rules: { allowTopics: [], blockKeywords: ['banana'] } });
+  await sleep(200);
+  await fEval("window.__setV18('banana')");
+  const bananaEntry = await waitUntil(async () => findLog('blocked', 'keyword:banana'), 9000, 'blocked keyword:banana');
+  check('v18 blocklist. a custom list replaces the seed — its own keyword blocks (path B too)', !!bananaEntry, { entry: bananaEntry });
+  await sleep(1500);
+  const bananaNames = (await cardClicks()).map((x) => x.n);
+  check('v18 blocklist. the banana card is never clicked', !bananaNames.includes('v18-banana-allow') && !bananaNames.includes('v18-banana-deny'), { names: bananaNames });
+  await fEval("window.__setV18('off')");
+
+  // ---- topics: non-empty allowTopics => click ONLY on an exact (case-insensitive) match ----
+  await seed({ rules: { allowTopics: ['TOPIC-OK'], blockKeywords: [] } });
+  await sleep(200);
+  await fEval("window.__setV18('topicOk')");
+  const topicOkHit = await waitUntil(async () => { const c = await cardClicks(); return c.some((x) => x.n === 'v18-topic-ok-allow') ? c : null; }, 9000, 'topic-ok clicked');
+  check('v18 topics. matching extractTopic() (case-insensitive exact) is clicked', !!topicOkHit, {});
+  await fEval("window.__setV18('off')");
+  await fEval("window.__setV18('topicBad')");
+  const topicBadEntry = await waitUntil(async () => findLog('blocked', 'topic'), 9000, 'blocked topic');
+  check('v18 topics. a mismatched topic logs kind "blocked" + blockedReason "topic"', !!topicBadEntry, { entry: topicBadEntry });
+  await sleep(1800);
+  const topicBadNames = (await cardClicks()).map((x) => x.n);
+  check('v18 topics. the mismatched card is never clicked', !topicBadNames.includes('v18-topic-bad-allow'), { names: topicBadNames.filter((n) => /topic/.test(n)) });
+  await seed({ rules: { allowTopics: [], blockKeywords: [] } });
+  const topicBadHit = await waitUntil(async () => { const c = await cardClicks(); return c.some((x) => x.n === 'v18-topic-bad-allow') ? c : null; }, 10000, 'topic gate off => clicked');
+  check('v18 topics. an empty allowTopics list disables the gate (same card is clicked)', !!topicBadHit, {});
+  await fEval("window.__setV18('off')");
+
+  // ---- allow-once: mode off leaves 'Allow once only' alone; mode on recognizes + prefers it ----
+  await fEval("window.__setV18('onceOnly')");
+  await sleep(2600);
+  const onceOffNames = (await cardClicks()).map((x) => x.n);
+  check('v18 allow-once. mode OFF: "Allow once only" is not recognized — the card is left to the user',
+    !onceOffNames.some((n) => n.startsWith('v18-once')), { names: onceOffNames.filter((n) => /once/.test(n)) });
+  await seed({ allowOnceMode: true });
+  const onceHit = await waitUntil(async () => { const c = await cardClicks(); return c.some((x) => x.n === 'v18-once-only') ? c : null; }, 9000, 'once-only clicked');
+  check('v18 allow-once. mode ON: "Allow once only" is recognized and clicked', !!onceHit, {});
+  await sleep(1500);
+  const onceNames = (await cardClicks()).map((x) => x.n);
+  check('v18 allow-once. never clicks "Always allow" or Deny on the same card',
+    !onceNames.includes('v18-once-always') && !onceNames.includes('v18-once-deny'), { names: onceNames.filter((n) => /once/.test(n)) });
+  await fEval("window.__setV18('prefOnce')");
+  const prefHit = await waitUntil(async () => { const c = await cardClicks(); return c.some((x) => x.n === 'v18-pref-once') ? c : null; }, 9000, 'pref once clicked');
+  check('v18 allow-once. mode ON prefers "Allow once" over plain "Allow" and "Allow always"', !!prefHit, {});
+  await sleep(1500);
+  const prefNames = (await cardClicks()).map((x) => x.n);
+  check('v18 allow-once. mode ON: neither the plain nor the always option was clicked',
+    !prefNames.includes('v18-pref-plain') && !prefNames.includes('v18-pref-always'), { names: prefNames.filter((n) => /pref/.test(n)) });
+  await fEval("window.__setV18('off')");
+  await seed({ allowOnceMode: false });
+  await sleep(200);
+  await fEval("window.__setV18('prefLegacy')");
+  const legacyHit = await waitUntil(async () => { const c = await cardClicks(); return c.some((x) => x.n === 'v18-legacy-plain') ? c : null; }, 9000, 'legacy plain clicked');
+  check('v18 allow-once. mode OFF: legacy ranking clicks the plain "Allow" (preference switch proven)', !!legacyHit, {});
+  await sleep(1500);
+  const legacyNames = (await cardClicks()).map((x) => x.n);
+  check('v18 allow-once. mode OFF: the one-shot twin was not preferred',
+    !legacyNames.includes('v18-legacy-once') && !legacyNames.includes('v18-legacy-always'), { names: legacyNames.filter((n) => /legacy/.test(n)) });
+  await fEval("window.__setV18('off')");
+
+  // ---- pause: clicks halted while pauseUntil is in the future (seeded BEFORE the probe shows) ----
+  await seed({ pauseUntil: Date.now() + 60000 });
+  await sleep(200);
+  await fEval("window.__setV18('pause')");
+  await sleep(2600);
+  const pauseNames = (await cardClicks()).map((x) => x.n);
+  check('v18 pause. no click while paused', !pauseNames.includes('v18-pause-allow'), { names: pauseNames.filter((n) => /pause/.test(n)) });
+  const stPause = await fixtureMsg({ type: 'followup-status' });
+  check('v18 status. the ping carries paused/dryRun/allowOnceMode/scheduleAllowed',
+    !!(stPause.resp && stPause.resp.paused === true && typeof stPause.resp.dryRun === 'boolean' &&
+       typeof stPause.resp.allowOnceMode === 'boolean' && typeof stPause.resp.scheduleAllowed === 'boolean'), stPause);
+  await seed({ pauseUntil: 0 });
+  const pauseHit = await waitUntil(async () => { const c = await cardClicks(); return c.some((x) => x.n === 'v18-pause-allow') ? c : null; }, 10000, 'click after pause cleared');
+  check('v18 pause. clearing the pause resumes clicking', !!pauseHit, {});
+  check('v18 onboarded. the engine ignores onboarded (UI-only key): the whole phase above ran with it set',
+    !!dryHit && !!pauseHit, { note: 'onboarded:true was seeded at the start of the v18-A phase' });
+  await fEval("window.__setV18('off')");
+
+  // ---- pre-reload hygiene snapshot (the reloads below reset the fixture arrays) ----
+  const preReloadCards = (await cardClicks()).map((x) => x.n);
+  const preReloadApprovals = (await fJSON('window.__approvalClicks')) || [];
+  check('v18 hygiene. pre-reload: no deny was ever clicked on any card variant',
+    !preReloadCards.some((n) => /deny/.test(n)) && !preReloadApprovals.some((a) => a.n === 'deny'),
+    { cards: preReloadCards, approvals: preReloadApprovals.map((a) => a.n) });
+
+  // ======================================================================
+  // v18-B. FOLLOW-UP gates — pause / schedule / onlyActiveTab / error / stuck / dry-run.
+  // Each group starts from a RELOAD so the hard 6-attempts/hour cap is fresh per group.
+  // ======================================================================
+  await reloadFixture('v18 follow-up group');
+
+  // ---- B1. pause blocks the follow-up engine; the badge marks it; clearing resumes ----
+  await fEval("window.__setState('idle')");
+  const settle = await settlePrompt(V18_PROMPT);
+  const V18P = settle.prompt;
+  check('v18 setup. the seeded follow-up prompt settles to the exact probe text (popup composition)', V18P === V18_PROMPT && JSON.stringify(settle.chips) === '[]', settle);
+  await seed({ followupEnabled: true, followupPrompt: V18P, followupChips: [], followupPrompts: [], followupIdleMs: 400, followupCooldownMs: 1000,
+    followupSchedule: { enabled: false, start: 8, end: 18, onlyActiveTab: false }, followupSmart: { stuckMin: 0, errorRecovery: false },
+    dryRun: false, pauseUntil: Date.now() + 60000 });
+  await sleep(2600);
+  check('v18 pause. no follow-up send while paused (idle)', (await sentList()).length === 0, { sent: (await sentList()).length });
+  const manualPaused = await fixtureMsg({ type: 'followup-send-now' });
+  check('v18 pause. manual send-now is refused with reason "paused"',
+    !!(manualPaused.resp && manualPaused.resp.ok === false && manualPaused.resp.reason === 'paused'), manualPaused);
+  // the service worker may take a moment to repaint the badge — poll instead of one-shot
+  const badgeRaw = await waitUntil(async () => {
+    const raw = await pEval(`new Promise((res) => { try { chrome.action.getBadgeText({}, (t) => res(JSON.stringify({ t: t, err: chrome.runtime.lastError ? String(chrome.runtime.lastError.message) : null }))); } catch (e) { res(JSON.stringify({ err: String(e) })); } })`, true);
+    try { const b = JSON.parse(raw || '{}'); return (b.err === null && b.t === '||') ? raw : null; } catch { return null; }
+  }, 5000, 'badge shows pause marker');
+  let badge = null;
+  try { badge = JSON.parse(badgeRaw || '{}'); } catch { badge = { err: 'bad-json' }; }
+  check('v18 pause. the toolbar badge shows the pause marker "||"', badge.err === null && badge.t === '||', badge);
+  await seed({ pauseUntil: 0 });
+  const resumeSent = await waitUntil(async () => { const l = await sentList(); return l.length > 0 ? l : null; }, 9000, 'send after pause cleared');
+  check('v18 pause. clearing the pause resumes the follow-up engine', !!resumeSent, {});
+  await seed({ followupEnabled: false });
+
+  // ---- B2. followupSchedule: [start,end) window, computed at run time (deterministic) ----
+  const hourNow = new Date().getHours();
+  const winOut = { start: (hourNow + 1) % 24, end: (hourNow + 2) % 24 };  // excludes now at every hour
+  const winIn = { start: hourNow, end: (hourNow + 23) % 24 };            // includes now (wraps unless hour 0)
+  await seed({ followupEnabled: true, followupPrompt: V18P, followupIdleMs: 400, followupCooldownMs: 1500,
+    followupSchedule: { enabled: true, start: winOut.start, end: winOut.end, onlyActiveTab: false } });
+  await fEval("window.__setState('idle')");
+  const schBase = (await sentList()).length; // 1 — the B1 resume send lives in this fixture session
+  await sleep(3000);
+  const schOutSent = (await sentList()).length;
+  check('v18 schedule. outside the window => no send', schOutSent === schBase, { winOut, hourNow, sent: schOutSent, base: schBase });
+  await seed({ followupSchedule: { enabled: true, start: winIn.start, end: winIn.end, onlyActiveTab: false } });
+  const schIn = await waitUntil(async () => { const l = await sentList(); return l.length > schBase ? l : null; }, 9000, 'scheduled send');
+  check('v18 schedule. inside the window => the send fires (wrap-around supported)',
+    !!(schIn && schIn[schBase] && schIn[schBase].text === V18P),
+    { winIn, hourNow, wrap: winIn.start > winIn.end, text: schIn && schIn[schBase] ? schIn[schBase].text : null });
+  await seed({ followupEnabled: false });
+
+  // ---- B3. onlyActiveTab: a background (hidden) fixture tab must not send ----
+  await reloadFixture('v18 onlyActiveTab group');
+  await fEval("window.__setState('idle')");
+  // make the fixture a BACKGROUND tab FIRST — arming the schedule while it is still visible
+  // would let a legitimate visible-tab send fire before the tab is hidden (seed race)
+  let visTarget = null, visState = null;
+  try {
+    const t2 = await send('Target.createTarget', { url: 'about:blank' });
+    visTarget = t2.targetId;
+    await send('Target.activateTarget', { targetId: visTarget });
+    await sleep(1200);
+    visState = await fEval('document.visibilityState');
+  } catch (e) { visState = 'error: ' + (e && e.message); }
+  await seed({ followupEnabled: true, followupPrompt: V18P, followupIdleMs: 400, followupCooldownMs: 1500,
+    followupSchedule: { enabled: true, start: winIn.start, end: winIn.end, onlyActiveTab: true } });
+  if (visState === 'hidden') {
+    await sleep(3000);
+    check('v18 schedule. onlyActiveTab: no send while the document is hidden', (await sentList()).length === 0, { visState });
+    await seed({ followupSchedule: { enabled: true, start: winIn.start, end: winIn.end, onlyActiveTab: false } });
+    const backSend = await waitUntil(async () => { const l = await sentList(); return l.length > 0 ? l : null; }, 9000, 'send after visibility gate off');
+    check('v18 schedule. onlyActiveTab off: the send fires again', !!backSend, {});
+  } else {
+    check('v18 schedule. onlyActiveTab: hidden-state negative case exercised', false,
+      { visState, note: 'could not make the fixture tab hidden in this Chrome — the onlyActiveTab gate could not be exercised' });
+  }
+  try { await send('Target.activateTarget', { targetId: fxTargetId }); } catch { /* ignore */ }
+  try { if (visTarget) await send('Target.closeTarget', { targetId: visTarget }); } catch { /* ignore */ }
+  await seed({ followupEnabled: false });
+
+  // ---- B4. errorRecovery: default prompt, one send per distinct error text ----
+  await reloadFixture('v18 error group');
+  await fEval("window.__setState('working')");
+  await seed({ followupEnabled: true, followupPrompt: V18P, followupIdleMs: 400, followupCooldownMs: 1000,
+    followupSchedule: { enabled: false, start: 8, end: 18, onlyActiveTab: false },
+    followupSmart: { stuckMin: 0, errorRecovery: false } });
+  await fEval("window.__setError('Error: something went wrong while running the command')");
+  await sleep(2600);
+  check('v18 error. errorRecovery=false => nothing sent for the visible error', (await sentList()).length === 0, {});
+  await seed({ followupSmart: { stuckMin: 0, errorRecovery: true } });
+  const errSend = await waitUntil(async () => { const l = await sentList(); return l.length > 0 ? l : null; }, 9000, 'error recovery send');
+  check('v18 error. errorRecovery=true => the default recovery prompt is sent',
+    !!(errSend && errSend[0] && errSend[0].text === ERROR_DEFAULT), { text: errSend && errSend[0] ? errSend[0].text : null, expected: ERROR_DEFAULT });
+  if (errSend) await waitSendVerified(errSend[0].t, 'error send verified');
+  await sleep(2200); // > cooldown: a repeat would fire if the fingerprint guard were missing
+  check('v18 error. the SAME error text is not answered twice (fingerprint guard)', (await sentList()).length === 1, { sent: (await sentList()).length });
+  await fEval("window.__setError('Traceback: unhandled exception in step 2')");
+  const errSend2 = await waitUntil(async () => { const l = await sentList(); return l.length > 1 ? l : null; }, 9000, 'error recovery send 2');
+  check('v18 error. a DIFFERENT error text triggers a new recovery send', !!errSend2, {});
+  if (errSend2) await waitSendVerified(errSend2[1].t, 'error send 2 verified');
+  await fEval("window.__setError('')");
+  await sleep(600);
+  await fEval("window.__setError('Traceback: unhandled exception in step 2')");
+  const errSend3 = await waitUntil(async () => { const l = await sentList(); return l.length > 2 ? l : null; }, 9000, 'error recovery send 3');
+  check('v18 error. after the error clears, the same text is answerable again', !!errSend3, {});
+  await fEval("window.__setError('')");
+  await seed({ followupEnabled: false });
+
+  // ---- B5. stuck: silence threshold, default + custom prompt, approval blocks it ----
+  await reloadFixture('v18 stuck group');
+  await seed({ followupEnabled: true, followupPrompt: V18P, followupIdleMs: 400, followupCooldownMs: 1000,
+    followupSchedule: { enabled: false, start: 8, end: 18, onlyActiveTab: false },
+    followupSmart: { stuckMin: 0, errorRecovery: false } });
+  await fEval("window.__setState('working')");
+  await sleep(3000);
+  check('v18 stuck. stuckMin=0 => no stuck send while working and silent', (await sentList()).length === 0, { sent: (await sentList()).length });
+  await seed({ followupSmart: { stuckMin: 0.05, errorRecovery: false } }); // 3 s — fractional minutes allowed
+  const stuckSend = await waitUntil(async () => { const l = await sentList(); return l.length > 0 ? l : null; }, 9000, 'stuck recovery send');
+  check('v18 stuck. after the silence threshold the default stuck-recovery prompt is sent',
+    !!(stuckSend && stuckSend[0] && stuckSend[0].text === STUCK_DEFAULT), { text: stuckSend && stuckSend[0] ? stuckSend[0].text : null, expected: STUCK_DEFAULT });
+  // seed the custom prompt IMMEDIATELY: the next silence window is already counting down from the
+  // first attempt, so waiting for the verification first would let send #2 fire with the old prompt
+  await seed({ followupSmart: { stuckMin: 0.05, stuckPrompt: 'CUSTOM STUCK PROMPT', errorRecovery: false } });
+  if (stuckSend) await waitSendVerified(stuckSend[0].t, 'stuck send verified');
+  const stuckSend2 = await waitUntil(async () => { const l = await sentList(); return l.length > 1 ? l : null; }, 15000, 'stuck recovery send 2 (custom)');
+  check('v18 stuck. a custom stuckPrompt override is honored', !!(stuckSend2 && stuckSend2[1] && stuckSend2[1].text === 'CUSTOM STUCK PROMPT'),
+    { text: stuckSend2 && stuckSend2[1] ? stuckSend2[1].text : null });
+  if (stuckSend2) await waitSendVerified(stuckSend2[1].t, 'stuck send 2 verified');
+  await fEval("window.__setApproval(true)");
+  const stuckBase3 = (await sentList()).length;
+  await sleep(4200);
+  check('v18 stuck. never sends while an approval card is present', (await sentList()).length === stuckBase3, { sent: (await sentList()).length });
+  await fEval("window.__setApproval(false)");
+  await seed({ followupEnabled: false });
+
+  // ---- B6. dry-run (follow-up side): 'followup-dry' logged, nothing sent ----
+  await reloadFixture('v18 dry follow-up group');
+  await fEval("window.__setState('idle')");
+  await seed({ followupEnabled: true, followupPrompt: V18P, followupIdleMs: 400, followupCooldownMs: 1000,
+    followupSchedule: { enabled: false, start: 8, end: 18, onlyActiveTab: false },
+    followupSmart: { stuckMin: 0, errorRecovery: false }, dryRun: true });
+  const fdEntry = await waitUntil(async () => findLog('followup-dry'), 9000, 'followup-dry log entry');
+  check('v18 dry-run. the follow-up logs kind "followup-dry" (dryRun:true) and does NOT send',
+    !!fdEntry && fdEntry.dryRun === true && (await sentList()).length === 0, { entry: fdEntry, sent: (await sentList()).length });
+  await seed({ dryRun: false });
+  const fdSend = await waitUntil(async () => { const l = await sentList(); return l.length > 0 ? l : null; }, 9000, 'real send after dryRun off');
+  check('v18 dry-run. turning dryRun off resumes real follow-up sends',
+    !!(fdSend && fdSend[0] && fdSend[0].text === V18P), { text: fdSend && fdSend[0] ? fdSend[0].text : null });
+  await seed({ followupEnabled: false, dryRun: false, pauseUntil: 0 });
+
+  // ---- digest counters (written by the content script, consumed by the background digest) ----
+  const dgStore = await popStore(['digestCounters']);
+  const dg = (dgStore && dgStore.digestCounters) || null;
+  check('v18 digest. counters recorded real clicks + blocked + verified follow-ups',
+    !!dg && dg.clicks >= 1 && dg.blocked >= 2 && dg.followups >= 1, { counters: dg });
+  results.v18 = { dryEntry, blEntry, bananaEntry, topicBadEntry, badge, visState, counters: dg };
 
   // ---- fixture-side evidence + hygiene ----
   const finalSent = await sentList();

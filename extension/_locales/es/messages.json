@@ -244,5 +244,191 @@
   },
   "followupRotateStarterConfirm": {
     "message": "¿Reemplazar tus $1 combos guardados? Toca de nuevo"
+  },
+  "pauseLabel": {
+    "message": "Pausar"
+  },
+  "pause15": {
+    "message": "15 min"
+  },
+  "pause60": {
+    "message": "1 hora"
+  },
+  "pauseTomorrow": {
+    "message": "Mañana"
+  },
+  "pauseTomorrowTitle": {
+    "message": "Pausar hasta mañana"
+  },
+  "pauseHint": {
+    "message": "Pausar el clic automático y el seguimiento"
+  },
+  "pauseResume": {
+    "message": "Reanudar"
+  },
+  "pauseStateUntil": {
+    "message": "En pausa hasta $1"
+  },
+  "dryRunTitle": {
+    "message": "Prueba (solo registro)"
+  },
+  "dryRunNote": {
+    "message": "Detecta y registra igual que siempre: no hace clic ni envía seguimientos."
+  },
+  "dryRunBanner": {
+    "message": "Solo registro — no se hará ningún clic"
+  },
+  "dryRunChip": {
+    "message": "Prueba"
+  },
+  "allowOnceTitle": {
+    "message": "Preferir «Permitir una vez»"
+  },
+  "allowOnceNote": {
+    "message": "Permisos de una sola vez en lugar de acceso permanente: el permiso más limitado es más seguro."
+  },
+  "safetyOpen": {
+    "message": "Seguridad"
+  },
+  "safetyTitle": {
+    "message": "Seguridad y control"
+  },
+  "safetyClose": {
+    "message": "Cerrar"
+  },
+  "topicsLabel": {
+    "message": "Temas permitidos"
+  },
+  "topicsNote": {
+    "message": "Si se definen, solo se pulsa en tarjetas cuyo tema coincida exactamente. Déjalo vacío para permitir todos los temas."
+  },
+  "topicsPlaceholder": {
+    "message": "Añadir un tema…"
+  },
+  "topicsEmpty": {
+    "message": "Sin temas: se permiten todos"
+  },
+  "keywordsLabel": {
+    "message": "Palabras bloqueadas"
+  },
+  "keywordsNote": {
+    "message": "Una tarjeta con cualquiera de estas palabras nunca se pulsa: se registra como bloqueada."
+  },
+  "keywordsPlaceholder": {
+    "message": "Añadir una palabra…"
+  },
+  "keywordsReset": {
+    "message": "Restaurar valores"
+  },
+  "keywordsResetConfirm": {
+    "message": "¿Restaurar la lista? Toca otra vez"
+  },
+  "keywordsEmpty": {
+    "message": "Sin palabras clave: nada se bloquea"
+  },
+  "rulesAdd": {
+    "message": "Añadir"
+  },
+  "rulesRemove": {
+    "message": "Quitar"
+  },
+  "scheduleTitle": {
+    "message": "Seguimiento solo por horas"
+  },
+  "scheduleNote": {
+    "message": "No se envía fuera de esta franja horaria local (las franjas nocturnas se ajustan)."
+  },
+  "scheduleOnlyActive": {
+    "message": "Solo pestaña activa"
+  },
+  "smartTitle": {
+    "message": "Recuperación de bloqueos y errores"
+  },
+  "smartNote": {
+    "message": "Avisa a Muse cuando parece bloqueado y se recupera de los errores visibles. Pon 0 minutos para desactivar el aviso."
+  },
+  "smartStuckLabel": {
+    "message": "Avisar si se bloquea tras"
+  },
+  "smartErrorLabel": {
+    "message": "Recuperar ante errores visibles"
+  },
+  "syncTitle": {
+    "message": "Sincronizar ajustes entre dispositivos"
+  },
+  "syncNote": {
+    "message": "Usa Chrome Sync (límite de 8 KB por elemento). Las listas que lo superan se quedan en este dispositivo; los ajustes locales siempre mandan."
+  },
+  "digestTitle": {
+    "message": "Mientras no estabas"
+  },
+  "digestSince": {
+    "message": "desde $1"
+  },
+  "digestSinceStart": {
+    "message": "desde el inicio"
+  },
+  "digestClicks": {
+    "message": "clics"
+  },
+  "digestFollowups": {
+    "message": "seguimientos"
+  },
+  "digestBlocked": {
+    "message": "bloqueados"
+  },
+  "onbStep1Title": {
+    "message": "Activar el clic automático"
+  },
+  "onbStep1Body": {
+    "message": "Muse pide aprobación a menudo. Deja que la extensión pulse Allow por ti: puedes pausarla cuando quieras."
+  },
+  "onbEnable": {
+    "message": "Activar"
+  },
+  "onbStep2Title": {
+    "message": "Empezar en modo Prueba"
+  },
+  "onbStep2Body": {
+    "message": "Recomendado: déjalo registrar un día y observa. No se hará ningún clic hasta que desactives el modo Prueba."
+  },
+  "onbDryRun": {
+    "message": "Activar la prueba"
+  },
+  "onbStep3Title": {
+    "message": "Elige un seguimiento"
+  },
+  "onbStep3Body": {
+    "message": "Un toque define el mensaje que mantiene a Muse trabajando cuando queda inactivo. Puedes cambiarlo después."
+  },
+  "onbBack": {
+    "message": "Atrás"
+  },
+  "onbSkip": {
+    "message": "Omitir"
+  },
+  "onbDone": {
+    "message": "Hecho"
+  },
+  "onbStepCount": {
+    "message": "Paso $1 de $2"
+  },
+  "kindBlocked": {
+    "message": "bloqueado"
+  },
+  "kindFollowup": {
+    "message": "seguimiento"
+  },
+  "kindAllowDry": {
+    "message": "permitir (prueba)"
+  },
+  "kindExpandDry": {
+    "message": "expandir (prueba)"
+  },
+  "kindOpenPanelDry": {
+    "message": "abrir panel (prueba)"
+  },
+  "kindFollowupDry": {
+    "message": "seguimiento (prueba)"
   }
 }

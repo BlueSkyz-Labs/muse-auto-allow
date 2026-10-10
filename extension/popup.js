@@ -16,6 +16,15 @@ function applyI18n() {
     if (msg) el.setAttribute('placeholder', msg);
   });
   try { document.documentElement.lang = chrome.i18n.getUILanguage() || 'en'; } catch { /* keep */ }
+  // v1.8.0 — aria labels / titles that are not plain textContent
+  const aria = (id, key, fb) => { const el = $(id); if (el) el.setAttribute('aria-label', t(key, fb)); };
+  aria('safetyClose', 'safetyClose', 'Close');
+  aria('schStart', 'scheduleStart', 'Start hour');
+  aria('schEnd', 'scheduleEnd', 'End hour');
+  const pt = $('ptom');
+  if (pt) pt.title = t('pauseTomorrowTitle', 'Pause until tomorrow');
+  const pg = $('pauseIdle');
+  if (pg) pg.title = t('pauseHint', 'Auto-click and follow-up are paused');
   const hint = $('fhint');
   if (hint) hint.textContent = t('followupGateNote', hint.textContent); // fallback = the caption in the markup
 }
@@ -24,8 +33,20 @@ function esc(s) {
   return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 }
 
-const KIND_KEY = { allow: 'kindAllow', expand: 'kindExpand', 'open-panel': 'kindOpenPanel', 'review-bar': 'kindOpenPanel' };
+const KIND_KEY = { allow: 'kindAllow', expand: 'kindExpand', 'open-panel': 'kindOpenPanel', 'review-bar': 'kindOpenPanel',
+  // v1.8.0 kinds: the safety block + the follow-up entry + the dry-run variants
+  blocked: 'kindBlocked', followup: 'kindFollowup', 'allow-dry': 'kindAllowDry', 'expand-dry': 'kindExpandDry',
+  'open-panel-dry': 'kindOpenPanelDry', 'review-bar-dry': 'kindOpenPanelDry', 'followup-dry': 'kindFollowupDry' };
 const kindLabel = (k) => t(KIND_KEY[k] || '', k);
+// v1.8.0: chip class per kind — the dry variants share one quiet tint, 'blocked' keeps its
+// own, a follow-up entry reads like an allow entry (the label already says 'follow-up')
+function kindClass(k) {
+  if (k === 'review-bar') return 'open-panel';
+  if (k === 'review-bar-dry') return 'open-panel-dry';
+  if (String(k).endsWith('-dry')) return 'dry';
+  if (k === 'followup') return 'allow';
+  return k;
+}
 
 // ---- v1.6.0: Auto follow-up settings + live status -------------------------
 // Presets are the owner-specified follow-up prompts (exact strings), kept verbatim
@@ -424,11 +445,13 @@ async function renderLog(log) {
   const sane = (Array.isArray(log) ? log : []).filter((e) => e && typeof e === 'object'); // V4-3: junk entries never crash the render
   const items = await Promise.all(sane.slice(0, 50).map(async (e) => ({ e, plain: await decCtx(e) })));
   if (seq !== renderSeq) return; // a newer render superseded this one
-  $('log').innerHTML = items.length
+  $('logList').innerHTML = items.length
     ? items.map(({ e, plain }) => {
         const k = e.kind || 'allow';
-        const kCls = k === 'review-bar' ? 'open-panel' : k; // review-bar entries share the open-panel chip
+        const kCls = kindClass(k); // v1.8.0: review-bar shares open-panel; the dry variants share one tint
         const kLbl = kindLabel(k);
+        // v1.8.0: a blocked entry carries the reason the engine logged ('topic' / 'keyword:<kw>')
+        const kTitle = e.blockedReason ? String(e.blockedReason) : '';
         const lbl = String(e.label || '');
         // the kind chip already says it — don't repeat the same word as a bold title
         const title = lbl && lbl.toLowerCase() !== kLbl.toLowerCase() ? '<b title="' + esc(lbl) + '">' + esc(lbl) + '</b>' : '';
@@ -439,7 +462,7 @@ async function renderLog(log) {
         // timestamp column on the left; the kind chip opens the message column and the
         // clamped context hangs under it (no full-margin continuation lines)
         return '<div class="item"><span class="t" title="' + esc(localFull(e.at)) + '">' + esc(localTime(e.at)) + '</span>' +
-          '<div class="top"><span class="k k-' + esc(kCls) + '">' + esc(kLbl) + '</span>' + title + '</div>' +
+          '<div class="top"><span class="k k-' + esc(kCls) + '"' + (kTitle ? ' title="' + esc(kTitle) + '"' : '') + '>' + esc(kLbl) + '</span>' + title + '</div>' +
           '<div class="c" title="' + esc(plain) + '">' + esc(ctxS) + '</div></div>';
       }).join('')
     : '<div class="empty">' + esc(t('noClicks', 'No clicks yet')) + '</div>';
@@ -501,9 +524,13 @@ function refreshMuseStat() {
 function refresh() {
   // NOTE: the object form of storage.get returns ONLY the listed keys — followupChips must
   // be listed (null default keeps 'absent' distinguishable from an explicit empty array).
+  // v1.8.0 keys use null defaults where 'absent' must stay distinguishable (rules,
+  // followupSmart, followupSchedule, digestCounters) — absent = the engine's default.
   chrome.storage.local.get({ enabled: true, minDelayMs: 300, clickCount: 0, log: [], stats: null,
     followupEnabled: false, followupPrompt: PRESETS[0], followupIdleMs: 60000, followupCooldownMs: 600000,
-    followupChips: null, followupPrompts: [], followupRotateIdx: 0 }, (s) => {
+    followupChips: null, followupPrompts: [], followupRotateIdx: 0,
+    pauseUntil: 0, dryRun: false, allowOnceMode: false, rules: null, followupSmart: null, followupSchedule: null,
+    syncSettings: false, onboarded: false, digestCounters: null, lastDigestAt: 0 }, (s) => {
     $('enabled').checked = s.enabled !== false;
     $('delay').value = s.minDelayMs ?? 300;
     const c = $('count');
@@ -521,9 +548,306 @@ function refresh() {
     const today = $('today');
     if (today) today.textContent = Number(byDay[dayKeyOf(now)]) || 0;
     renderMini(byDay, now);
+    applyV18UI(s); // v1.8.0: pause / dry-run / rules / schedule / sync / digest / onboarding
     applyFollowupUI(s);
     renderLog(Array.isArray(s.log) ? s.log : []);
   });
+}
+
+// ======================================================================
+// v1.8.0 — pause / dry-run / Safety & Control / digest / onboarding.
+// Frozen contract (contracts-v18.md): every key is read with absent = default
+// semantics; the popup writes ONLY contract keys, and object-valued keys
+// (followupSmart / followupSchedule / rules) are merged so engine-owned extras
+// (stuckPrompt / errorPrompt) are never dropped by a UI write.
+// ======================================================================
+const SEED_BLOCK = ['delete', 'remove', 'drop', 'wipe', 'format', 'billing', 'payment', 'invoice', 'pay',
+  'transfer', 'refund', 'production', 'deploy', 'revoke', 'rm -rf', 'sudo', 'credential', 'password', 'secret', 'token'];
+const RULES_MAX_ITEMS = 50;   // contract: allowTopics cap 50 items x 64 chars
+const RULES_MAX_LEN = 64;
+const PAUSE_15M = 15 * 60 * 1000;
+const PAUSE_1H = 60 * 60 * 1000;
+const HOUR_LABELS = Array.from({ length: 24 }, (_, h) => pad2(h));
+
+const asObj = (v) => (v && typeof v === 'object' && !Array.isArray(v)) ? v : {};
+function cleanList(list) {
+  const out = [];
+  for (const raw of Array.isArray(list) ? list : []) {
+    const s = String(raw == null ? '' : raw).trim().slice(0, RULES_MAX_LEN);
+    if (!s) continue;
+    if (out.some((x) => x.toLowerCase() === s.toLowerCase())) continue;
+    out.push(s);
+    if (out.length >= RULES_MAX_ITEMS) break;
+  }
+  return out;
+}
+// '' / null / junk must fall back to the default — Number('') is 0, which would silently
+// turn an unset hour into midnight instead of the documented default
+const clampHour = (v, d) => {
+  const s = String(v == null ? '' : v).trim();
+  if (!s) return d;
+  const n = Math.round(Number(s));
+  return Number.isFinite(n) && n >= 0 && n <= 23 ? n : d;
+};
+const hhmm = (ms) => { const d = new Date(Number(ms) || 0); return pad2(d.getHours()) + ':' + pad2(d.getMinutes()); };
+
+const v18 = { pauseUntil: 0, dryRun: false, allowOnce: false, syncSettings: false, onboarded: false, lastDigestAt: 0,
+              smart: { stuckMin: 10, errorRecovery: false },
+              schedule: { enabled: false, start: 8, end: 18, onlyActiveTab: false },
+              counters: {}, rules: { topics: [], keywords: [], keywordsSeeded: true } };
+let safetyOpen = false;
+const pausedNow = () => Date.now() < (Number(v18.pauseUntil) || 0);
+
+// ---- pause: quick durations + a state banner in the SAME 26px row -------------------
+let pauseTimer = null;
+function renderPause() {
+  const paused = pausedNow();
+  const idle = $('pauseIdle'), act = $('pauseActive');
+  if (idle) idle.hidden = paused;
+  if (act) act.hidden = !paused;
+  if (paused) {
+    const tx = $('pstateText');
+    if (tx) tx.textContent = t('pauseStateUntil', 'Paused until $1', [hhmm(v18.pauseUntil)]);
+  }
+  if (pauseTimer) { clearTimeout(pauseTimer); pauseTimer = null; }
+  if (paused) {
+    // flip back the moment the pause expires while the popup stays open
+    const ms = Math.max(0, (Number(v18.pauseUntil) || 0) - Date.now()) + 250;
+    pauseTimer = setTimeout(() => { pauseTimer = null; renderPause(); }, Math.min(ms, 2147483000));
+  }
+}
+function setPause(until) { try { chrome.storage.local.set({ pauseUntil: until }); } catch { /* ignore */ } }
+function pauseUntilTomorrow() {
+  const d = new Date(); d.setHours(24, 0, 0, 0);                 // next local midnight
+  if (d.getTime() - Date.now() < PAUSE_1H) d.setDate(d.getDate() + 1); // never a < 1h 'tomorrow'
+  return d.getTime();
+}
+
+// ---- rules editor (allowTopics + blockKeywords) -------------------------------------
+function ruleChip(s, kind, i) {
+  return '<span class="rchip"><span class="rtxt" title="' + esc(s) + '">' + esc(s) + '</span>' +
+    '<button type="button" class="rx" data-k="' + kind + '" data-i="' + i + '" aria-label="' +
+    esc(t('rulesRemove', 'Remove') + ': ' + s) + '">&#10005;</button></span>';
+}
+function renderRules() {
+  const tl = $('topicsList');
+  if (tl) {
+    tl.innerHTML = v18.rules.topics.length
+      ? v18.rules.topics.map((s, i) => ruleChip(s, 'topic', i)).join('')
+      : '<div class="rempty">' + esc(t('topicsEmpty', 'No topics set — every topic is allowed')) + '</div>';
+  }
+  const kl = $('kwList');
+  if (kl) {
+    kl.innerHTML = v18.rules.keywords.length
+      ? v18.rules.keywords.map((s, i) => ruleChip(s, 'kw', i)).join('')
+      : '<div class="rempty">' + esc(t('keywordsEmpty', 'No keywords set — nothing is blocked')) + '</div>';
+  }
+}
+function writeRules(topics, keywords) {
+  v18.rules.topics = cleanList(topics);
+  v18.rules.keywords = cleanList(keywords);
+  v18.rules.keywordsSeeded = false;
+  try { chrome.storage.local.set({ rules: { allowTopics: v18.rules.topics.slice(), blockKeywords: v18.rules.keywords.slice() } }); } catch { /* ignore */ }
+  renderRules();
+}
+function addRule(kind) {
+  const inp = kind === 'topic' ? $('topicInput') : $('kwInput');
+  if (!inp) return;
+  const v = String(inp.value || '').trim();
+  if (!v) { inp.focus(); return; }
+  inp.value = '';
+  if (kind === 'topic') writeRules(v18.rules.topics.concat([v]), v18.rules.keywords);
+  else writeRules(v18.rules.topics, v18.rules.keywords.concat([v]));
+  inp.focus();
+}
+function removeRule(kind, i) {
+  if (kind === 'topic') writeRules(v18.rules.topics.filter((_, j) => j !== i), v18.rules.keywords);
+  else writeRules(v18.rules.topics, v18.rules.keywords.filter((_, j) => j !== i));
+}
+// replacing the keyword list is a two-step inline confirm (same pattern as 'Starter
+// rotation'): the first tap arms the button, a second tap within 5s performs the reset
+let kwResetArmed = false;
+let kwResetTimer = null;
+function kwResetDisarm() {
+  if (kwResetTimer) { clearTimeout(kwResetTimer); kwResetTimer = null; }
+  if (!kwResetArmed) return;
+  kwResetArmed = false;
+  const b = $('kwReset');
+  if (b) { b.textContent = t('keywordsReset', 'Reset to defaults'); b.classList.remove('armed'); }
+}
+function kwResetArm() {
+  kwResetArmed = true;
+  const b = $('kwReset');
+  if (b) { b.textContent = t('keywordsResetConfirm', 'Reset the list? Tap again'); b.classList.add('armed'); }
+  if (kwResetTimer) clearTimeout(kwResetTimer);
+  kwResetTimer = setTimeout(() => { kwResetTimer = null; kwResetDisarm(); }, 5000);
+}
+
+// ---- schedule / smart recovery / sync ------------------------------------------------
+function renderSchedule() {
+  const en = $('schEnabled');
+  if (en) en.checked = v18.schedule.enabled === true;
+  const st = $('schStart'), ed = $('schEnd');
+  if (st && ed) {
+    if (!st.options.length) for (const h of HOUR_LABELS) { st.appendChild(new Option(h, h)); ed.appendChild(new Option(h, h)); }
+    if (document.activeElement !== st) st.value = pad2(v18.schedule.start);
+    if (document.activeElement !== ed) ed.value = pad2(v18.schedule.end);
+  }
+  const ac = $('schActive');
+  if (ac) ac.checked = v18.schedule.onlyActiveTab === true;
+}
+function writeSchedule() {
+  try {
+    chrome.storage.local.get({ followupSchedule: null }, (s) => {
+      const cur = asObj(s.followupSchedule);
+      const next = Object.assign({}, cur, {
+        enabled: !!($('schEnabled') || {}).checked,
+        start: clampHour(($('schStart') || {}).value, 8),
+        end: clampHour(($('schEnd') || {}).value, 18),
+        onlyActiveTab: !!($('schActive') || {}).checked,
+      });
+      chrome.storage.local.set({ followupSchedule: next });
+    });
+  } catch { /* ignore */ }
+}
+function renderSmart() {
+  const st = $('stuckMin');
+  if (st && document.activeElement !== st) st.value = String(v18.smart.stuckMin);
+  const er = $('errRec');
+  if (er) er.checked = v18.smart.errorRecovery === true;
+}
+function writeSmart(patch) {
+  try {
+    chrome.storage.local.get({ followupSmart: null }, (s) => {
+      chrome.storage.local.set({ followupSmart: Object.assign({}, asObj(s.followupSmart), patch) });
+    });
+  } catch { /* ignore */ }
+}
+function renderSync() {
+  const el = $('syncSet');
+  if (el) el.checked = v18.syncSettings === true;
+}
+
+// ---- 'While you were away' digest (digestCounters + lastDigestAt) --------------------
+function renderDigest() {
+  const c = asObj(v18.counters);
+  const clicks = Number(c.clicks) || 0, fups = Number(c.followups) || 0, blocked = Number(c.blocked) || 0;
+  const n = clicks + fups + blocked;
+  const band = $('digest');
+  if (band) band.hidden = n <= 0;
+  if (n > 0) {
+    const putEl = (id, v) => { const el = $(id); if (el) el.textContent = String(v); };
+    putEl('dClicks', clicks); putEl('dFollowups', fups); putEl('dBlocked', blocked);
+    const since = $('dSince');
+    if (since) {
+      since.textContent = v18.lastDigestAt > 0
+        ? t('digestSince', 'since $1', [localFull(new Date(v18.lastDigestAt).toISOString())])
+        : t('digestSinceStart', 'since you started');
+    }
+  }
+  renderLogTop();
+}
+function renderDry() {
+  const db = $('dryBand');
+  if (db) db.hidden = v18.dryRun !== true;
+  const chip = $('safetyChip');
+  if (chip) {
+    chip.hidden = v18.dryRun !== true;
+    if (v18.dryRun === true) chip.textContent = t('dryRunChip', 'Dry-run');
+  }
+  renderLogTop();
+}
+function renderLogTop() {
+  const top = $('logTop');
+  if (!top) return;
+  const dg = $('digest');
+  top.hidden = !(v18.dryRun === true || (dg && !dg.hidden));
+}
+
+// ---- Safety & Control panel (full-popup overlay) -------------------------------------
+function setSafety(open) {
+  safetyOpen = !!open;
+  const p = $('safetyPanel');
+  if (p) p.hidden = !safetyOpen;
+  const b = $('safetyBtn');
+  if (b) b.setAttribute('aria-expanded', safetyOpen ? 'true' : 'false');
+  if (safetyOpen) {
+    renderRules(); renderSchedule(); renderSmart(); renderSync();
+    const dr = $('dryRun'); if (dr) dr.checked = v18.dryRun === true;
+    const ao = $('allowOnce'); if (ao) ao.checked = v18.allowOnce === true;
+    const c = $('safetyClose'); if (c) c.focus();
+  } else {
+    kwResetDisarm();
+  }
+}
+
+// ---- onboarding wizard (3 steps, shown while onboarded !== true) ---------------------
+let obStep = 0;
+const OB_STEPS = [
+  { title: ['onbStep1Title', 'Turn on auto-click'], body: ['onbStep1Body', 'Muse asks for approval often. Let the extension click Allow for you — you can pause it any time.'],
+    primary: ['onbEnable', 'Turn on'], act: 'enable' },
+  { title: ['onbStep2Title', 'Start in Dry-run'], body: ['onbStep2Body', 'Recommended: let it log for a day and watch. Nothing is clicked until you switch Dry-run off.'],
+    primary: ['onbDryRun', 'Turn on Dry-run'], act: 'dry' },
+  { title: ['onbStep3Title', 'Pick a follow-up'], body: ['onbStep3Body', 'One tap sets the prompt that keeps Muse working when it goes idle. You can change it later.'],
+    primary: ['onbDone', 'Done'], act: 'done' },
+];
+function renderOnboard() {
+  const ov = $('onboard');
+  if (!ov) return;
+  const show = v18.onboarded !== true;
+  ov.hidden = !show;
+  if (!show) return;
+  const step = OB_STEPS[obStep] || OB_STEPS[0];
+  const ti = $('obTitle'), bo = $('obBody'), pr = $('obPrimary');
+  if (ti) ti.textContent = t(step.title[0], step.title[1]);
+  if (bo) bo.textContent = t(step.body[0], step.body[1]);
+  if (pr) pr.textContent = t(step.primary[0], step.primary[1]);
+  const q = $('obQuick'); if (q) q.hidden = obStep !== 2;
+  const bk = $('obBack'); if (bk) bk.hidden = obStep === 0;
+  const sc = $('obStep'); if (sc) sc.textContent = t('onbStepCount', 'Step $1 of $2', [String(obStep + 1), '3']);
+  document.querySelectorAll('.obdot').forEach((d) => d.classList.toggle('on', Number(d.dataset.s) <= obStep));
+}
+function obPrimary() {
+  const step = OB_STEPS[obStep] || OB_STEPS[0];
+  if (step.act === 'enable') { try { chrome.storage.local.set({ enabled: true }); } catch { /* ignore */ } obStep = 1; renderOnboard(); return; }
+  if (step.act === 'dry') { try { chrome.storage.local.set({ dryRun: true }); } catch { /* ignore */ } obStep = 2; renderOnboard(); return; }
+  finishOnboard();
+}
+function finishOnboard() {
+  v18.onboarded = true;
+  obStep = 0;
+  try { chrome.storage.local.set({ onboarded: true }); } catch { /* ignore */ }
+  renderOnboard();
+}
+
+// ---- apply the v1.8 storage snapshot to the UI ---------------------------------------
+function applyV18UI(s) {
+  v18.pauseUntil = Number(s.pauseUntil) || 0;
+  v18.dryRun = s.dryRun === true;
+  v18.allowOnce = s.allowOnceMode === true;
+  v18.syncSettings = s.syncSettings === true;
+  v18.onboarded = s.onboarded === true;
+  v18.counters = asObj(s.digestCounters);
+  v18.lastDigestAt = Number(s.lastDigestAt) || 0;
+  const rules = s.rules === null || s.rules === undefined ? null : asObj(s.rules);
+  const hasKw = !!(rules && Array.isArray(rules.blockKeywords));
+  v18.rules.topics = cleanList(rules && rules.allowTopics);
+  // absent blockKeywords = the engine's shipped seed list (shown pre-loaded, not written)
+  v18.rules.keywords = hasKw ? cleanList(rules.blockKeywords) : SEED_BLOCK.slice();
+  v18.rules.keywordsSeeded = !hasKw;
+  const sm = asObj(s.followupSmart);
+  const stuck = Number(sm.stuckMin);
+  v18.smart = { stuckMin: Number.isFinite(stuck) ? Math.max(0, Math.round(stuck)) : 10, errorRecovery: sm.errorRecovery === true };
+  const sc = asObj(s.followupSchedule);
+  v18.schedule = { enabled: sc.enabled === true, start: clampHour(sc.start, 8), end: clampHour(sc.end, 18), onlyActiveTab: sc.onlyActiveTab === true };
+  renderPause();
+  renderDry();
+  renderDigest();
+  renderSchedule();
+  renderSmart();
+  renderSync();
+  renderOnboard();
+  if (safetyOpen) renderRules();
 }
 
 applyI18n();
@@ -663,7 +987,11 @@ document.addEventListener('click', (e) => {
     !!(e.target && e.target.closest && (e.target.closest('#flibbtn') || e.target.closest('#frotnext')));
   if (!inside && !trigger) fSheet('');
 });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && fSheetMode) fSheet(''); });
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (safetyOpen) { setSafety(false); return; } // v1.8.0: Escape closes the Safety panel first
+  if (fSheetMode) fSheet('');
+});
 $('fidle').addEventListener('change', () => {
   const v = Math.max(1, Math.min(3600, Math.round(Number($('fidle').value) || 60)));
   $('fidle').value = v;
@@ -732,3 +1060,46 @@ refresh(); // boot: apply the stored state immediately (was missing — popup re
 refreshFollowupStatus();
 setInterval(refreshFollowupStatus, 2500);
 chrome.storage.onChanged.addListener(refresh);
+
+// ---- v1.8.0 wiring: pause / Safety panel / rules / schedule / smart / sync / onboarding ----
+$('p15').addEventListener('click', () => setPause(Date.now() + PAUSE_15M));
+$('p60').addEventListener('click', () => setPause(Date.now() + PAUSE_1H));
+$('ptom').addEventListener('click', () => setPause(pauseUntilTomorrow()));
+$('presume').addEventListener('click', () => setPause(0));
+$('safetyBtn').addEventListener('click', () => setSafety(!safetyOpen));
+$('safetyClose').addEventListener('click', () => setSafety(false));
+$('topicAdd').addEventListener('click', () => addRule('topic'));
+$('kwAdd').addEventListener('click', () => addRule('kw'));
+$('kwReset').addEventListener('click', () => {
+  if (!kwResetArmed) { kwResetArm(); return; }
+  kwResetDisarm();
+  writeRules(v18.rules.topics, SEED_BLOCK.slice()); // back to the shipped seed list
+});
+$('topicsList').addEventListener('click', (e) => { const b = e.target.closest('[data-k]'); if (b) removeRule(b.dataset.k, Number(b.dataset.i)); });
+$('kwList').addEventListener('click', (e) => { const b = e.target.closest('[data-k]'); if (b) removeRule(b.dataset.k, Number(b.dataset.i)); });
+$('topicInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addRule('topic'); } });
+$('kwInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addRule('kw'); } });
+$('dryRun').addEventListener('change', () => { try { chrome.storage.local.set({ dryRun: $('dryRun').checked }); } catch { /* ignore */ } });
+$('allowOnce').addEventListener('change', () => { try { chrome.storage.local.set({ allowOnceMode: $('allowOnce').checked }); } catch { /* ignore */ } });
+$('syncSet').addEventListener('change', () => { try { chrome.storage.local.set({ syncSettings: $('syncSet').checked }); } catch { /* ignore */ } });
+$('schEnabled').addEventListener('change', writeSchedule);
+$('schStart').addEventListener('change', writeSchedule);
+$('schEnd').addEventListener('change', writeSchedule);
+$('schActive').addEventListener('change', writeSchedule);
+$('stuckMin').addEventListener('change', () => {
+  const v = Math.max(0, Math.min(1440, Math.round(Number($('stuckMin').value) || 0)));
+  $('stuckMin').value = v;
+  writeSmart({ stuckMin: v });
+});
+$('errRec').addEventListener('change', () => writeSmart({ errorRecovery: $('errRec').checked }));
+// onboarding wizard
+$('obPrimary').addEventListener('click', obPrimary);
+$('obBack').addEventListener('click', () => { obStep = Math.max(0, obStep - 1); renderOnboard(); });
+$('obSkip').addEventListener('click', finishOnboard);
+[0, 1, 2].forEach((i) => {
+  const b = $('obq' + i);
+  if (b) b.addEventListener('click', () => {
+    try { chrome.storage.local.set({ followupEnabled: true, followupPrompt: PRESETS[i], followupChips: [] }); } catch { /* ignore */ }
+    finishOnboard();
+  });
+});

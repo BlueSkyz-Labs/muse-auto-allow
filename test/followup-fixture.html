@@ -86,6 +86,111 @@
   </div>
 </div>
 
+<!-- =====================================================================================
+     v1.8.0 family — pause / dry-run / blocklist / topic / allow-once. Exactly one variant
+     is shown at a time via window.__setV18(mode); clicks record into window.__cardClicks
+     and the cards STAY (so dedup/blocked behavior remains observable). All hidden by
+     default — the earlier phases never see them.
+     ===================================================================================== -->
+
+<!-- dry-run probe: detected + logged as 'allow-dry', never clicked while dryRun is on;
+     the SAME node must be clicked after dryRun turns off (dedup window elapsed) -->
+<div class="card" data-testid="hatch-inline-approval-card" id="v18Dry" style="display:none">
+  <p>Dry-run probe</p>
+  <div class="row">
+    <button type="button" class="allow" id="v18DryAllow">Allow</button>
+    <button type="button" class="deny" id="v18DryDeny">Deny</button>
+  </div>
+</div>
+
+<!-- blocklist probe (seed keyword 'delete'): must NEVER be clicked -->
+<div class="card" data-testid="hatch-inline-approval-card" id="v18Blocked" style="display:none">
+  <p>Allow Muse to perform this action on your GitHub account? Action delete Repository demo-repo</p>
+  <div class="row">
+    <button type="button" class="allow" id="v18BlockedAllow">Allow</button>
+    <button type="button" class="deny" id="v18BlockedDeny">Deny</button>
+  </div>
+</div>
+
+<!-- custom-keyword probe (unmarked → path B; text has 'banana'): blocked only when
+     rules.blockKeywords contains 'banana' -->
+<div class="card" id="v18Banana" style="display:none">
+  <p>Allow Muse to perform this action on your GitHub account? Action banana</p>
+  <div class="row">
+    <button type="button" class="allow" id="v18BananaAllow">Allow</button>
+    <button type="button" class="deny" id="v18BananaDeny">Deny</button>
+  </div>
+</div>
+
+<!-- clean control card: still approved while a dangerous card is on screen -->
+<div class="card" data-testid="hatch-inline-approval-card" id="v18Clean" style="display:none">
+  <p>Clean control probe</p>
+  <div class="row">
+    <button type="button" class="allow" id="v18CleanAllow">Allow</button>
+    <button type="button" class="deny" id="v18CleanDeny">Deny</button>
+  </div>
+</div>
+
+<!-- topic probes: extractTopic() reads the LAST "Repository <name>" token -->
+<div class="card" data-testid="hatch-inline-approval-card" id="v18TopicOk" style="display:none">
+  <p>Allow Muse to perform this action on your GitHub account? Action Pull Repository topic-ok</p>
+  <div class="row">
+    <button type="button" class="allow" id="v18TopicOkAllow">Allow</button>
+    <button type="button" class="deny" id="v18TopicOkDeny">Deny</button>
+  </div>
+</div>
+<div class="card" data-testid="hatch-inline-approval-card" id="v18TopicBad" style="display:none">
+  <p>Allow Muse to perform this action on your GitHub account? Action Pull Repository other-repo</p>
+  <div class="row">
+    <button type="button" class="allow" id="v18TopicBadAllow">Allow</button>
+    <button type="button" class="deny" id="v18TopicBadDeny">Deny</button>
+  </div>
+</div>
+
+<!-- allow-once probes. onceOnly: 'Allow once only' is recognized ONLY under allowOnceMode
+     (mode off: nothing recognized → the card is left to the user, fail closed).
+     prefOnce / prefLegacy are text-distinct twins: with the mode on the one-shot option
+     wins; with it off the legacy ranking (plain 'Allow' first) applies. -->
+<div class="card" data-testid="hatch-inline-approval-card" id="v18OnceOnly" style="display:none">
+  <p>Allow once only probe</p>
+  <div class="row">
+    <button type="button" class="allow" id="v18OnceOnlyBtn">Allow once only</button>
+    <button type="button" class="allow" id="v18OnceAlways">Always allow</button>
+    <button type="button" class="deny" id="v18OnceDeny">Deny</button>
+  </div>
+</div>
+<div class="card" data-testid="hatch-inline-approval-card" id="v18PrefOnce" style="display:none">
+  <p>Preference probe A</p>
+  <div class="row">
+    <button type="button" class="allow" id="v18PrefPlain">Allow</button>
+    <button type="button" class="allow" id="v18PrefOnceBtn">Allow once</button>
+    <button type="button" class="allow" id="v18PrefAlways">Allow always</button>
+    <button type="button" class="deny" id="v18PrefDeny">Deny</button>
+  </div>
+</div>
+<div class="card" data-testid="hatch-inline-approval-card" id="v18PrefLegacy" style="display:none">
+  <p>Preference probe B</p>
+  <div class="row">
+    <button type="button" class="allow" id="v18LegacyPlain">Allow</button>
+    <button type="button" class="allow" id="v18LegacyOnceBtn">Allow once</button>
+    <button type="button" class="allow" id="v18LegacyAlways">Allow always</button>
+    <button type="button" class="deny" id="v18LegacyDeny">Deny</button>
+  </div>
+</div>
+
+<!-- pause probe: untouched while pauseUntil is in the future, clicked once it clears -->
+<div class="card" data-testid="hatch-inline-approval-card" id="v18Pause" style="display:none">
+  <p>Pause probe</p>
+  <div class="row">
+    <button type="button" class="allow" id="v18PauseAllow">Allow</button>
+    <button type="button" class="deny" id="v18PauseDeny">Deny</button>
+  </div>
+</div>
+
+<!-- error surface for followupSmart.errorRecovery (hidden unless __setError is called).
+     No aria-live on purpose: the status classifier must not read it as a Muse state. -->
+<div class="card chat-error" id="errBox" role="alert" style="display:none"></div>
+
 <!-- composer bar: plus icon, input placeholder 'Message', mic icon, send button -->
 <div id="composerbar">
   <button type="button" id="plus" aria-label="Add attachment">+</button>
@@ -146,6 +251,57 @@ window.__hideSend = function () {
 window.__setComposer = function (v) {
   document.getElementById('composer').value = String(v || '');
 };
+// v1.8.0 family: show exactly one variant at a time (clicks record, cards stay visible)
+window.__setV18 = function (mode) {
+  var set = function (id, v) { var el = document.getElementById(id); if (el) el.style.display = v ? '' : 'none'; };
+  set('v18Dry', mode === 'dry');
+  set('v18Blocked', mode === 'blocked' || mode === 'both');
+  set('v18Banana', mode === 'banana');
+  set('v18Clean', mode === 'clean' || mode === 'both');
+  set('v18TopicOk', mode === 'topicOk');
+  set('v18TopicBad', mode === 'topicBad');
+  set('v18OnceOnly', mode === 'onceOnly');
+  set('v18PrefOnce', mode === 'prefOnce');
+  set('v18PrefLegacy', mode === 'prefLegacy');
+  set('v18Pause', mode === 'pause');
+};
+// error surface for followupSmart.errorRecovery
+window.__setError = function (text) {
+  var el = document.getElementById('errBox');
+  if (!el) return;
+  el.textContent = String(text || '');
+  el.style.display = text ? '' : 'none';
+};
+function wireV18(id, name) {
+  var el = document.getElementById(id);
+  if (el) el.addEventListener('click', function () { window.__cardClicks.push({ n: name, t: Date.now() }); });
+}
+wireV18('v18DryAllow', 'v18-dry-allow');
+wireV18('v18DryDeny', 'v18-dry-deny');
+wireV18('v18BlockedAllow', 'v18-blocked-allow');
+wireV18('v18BlockedDeny', 'v18-blocked-deny');
+wireV18('v18BananaAllow', 'v18-banana-allow');
+wireV18('v18BananaDeny', 'v18-banana-deny');
+wireV18('v18CleanAllow', 'v18-clean-allow');
+wireV18('v18CleanDeny', 'v18-clean-deny');
+wireV18('v18TopicOkAllow', 'v18-topic-ok-allow');
+wireV18('v18TopicOkDeny', 'v18-topic-ok-deny');
+wireV18('v18TopicBadAllow', 'v18-topic-bad-allow');
+wireV18('v18TopicBadDeny', 'v18-topic-bad-deny');
+wireV18('v18OnceOnlyBtn', 'v18-once-only');
+wireV18('v18OnceAlways', 'v18-once-always');
+wireV18('v18OnceDeny', 'v18-once-deny');
+wireV18('v18PrefPlain', 'v18-pref-plain');
+wireV18('v18PrefOnceBtn', 'v18-pref-once');
+wireV18('v18PrefAlways', 'v18-pref-always');
+wireV18('v18PrefDeny', 'v18-pref-deny');
+wireV18('v18LegacyPlain', 'v18-legacy-plain');
+wireV18('v18LegacyOnceBtn', 'v18-legacy-once');
+wireV18('v18LegacyAlways', 'v18-legacy-always');
+wireV18('v18LegacyDeny', 'v18-legacy-deny');
+wireV18('v18PauseAllow', 'v18-pause-allow');
+wireV18('v18PauseDeny', 'v18-pause-deny');
+window.__setV18('off');
 
 var composer = document.getElementById('composer');
 function record(text, via) {

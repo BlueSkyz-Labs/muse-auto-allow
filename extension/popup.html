@@ -25,7 +25,7 @@
     .head svg .ck { stroke-dashoffset: 0 !important; }
   }
   body { width: 320px; max-height: 600px; box-sizing: border-box; margin: 0; padding: 10px 14px 10px;
-         background: var(--bg); color: var(--ink); display: flex; flex-direction: column;
+         background: var(--bg); color: var(--ink); display: flex; flex-direction: column; position: relative;
          font: 13px/1.45 "Optimistic", "optimisticAI", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
   body > * { flex: 0 0 auto; }
   .head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
@@ -222,9 +222,14 @@
   .k-allow { background: rgba(0,90,191,.10); color: var(--blue); }
   .k-expand { background: rgba(243,217,180,.55); color: #7a5a20; }
   .k-open-panel { background: var(--fill); color: var(--muted); }
+  /* v1.8.0 log kinds: blocked (safety) + the dry-run variants (log-only) */
+  .k-blocked { background: rgba(194,38,63,.12); color: #a51e35; }
+  .k-dry { background: rgba(0,90,191,.08); color: var(--muted); }
   @media (prefers-color-scheme: dark) {
     .k-allow { background: rgba(10,92,224,.25); color: #8ab8ff; }
     .k-expand { background: rgba(243,217,180,.18); color: #e8c98a; }
+    .k-blocked { background: rgba(255,130,150,.18); color: #ff9db0; }
+    .k-dry { background: rgba(10,92,224,.18); color: #8ab8ff; }
   }
   .empty { color: var(--muted); padding: 4px 0; }
   .foot { margin: 5px 0 0; border-top: 1px solid var(--divider); padding-top: 5px; justify-content: space-between; }
@@ -233,6 +238,115 @@
   ::-webkit-scrollbar-thumb { background: rgba(17,17,18,.26); border-radius: 999px; }
   ::-webkit-scrollbar-track { background: transparent; }
   @media (prefers-color-scheme: dark) { ::-webkit-scrollbar-thumb { background: rgba(228,230,235,.30); } }
+
+  /* ======================================================================
+     v1.8.0 — pause, Safety & Control, dry-run, digest, onboarding.
+     Height discipline (W1: the popup stays <=600px in EVERY state):
+       · the control bar adds exactly ONE 26px row (pause + Safety entry);
+       · the Safety & Control panel and the onboarding wizard are full-popup
+         overlays (position:absolute; inset:0) — opening them never grows it;
+       · the dry-run banner and the digest live INSIDE the log's own scroll
+         area (sticky top), so they cost the layout no height at all;
+       · the log keeps flex:0 1 auto with min-height:0, so it is the element
+         that absorbs every crowded state instead of pushing the popup.
+     ====================================================================== */
+  body { padding: 8px 14px 6px; }
+  .head { margin-bottom: 4px; }
+  .stats { margin: 3px 0; }
+  .foot { margin: 4px 0 0; padding-top: 4px; }
+  .log { margin-top: 4px; min-height: 0; }
+  /* one row: pause control (idle pills / paused state) left, Safety & Control entry right */
+  .ctlbar { display: flex; align-items: center; gap: 6px; margin: 0 0 3px; min-width: 0; }
+  .pgroup { display: inline-flex; align-items: center; gap: 4px; min-width: 0; overflow: hidden; }
+  .plabel { flex: none; font-size: 11.5px; }
+  .pbtn { font: inherit; font-size: 11px; line-height: 1.4; background: var(--fill); color: var(--ink);
+          border: 1px solid var(--stroke); border-radius: 999px; padding: 2px 8px; cursor: pointer; white-space: nowrap; }
+  .pbtn:hover { background: rgba(0,90,191,.12); }
+  .pbtn.resume { background: rgba(0,90,191,.14); border-color: rgba(0,90,191,.32); color: var(--blue); font-weight: 500; }
+  .pbtn.resume:hover { background: rgba(0,90,191,.20); }
+  .pstate { font-size: 11px; font-weight: 500; color: var(--blue); background: rgba(0,90,191,.10);
+            border-radius: 999px; padding: 2px 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .safetybtn { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; flex: none; font: inherit;
+               font-size: 11.5px; background: none; border: 0; color: var(--muted); cursor: pointer; padding: 2px 0; white-space: nowrap; }
+  .safetybtn:hover { color: var(--ink); }
+  .safetybtn .chev { font-size: 9px; }
+  .schip { font-size: 10px; font-weight: 500; background: rgba(0,90,191,.14); color: var(--blue);
+           border-radius: 999px; padding: 0 6px; }
+  @media (prefers-color-scheme: dark) {
+    .pbtn:hover { background: rgba(10,92,224,.30); }
+    .pbtn.resume { background: rgba(10,92,224,.32); border-color: rgba(10,92,224,.50); color: #8ab8ff; }
+    .pstate { background: rgba(10,92,224,.25); color: #8ab8ff; }
+    .schip { background: rgba(10,92,224,.30); color: #8ab8ff; }
+  }
+  /* dry-run banner + digest: inside #logTop, sticky at the top of the log's scroll area */
+  .logtop { position: sticky; top: 0; z-index: 2; background: var(--bg); }
+  .dryband { display: flex; align-items: center; box-sizing: border-box; border-radius: 10px;
+             padding: 1px 8px; font-size: 10.5px; line-height: 1.4;
+             background: rgba(243,217,180,.35); border: 1px solid rgba(243,217,180,.9); color: #7a5a20; }
+  .digest { box-sizing: border-box; border-radius: 10px; padding: 0 8px; margin-top: 2px;
+            background: var(--panel); border: 1px solid var(--stroke); }
+  .digest .dhead { font-size: 10px; line-height: 1.3; color: var(--muted); display: flex; gap: 6px; }
+  .digest .drow { display: flex; align-items: baseline; gap: 9px; font-size: 11px; line-height: 1.3; white-space: nowrap; }
+  .digest .dstat { display: inline-flex; align-items: baseline; gap: 3px; min-width: 0; }
+  .digest b { font-weight: 600; font-variant-numeric: tabular-nums; }
+  @media (prefers-color-scheme: dark) {
+    .dryband { background: rgba(243,217,180,.14); border-color: rgba(243,217,180,.34); color: #e8c98a; }
+  }
+  /* full-popup overlay panel: Safety & Control + the onboarding wizard.
+     inset:0 keeps every overlay state inside the popup's own box (never grows it). */
+  .overlay { position: absolute; inset: 0; z-index: 9; box-sizing: border-box; padding: 8px 14px;
+             background: var(--bg); display: flex; flex-direction: column; }
+  #onboard { z-index: 10; }
+  .ovhead { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; flex: none; }
+  .ovhead h2 { font-size: 13.5px; font-weight: 500; margin: 0; letter-spacing: -0.01em; }
+  .ovclose { margin-left: auto; flex: none; font: inherit; font-size: 12px; line-height: 1.3; background: var(--fill);
+             color: var(--muted); border: 1px solid var(--stroke); border-radius: 999px; padding: 2px 9px; cursor: pointer; }
+  .ovclose:hover { color: var(--ink); }
+  .ovbody { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+  /* position:relative keeps the hidden 1x1 checkbox inputs (absolute, shipped pattern)
+     inside their own group: without it their containing block is the overlay itself and a
+     checkbox deep in the scrolled list lands OUTSIDE the popup box, adding phantom
+     document overflow (measured: 600 -> 767px while the panel was open). */
+  .rgroup { margin: 8px 0 0; border-top: 1px solid var(--divider); padding-top: 6px; position: relative; }
+  .rgroup:first-child { margin-top: 0; border-top: 0; padding-top: 0; }
+  .rlabel { font-weight: 500; }
+  .rnote { font-size: 11px; color: var(--muted); margin: 1px 0 4px; }
+  .rlist { display: flex; flex-wrap: wrap; gap: 4px; min-height: 20px; }
+  .rchip { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; font-size: 11px; line-height: 1.4;
+           background: var(--fill); border: 1px solid var(--stroke); border-radius: 999px; padding: 1px 3px 1px 8px; }
+  .rchip .rtxt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rchip .rx { flex: none; font: inherit; font-size: 10px; line-height: 1.3; background: none; border: 0; color: var(--muted);
+               cursor: pointer; padding: 0 4px; border-radius: 999px; }
+  .rchip .rx:hover { color: var(--ink); background: rgba(0,90,191,.12); }
+  .rempty { font-size: 11px; color: var(--muted); padding: 2px 0; }
+  .radd { display: flex; align-items: center; gap: 5px; margin-top: 5px; flex-wrap: wrap; }
+  .rin { flex: 1 1 100px; min-width: 0; box-sizing: border-box; background: var(--fill); color: var(--ink);
+         border: 1px solid var(--stroke); border-radius: 999px; padding: 3px 10px; font: inherit; font-size: 11.5px; }
+  .rin::placeholder { color: var(--muted); opacity: 1; }
+  .schrow { display: flex; align-items: center; gap: 5px; margin-top: 4px; flex-wrap: wrap; }
+  select.hsel { width: 62px; flex: none; font-size: 11.5px; padding: 3px 24px 3px 9px;
+                background-position: right 7px center; }
+  .schonly { font-size: 11.5px; }
+  .schonly .track { width: 32px; height: 19px; }
+  .schonly .knob { width: 15px; height: 15px; }
+  .schonly input:checked + .track .knob { transform: translateX(13px); }
+  .rbtn { font: inherit; font-size: 11px; line-height: 1.4; background: var(--fill); color: var(--ink);
+          border: 1px solid var(--stroke); border-radius: 999px; padding: 2px 9px; cursor: pointer; white-space: nowrap; }
+  .rbtn:hover { background: rgba(0,90,191,.12); }
+  .rbtn.armed { background: rgba(0,90,191,.16); border-color: rgba(0,90,191,.32); color: var(--blue); font-weight: 500; }
+  /* onboarding wizard: one card, three steps, no heavy motion */
+  .obcard { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+  .obdots { display: flex; align-items: center; gap: 5px; margin-bottom: 6px; flex: none; }
+  .obdot { width: 18px; height: 3px; border-radius: 999px; background: var(--fill); }
+  .obdot.on { background: var(--blue); }
+  .obstep { font-size: 10.5px; color: var(--muted); margin-left: auto; }
+  .obtitle { font-size: 14px; font-weight: 500; margin: 2px 0 4px; }
+  .obbody { font-size: 12px; color: var(--muted); margin: 0 0 8px; }
+  .obactions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .obactions .btn { font-size: 12px; padding: 4px 14px; }
+  .obfoot { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 8px; flex: none; }
+  .obquick { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+  .obquick .qbtn { width: 100%; box-sizing: border-box; text-align: left; padding: 4px 9px; }
 </style>
 </head>
 <body>
@@ -247,6 +361,22 @@
     </svg>
     <h1 data-i18n="extName">Muse Auto-Allow</h1>
     <span class="chip" id="musestat"><i class="cd" aria-hidden="true"></i><span id="musestatText">&hellip;</span></span>
+  </div>
+  <!-- v1.8.0 — pause + Safety & Control entry (one 26px row in every state) -->
+  <div class="ctlbar" id="ctlbar">
+    <span class="pgroup" id="pauseIdle">
+      <span class="plabel muted" data-i18n="pauseLabel">Pause</span>
+      <button type="button" class="pbtn" id="p15" data-i18n="pause15">15 min</button>
+      <button type="button" class="pbtn" id="p60" data-i18n="pause60">1 hour</button>
+      <button type="button" class="pbtn" id="ptom" data-i18n="pauseTomorrow">Tomorrow</button>
+    </span>
+    <span class="pgroup" id="pauseActive" hidden>
+      <span class="pstate" id="pstateText"></span>
+      <button type="button" class="pbtn resume" id="presume" data-i18n="pauseResume">Resume</button>
+    </span>
+    <button type="button" class="safetybtn" id="safetyBtn" aria-expanded="false" aria-controls="safetyPanel">
+      <span data-i18n="safetyOpen">Safety</span><span class="schip" id="safetyChip" hidden></span><span class="chev" aria-hidden="true">&#9654;</span>
+    </button>
   </div>
   <label class="sw"><input type="checkbox" id="enabled"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="toggleLabel">Auto-click Allow</span></label>
   <div class="row field"><label class="muted" for="delay" data-i18n="delayLabel" data-nc>Delay between clicks:</label>
@@ -305,8 +435,98 @@
       <div class="fblock sendrow" id="fsendrow"><span class="fsendnote" id="fsendnote" role="status"></span><button class="btn tonal" id="fsendnow" data-i18n="followupSendNow">Send now</button></div>
     </div>
   </div>
-  <div class="log" id="log" aria-live="polite"></div>
+  <div class="log" id="log" aria-live="polite">
+    <!-- v1.8.0 — state bands live INSIDE the log's scroll area (sticky top): they cost the
+         layout no height, so they can never push the popup past its 600px cap -->
+    <div class="logtop" id="logTop" hidden>
+      <div class="dryband" id="dryBand" hidden><span data-i18n="dryRunBanner">Logging only — nothing will be clicked</span></div>
+      <div class="digest" id="digest" hidden>
+        <div class="dhead"><span data-i18n="digestTitle">While you were away</span><span id="dSince"></span></div>
+        <div class="drow">
+          <span class="dstat"><b id="dClicks">0</b><span data-i18n="digestClicks">clicks</span></span>
+          <span class="dstat"><b id="dFollowups">0</b><span data-i18n="digestFollowups">follow-ups</span></span>
+          <span class="dstat"><b id="dBlocked">0</b><span data-i18n="digestBlocked">blocked</span></span>
+        </div>
+      </div>
+    </div>
+    <div id="logList"></div>
+  </div>
   <div class="row foot"><span class="note muted" data-i18n="onlyMuse">Works only on muse.ai</span><button class="btn" id="openstats" data-i18n="statsOpen">Statistics</button></div>
+
+  <!-- v1.8.0 — Safety & Control panel (full-popup overlay: opening it never grows the popup) -->
+  <div class="overlay" id="safetyPanel" hidden role="dialog" aria-modal="true" aria-labelledby="safetyH">
+    <div class="ovhead"><h2 id="safetyH" data-i18n="safetyTitle">Safety &amp; Control</h2>
+      <button type="button" class="ovclose" id="safetyClose">&#10005;</button></div>
+    <div class="ovbody">
+      <div class="rgroup">
+        <label class="sw"><input type="checkbox" id="dryRun"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="dryRunTitle">Dry-run (log only)</span></label>
+        <div class="rnote" data-i18n="dryRunNote">Detect and log exactly as usual — nothing is clicked and no follow-up is sent.</div>
+      </div>
+      <div class="rgroup">
+        <label class="sw"><input type="checkbox" id="allowOnce"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="allowOnceTitle">Prefer "Allow once"</span></label>
+        <div class="rnote" data-i18n="allowOnceNote">One-time approvals instead of standing access — the narrower grant is safer.</div>
+      </div>
+      <div class="rgroup">
+        <div class="rlabel" data-i18n="topicsLabel">Allowed topics</div>
+        <div class="rnote" data-i18n="topicsNote">When set, only cards whose topic matches exactly are clicked. Leave empty to allow every topic.</div>
+        <div class="rlist" id="topicsList"></div>
+        <div class="radd"><input class="rin" id="topicInput" maxlength="64" placeholder="Add a topic…" data-i18n-ph="topicsPlaceholder">
+          <button type="button" class="rbtn" id="topicAdd" data-i18n="rulesAdd">Add</button></div>
+      </div>
+      <div class="rgroup">
+        <div class="rlabel" data-i18n="keywordsLabel">Block keywords</div>
+        <div class="rnote" data-i18n="keywordsNote">A card containing any of these words is never clicked — it is logged as blocked instead.</div>
+        <div class="rlist" id="kwList"></div>
+        <div class="radd"><input class="rin" id="kwInput" maxlength="64" placeholder="Add a keyword…" data-i18n-ph="keywordsPlaceholder">
+          <button type="button" class="rbtn" id="kwAdd" data-i18n="rulesAdd">Add</button>
+          <button type="button" class="rbtn" id="kwReset" data-i18n="keywordsReset">Reset to defaults</button></div>
+      </div>
+      <div class="rgroup">
+        <label class="sw"><input type="checkbox" id="schEnabled"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="scheduleTitle">Follow-up only during hours</span></label>
+        <div class="rnote" data-i18n="scheduleNote">Sends are skipped outside this local-time window (overnight windows wrap around).</div>
+        <div class="schrow">
+          <select class="sel hsel" id="schStart"></select>
+          <span class="muted">&ndash;</span>
+          <select class="sel hsel" id="schEnd"></select>
+          <label class="sw schonly"><input type="checkbox" id="schActive"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="scheduleOnlyActive">Active tab only</span></label>
+        </div>
+      </div>
+      <div class="rgroup">
+        <div class="rlabel" data-i18n="smartTitle">Stuck &amp; error recovery</div>
+        <div class="rnote" data-i18n="smartNote">Nudges Muse when it looks stuck, and recovers from visible errors. Set 0 minutes to switch the stuck nudge off.</div>
+        <div class="row field fset">
+          <label class="muted" for="stuckMin" data-i18n="smartStuckLabel">Nudge when stuck after</label>
+          <span class="numwrap"><input type="number" id="stuckMin" min="0" max="1440" step="1"><span class="unit muted">min</span></span>
+        </div>
+        <label class="sw"><input type="checkbox" id="errRec"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="smartErrorLabel">Recover from visible errors</span></label>
+      </div>
+      <div class="rgroup">
+        <label class="sw"><input type="checkbox" id="syncSet"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="syncTitle">Sync settings across devices</span></label>
+        <div class="rnote" data-i18n="syncNote">Uses Chrome Sync (8 KB per-item limit). Lists larger than the limit stay on this device; local settings always win.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- v1.8.0 — 3-step onboarding wizard (overlay; shown until onboarded === true) -->
+  <div class="overlay" id="onboard" hidden role="dialog" aria-modal="true" aria-labelledby="obTitle">
+    <div class="obcard">
+      <div class="obdots"><span class="obdot" data-s="0"></span><span class="obdot" data-s="1"></span><span class="obdot" data-s="2"></span><span class="obstep" id="obStep"></span></div>
+      <h2 class="obtitle" id="obTitle"></h2>
+      <p class="obbody" id="obBody"></p>
+      <div class="obquick" id="obQuick" hidden>
+        <button type="button" class="qbtn" id="obq0" data-i18n="followupQuick1">Keep going</button>
+        <button type="button" class="qbtn" id="obq1" data-i18n="followupQuick2">Long-run</button>
+        <button type="button" class="qbtn" id="obq2" data-i18n="followupQuick3">Best practice</button>
+      </div>
+      <div class="obactions">
+        <button type="button" class="btn" id="obPrimary"></button>
+        <button type="button" class="rbtn" id="obBack" hidden data-i18n="onbBack">Back</button>
+      </div>
+      <div class="obfoot">
+        <button type="button" class="rbtn" id="obSkip" data-i18n="onbSkip">Skip</button>
+      </div>
+    </div>
+  </div>
   <script src="popup.js"></script>
 </body>
 </html>

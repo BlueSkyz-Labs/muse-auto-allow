@@ -244,5 +244,191 @@
   },
   "followupRotateStarterConfirm": {
     "message": "保存済みの $1 件のコンボを置き換えますか？もう一度タップ"
+  },
+  "pauseLabel": {
+    "message": "一時停止"
+  },
+  "pause15": {
+    "message": "15 分"
+  },
+  "pause60": {
+    "message": "1 時間"
+  },
+  "pauseTomorrow": {
+    "message": "明日まで"
+  },
+  "pauseTomorrowTitle": {
+    "message": "明日まで一時停止"
+  },
+  "pauseHint": {
+    "message": "自動クリックと自動フォローを一時停止"
+  },
+  "pauseResume": {
+    "message": "再開"
+  },
+  "pauseStateUntil": {
+    "message": "$1 まで一時停止中"
+  },
+  "dryRunTitle": {
+    "message": "ドライラン（記録のみ）"
+  },
+  "dryRunNote": {
+    "message": "検出とログ記録は通常どおり行いますが、クリックもフォロー送信も行いません。"
+  },
+  "dryRunBanner": {
+    "message": "記録のみ — 何もクリックされません"
+  },
+  "dryRunChip": {
+    "message": "ドライラン"
+  },
+  "allowOnceTitle": {
+    "message": "「一度だけ許可」を優先"
+  },
+  "allowOnceNote": {
+    "message": "継続的な許可ではなく 1 回限りの許可を使います — 範囲が狭いほど安全です。"
+  },
+  "safetyOpen": {
+    "message": "安全"
+  },
+  "safetyTitle": {
+    "message": "安全と制御"
+  },
+  "safetyClose": {
+    "message": "閉じる"
+  },
+  "topicsLabel": {
+    "message": "許可するトピック"
+  },
+  "topicsNote": {
+    "message": "設定すると、トピックが完全一致するカードだけをクリックします。空欄ならすべて許可します。"
+  },
+  "topicsPlaceholder": {
+    "message": "トピックを追加…"
+  },
+  "topicsEmpty": {
+    "message": "トピック未設定 — すべてのトピックを許可"
+  },
+  "keywordsLabel": {
+    "message": "ブロックするキーワード"
+  },
+  "keywordsNote": {
+    "message": "次のいずれかを含むカードは決してクリックせず、ブロックとして記録します。"
+  },
+  "keywordsPlaceholder": {
+    "message": "キーワードを追加…"
+  },
+  "keywordsReset": {
+    "message": "既定に戻す"
+  },
+  "keywordsResetConfirm": {
+    "message": "リストをリセットしますか？もう一度タップ"
+  },
+  "keywordsEmpty": {
+    "message": "キーワード未設定 — ブロックなし"
+  },
+  "rulesAdd": {
+    "message": "追加"
+  },
+  "rulesRemove": {
+    "message": "削除"
+  },
+  "scheduleTitle": {
+    "message": "時間帯内のみフォロー"
+  },
+  "scheduleNote": {
+    "message": "このローカル時間帯の外では送信しません（深夜をまたぐ時間帯にも対応）。"
+  },
+  "scheduleOnlyActive": {
+    "message": "アクティブなタブのみ"
+  },
+  "smartTitle": {
+    "message": "停止・エラーからの復帰"
+  },
+  "smartNote": {
+    "message": "停止しているように見えるときに促し、エラーが見えると復帰します。0 分で停止時の促しをオフにします。"
+  },
+  "smartStuckLabel": {
+    "message": "停止後に促す"
+  },
+  "smartErrorLabel": {
+    "message": "エラー時に自動復帰"
+  },
+  "syncTitle": {
+    "message": "設定を端末間で同期"
+  },
+  "syncNote": {
+    "message": "Chrome 同期を使用（1 項目あたり 8 KB まで）。上限を超えるリストはこの端末に残ります。ローカル設定が常に優先されます。"
+  },
+  "digestTitle": {
+    "message": "離席中の動き"
+  },
+  "digestSince": {
+    "message": "$1 以降"
+  },
+  "digestSinceStart": {
+    "message": "利用開始以降"
+  },
+  "digestClicks": {
+    "message": "クリック"
+  },
+  "digestFollowups": {
+    "message": "フォロー"
+  },
+  "digestBlocked": {
+    "message": "ブロック"
+  },
+  "onbStep1Title": {
+    "message": "自動クリックをオンにする"
+  },
+  "onbStep1Body": {
+    "message": "Muse はよく承認を求めます。拡張機能に Allow を任せましょう — いつでも一時停止できます。"
+  },
+  "onbEnable": {
+    "message": "オンにする"
+  },
+  "onbStep2Title": {
+    "message": "ドライランで始める"
+  },
+  "onbStep2Body": {
+    "message": "おすすめ: まず 1 日記録を眺めてください。ドライランをオフにするまで何もクリックしません。"
+  },
+  "onbDryRun": {
+    "message": "ドライランをオン"
+  },
+  "onbStep3Title": {
+    "message": "フォロー文を選ぶ"
+  },
+  "onbStep3Body": {
+    "message": "ワンタップで、Muse がアイドル時に作業を続けるプロンプトを設定します。後で変更できます。"
+  },
+  "onbBack": {
+    "message": "戻る"
+  },
+  "onbSkip": {
+    "message": "スキップ"
+  },
+  "onbDone": {
+    "message": "完了"
+  },
+  "onbStepCount": {
+    "message": "ステップ $1/$2"
+  },
+  "kindBlocked": {
+    "message": "ブロック"
+  },
+  "kindFollowup": {
+    "message": "フォロー"
+  },
+  "kindAllowDry": {
+    "message": "許可（ドライ）"
+  },
+  "kindExpandDry": {
+    "message": "展開（ドライ）"
+  },
+  "kindOpenPanelDry": {
+    "message": "パネルを開く（ドライ）"
+  },
+  "kindFollowupDry": {
+    "message": "フォロー（ドライ）"
   }
 }

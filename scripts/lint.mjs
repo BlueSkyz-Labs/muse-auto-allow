@@ -101,7 +101,7 @@ try {
   const man = JSON.parse(fs.readFileSync(path.join(EXT, 'manifest.json'), 'utf8'));
   checked++;
   if (man.manifest_version !== 3) findings.push('MANIFEST not MV3');
-  const ALLOWED = new Set(['storage', 'alarms']);
+  const ALLOWED = new Set(['storage', 'alarms', 'notifications']);
   for (const p of man.permissions || []) if (!ALLOWED.has(p)) findings.push(`MANIFEST unexpected permission "${p}"`);
   if (String(man.name || '') !== '__MSG_extName__') findings.push('MANIFEST name must use __MSG_extName__');
   if (!man.default_locale) findings.push('MANIFEST missing default_locale');

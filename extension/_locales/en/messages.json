@@ -244,5 +244,191 @@
   },
   "followupRotateStarterConfirm": {
     "message": "Replace your $1 saved combos? Tap again"
+  },
+  "pauseLabel": {
+    "message": "Pause"
+  },
+  "pause15": {
+    "message": "15 min"
+  },
+  "pause60": {
+    "message": "1 hour"
+  },
+  "pauseTomorrow": {
+    "message": "Tomorrow"
+  },
+  "pauseTomorrowTitle": {
+    "message": "Pause until tomorrow"
+  },
+  "pauseHint": {
+    "message": "Pause auto-click and follow-up"
+  },
+  "pauseResume": {
+    "message": "Resume"
+  },
+  "pauseStateUntil": {
+    "message": "Paused until $1"
+  },
+  "dryRunTitle": {
+    "message": "Dry-run (log only)"
+  },
+  "dryRunNote": {
+    "message": "Detect and log exactly as usual — nothing is clicked and no follow-up is sent."
+  },
+  "dryRunBanner": {
+    "message": "Logging only — nothing will be clicked"
+  },
+  "dryRunChip": {
+    "message": "Dry-run"
+  },
+  "allowOnceTitle": {
+    "message": "Prefer \"Allow once\""
+  },
+  "allowOnceNote": {
+    "message": "One-time approvals instead of standing access — the narrower grant is safer."
+  },
+  "safetyOpen": {
+    "message": "Safety"
+  },
+  "safetyTitle": {
+    "message": "Safety & Control"
+  },
+  "safetyClose": {
+    "message": "Close"
+  },
+  "topicsLabel": {
+    "message": "Allowed topics"
+  },
+  "topicsNote": {
+    "message": "When set, only cards whose topic matches exactly are clicked. Leave empty to allow every topic."
+  },
+  "topicsPlaceholder": {
+    "message": "Add a topic…"
+  },
+  "topicsEmpty": {
+    "message": "No topics set — every topic is allowed"
+  },
+  "keywordsLabel": {
+    "message": "Block keywords"
+  },
+  "keywordsNote": {
+    "message": "A card containing any of these words is never clicked — it is logged as blocked instead."
+  },
+  "keywordsPlaceholder": {
+    "message": "Add a keyword…"
+  },
+  "keywordsReset": {
+    "message": "Reset to defaults"
+  },
+  "keywordsResetConfirm": {
+    "message": "Reset the list? Tap again"
+  },
+  "keywordsEmpty": {
+    "message": "No keywords set — nothing is blocked"
+  },
+  "rulesAdd": {
+    "message": "Add"
+  },
+  "rulesRemove": {
+    "message": "Remove"
+  },
+  "scheduleTitle": {
+    "message": "Follow-up only during hours"
+  },
+  "scheduleNote": {
+    "message": "Sends are skipped outside this local-time window (overnight windows wrap around)."
+  },
+  "scheduleOnlyActive": {
+    "message": "Active tab only"
+  },
+  "smartTitle": {
+    "message": "Stuck & error recovery"
+  },
+  "smartNote": {
+    "message": "Nudges Muse when it looks stuck, and recovers from visible errors. Set 0 minutes to switch the stuck nudge off."
+  },
+  "smartStuckLabel": {
+    "message": "Nudge when stuck after"
+  },
+  "smartErrorLabel": {
+    "message": "Recover from visible errors"
+  },
+  "syncTitle": {
+    "message": "Sync settings across devices"
+  },
+  "syncNote": {
+    "message": "Uses Chrome Sync (8 KB per-item limit). Lists larger than the limit stay on this device; local settings always win."
+  },
+  "digestTitle": {
+    "message": "While you were away"
+  },
+  "digestSince": {
+    "message": "since $1"
+  },
+  "digestSinceStart": {
+    "message": "since you started"
+  },
+  "digestClicks": {
+    "message": "clicks"
+  },
+  "digestFollowups": {
+    "message": "follow-ups"
+  },
+  "digestBlocked": {
+    "message": "blocked"
+  },
+  "onbStep1Title": {
+    "message": "Turn on auto-click"
+  },
+  "onbStep1Body": {
+    "message": "Muse asks for approval often. Let the extension click Allow for you — you can pause it any time."
+  },
+  "onbEnable": {
+    "message": "Turn on"
+  },
+  "onbStep2Title": {
+    "message": "Start in Dry-run"
+  },
+  "onbStep2Body": {
+    "message": "Recommended: let it log for a day and watch. Nothing is clicked until you switch Dry-run off."
+  },
+  "onbDryRun": {
+    "message": "Turn on Dry-run"
+  },
+  "onbStep3Title": {
+    "message": "Pick a follow-up"
+  },
+  "onbStep3Body": {
+    "message": "One tap sets the prompt that keeps Muse working when it goes idle. You can change it later."
+  },
+  "onbBack": {
+    "message": "Back"
+  },
+  "onbSkip": {
+    "message": "Skip"
+  },
+  "onbDone": {
+    "message": "Done"
+  },
+  "onbStepCount": {
+    "message": "Step $1 of $2"
+  },
+  "kindBlocked": {
+    "message": "blocked"
+  },
+  "kindFollowup": {
+    "message": "follow-up"
+  },
+  "kindAllowDry": {
+    "message": "allow (dry)"
+  },
+  "kindExpandDry": {
+    "message": "expand (dry)"
+  },
+  "kindOpenPanelDry": {
+    "message": "open panel (dry)"
+  },
+  "kindFollowupDry": {
+    "message": "follow-up (dry)"
   }
 }

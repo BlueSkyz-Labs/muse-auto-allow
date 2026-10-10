@@ -15,8 +15,11 @@
  *  4. path D: background surface button clicked, then revealed Allow clicked (surface -> 6)
  *  5. late card (MutationObserver) clicked (card 3)
  *  6. never: lone Allow, "Allow notifications"/"Block", the notification-style card
- *     carrying approval wording (19), Deny buttons
+ *     carrying approval wording (19), Deny buttons, the OWNER-REPORTED connector card (20 —
+ *     a user-input surface: nothing inside it is ever clicked, even the pair that renders
+ *     within it) and the lone Connect twin
  *  7. muse.ai (logged out): content script injects (documentElement attribute) — WARN-only
+ *  8. v1.8.0 connector guard: the refusal is logged ('blocked' with blockedReason 'connector')
  */
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -27,7 +30,9 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
-const EXT_DIR = path.join(ROOT, 'extension');
+// MAA_EXT_DIR lets a falsification run point the harness at a MUTATED copy of the extension
+// (reverse-mutation proof: disable a guard -> the matching checks go RED; restore -> GREEN).
+const EXT_DIR = process.env.MAA_EXT_DIR ? path.resolve(process.env.MAA_EXT_DIR) : path.join(ROOT, 'extension');
 const IS_WIN = process.platform === 'win32';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -161,7 +166,8 @@ function killMyChrome() {
 }
 
 const EXPECTED = ['1', '2', '3', '4', '5', '6', '7', '11', '17', 'pending5', 'surface', 'reviewbar', '18'];
-const FORBIDDEN = ['8', '9', '10', '12', '13', '14', '16', '19', 'surface2', 'surface3', 'lone', 'notif', 'plain-review'];
+const FORBIDDEN = ['8', '9', '10', '12', '13', '14', '16', '19', 'surface2', 'surface3', 'lone', 'notif', 'plain-review',
+  '20', 'lone-connect']; // v1.8.0: the connector card (any button inside) + the lone Connect twin
 
 let ws = null;
 let send = null;
@@ -305,6 +311,25 @@ try {
     });
   } catch (e) { encCheck.error = e.message; }
 
+  // ---- v1.8.0 connector guard (owner-reported): the refusal is logged ----
+  // The connector card (20) is a user-input surface: nothing inside it may be clicked, and
+  // the engine must record WHY ('blocked' / blockedReason 'connector').
+  const connectorCheck = { ok: false };
+  try {
+    const t6 = await send('Target.createTarget', { url: `chrome-extension://${extId}/popup.html` });
+    const { sessionId: s6 } = await send('Target.attachToTarget', { targetId: t6.targetId, flatten: true });
+    await sleep(800);
+    const r6 = await send('Runtime.evaluate', {
+      expression: `new Promise((res) => chrome.storage.local.get(['log'], (s) => res(JSON.stringify({
+        blockedConnector: ((s.log || []).filter((e) => e && e.kind === 'blocked' && e.blockedReason === 'connector')).length,
+        blockedAny: ((s.log || []).filter((e) => e && e.kind === 'blocked')).length,
+      }))))`,
+      returnByValue: true, awaitPromise: true,
+    }, s6);
+    const j6 = JSON.parse(r6?.result?.value || '{}');
+    Object.assign(connectorCheck, { blockedConnector: j6.blockedConnector, blockedAny: j6.blockedAny, ok: (j6.blockedConnector || 0) >= 1 });
+  } catch (e) { connectorCheck.error = e.message; }
+
   // ---- stats.html renders (v1.3): KPI + bars + topics with the recorded data ----
   const statsPage = { ok: false };
   try {
@@ -352,7 +377,7 @@ try {
 
   const pass = missing.length === 0 && extra.length === 0 && dupes.length === 0 && denyCount === 0 && orderOk && dedupSepOk
     && forbiddenHit.length === 0 && n7count === 1 && n11count === 1 && !surface2Hit && statsCheck.ok && statsPage.ok
-    && encCheck.ok && locksProbe === true;
+    && encCheck.ok && connectorCheck.ok && locksProbe === true;
   Object.assign(results, {
     ok: pass,
     extId,
@@ -373,6 +398,7 @@ try {
     retryFired,
     statsCheck,
     encCheck,
+    connectorCheck,
     statsPage,
     locksProbe,
     timeline: timeline.slice(-45),
