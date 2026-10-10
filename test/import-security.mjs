@@ -112,7 +112,9 @@ vm.runInContext(
   statsSrc + '\n;globalThis.__maaTest = {' +
   ' sanitizeBackup: typeof sanitizeBackup === "function" ? sanitizeBackup : null,' +
   ' testBackupKey: typeof testBackupKey === "function" ? testBackupKey : null,' +
-  ' resolveImportedKey: typeof resolveImportedKey === "function" ? resolveImportedKey : null };',
+  ' resolveImportedKey: typeof resolveImportedKey === "function" ? resolveImportedKey : null,' +
+  ' MISSION_STEPS: (typeof MISSION_STEPS === "object" && MISSION_STEPS) ? MISSION_STEPS : null,' +
+  ' LOCALE_IDS: Array.isArray(typeof LOCALE_IDS !== "undefined" ? LOCALE_IDS : null) ? LOCALE_IDS : null };',
   ctx, { filename: SRC });
 const T = env.sandbox.__maaTest;
 const { store, alerts, listeners, state } = env;
@@ -304,6 +306,103 @@ async function main() {
   check('SA-3 quota: rejection shows the dedicated importQuota message', aQ.includes(MSG.quota) && !aQ.includes(MSG.bad), { alerts: aQ });
   check('SA-3 quota: storage untouched after the failed save', store.enabled === false && store.cryptKeyRaw === K1);
   check('SA-3 quota: the quota message differs from the not-a-backup message', MSG.quota !== MSG.bad);
+
+  // ================= F-V19-1 — v1.8.0 / v1.9.0 key inheritance =================
+  // (a) round-trip: every v1.8/v1.9 key survives export->import byte-for-byte (types intact)
+  const V19 = {
+    pauseUntil: 1799999999999,
+    dryRun: true, allowOnceMode: false, syncSettings: true, missionEnabled: true, onboarded: true,
+    userLocale: 'vi',
+    rules: { allowTopics: ['repo-x', 'docs-site'], blockKeywords: ['delete', 'billing'] },
+    followupSmart: { stuckMin: 10, stuckPrompt: 'Stuck? continue where you left off.', errorRecovery: true, errorPrompt: 'Fix the error, then continue.' },
+    followupSchedule: { enabled: true, start: 8, end: 18, onlyActiveTab: true },
+    mission: { id: 'golive-ready', step: 2, cycles: 1, startedAt: 1799990000000, lastSentAt: 1799995000000 },
+  };
+  const V19_KEYS = ['pauseUntil', 'dryRun', 'allowOnceMode', 'syncSettings', 'missionEnabled', 'onboarded',
+    'userLocale', 'rules', 'followupSmart', 'followupSchedule', 'mission'];
+  const cleanV19 = T.sanitizeBackup(V19) || {};
+  const missV19 = V19_KEYS.filter((k) => JSON.stringify(cleanV19[k]) !== JSON.stringify(V19[k]));
+  check('F-V19-1 round-trip: every v1.8/v1.9 key survives the sanitizer byte-for-byte (types preserved)', missV19.length === 0, { missing: missV19, got: cleanV19 });
+  resetStore({ cryptKeyRaw: K1, dryRun: false, rules: null, pauseUntil: 0, mission: null, userLocale: 'auto' });
+  const aV19 = await importFile(backup(V19));
+  const rtV19 = V19_KEYS.filter((k) => JSON.stringify(store[k]) !== JSON.stringify(V19[k]));
+  check('F-V19-1 round-trip: the handler restores every v1.8/v1.9 key into storage', rtV19.length === 0, { rt: rtV19, alerts: aV19 });
+  check('F-V19-1 round-trip: no "Not a backup" alert on a v1.8/v1.9 restore', !aV19.includes(MSG.bad), { alerts: aV19 });
+
+  // (b) a v1.8/v1.9-ONLY file imports successfully (seen>0 => NOT refused as "Not a backup")
+  const onlyV19 = {
+    dryRun: true, allowOnceMode: true, syncSettings: true, pauseUntil: 1799999999999,
+    rules: { allowTopics: ['only-x'], blockKeywords: ['delete'] },
+    followupSmart: { stuckMin: 5, errorRecovery: true },
+    followupSchedule: { enabled: true, start: 9, end: 17, onlyActiveTab: false },
+    missionEnabled: true, mission: { id: 'audit-only', step: 1, cycles: 0, startedAt: 1799990000000, lastSentAt: 0 },
+    userLocale: 'ja', onboarded: true,
+  };
+  const cleanOnly = T.sanitizeBackup(onlyV19);
+  check('F-V19-1 v1.9-only: a file of ONLY the v1.8/v1.9 keys is accepted (seen>0, not null)', cleanOnly !== null, { clean: cleanOnly });
+  resetStore({ cryptKeyRaw: K1 });
+  const aOnly = await importFile(backup(onlyV19));
+  check('F-V19-1 v1.9-only: the import succeeds — NO "Not a backup" refusal, dryRun applied', !aOnly.includes(MSG.bad) && store.dryRun === true, { alerts: aOnly, dryRun: store.dryRun });
+
+  // (c) a TAMPERED file is sanitized to defaults/clamped, never adopted raw
+  const tampered = {
+    rules: 'not-an-object',                                                // whole rules a string => dropped
+    mission: { id: 'evil-mission', step: 3, cycles: 999, startedAt: 1 },   // unknown id => dropped
+    userLocale: 'xx',                                                      // not a shipped locale => dropped
+    pauseUntil: 'soon',                                                    // not a number => dropped
+    dryRun: 'true',                                                        // not a boolean => dropped
+  };
+  check('F-V19-1 tamper: an ALL-junk file is refused (seen===0 => null)', T.sanitizeBackup(tampered) === null, { clean: T.sanitizeBackup(tampered) });
+  const mixed = T.sanitizeBackup(Object.assign({ enabled: true }, tampered)) || {};
+  check('F-V19-1 tamper: rules as a string is dropped (never adopted raw)', !('rules' in mixed), { rules: mixed.rules });
+  check('F-V19-1 tamper: mission with an unknown id is dropped (fail closed)', !('mission' in mixed), { mission: mixed.mission });
+  check('F-V19-1 tamper: userLocale "xx" is dropped', mixed.userLocale === undefined, { userLocale: mixed.userLocale });
+  check('F-V19-1 tamper: pauseUntil "soon" is dropped', mixed.pauseUntil === undefined, { pauseUntil: mixed.pauseUntil });
+  check('F-V19-1 tamper: dryRun "true" (string) is dropped', mixed.dryRun === undefined, { dryRun: mixed.dryRun });
+
+  const clamped = T.sanitizeBackup({
+    enabled: true,
+    pauseUntil: -5,
+    rules: { allowTopics: 'nope', blockKeywords: ['Delete', 'billing'] },
+    followupSmart: { stuckMin: 1e9, errorRecovery: 'yes' },
+    followupSchedule: { start: 99, end: 8, enabled: 'yes' },
+    mission: { id: 'golive-ready', step: 999, cycles: 999, startedAt: -1, lastSentAt: 'x' },
+  }) || {};
+  const cSmart = clamped.followupSmart || {}, cSch = clamped.followupSchedule || {}, cMis = clamped.mission || {};
+  check('F-V19-1 tamper: pauseUntil -5 clamps to 0', clamped.pauseUntil === 0, { pauseUntil: clamped.pauseUntil });
+  check('F-V19-1 tamper: rules.allowTopics non-array dropped, blockKeywords kept verbatim',
+    !('allowTopics' in (clamped.rules || {})) && JSON.stringify(clamped.rules && clamped.rules.blockKeywords) === JSON.stringify(['Delete', 'billing']), { rules: clamped.rules });
+  check('F-V19-1 tamper: followupSmart.stuckMin 1e9 clamps to 1440, errorRecovery string dropped',
+    cSmart.stuckMin === 1440 && cSmart.errorRecovery === undefined, { smart: clamped.followupSmart });
+  check('F-V19-1 tamper: followupSchedule.start 99 dropped, end 8 kept, enabled string dropped',
+    cSch.start === undefined && cSch.end === 8 && cSch.enabled === undefined, { sch: clamped.followupSchedule });
+  check('F-V19-1 tamper: mission step 999 clamps to L-1 (5) and cycles 999 clamps to 3',
+    cMis.step === 5 && cMis.cycles === 3, { mission: clamped.mission });
+  check('F-V19-1 tamper: mission startedAt -1 => finite now (>0), lastSentAt "x" => 0',
+    Number.isFinite(cMis.startedAt) && cMis.startedAt > 0 && cMis.lastSentAt === 0, { mission: clamped.mission });
+  check('F-V19-1 tamper: no prototype pollution from the crafted objects',
+    ({}).polluted === undefined && Object.prototype.polluted === undefined && !Object.getOwnPropertyNames(clamped.rules || {}).includes('__proto__'),
+    { rulesKeys: Object.getOwnPropertyNames(clamped.rules || {}) });
+  const proto = T.sanitizeBackup(JSON.parse('{"enabled":true,"rules":{"__proto__":{"polluted":"yes"}},"followupSmart":{"__proto__":{"polluted":"yes"}},"mission":{"__proto__":{"polluted":"yes"}}}')) || {};
+  check('F-V19-1 tamper: a __proto__-bearing rules/followupSmart/mission does not pollute Object.prototype',
+    ({}).polluted === undefined && Object.prototype.polluted === undefined && !Object.getOwnPropertyNames(proto.rules || {}).includes('__proto__'),
+    { rulesKeys: Object.getOwnPropertyNames(proto.rules || {}) });
+
+  // Mirror guard: the mission id/step table mirrored into stats.js must equal the engine's own
+  // MISSION_CORPUS (content.js) — a drift here would let the sanitizer accept a mission the
+  // engine refuses, or vice versa.
+  const contentSrc = fs.readFileSync(path.join(ROOT, 'extension', 'content.js'), 'utf8');
+  const corpusBlock = contentSrc.match(/MISSION_CORPUS_BEGIN([\s\S]*?)MISSION_CORPUS_END/);
+  const corpusMap = {};
+  if (corpusBlock) {
+    const re = /id:\s*'([^']+)'[\s\S]*?steps:\s*\[([\s\S]*?)\],/g;
+    let mm;
+    while ((mm = re.exec(corpusBlock[1]))) corpusMap[mm[1]] = (mm[2].match(/^\s*'/gm) || []).length;
+  }
+  check('F-V19-1 mirror: stats.js MISSION_STEPS === content.js MISSION_CORPUS ids + step counts',
+    Object.keys(corpusMap).length === 4 && JSON.stringify(corpusMap) === JSON.stringify(T.MISSION_STEPS || null), { corpus: corpusMap, stats: T.MISSION_STEPS });
+  check('F-V19-1 mirror: stats.js LOCALE_IDS === the shipped locale set',
+    JSON.stringify(T.LOCALE_IDS) === JSON.stringify(['en', 'vi', 'zh_CN', 'ja', 'ko', 'es']), { locales: T.LOCALE_IDS });
 
   // ---------- report ----------
   for (const c of checks) {

@@ -3,6 +3,9 @@
 > **Lane:** SECURITY & PAID GO-LIVE ROUND — **AUDIT ONLY** (read-only; no fix in this lane).
 > Charter: `docs/SECURITY_PAID_GO_LIVE_ROUND.md` (S0–S15 map). Prompt: `docs/SGPS_SECURITY_PAID_v1.6_ROUND_PROMPT.md`.
 > This document is the audit; remediation + independent re-attack are separate lanes (S12/S13).
+> **S12 REMEDIATION (separate lane):** F-V19-1 (MEDIUM) and F-V19-2 (LOW) are **FIXED** at the
+> post-fix revision — see the status + proof in §9 and the gate re-run / falsifications in §10.1.
+> The audit's own findings and evidence below are unchanged.
 > **Prior evidence is PRIOR EVIDENCE ONLY** (redteam v1–v4, the v1.6/v1.7 security rounds). Every
 > previously-closed finding is **re-attacked at THIS revision** (§8); no old PASS is re-cited as fresh.
 
@@ -389,6 +392,32 @@ CALL (click/type/submit) → REAL EFFECT (approval granted / message sent)`.
   `followupSchedule` as plain objects with bounded keys; `pauseUntil` finite ≥ 0; `dryRun`/
   `allowOnceMode`/`syncSettings`/`missionEnabled` booleans; `mission` via the engine's
   `sanitizeMission` shape; `userLocale` ∈ `LOCALE_IDS ∪ {auto}`), and keep `seen` counting them.
+- **Status: FIXED (S12 remediation lane).** `extension/stats.js` `sanitizeBackup` now accepts the
+  v1.8/v1.9 keys with typed validation that MIRRORS the engine's own readers (content.js
+  `applyV18Settings`/`sanitizeMission`, popup.js `applyV18UI`, background.js `syncSettings`):
+  booleans strict (`dryRun`/`allowOnceMode`/`syncSettings`/`missionEnabled`/`onboarded`);
+  `pauseUntil` a finite number, clamped ≥ 0; `rules` a plain object with `allowTopics`
+  (cap 50 × 64 chars) / `blockKeywords` (cap 500) string arrays; `followupSmart` a plain object
+  (finite `stuckMin` ≤ 1440, non-empty string `stuckPrompt`/`errorPrompt` ≤ 600, boolean
+  `errorRecovery`); `followupSchedule` a plain object (boolean `enabled`/`onlyActiveTab`,
+  integer 0–23 `start`/`end`); `mission` validated to the engine's `sanitizeMission` shape
+  (shipped id only, `step`/`cycles` clamped to the 12/3 caps, finite timestamps); and
+  `userLocale` ∈ `LOCALE_IDS ∪ {'auto'}`. Every accepted key counts toward `seen`, so a file of
+  ONLY those keys imports. A present-but-invalid value is DROPPED (never emitted as a
+  reset-to-default) so a crafted file cannot use junk to CLEAR a user restriction. Every
+  pre-existing rule (typed whitelist, decrypt-proof/adopt-or-refuse, caps, quota message) is
+  untouched.
+- **Proof (S12):** `test/import-security.mjs` (now **50 checks, 0 failed**, exit 0) adds
+  (a) an export→import round-trip of all 11 keys byte-for-byte with types preserved;
+  (b) a v1.8/v1.9-ONLY file that imports (no "Not a backup" refusal, `dryRun` applied);
+  (c) tamper cases — `rules` a string / an unknown mission id / `userLocale:'xx'` /
+  `pauseUntil:'soon'` / `dryRun:'true'` dropped; `pauseUntil:-5`→0; `stuckMin:1e9`→1440;
+  `start:99` dropped; `mission{step:999,cycles:999}`→`{step:5,cycles:3}`; `startedAt:-1`→now;
+  `__proto__`-bearing objects do not pollute `Object.prototype`; plus a **mirror guard** asserting
+  stats.js `MISSION_STEPS`/`LOCALE_IDS` equal content.js `MISSION_CORPUS`/popup.js `LOCALE_IDS`.
+  **Falsification:** stripping the two new blocks from a mutated copy
+  (`stats_nov19keys.js`) turns **13** of the new assertions RED (exit 2) while the shipped file is
+  **50/50 green** (§10.1).
 
 ### F-V19-2 — **LOW** · The "zero-network" lint gate is blind to the aliased `fetch`
 - **Class:** assurance-gate false-negative (supply chain / no-remote-primitive invariant).
@@ -410,6 +439,21 @@ CALL (click/type/submit) → REAL EFFECT (approval granted / message sent)`.
   `window.fetch`, and any bare `readAsset(`/aliased-call pattern; and add a lint assertion that the
   only `fetch`-family call site passes a `chrome.runtime.getURL(...)` argument. (Also add a
   regression assertion so a remote URL cannot be passed.)
+- **Status: FIXED (S12 remediation lane).** `scripts/lint.mjs` gains a shared
+  `fetchFamilyFindings()` check (run alongside the original `REMOTE_CODE` rules): the only allowed
+  fetch-family form is the alias binding `<g>.fetch.bind(<g>)` (`g` ∈
+  globalThis|window|self|global), and EVERY call of that alias must pass a
+  `chrome.runtime.getURL(...)` argument; any bare `fetch(...)`, any other `.fetch` reference, or an
+  alias call with a different argument is flagged. The shipped
+  `globalThis.fetch.bind(globalThis)` + `readAsset(chrome.runtime.getURL(...))` pair is explicitly
+  allowed — no false positive anywhere in the package. A `--self-test` mode encodes the three
+  cases so the gate can prove itself.
+- **Proof (S12):** `node scripts/lint.mjs` stays **exit 0** ("lint OK — 24 checks across 18 files");
+  `node scripts/lint.mjs --self-test` → **all 3 cases PASS**. **Falsification (real package copy):**
+  a copy of `extension/` with `fetch('https://evil.example')` appended ⇒ **exit 1**
+  ("forbidden primitive /\bfetch\s*\(/" + "bare fetch( call"); the copy with
+  `readAsset('https://evil.example')` ⇒ **exit 1** ("aliased fetch without a same-package URL");
+  the restored copy ⇒ **exit 0** (§10.1).
 
 ### F-V19-3 — **INFO** · Adaptive fast-path sweep reduces the card-mutation settle window to ~0 ms
 - **Class:** reliability / TOCTOU (Chain I).
@@ -471,6 +515,39 @@ recorded so the "non-TTY kills Chrome suites" caveat is not over-generalized her
 
 ---
 
+## 10.1 S12 REMEDIATION — GATE RE-RUN + FALSIFICATIONS (F-V19-1 + F-V19-2 FIXED)
+
+Post-fix working tree (v1.9.1 + S12; `FIXED_ON` = this revision). All gates run
+foreground/unpiped:
+
+```
+node scripts/lint.mjs                             exit 0  "lint OK — 24 checks across 18 files (syntax, JSON, i18n parity, no remote code, minimal permissions)"
+node scripts/lint.mjs --self-test                 exit 0  "all 3 cases PASS"
+node test/import-security.mjs                     exit 0  total:50, failed:0
+node test/e2e.mjs                                 exit 0  ok:true; forbiddenHit:[]; denyCount:0; connectorCheck.ok:true (blockedConnector:2); encCheck.ok:true; statsPage.ok:true; locksProbe:true
+node test/followup-e2e.mjs                        exit 0  ok:true (the nested ok:false = the EXPECTED 'paused' / 'composer-not-empty' engine refusals)
+node test/lang-switch-e2e.mjs                     exit 0  passed:36, failed:0
+node test/background-unit.mjs                     exit 0  total:29, failed:0
+node test/mission-e2e.mjs                         exit 0  ok:true; 39 checks, 0 failed; verifyTimeouts:[]
+node scripts/bench/experience.mjs --only=assert   exit 0  pass:22, fail:0
+```
+
+Reverse-mutation falsifications:
+
+```
+import-security on a mutated stats.js (both new blocks removed)      → 13 new F-V19-1 assertions RED, exit 2
+lint --self-test (shipped / +fetch(remote) / readAsset(remote))      → PASS / PASS / PASS
+lint on a mutated package copy  + fetch('https://evil.example')      → exit 1 (forbidden primitive + bare fetch( call)
+lint on a mutated package copy  + readAsset('https://evil.example')  → exit 1 (aliased fetch without a same-package URL)
+lint on the restored package copy                                    → exit 0
+```
+
+Files changed by S12: `extension/stats.js`, `scripts/lint.mjs`, `test/import-security.mjs`,
+this document. `VERIFIED_ON` remains for the S13 independent re-attack lane — no PASS here is a
+re-attack.
+
+---
+
 ## 11. RESIDUAL / ACCEPTED RISKS (explicit)
 
 1. **R8–R11 — delegated-approval impersonation (CORE, accepted).** A compromised Muse
@@ -513,7 +590,8 @@ recorded so the "non-TTY kills Chrome suites" caveat is not over-generalized her
   shipped-corpus-only text, advance-on-verified-send-only, caps (12/3) enforced on **stored** values,
   unknown ids ⇒ no mission.
 - **CONDITIONAL items (owner TODO list):** (a) extend the import sanitizer whitelist to the
-  v1.8/v1.9 keys (F-V19-1); (b) close the lint zero-network blind spot (F-V19-2); (c) owner
+  v1.8/v1.9 keys (F-V19-1) — **FIXED (S12)**, see §9 + §10.1; (b) close the lint zero-network
+  blind spot (F-V19-2) — **FIXED (S12)**, see §9 + §10.1; (c) owner
   decision on Chain F first-run consent; (d) CWS 2FA + hash-verify-before-upload; (e) owner/legal
   decision on the Muse ToS §7.6 tension.
 - **Paid-path readiness: `NOT_VERIFIED`** — there is no payment/provider/webhook/entitlement/ledger

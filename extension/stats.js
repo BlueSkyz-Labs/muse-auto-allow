@@ -197,6 +197,55 @@ $('seg').addEventListener('click', (e) => {
 // so a crafted file cannot inflate the log or the storage quota with junk `at` values.
 const ISO_AT_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})?$/;
 const isoAt = (v) => { const s = typeof v === 'string' ? v.slice(0, 64) : ''; return ISO_AT_RE.test(s) ? s : null; };
+// ---- F-V19-1: v1.8.0/v1.9.0 import-validation helpers ----------------------------------
+// Every helper below MIRRORS the engine's own reader (content.js applyV18Settings /
+// applyMissionSettings, popup.js applyV18UI, background.js syncSettings) so a value this
+// sanitizer keeps can never diverge from what the engine computes for the same stored value.
+const plainObj = (v) => (v && typeof v === 'object' && !Array.isArray(v)) ? v : null;
+// content.js sanitizeList(v, cap, maxLen): trimmed non-empty strings, each sliced to maxLen,
+// the list capped; null when v is not an array (the caller then keeps its own default).
+const strList = (v, cap, maxLen) => {
+  if (!Array.isArray(v)) return null;
+  const out = [];
+  for (const x of v) {
+    if (typeof x !== 'string') continue;
+    const s = x.trim();
+    if (!s) continue;
+    out.push(maxLen ? s.slice(0, maxLen) : s);
+    if (out.length >= cap) break;
+  }
+  return out;
+};
+// content.js hourOf(v, dflt): an integer 0..23 (Number-coerced), else the default — here
+// null so the caller can DROP an invalid hour instead of silently writing the default.
+const intHour = (v) => { const n = Number(v); return Number.isInteger(n) && n >= 0 && n <= 23 ? n : null; };
+// popup.js LOCALE_IDS — the shipped locale set the language switcher may point at (+ 'auto').
+const LOCALE_IDS = ['en', 'vi', 'zh_CN', 'ja', 'ko', 'es'];
+// The shipped Mission Orchestrator corpus shape: id -> step count. Mirrors content.js
+// MISSION_CORPUS (every entry is under MISSION_MAX_STEPS_PER_MISSION = 12) and popup.js
+// MISSION_META. A stored `mission` is adopted ONLY for an id in this table — an unknown or
+// foreign id yields NO mission, exactly as the engine's own sanitizeMission fails closed.
+const MISSION_STEPS = { 'golive-ready': 6, 'audit-only': 4, 'fix-findings': 4, 'release-prep': 4 };
+const MISSION_MAX_STEPS_PER_MISSION = 12;
+const MISSION_MAX_CYCLES = 3;
+// content.js sanitizeMission(m): a shipped id, step/cycles clamped to the engine's caps and
+// finite timestamps (absent/invalid startedAt => now, lastSentAt => 0). null => no mission.
+const sanitizeMissionObj = (m) => {
+  const o = plainObj(m);
+  if (!o) return null;
+  const id = typeof o.id === 'string' ? o.id : '';
+  if (!Object.prototype.hasOwnProperty.call(MISSION_STEPS, id)) return null;
+  const L = Math.min(MISSION_STEPS[id], MISSION_MAX_STEPS_PER_MISSION);
+  const st0 = Number(o.step);
+  const step = Number.isInteger(st0) && st0 > 0 ? Math.min(st0, Math.max(0, L - 1)) : 0;
+  const cy0 = Number(o.cycles);
+  const cycles = Number.isInteger(cy0) && cy0 > 0 ? Math.min(cy0, MISSION_MAX_CYCLES) : 0;
+  const s0 = Number(o.startedAt);
+  const startedAt = Number.isFinite(s0) && s0 > 0 ? s0 : Date.now();
+  const l0 = Number(o.lastSentAt);
+  const lastSentAt = Number.isFinite(l0) && l0 > 0 ? l0 : 0;
+  return { id, step, cycles, startedAt, lastSentAt };
+};
 const sanitizeBackup = (d) => {
   const out = {}; let seen = 0;
   if (typeof d.enabled === 'boolean') { out.enabled = d.enabled; seen++; }
@@ -239,6 +288,47 @@ const sanitizeBackup = (d) => {
   // magnitudes clamp while every UI-settable value round-trips exactly.
   if (typeof d.followupIdleMs === 'number' && isFinite(d.followupIdleMs)) { out.followupIdleMs = Math.min(3600000, Math.max(0, Math.round(d.followupIdleMs))); seen++; }
   if (typeof d.followupCooldownMs === 'number' && isFinite(d.followupCooldownMs)) { out.followupCooldownMs = Math.min(86400000, Math.max(0, Math.round(d.followupCooldownMs))); seen++; }
+  // ---- F-V19-1: v1.8.0 authority + v1.9.0 mission keys ---------------------------------
+  // The whitelist MUST track every key the engine reads (the export writes all of
+  // chrome.storage.local). A restore on a fresh device must not silently drop dryRun / the
+  // rules blocklist / pauseUntil / the mission state — a dropped dryRun:true fails OPEN into
+  // real clicking. Types mirror the engine's readers; a present-but-invalid value is DROPPED
+  // (never emitted as a reset-to-default) so a crafted file cannot use junk to CLEAR a user
+  // restriction. Every accepted key counts toward `seen` (a file of ONLY these keys imports).
+  if (typeof d.pauseUntil === 'number' && isFinite(d.pauseUntil)) { out.pauseUntil = Math.max(0, d.pauseUntil); seen++; }
+  if (typeof d.dryRun === 'boolean') { out.dryRun = d.dryRun; seen++; }
+  if (typeof d.allowOnceMode === 'boolean') { out.allowOnceMode = d.allowOnceMode; seen++; }
+  if (typeof d.syncSettings === 'boolean') { out.syncSettings = d.syncSettings; seen++; }
+  if (typeof d.missionEnabled === 'boolean') { out.missionEnabled = d.missionEnabled; seen++; }
+  if (typeof d.onboarded === 'boolean') { out.onboarded = d.onboarded; seen++; }
+  if (typeof d.userLocale === 'string' && (d.userLocale === 'auto' || LOCALE_IDS.indexOf(d.userLocale) >= 0)) { out.userLocale = d.userLocale; seen++; }
+  const rules = plainObj(d.rules);
+  if (rules) {
+    const r = {};
+    if ('allowTopics' in rules) { const a = strList(rules.allowTopics, 50, 64); if (a) r.allowTopics = a; }   // engine TOPIC_MAX 50 x TOPIC_LEN 64
+    if ('blockKeywords' in rules) { const k = strList(rules.blockKeywords, 500, 0); if (k) r.blockKeywords = k; } // engine cap 500, no length slice
+    out.rules = r; seen++;
+  }
+  const smart = plainObj(d.followupSmart);
+  if (smart) {
+    const s = {};
+    if (typeof smart.stuckMin === 'number' && isFinite(smart.stuckMin) && smart.stuckMin >= 0) s.stuckMin = Math.min(smart.stuckMin, 1440);
+    if (typeof smart.stuckPrompt === 'string' && smart.stuckPrompt.trim()) s.stuckPrompt = smart.stuckPrompt.trim().slice(0, 600);
+    if (typeof smart.errorRecovery === 'boolean') s.errorRecovery = smart.errorRecovery;
+    if (typeof smart.errorPrompt === 'string' && smart.errorPrompt.trim()) s.errorPrompt = smart.errorPrompt.trim().slice(0, 600);
+    out.followupSmart = s; seen++;
+  }
+  const sch = plainObj(d.followupSchedule);
+  if (sch) {
+    const s = {};
+    if (typeof sch.enabled === 'boolean') s.enabled = sch.enabled;
+    if ('start' in sch) { const h = intHour(sch.start); if (h !== null) s.start = h; }
+    if ('end' in sch) { const h = intHour(sch.end); if (h !== null) s.end = h; }
+    if (typeof sch.onlyActiveTab === 'boolean') s.onlyActiveTab = sch.onlyActiveTab;
+    out.followupSchedule = s; seen++;
+  }
+  const mis = sanitizeMissionObj(d.mission);
+  if (mis) { out.mission = mis; seen++; }
   if (typeof d.cryptKeyRaw === 'string' && /^[A-Za-z0-9+/]{43}=$/.test(d.cryptKeyRaw)) { out.cryptKeyRaw = d.cryptKeyRaw; seen++; }
   if (!seen) return null;
   out.schemaVersion = 2;
