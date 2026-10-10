@@ -58,14 +58,15 @@ Sources: <https://developer.chrome.com/docs/webstore/cws-dashboard-privacy#list_
 <https://developer.chrome.com/docs/webstore/program-policies/permissions> ("Use of
 Permissions": request the *narrowest* permissions necessary; no future-proofing).
 
-Verified against `extension/manifest.json` (frozen tree, HEAD `91b1726`, 2026-10-10):
+Verified against `extension/manifest.json` (frozen tree, HEAD `fcbdd63`, 2026-10-10):
 `permissions: ["storage", "alarms", "notifications"]`; `commands: { toggle-pause
 (Alt+Shift+P), send-followup (Alt+Shift+F) }`; `host_permissions: ["https://muse.ai/*",
-"https://*.muse.ai/*"]`. Nothing else is declared — exactly what the v1.8 feature set
-(pause, dry-run, rules, smart/scheduled follow-ups, digest, optional settings sync,
-onboarding) requires, and `scripts/lint.mjs` fails on any added permission.
-*(`manifest.version` now reads `1.8.0` on the frozen tree — the release freeze has
-happened; the package is `dist/muse-auto-allow-v1.8.0.zip`. This section matches the
+"https://*.muse.ai/*"]`. Nothing else is declared — exactly what the current feature set
+(v1.8 pause, dry-run, rules, smart/scheduled follow-ups, digest, optional settings sync,
+onboarding; v1.9 Mission Orchestrator) requires, and `scripts/lint.mjs` fails on any added
+permission.
+*(`manifest.version` now reads `1.9.0` on the frozen tree — the release freeze has
+happened; the package is `dist/muse-auto-allow-v1.9.0.zip`. This section matches the
 frozen package; it is not yet uploaded to the Chrome Web Store.)*
 
 ### `storage`
@@ -122,8 +123,8 @@ extension needs none of them.
 `storage`/`alarms`/`notifications` allowlist, any host set other than the two muse.ai
 patterns, or a missing explicit `extension_pages` CSP — so the packaged manifest can
 never silently drift from these answers. (Allowlist verified in the working tree,
-HEAD `91b1726`, 2026-10-10, lint exit 0 — the allowlist and the manifest moved together
-in the v1.8 lane.)
+HEAD `fcbdd63`, 2026-10-10, lint exit 0 — the allowlist is unchanged since the v1.8
+lane and still matches the frozen v1.9.0 manifest.)
 
 ---
 
@@ -228,7 +229,7 @@ Dashboard reference: <https://developer.chrome.com/docs/webstore/cws-dashboard-l
 |---|---|---|---|
 | Item name | "Muse Auto-Allow" — resolved from manifest `name` = `__MSG_extName__` (`extension/_locales/en/messages.json`); 15 characters | Manifest `name` is "a short, plain text string (maximum of **75 characters**)". Note: older guides still cite a legacy 45-character store limit — this name satisfies both. Keep listing names consistent across locales. | [manifest/name](https://developer.chrome.com/docs/extensions/reference/manifest/name) · [prepare](https://developer.chrome.com/docs/webstore/prepare) |
 | Short description | EN: "Auto-click Allow on Muse (muse.ai) approval requests so your agent keeps running. Local-only by default; optional settings sync." (128 chars; all 6 localized variants in `LISTING.md` §1) | **≤ 132 characters** — "A string of no more than 132 characters"; "Your summary … (132 characters or less)". | [prepare](https://developer.chrome.com/docs/webstore/prepare) · [best-listing](https://developer.chrome.com/docs/webstore/best-listing) |
-| Detailed description | Per locale, from `store/LISTING.md` §2 (en, vi, zh_CN, ja, ko, es). All six locales updated for v1.8 (pause, dry-run, allow-once, rules, digest, smart/scheduled follow-ups, optional settings sync, onboarding) — the localized v1.8 feature lists are done, using the in-product wording from `extension/_locales/*/messages.json`; the localized privacy lines carry the sync disclosure. | No numeric limit is published in the official docs (the dashboard enforces its own bound at entry); keep it accurate, concise, and free of keyword stuffing. | [cws-dashboard-listing](https://developer.chrome.com/docs/webstore/cws-dashboard-listing) · [spam FAQ](https://developer.chrome.com/docs/webstore/program-policies/spam-faq#keyword-spam) |
+| Detailed description | Per locale, from `store/LISTING.md` §2 (en, vi, zh_CN, ja, ko, es). English carries the current feature set including the v1.9 Mission Orchestrator; the five localized descriptions were last refreshed for v1.8 (pause, dry-run, allow-once, rules, digest, smart/scheduled follow-ups, optional settings sync, onboarding) and **still describe v1.8 — a v1.9 pass is pending** (stated in `store/LISTING.md` §2). The localized privacy lines carry the sync disclosure. | No numeric limit is published in the official docs (the dashboard enforces its own bound at entry); keep it accurate, concise, and free of keyword stuffing. | [cws-dashboard-listing](https://developer.chrome.com/docs/webstore/cws-dashboard-listing) · [spam FAQ](https://developer.chrome.com/docs/webstore/program-policies/spam-faq#keyword-spam) |
 | Category | **Productivity** (one primary category; rationale in `LISTING.md` §3) | "The primary category under which your item should be listed." | [cws-dashboard-listing](https://developer.chrome.com/docs/webstore/cws-dashboard-listing) |
 | Language(s) | Default English (en); localized listings for vi, zh_CN, ja, ko, es (copy in `LISTING.md`) | "Your item's language"; localized listings use the extension's `_locales` set. | [cws-dashboard-listing#localize_your_listing](https://developer.chrome.com/docs/webstore/cws-dashboard-listing#localize_your_listing) |
 | Homepage / support URL | `TODO` placeholders in `LISTING.md` §9 — fill before submit | Optional fields; appear on the listing. | [cws-dashboard-listing#additional-fields](https://developer.chrome.com/docs/webstore/cws-dashboard-listing#additional-fields) |
@@ -406,7 +407,7 @@ Source: <https://developer.chrome.com/docs/webstore/review-process#warning>
 - [ ] Build + verify the zip for the frozen release version; attach it to the GitHub Release (see `docs/GITHUB_PUBLISH_RUNBOOK.md`).
 - [ ] Sanity-check Muse's terms of service for user-side auto-approval before public launch.
 - [ ] Confirm the four screenshots and both promo images reflect the frozen build.
-- [ ] Re-verify §2 (permissions `storage`/`alarms`/`notifications` + `commands`) against the frozen v1.8 package — §2 matches the frozen `extension/manifest.json` at HEAD `91b1726` (`manifest.version` reads `1.8.0`); the package is `dist/muse-auto-allow-v1.8.0.zip`.
+- [ ] Re-verify §2 (permissions `storage`/`alarms`/`notifications` + `commands`) against the frozen v1.9.0 package — §2 matches the frozen `extension/manifest.json` at HEAD `fcbdd63` (`manifest.version` reads `1.9.0`); the package is `dist/muse-auto-allow-v1.9.0.zip`.
 
 ---
 

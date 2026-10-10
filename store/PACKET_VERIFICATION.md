@@ -10,6 +10,8 @@
 > **v1.4.0 addendum:** the packet now ships as **v1.4.0** (`dist/muse-auto-allow-v1.4.0.zip`) — the addendum at the end of this document records what changed and the re-verification status per item. Everything above this line remains the v1.2.0 record.
 >
 > **v1.5.0 addendum:** the packet now ships as **v1.5.0** (`dist/muse-auto-allow-v1.5.0.zip`) — the v1.5.0 addendum at the end of this document re-verifies the items that changed since v1.4.0 (commits `d7084da` + `311f006`).
+>
+> **v1.9.0 addendum:** the packet now ships as **v1.9.0** (`dist/muse-auto-allow-v1.9.0.zip`) — the v1.9.0 addendum at the end of this document is the **current verification** for this packet. Everything above (the v1.2.0 record and the v1.4.0/v1.5.0 addenda) is the frozen historical record; the **v1.6.0 / v1.7.0 / v1.8.0 gap** in this file is a known stale item (those releases moved without a verification addendum here).
 
 ## Verdict
 
@@ -215,3 +217,51 @@ Entries carry an ISO `at` timestamp (`content.js:203`); PRIVACY §2 describes "k
 - **Visual content of store images** — only PNG-header dimensions were verified; the images were not visually reviewed in this pass.
 
 **Bottom line:** all three v1.4.0 addendum findings (F1 screenshot3 spec, F2 LISTING staleness, F3 header version) are closed at `311f006`; the v1.5.0 feature set (encryption at rest, backup/restore, upgrade inheritance, local-time log) is present per file-level evidence; the zip re-verifies 18/18 byte-equal at v1.5.0. Remaining submission blockers are the pre-existing owner-input TODOs (privacy URL, support email, publisher name) — unchanged.
+
+---
+
+## v1.9.0 Addendum (2026-10-10)
+
+**Verifier:** independent docs pass (maker ≠ judge), run as part of the v1.9.0 store/release doc sync. This addendum does **not** rewrite anything above it: §1–§11 and the v1.4.0 / v1.5.0 addenda are the **frozen v1.2.0-era record** (with its v1.4.0/v1.5.0 addenda), kept as history.
+
+**Current verification is the v1.9.0 freeze evidence below.** The **v1.6.0 / v1.7.0 / v1.8.0 gap** in this document is a known stale item — those releases moved the packet (CWS submission pack, Statistics, pause/dry-run/rules/notifications/settings-sync) without a verification addendum here; the gap is acknowledged, not back-filled.
+
+**Revision:** v1.9.0 = freeze commit `fcbdd63` (2026-10-10; remote `main`; tag `v1.9.0`); working tree clean at check time.
+
+**Method (this pass):** Python `zipfile` listing + per-entry parse of `dist/muse-auto-allow-v1.9.0.zip`; `sha256sum` of the artifact vs its sidecar; `python scripts/verify-zip.py` (read-only byte-compare, exit 0); read of `extension/manifest.json` (permissions / host patterns / commands / `content_scripts.matches`); read of `store/LISTING.md` §1; `node scripts/lint.mjs`; `node test/background-unit.mjs`; targeted greps for remote-code/network primitives and `https://` strings. **No Chrome / CDP run was performed in this pass.**
+
+### Current verification — the v1.9.0 freeze evidence
+
+- **Artifact:** `dist/muse-auto-allow-v1.9.0.zip` — **177,387 bytes**, **18 entries**, `manifest.json` at the zip root; sha256 `d1929416a88a550505c68120542dcd1830a1142f5d96bfe2a5aa195ff531718d` (matches the sidecar `dist/muse-auto-allow-v1.9.0.zip.sha256`).
+- **Byte-verify:** `python scripts/verify-zip.py` → `18 matched, 0 mismatched, 0 disk-only, 0 zip-only` (exit 0) — **re-run in this pass**.
+- **Artifact smoke:** `node scripts/smoke-zip.mjs` → exit 0, `ok: true` (freeze-recorded; see `docs/RELEASE_INTEGRITY.md` → "Recorded evidence (v1.9.0 freeze)").
+- **Determinism:** two consecutive `node scripts/build.mjs` runs byte-identical (same sha256) — freeze-recorded.
+- **Gates on the frozen tree (freeze-recorded):** `lint.mjs` 0 · `background-unit.mjs` 29/29 · `e2e.mjs` ok (`n7count 1`, `forbiddenHit []`) · `followup-e2e.mjs` 106 checks 0 failed · `lang-switch-e2e.mjs` ok · `mission-e2e.mjs` 39 checks 0 failed.
+- **Not done:** the package has **not** been uploaded to the Chrome Web Store; no CWS review, no store publish.
+
+### Re-verification of the item list that still applies (file-level, this pass)
+
+| # | Item | v1.9.0 re-check | Status |
+|---|---|---|---|
+| 2.1 | `manifest.json` at the zip root | entry list contains `manifest.json` at root (not nested) | PASS |
+| 2.2 | Only runtime files — no `test/`, `docs/`, `scripts/`, `store/` entries | 18 entries: `manifest.json`, `content.js`, `background.js`, `popup.html`, `popup.js`, `stats.html`, `stats.js`, `icons/{icon16,icon32,icon48,icon128,icon512}.png`, `_locales/{en,es,ja,ko,vi,zh_CN}/messages.json` — nothing else | PASS |
+| 2.3 | Every entry matches `extension/` on disk | `verify-zip.py` → 18 matched, 0 mismatched, 0 disk-only, 0 zip-only (exit 0) | PASS |
+| 2.4 | Manifest inside zip == LISTING | zip manifest `version 1.9.0`, `permissions ["storage","alarms","notifications"]`, `host_permissions` the two muse.ai patterns, `commands` `toggle-pause`/`send-followup`, `default_locale en` — matches `store/LISTING.md` §1 (`Version 1.9.0`, package `dist/muse-auto-allow-v1.9.0.zip`) and the frozen `extension/manifest.json` | PASS |
+| 2.6 | Zip structural hygiene | 18 entries, `/`-separated names, no directory entries (Python listing) | PASS |
+| 3.2 | No network calls in extension code | grep for `eval(`/`new Function`/`fetch(`/`XMLHttpRequest`/`WebSocket`/`sendBeacon`/`EventSource`/`importScripts`/`insertAdjacentHTML`/`document.write` over `extension/`: **0 matches**; the only `https://` strings are the muse.ai `chrome.tabs.query` match patterns (`background.js` 121/255, `popup.js` 477/641/1429) — the remaining `http://` hits are inline `data:image/svg+xml` URIs in `popup.html` CSS, not network requests | PASS |
+| 3.7 | Page access limited to muse.ai | `host_permissions` and `content_scripts[0].matches` are exactly `https://muse.ai/*` + `https://*.muse.ai/*` | PASS |
+| 3.8 | Permissions table matches manifest | manifest = `storage` / `alarms` / `notifications` + the two muse.ai hosts (`commands` is a manifest key, **not** a permission) — matches `store/LISTING.md` §5 / `store/PRIVACY.md` §5 | PASS |
+| 3.9 | "collects nothing / transmits nothing / no analytics / no advertising" | consistent with the scans above; the one optional data-flow surface (off-by-default settings sync) is disclosed in `store/PRIVACY.md` §2 and `store/CWS_SUBMISSION_PACK.md` §3.2a | PASS |
+| 1.2 / 4.6 | Version consistency | `extension/manifest.json` `"version": "1.9.0"` = `store/LISTING.md` §1 `Version 1.9.0` = `dist/muse-auto-allow-v1.9.0.zip` (all three read in this pass) | PASS (superseded from 1.2.0) |
+| — | Lint gate | `node scripts/lint.mjs` → exit 0 (24 checks across 18 files) | PASS (re-run) |
+| — | Background-unit gate | `node test/background-unit.mjs` → 29/29, `ok: true`, exit 0 | PASS (re-run) |
+
+### NOT_VERIFIED in this pass (explicit)
+
+- **Chrome / CDP runtime suites** — `test/e2e.mjs`, `test/followup-e2e.mjs`, `test/lang-switch-e2e.mjs`, `test/mission-e2e.mjs`, and `scripts/smoke-zip.mjs` were **NOT executed** here; their results are cited from the v1.9.0 freeze evidence (`docs/RELEASE_INTEGRITY.md`, `CHANGELOG.md` 1.9.0) and not independently reproduced. **NOT_VERIFIED.**
+- **Determinism re-proof** — a clean `node scripts/build.mjs` could **NOT** complete in this docs pass: the write step aborted with a Windows `EPERM` file-lock on `dist/muse-auto-allow-v1.9.0.zip`. The artifact bytes were unchanged (same sha256) and `verify-zip.py` still passed. The double-build determinism claim is freeze-recorded, not re-proven here. **NOT_VERIFIED.**
+- **Visual content of the store images** — PNG dimensions were not re-parsed and the images were not visually reviewed in this pass. **NOT_VERIFIED.**
+- **Chrome Web Store submission state** — no dashboard was opened; nothing was uploaded, reviewed, or published. **NOT_VERIFIED / NOT DONE.**
+- **Items 1.3–1.21, 3.1, 3.3–3.6, 4.1–4.8** (the v1.2.0 per-line checks) — only the subset re-listed in the table above was re-checked; the rest stand as the historical v1.2.0/v1.4.0/v1.5.0 record and are **NOT_VERIFIED** against the v1.9.0 tree in this pass.
+
+**Bottom line:** the v1.9.0 freeze evidence (artifact + sha256 + verify-zip + smoke + six green suites) is the current verification for this packet; the sections above it are the frozen v1.2.0-era record with its v1.4.0/v1.5.0 addenda, and the v1.6.0–v1.8.0 gap here is a known stale item. Nothing in this document claims a Chrome Web Store upload, review, or publish — the package has not been uploaded.

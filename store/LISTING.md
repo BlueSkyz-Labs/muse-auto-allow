@@ -13,9 +13,9 @@ provided in all six supported languages (en, vi, zh_CN, ja, ko, es). Values mark
 | Item name | **Muse Auto-Allow** |
 | Category | **Productivity** |
 | Default language | English (en) |
-| Version | 1.8.0 |
+| Version | 1.9.0 |
 | Manifest version | Manifest V3 |
-| Extension package | `dist/muse-auto-allow-v1.8.0.zip` |
+| Extension package | `dist/muse-auto-allow-v1.9.0.zip` |
 | License | MIT © 2026 BlueSkyz Labs |
 | Homepage / support URL | `TODO: fill before submit` |
 | Privacy policy URL | `TODO: fill before submit` (host `store/PRIVACY.md` and paste the public link) |
@@ -48,11 +48,17 @@ Auto-click Allow on Muse (muse.ai) approval requests so your agent keeps running
 
 ## 2. Detailed description (all six languages)
 
-> **v1.8 — localization done:** all six descriptions below now cover the current
-> release — pause, dry-run, allow-once, rules, smart/scheduled follow-ups, the startup
-> digest, optional settings sync, and onboarding — using the same in-product wording as
-> `extension/_locales/*/messages.json`. English is the reference text; every localized
-> feature list and privacy line makes the same claims as it.
+> **v1.8 — localization done (history):** all six descriptions were refreshed for the
+> v1.8 release — pause, dry-run, allow-once, rules, smart/scheduled follow-ups, the
+> startup digest, optional settings sync, and onboarding — using the same in-product
+> wording as `extension/_locales/*/messages.json`.
+>
+> **v1.9 — English updated; localized descriptions pending:** the English description
+> below now also covers the v1.9 Mission Orchestrator. The five localized descriptions
+> (vi, zh_CN, ja, ko, es) still describe v1.8 and have **not** been updated for v1.9 —
+> they need a v1.9 pass before a localized listing is published. English is the
+> reference text; every localized feature list and privacy line makes the same claims as
+> it (minus the Mission Orchestrator until that pass lands).
 
 ### English (en)
 
@@ -92,6 +98,11 @@ keeps moving.
 - Smart follow-ups: optionally nudge your Muse agent to keep going — including recovery
   prompts when it looks stuck or has hit an error — and restrict sending to hours you
   choose.
+- Missions: run a multi-step project-orchestration mission inside one Muse session — an
+  ordered sequence of prompts (the GOLIVE READY ladder, or Audit only / Fix findings /
+  Release prep) the follow-up engine sends on each idle detection. Watch live progress
+  (step n/N · cycle c), send the next step on demand, or pause the mission; a step only
+  advances when the send is verified.
 - Startup digest: a desktop notification summarizing recent activity (clicks,
   follow-ups, blocked items) — composed on your device.
 - Optional settings sync: carry your settings to other Chrome profiles through Chrome's
@@ -420,7 +431,7 @@ Compliance notes for this declaration:
 - Manifest V3, no `content_security_policy` relaxation.
 - No analytics SDK, no CDN, no update endpoint. (The optional settings sync uses
   Chrome's built-in sync service — a browser feature, not an extension network call.)
-- `dist/muse-auto-allow-v1.8.0.zip` contains only static files with `manifest.json` at the
+- `dist/muse-auto-allow-v1.9.0.zip` contains only static files with `manifest.json` at the
   zip root.
 
 ---
