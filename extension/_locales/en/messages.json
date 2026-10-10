@@ -430,5 +430,14 @@
   },
   "kindFollowupDry": {
     "message": "follow-up (dry)"
+  },
+  "langAuto": {
+    "message": "Auto"
+  },
+  "langAutoBrowser": {
+    "message": "Auto (browser)"
+  },
+  "langMenuAria": {
+    "message": "Language"
   }
 }

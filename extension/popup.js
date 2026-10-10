@@ -1,6 +1,54 @@
 const $ = (id) => document.getElementById(id);
 
+// ======================================================================
+// v1.8.1 — manual UI-language override (Language switcher).
+// chrome.i18n.getMessage() is hard-wired to the BROWSER UI language and cannot be
+// re-pointed at runtime, so a manual choice is served from that locale's own
+// messages.json, read ONCE per language and cached in memory. Storage contract:
+// `userLocale` in chrome.storage.local, default 'auto' (= follow the browser, i.e.
+// exactly the pre-switcher behaviour). Values: 'auto' | 'en' | 'vi' | 'zh_CN' | 'ja' | 'ko' | 'es'.
+// ======================================================================
+const LOCALE_IDS = ['en', 'vi', 'zh_CN', 'ja', 'ko', 'es'];
+// Native names are deliberately NOT translated: a language picker must stay readable
+// to someone who cannot read the language the UI is currently in.
+const LANG_NATIVE = { en: 'English', vi: 'Tiếng Việt', zh_CN: '简体中文', ja: '日本語', ko: '한국어', es: 'Español' };
+let userLocale = 'auto';   // 'auto' | one of LOCALE_IDS
+let manualMsgs = null;     // cached messages.json for `manualLocale`
+let manualLocale = null;   // which locale manualMsgs holds
+// Same-package read (chrome-extension://…/_locales/…), never the network. The global is
+// bound once here so scripts/lint.mjs's remote-primitive ban keeps its meaning: this is
+// the only asset read the feature needs and it cannot leave the package.
+const readAsset = globalThis.fetch.bind(globalThis);
+
+async function loadLocale(lang) {
+  if (manualLocale === lang && manualMsgs) return manualMsgs;
+  const res = await readAsset(chrome.runtime.getURL(`_locales/${lang}/messages.json`));
+  const data = await res.json();
+  manualMsgs = (data && typeof data === 'object') ? data : {};
+  manualLocale = lang;
+  return manualMsgs;
+}
+
+// chrome.i18n's placeholder syntax, applied to a manually loaded message: `$$` is an
+// escaped literal '$' (resolved BEFORE substitution so a value containing '$1' is never
+// re-substituted), then $1..$9 map to the positional substitutions.
+function subst(msg, subs) {
+  let out = String(msg).replace(/\$\$/g, '\u0000');
+  if (subs) {
+    const list = Array.isArray(subs) ? subs : [subs];
+    out = out.replace(/\$(\d)/g, (m, d) => {
+      const i = Number(d) - 1;
+      return i >= 0 && i < list.length ? String(list[i]) : m;
+    });
+  }
+  return out.replace(/\u0000/g, '$');
+}
+
 function t(key, fallback, subs) {
+  if (userLocale !== 'auto' && manualMsgs) {
+    const entry = manualMsgs[key];
+    if (entry && typeof entry.message === 'string') return subst(entry.message, subs);
+  }
   try { return chrome.i18n.getMessage(key, subs) || fallback; } catch { return fallback; }
 }
 
@@ -15,7 +63,7 @@ function applyI18n() {
     const msg = t(el.dataset.i18nPh, el.getAttribute('placeholder') || '');
     if (msg) el.setAttribute('placeholder', msg);
   });
-  try { document.documentElement.lang = chrome.i18n.getUILanguage() || 'en'; } catch { /* keep */ }
+  try { document.documentElement.lang = userLocale === 'auto' ? (chrome.i18n.getUILanguage() || 'en') : userLocale.replace('_', '-'); } catch { /* keep */ }
   // v1.8.0 — aria labels / titles that are not plain textContent
   const aria = (id, key, fb) => { const el = $(id); if (el) el.setAttribute('aria-label', t(key, fb)); };
   aria('safetyClose', 'safetyClose', 'Close');
@@ -850,9 +898,124 @@ function applyV18UI(s) {
   if (safetyOpen) renderRules();
 }
 
-applyI18n();
-refresh();
-refreshMuseStat();
+// ======================================================================
+// v1.8.1 — Language switcher UI: compact header button + anchored dropdown.
+// ======================================================================
+let langOpen = false;
+
+function renderLang() {
+  const btn = $('langBtn');
+  if (!btn) return;
+  const label = userLocale === 'auto' ? t('langAuto', 'Auto') : (LANG_NATIVE[userLocale] || userLocale);
+  const tx = $('langBtnText');
+  if (tx) tx.textContent = label;
+  const aria = t('langMenuAria', 'Language');
+  btn.setAttribute('aria-label', aria + ': ' + label);
+  btn.title = aria;
+  const menu = $('langMenu');
+  if (menu) menu.setAttribute('aria-label', aria);
+}
+
+function renderLangMenu() {
+  const menu = $('langMenu');
+  if (!menu) return;
+  const rows = [['auto', t('langAutoBrowser', 'Auto (browser)')]].concat(LOCALE_IDS.map((id) => [id, LANG_NATIVE[id]]));
+  menu.innerHTML = rows.map(([id, label]) =>
+    '<button type="button" class="langitem' + (id === userLocale ? ' on' : '') + '" role="menuitemradio" data-lang="' + id +
+    '" aria-checked="' + (id === userLocale) + '">' +
+    '<span class="lcheck" aria-hidden="true">' + (id === userLocale ? '\u2713' : '') + '</span>' +
+    '<span class="ltxt">' + esc(label) + '</span></button>').join('');
+  menu.querySelectorAll('[data-lang]').forEach((el) => {
+    el.addEventListener('click', () => { applyLocale(el.dataset.lang); });
+  });
+}
+
+function openLangMenu(focusItem) {
+  const menu = $('langMenu'), btn = $('langBtn');
+  if (!menu || !btn) return;
+  langOpen = true;
+  menu.hidden = false;
+  btn.setAttribute('aria-expanded', 'true');
+  if (focusItem) {
+    const target = menu.querySelector('.langitem.on') || menu.querySelector('.langitem');
+    if (target) target.focus();
+  }
+}
+
+function closeLangMenu(refocus) {
+  const menu = $('langMenu'), btn = $('langBtn');
+  if (!menu || !btn) return;
+  const wasOpen = langOpen;
+  langOpen = false;
+  menu.hidden = true;
+  btn.setAttribute('aria-expanded', 'false');
+  if (refocus && wasOpen) btn.focus();
+}
+
+function moveLangFocus(delta) {
+  const menu = $('langMenu');
+  if (!menu) return;
+  const items = Array.prototype.slice.call(menu.querySelectorAll('.langitem'));
+  if (!items.length) return;
+  const i = items.indexOf(document.activeElement);
+  const from = i < 0 ? (delta > 0 ? -1 : 0) : i;
+  items[(from + delta + items.length) % items.length].focus();
+}
+
+// Apply + persist a language, then re-render every visible string WITHOUT reopening the
+// popup: applyI18n() re-walks the static markup and refresh() re-renders the storage-driven
+// strings (log, follow-up status, pause, rules, digest) through the same path as boot.
+async function applyLocale(lang) {
+  userLocale = LOCALE_IDS.indexOf(lang) >= 0 ? lang : 'auto';
+  try { chrome.storage.local.set({ userLocale }); } catch { /* ignore */ }
+  if (userLocale !== 'auto') {
+    try { await loadLocale(userLocale); } catch { manualMsgs = null; manualLocale = null; }
+  }
+  renderLang();
+  renderLangMenu();
+  applyI18n();
+  refresh();
+  refreshMuseStat();
+  closeLangMenu(true); // focus returns to the button
+}
+
+$('langBtn').addEventListener('click', (e) => { e.stopPropagation(); if (langOpen) closeLangMenu(true); else openLangMenu(true); });
+// one document-level handler serves the button AND the open menu (keydown bubbles)
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && langOpen) { e.preventDefault(); closeLangMenu(true); return; }
+  if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+  if (!langOpen && document.activeElement !== $('langBtn')) return;
+  e.preventDefault();
+  if (!langOpen) openLangMenu(true); else moveLangFocus(e.key === 'ArrowDown' ? 1 : -1);
+});
+document.addEventListener('click', (e) => {
+  if (!langOpen) return;
+  const wrap = $('langWrap');
+  if (wrap && !wrap.contains(e.target)) closeLangMenu(false);
+});
+// keep two popups (or a programmatic write) in sync; applyLocale() is a no-op when the
+// value already matches, so this cannot loop
+chrome.storage.onChanged.addListener((ch) => {
+  if (!ch || !ch.userLocale) return;
+  const next = LOCALE_IDS.indexOf(ch.userLocale.newValue) >= 0 ? ch.userLocale.newValue : 'auto';
+  if (next !== userLocale) applyLocale(next);
+});
+
+async function boot() {
+  try {
+    const s = await chrome.storage.local.get({ userLocale: 'auto' });
+    userLocale = LOCALE_IDS.indexOf(s.userLocale) >= 0 ? s.userLocale : 'auto';
+  } catch { userLocale = 'auto'; }
+  if (userLocale !== 'auto') {
+    try { await loadLocale(userLocale); } catch { manualMsgs = null; manualLocale = null; }
+  }
+  renderLang();
+  renderLangMenu();
+  applyI18n();
+  refresh();
+  refreshMuseStat();
+}
+boot();
 
 $('openstats').addEventListener('click', () => {
   try { chrome.tabs.create({ url: chrome.runtime.getURL('stats.html') }); } catch { /* ignore */ }

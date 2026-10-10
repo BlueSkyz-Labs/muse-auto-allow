@@ -430,5 +430,14 @@
   },
   "kindFollowupDry": {
     "message": "フォロー（ドライ）"
+  },
+  "langAuto": {
+    "message": "自動"
+  },
+  "langAutoBrowser": {
+    "message": "自動（ブラウザー）"
+  },
+  "langMenuAria": {
+    "message": "言語"
   }
 }

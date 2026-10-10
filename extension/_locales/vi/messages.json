@@ -430,5 +430,14 @@
   },
   "kindFollowupDry": {
     "message": "nhắc tiếp (thử)"
+  },
+  "langAuto": {
+    "message": "Tự động"
+  },
+  "langAutoBrowser": {
+    "message": "Tự động (theo trình duyệt)"
+  },
+  "langMenuAria": {
+    "message": "Ngôn ngữ"
   }
 }

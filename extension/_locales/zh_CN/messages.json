@@ -430,5 +430,14 @@
   },
   "kindFollowupDry": {
     "message": "跟进（试）"
+  },
+  "langAuto": {
+    "message": "自动"
+  },
+  "langAutoBrowser": {
+    "message": "自动（浏览器）"
+  },
+  "langMenuAria": {
+    "message": "语言"
   }
 }

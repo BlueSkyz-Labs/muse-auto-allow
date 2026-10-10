@@ -50,6 +50,7 @@ The popup must stay ≤ 600 px **in every state**, and v1.7.0 already ships at 5
 | `followupSchedule.{enabled,start,end,onlyActiveTab}` | `false,8,18,false` | toggle + selects + checkbox | change | merged write; hours clamped to 0–23 with a real default (an empty value must not become 0) |
 | `syncSettings` | `false` | toggle | change | 8 KB note in the panel |
 | `onboarded` | `false` | wizard visibility | wizard Done/Skip | absent ⇒ wizard shows once |
+| `userLocale` | `'auto'` | the language button + every `t()` string | language menu | **v1.8.1.** `'auto'` ⇒ `chrome.i18n` (the browser locale — the exact pre-switcher behaviour); otherwise `_locales/<lang>/messages.json` is fetched once and cached, and `t()` is served from it |
 
 The popup never writes a key outside this table. `followupSmart`, `followupSchedule` and `rules` are read-merge-written so UI edits cannot delete engine-owned fields.
 
@@ -72,6 +73,7 @@ The popup never writes a key outside this table. `followupSmart`, `followupSched
 - Digest: `digestTitle, digestSince, digestSinceStart, digestClicks, digestFollowups, digestBlocked`
 - Onboarding: `onbStep1Title, onbStep1Body, onbEnable, onbStep2Title, onbStep2Body, onbDryRun, onbStep3Title, onbStep3Body, onbBack, onbSkip, onbDone, onbStepCount`
 - Log kinds: `kindBlocked, kindFollowup, kindAllowDry, kindExpandDry, kindOpenPanelDry, kindFollowupDry`
+- **v1.8.1 language switcher:** `langAuto, langAutoBrowser, langMenuAria` — en now carries **147** keys. The six native language names (`English`, `Tiếng Việt`, `简体中文`, `日本語`, `한국어`, `Español`) are deliberately **hardcoded and untranslated**: a language picker has to stay readable to someone who cannot read the language the UI is currently in.
 
 Every literal `t('key')` in `popup.js` and every `data-i18n`/`data-i18n-ph` in `popup.html` resolves in `en` (the harness pre-flight asserts both directions, with no fallback-only allowlist). Follow-up **prompt** chips stay English by design (existing rule); state chips (`.schip`, `.fstat`, log kind chips) are localised.
 
@@ -125,3 +127,47 @@ Functional probe (own CDP harness): **58/58** checks — wizard steps and their 
 - `followupSmart.stuckPrompt` / `errorPrompt` have **no** UI field (the frozen contract exposes `stuckMin` + `errorRecovery` only); they are preserved on every UI write.
 - `stats.html` / `stats.js` were not touched: v1.8 adds no statistics surface, and the export/import + backup-key logic is explicitly out of scope for this lane.
 - Measured on Windows Chrome (v26.7.0 node harness, installed Chrome via CDP); heights are CSS px in the popup document (320 px wide, `max-height:600px`).
+
+---
+
+## 7. v1.8.1 — Language switcher (manual UI-language override)
+
+**Ask (owner):** "Thêm nút này Language-switch UI" — pick the UI language by hand instead of being stuck with the browser's locale.
+
+**Why an override is needed at all:** `chrome.i18n.getMessage()` is bound to the *browser* UI language and **cannot** be re-pointed per user, and `chrome.i18n` exposes no per-locale read API. So a manual choice is served from that locale's own file.
+
+### Mechanism
+
+| Piece | Detail |
+|---|---|
+| Storage key | `userLocale` in `chrome.storage.local`, default `'auto'` |
+| Values | `'auto'` \| `'en'` \| `'vi'` \| `'zh_CN'` \| `'ja'` \| `'ko'` \| `'es'` (anything else falls back to `'auto'`) |
+| Manual load | `readAsset(chrome.runtime.getURL('_locales/<lang>/messages.json'))` → `res.json()`, **once per language**, cached in memory (`manualMsgs` / `manualLocale`). Re-selecting the same language re-uses the cache. |
+| `t(key, fallback, subs)` | manual locale first (with `$1..$9` + `$$` substitution re-implemented in `subst()`), then `chrome.i18n.getMessage`, then the inline fallback |
+| Live re-render | `applyLocale()` → `renderLang()` + `renderLangMenu()` + `applyI18n()` + `refresh()` + `refreshMuseStat()` — the same path as boot, so the popup re-renders **without reopening**. A `chrome.storage.onChanged` listener routes external writes through the same function (a no-op when the value already matches, so it cannot loop). |
+| `<html lang>` | follows the manual locale (`zh_CN` → `zh-CN`); `'auto'` keeps `chrome.i18n.getUILanguage()` |
+
+**Local-asset read + `scripts/lint.mjs`.** The lint gate bans network primitives (`fetch(`, `XMLHttpRequest`, `eval`, …) anywhere under `extension/` to keep the package remote-code-free. The one read this feature needs is *same-package* (`chrome-extension://…/_locales/…`, `chrome.runtime.getURL`, no network). It is therefore bound once as `const readAsset = globalThis.fetch.bind(globalThis);` and called as `readAsset(url)` — the ban stays intact and enforced (nothing in the file matches the banned token), while the single legitimate local read is explicit and auditable. No new permission, no host change, no manifest change.
+
+### UI
+
+- A compact pill button (`.langbtn`) sits in the **header**, after the status chip. Its label is the active language's **native** name; for `'auto'` it is the new translated key `langAuto`. `aria-label` = `"<Language>: <label>"` (key `langMenuAria`).
+- Clicking opens `.langmenu` — an absolutely positioned dropdown **inside `.langwrap`** (`right:0; top:calc(100% + 4px)`), so it *overlays* the popup exactly like the shipped phrase sheet and adds **zero height**. Rows: `Auto (browser)` (`langAutoBrowser`) + the 6 native names; the active row carries a `✓`, `role="menuitemradio"` and `aria-checked="true"`.
+- Keyboard/a11y: `aria-haspopup="menu"`, `aria-expanded` toggles, focus moves into the menu on open, ↑/↓ move between rows, **Escape closes and returns focus to the button**, click-outside closes. `role="menu"` with a localised `aria-label`.
+- Visual tokens are the **shipped** ones only (`--fill`, `--stroke`, `--ink`, `--muted`, `--bg`, `--blue`, 999px pill, 12px radius, the `.fsheet` shadow, the dark-mode `#8ab8ff` pair) — nothing was restyled. The only other CSS touch is one additive rule, `.head h1 { flex: 0 0 auto; white-space: nowrap; }`, so the third header control can never wrap the title (the already-ellipsised status chip absorbs the shrink instead).
+
+### Evidence (`node test/lang-switch-e2e.mjs` — new harness, real installed Chrome, CDP)
+
+| Assertion | Result |
+|---|---|
+| default (no `userLocale`) = browser-locale behaviour | button `Auto`, strings = en-US values, no manual locale loaded |
+| `userLocale: 'vi'` via the real dropdown | button `Tiếng Việt`; `toggleLabel/pauseLabel/last7` = `Tự động bấm Allow` / `Tạm dừng` / `7 ngày gần nhất`; **`chrome.i18n.getMessage('toggleLabel')` still returns the en string** ⇒ the override is real; persisted `'vi'` |
+| back to `'auto'` via the dropdown | strings and button restore to the browser-locale values; persisted `'auto'` |
+| **height with the menu OPEN** | lowest content edge **219 px** (the menu) / **411 px** (the layout) — ≤ 600 |
+| **height with a FULL 12-entry log + menu OPEN** | **594 px** — identical to the same state with the menu closed (the overlay adds 0), menu bottom at 219 px |
+| all 6 locales | native label + exact strings + override loaded + `<h1>` on **one line** (20 px) + ≤ 600 px (worst: 428 px) |
+| a11y | haspopup/expanded toggle, 7 `menuitemradio` rows, Escape closes + refocuses, ArrowDown opens + moves focus |
+
+Suite results for this change: `node scripts/lint.mjs` **exit 0** (24 checks, i18n parity green over 6 locales), `node test/e2e.mjs` **exit 0**, `node test/followup-e2e.mjs` **exit 0** (heights unchanged at 572 / 594 / 594), `node test/lang-switch-e2e.mjs` **exit 0** (36/36 checks).
+
+**Deleted:** `extension/lang-switch.mjs` — the earlier standalone draft (unwired, wrong approach: it never overrode `chrome.i18n`, and it injected hardcoded dark colours). The feature lives in `popup.js` / `popup.html` only.

@@ -347,6 +347,40 @@
   .obfoot { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 8px; flex: none; }
   .obquick { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
   .obquick .qbtn { width: 100%; box-sizing: border-box; text-align: left; padding: 4px 9px; }
+
+  /* ======================================================================
+     v1.8.1 — Language switcher (manual UI-language override).
+     ADDITIVE ONLY: no shipped token, rule or component is restyled. The button
+     reuses the shipped pill vocabulary (.pbtn/.rbtn) and the dropdown reuses the
+     sheet vocabulary (hairline --stroke, --bg surface, 12px radius, the same
+     soft shadow). The menu is absolutely positioned inside .langwrap, so opening
+     it OVERLAYS the popup and never adds height (same discipline as .fsheet).
+     ====================================================================== */
+  .langwrap { position: relative; flex: none; }
+  .langbtn { display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: 11px;
+             line-height: 1.4; background: var(--fill); color: var(--ink); border: 1px solid var(--stroke);
+             border-radius: 999px; padding: 2px 8px; cursor: pointer; white-space: nowrap; }
+  .langbtn:hover { background: rgba(0,90,191,.12); }
+  .langbtn .chev { font-size: 8px; color: var(--muted); }
+  .langmenu { position: absolute; right: 0; top: calc(100% + 4px); z-index: 20; min-width: 156px;
+              box-sizing: border-box; background: var(--bg); border: 1px solid var(--stroke);
+              border-radius: 12px; padding: 4px; display: flex; flex-direction: column; gap: 1px;
+              box-shadow: 0 12px 28px -14px rgba(0,0,0,.5); }
+  .langitem { display: flex; align-items: center; gap: 6px; width: 100%; box-sizing: border-box;
+              font: inherit; font-size: 11.5px; line-height: 1.4; text-align: left; background: none;
+              color: var(--ink); border: 0; border-radius: 8px; padding: 4px 8px; cursor: pointer; white-space: nowrap; }
+  .langitem:hover { background: rgba(0,90,191,.12); }
+  .langitem.on { color: var(--blue); font-weight: 500; }
+  .langitem .lcheck { flex: none; width: 12px; font-size: 10px; }
+  .langitem .ltxt { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  @media (prefers-color-scheme: dark) {
+    .langbtn:hover, .langitem:hover { background: rgba(10,92,224,.30); }
+    .langitem.on { color: #8ab8ff; }
+    .langmenu { box-shadow: 0 12px 28px -14px rgba(0,0,0,.8); }
+  }
+  /* the header now carries a third control; the title must never wrap when space is
+     tight — the status chip (already ellipsised + titled) absorbs the shrink instead */
+  .head h1 { flex: 0 0 auto; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -361,6 +395,15 @@
     </svg>
     <h1 data-i18n="extName">Muse Auto-Allow</h1>
     <span class="chip" id="musestat"><i class="cd" aria-hidden="true"></i><span id="musestatText">&hellip;</span></span>
+    <!-- v1.8.1 — Language switcher: button label = the active language's NATIVE name
+         ('Auto' while following the browser); the dropdown lists 'Auto (browser)' + the
+         6 native names, active one checked. aria-haspopup/aria-expanded + Escape. -->
+    <span class="langwrap" id="langWrap">
+      <button type="button" class="langbtn" id="langBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="langMenu">
+        <span id="langBtnText">Auto</span><span class="chev" aria-hidden="true">&#9662;</span>
+      </button>
+      <div class="langmenu" id="langMenu" role="menu" aria-label="Language" hidden></div>
+    </span>
   </div>
   <!-- v1.8.0 — pause + Safety & Control entry (one 26px row in every state) -->
   <div class="ctlbar" id="ctlbar">
