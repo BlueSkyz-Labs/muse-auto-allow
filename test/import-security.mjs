@@ -122,6 +122,88 @@ const { store, alerts, listeners, state } = env;
 const EN = JSON.parse(fs.readFileSync(path.join(ROOT, 'extension', '_locales', 'en', 'messages.json'), 'utf8'));
 const MSG = { bad: EN.importBad.message, quota: EN.importQuota.message, kept: EN.importKeyKept.message };
 
+const eq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+const clone = (o) => JSON.parse(JSON.stringify(o));
+
+// ---------- REAL engine readers, sliced out of content.js (F-V19-5 matrix) ----------
+// The sanitizer's output only matters through what the ENGINE computes on its next boot, so the
+// matrix below boots the REAL readers (content.js applyV18Settings / applyMissionSettings + their
+// helpers) on the merged stored state instead of inspecting the sanitizer's shape — a shape-only
+// view was the S12 test's blind spot. Slicing keeps this harness bound to the shipped engine: any
+// drift in content.js changes the sliced source and therefore these assertions.
+function sliceBalanced(src, startIdx, openCh, closeCh) {
+  let depth = 0, q = null;
+  for (let i = startIdx; i < src.length; i++) {
+    const c = src[i];
+    if (q) { if (c === '\\') i++; else if (c === q) q = null; continue; }
+    if (c === "'" || c === '"' || c === '`') { q = c; continue; }
+    if (c === openCh) depth++;
+    else if (c === closeCh) { depth--; if (depth === 0) return src.slice(startIdx, i + 1); }
+  }
+  throw new Error('unbalanced engine slice at ' + startIdx);
+}
+const sliceBlock = (src, marker, openCh, closeCh) => {
+  const i = src.indexOf(marker);
+  if (i < 0) throw new Error('engine marker not found: ' + marker);
+  const j = src.indexOf(openCh, i);
+  return src.slice(i, j) + sliceBalanced(src, j, openCh, closeCh) + ';';
+};
+const sliceFn = (src, name) => {
+  const i = src.indexOf('function ' + name + '(');
+  if (i < 0) throw new Error('engine function not found: ' + name);
+  const j = src.indexOf('{', i);
+  return src.slice(i, j) + sliceBalanced(src, j, '{', '}') + ';';
+};
+const sliceLine = (src, marker) => {
+  const i = src.indexOf(marker);
+  if (i < 0) throw new Error('engine line not found: ' + marker);
+  const j = src.indexOf('\n', i);
+  return src.slice(i, j < 0 ? src.length : j);
+};
+const engineSrc = fs.readFileSync(path.join(ROOT, 'extension', 'content.js'), 'utf8');
+const ENGINE_SRC = [
+  sliceBlock(engineSrc, 'const BLOCK_SEED = [', '[', ']'),
+  sliceLine(engineSrc, 'const TOPIC_MAX'),
+  sliceLine(engineSrc, 'const TOPIC_LEN'),
+  sliceLine(engineSrc, 'const STUCK_PROMPT_DEFAULT'),
+  sliceLine(engineSrc, 'const ERROR_PROMPT_DEFAULT'),
+  sliceBlock(engineSrc, 'const v18 = {', '{', '}'),
+  sliceFn(engineSrc, 'sanitizeList'),
+  sliceLine(engineSrc, 'const hourOf'),
+  sliceFn(engineSrc, 'applyV18Settings'),
+  sliceBlock(engineSrc, 'const v18Defaults = {', '{', '}'),
+  sliceFn(engineSrc, 'resetV18Key'),
+  sliceLine(engineSrc, 'const asObj'),
+  sliceBlock(engineSrc, 'const MISSION_CORPUS = [', '[', ']'),
+  sliceLine(engineSrc, 'const MISSION_MAX_STEPS_PER_MISSION'),
+  sliceLine(engineSrc, 'const MISSION_MAX_CYCLES'),
+  sliceLine(engineSrc, 'const missionById'),
+  sliceLine(engineSrc, 'const missionStepsOf'),
+  sliceBlock(engineSrc, 'const mission = {', '{', '}'),
+  sliceFn(engineSrc, 'sanitizeMission'),
+  sliceFn(engineSrc, 'applyMissionSettings'),
+  'globalThis.__engine = { v18, v18Defaults, mission, applyV18Settings, applyMissionSettings, resetV18Key };',
+].join('\n');
+// A FRESH content-script boot on the given stored state — content.js:1569's read defaults
+// ({pauseUntil:0,dryRun:false,allowOnceMode:false,rules:{},followupSmart:{},followupSchedule:{},
+// missionEnabled:false,mission:null}) + :1570's applyV18Settings/applyMissionSettings — returning
+// the engine's EFFECTIVE settings, which is what the F-V19-5 matrix asserts on.
+function bootEngine(merged) {
+  const sandbox = {};
+  vm.createContext(sandbox);
+  vm.runInContext(ENGINE_SRC, sandbox, { filename: 'content.js(engine readers)' });
+  const E = sandbox.__engine;
+  const boot = Object.assign({ pauseUntil: 0, dryRun: false, allowOnceMode: false, rules: {}, followupSmart: {}, followupSchedule: {}, missionEnabled: false, mission: null }, merged);
+  E.applyV18Settings(boot);
+  E.applyMissionSettings(boot);
+  return {
+    allowTopics: E.v18.allowTopics.slice(), blockKeywords: E.v18.blockKeywords.slice(),
+    smart: Object.assign({}, E.v18.smart), schedule: Object.assign({}, E.v18.schedule),
+    pauseUntil: E.v18.pauseUntil, dryRun: E.v18.dryRun, allowOnceMode: E.v18.allowOnceMode,
+    mission: { enabled: E.mission.enabled, id: E.mission.id, step: E.mission.step, cycles: E.mission.cycles },
+  };
+}
+
 // ---------- crypto helpers (real WebCrypto) ----------
 const b64 = (buf) => Buffer.from(new Uint8Array(buf)).toString('base64');
 const unb64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
@@ -401,8 +483,141 @@ async function main() {
   }
   check('F-V19-1 mirror: stats.js MISSION_STEPS === content.js MISSION_CORPUS ids + step counts',
     Object.keys(corpusMap).length === 4 && JSON.stringify(corpusMap) === JSON.stringify(T.MISSION_STEPS || null), { corpus: corpusMap, stats: T.MISSION_STEPS });
-  check('F-V19-1 mirror: stats.js LOCALE_IDS === the shipped locale set',
-    JSON.stringify(T.LOCALE_IDS) === JSON.stringify(['en', 'vi', 'zh_CN', 'ja', 'ko', 'es']), { locales: T.LOCALE_IDS });
+  // Mirror guard (F-V19-6): stats.js LOCALE_IDS must equal the SHIPPED locale set — the
+  // extension/_locales directory set AND popup.js's own LOCALE_IDS — not a hardcoded literal. A
+  // literal pinned only one direction: shipping a 7th locale left the guard GREEN while
+  // sanitizeBackup dropped its userLocale (a silent loss of the user's language choice).
+  const localesDir = path.join(ROOT, 'extension', '_locales');
+  const shippedLocales = fs.readdirSync(localesDir).filter((d) => fs.statSync(path.join(localesDir, d)).isDirectory()).sort();
+  const popupSrc = fs.readFileSync(path.join(ROOT, 'extension', 'popup.js'), 'utf8');
+  const popupLocaleMatch = popupSrc.match(/const\s+LOCALE_IDS\s*=\s*\[([^\]]*)\]/);
+  const popupLocaleIds = popupLocaleMatch ? popupLocaleMatch[1].split(',').map((s) => s.trim().replace(/^['"]|['"]$/g, '')).filter(Boolean) : null;
+  check('F-V19-6 mirror: stats.js LOCALE_IDS === the shipped _locales directory set',
+    Array.isArray(T.LOCALE_IDS) && eq(T.LOCALE_IDS.slice().sort(), shippedLocales), { stats: T.LOCALE_IDS, shipped: shippedLocales });
+  check('F-V19-6 mirror: stats.js LOCALE_IDS === popup.js LOCALE_IDS (same order)',
+    Array.isArray(T.LOCALE_IDS) && eq(T.LOCALE_IDS, popupLocaleIds), { stats: T.LOCALE_IDS, popup: popupLocaleIds });
+  // drift in BOTH directions: every shipped locale must be ACCEPTED by the sanitizer (a locale
+  // shipped without the sanitizer being updated is exactly the F-V19-6 silent-loss case)
+  const droppedLocales = shippedLocales.filter((loc) => { const c = T.sanitizeBackup({ userLocale: loc }); return !c || c.userLocale !== loc; });
+  check('F-V19-6: sanitizeBackup keeps EVERY shipped locale id (no silent drop on locale drift)', droppedLocales.length === 0, { dropped: droppedLocales });
+  check('F-V19-6: sanitizeBackup drops an unshipped locale id ("xx")', T.sanitizeBackup({ userLocale: 'xx' }) === null, { clean: T.sanitizeBackup({ userLocale: 'xx' }) });
+
+  // ================= F-V19-5 — the container-emission PROPERTY =================
+  // PROPERTY (not shape): a crafted/partial file can never make the engine's EFFECTIVE setting
+  // LOOSER than the stored one — for every container sub-key an accepted value survives, an invalid
+  // value is dropped, and a sub-key the file did not validly provide keeps its STORED effective
+  // value (never a reset-to-default). Asserted on the engine's values after a REAL boot.
+  const STORED = {
+    pauseUntil: 1799999999999, dryRun: true, allowOnceMode: true, missionEnabled: true,
+    rules: { allowTopics: ['repo-x', 'docs-site'], blockKeywords: ['delete', 'billing', 'custom-kw'] },
+    followupSmart: { stuckMin: 7, stuckPrompt: 'stored stuck prompt', errorRecovery: true, errorPrompt: 'stored error prompt' },
+    followupSchedule: { enabled: true, start: 9, end: 17, onlyActiveTab: true },
+    mission: { id: 'golive-ready', step: 2, cycles: 1, startedAt: 1799990000000, lastSentAt: 1799995000000 },
+  };
+  const BASELINE = bootEngine(STORED);
+  const CONTAINER_SUBS = {
+    rules: ['allowTopics', 'blockKeywords'],
+    followupSmart: ['stuckMin', 'stuckPrompt', 'errorRecovery', 'errorPrompt'],
+    followupSchedule: ['enabled', 'start', 'end', 'onlyActiveTab'],
+  };
+  const effOf = (st, cont, sk) => cont === 'rules' ? (sk === 'allowTopics' ? st.allowTopics : st.blockKeywords)
+    : (cont === 'followupSmart' ? st.smart[sk] : st.schedule[sk]);
+  // The "effective restriction" ordering, restricted to the sub-keys the file did NOT validly
+  // provide. Empty result = the import never loosened a stored restriction.
+  function looseness(after, before, provided) {
+    const has = (p) => provided.indexOf(p) >= 0;
+    const out = [];
+    if (!has('rules.allowTopics') && before.allowTopics.length > 0 && after.allowTopics.length === 0) out.push('allowTopics whitelist CLEARED');
+    if (!has('rules.blockKeywords')) { const a = new Set(after.blockKeywords); for (const k of before.blockKeywords) if (!a.has(k)) out.push('blockKeyword lost: ' + k); }
+    if (!has('followupSmart.stuckMin') && before.smart.stuckMin !== after.smart.stuckMin) out.push('smart.stuckMin changed');
+    if (!has('followupSmart.stuckPrompt') && before.smart.stuckPrompt !== after.smart.stuckPrompt) out.push('smart.stuckPrompt replaced');
+    if (!has('followupSmart.errorRecovery') && before.smart.errorRecovery === true && after.smart.errorRecovery !== true) out.push('smart.errorRecovery CLEARED');
+    if (!has('followupSmart.errorPrompt') && before.smart.errorPrompt !== after.smart.errorPrompt) out.push('smart.errorPrompt replaced');
+    if (!has('followupSchedule.enabled') && before.schedule.enabled === true && after.schedule.enabled !== true) out.push('schedule.enabled CLEARED (sends outside the window)');
+    if (!has('followupSchedule.start') && before.schedule.start !== after.schedule.start) out.push('schedule.start changed');
+    if (!has('followupSchedule.end') && before.schedule.end !== after.schedule.end) out.push('schedule.end changed');
+    if (!has('followupSchedule.onlyActiveTab') && before.schedule.onlyActiveTab !== after.schedule.onlyActiveTab) out.push('schedule.onlyActiveTab changed');
+    if (!has('pauseUntil') && before.pauseUntil > 0 && !(after.pauseUntil > 0)) out.push('pauseUntil CLEARED');
+    if (!has('dryRun') && before.dryRun === true && after.dryRun !== true) out.push('dryRun CLEARED');
+    if (!has('mission') && before.mission.id && !after.mission.id) out.push('mission CLEARED');
+    return out;
+  }
+  // Drive the REAL handler on a fresh store = STORED, then boot the REAL engine on the resulting
+  // store (the stub's storage.set merges exactly like chrome.storage.local.set).
+  async function runCase(data) {
+    resetStore(Object.assign({ cryptKeyRaw: K1 }, clone(STORED)));
+    const clean = T.sanitizeBackup(data);
+    await importFile(backup(data));
+    return { clean, after: bootEngine(Object.assign({}, store)) };
+  }
+  // emitted = the container the sanitizer must emit (null = DROPPED entirely, never {});
+  // provided = the container sub-key paths the file VALIDLY provides; refused = seen===0 => null.
+  const CASES = [
+    // (a) valid -> survives byte-for-byte
+    { name: 'F-V19-5 rules (a) both sub-keys valid', data: { rules: { allowTopics: ['repo-x'], blockKeywords: ['keepme', 'dropme'] } },
+      emitted: { rules: { allowTopics: ['repo-x'], blockKeywords: ['keepme', 'dropme'] } }, provided: ['rules.allowTopics', 'rules.blockKeywords'] },
+    { name: 'F-V19-5 smart (a) all four sub-keys valid', data: { followupSmart: { stuckMin: 5, stuckPrompt: 'p', errorRecovery: true, errorPrompt: 'q' } },
+      emitted: { followupSmart: { stuckMin: 5, stuckPrompt: 'p', errorRecovery: true, errorPrompt: 'q' } }, provided: ['followupSmart.stuckMin', 'followupSmart.stuckPrompt', 'followupSmart.errorRecovery', 'followupSmart.errorPrompt'] },
+    { name: 'F-V19-5 schedule (a) all four sub-keys valid', data: { followupSchedule: { enabled: true, start: 10, end: 16, onlyActiveTab: false } },
+      emitted: { followupSchedule: { enabled: true, start: 10, end: 16, onlyActiveTab: false } }, provided: ['followupSchedule.enabled', 'followupSchedule.start', 'followupSchedule.end', 'followupSchedule.onlyActiveTab'] },
+    // (b) invalid / mixed — the sub-keys the file did not validly provide must stay STORED
+    { name: 'F-V19-5 rules (b) allowTopics:"nope" (S13 row 1)', data: { rules: { allowTopics: 'nope' } }, emitted: { rules: null }, provided: [], refused: true },
+    { name: 'F-V19-5 rules (b) allowTopics all-junk array (S13 row 4)', data: { rules: { allowTopics: [['repo-x'], 5, null, {}, '  '] } }, emitted: { rules: null }, provided: [], refused: true },
+    { name: 'F-V19-5 rules (b) empty rules object (S13 row 3)', data: { rules: {} }, emitted: { rules: null }, provided: [], refused: true },
+    { name: 'F-V19-5 rules (b) MIXED allowTopics valid + blockKeywords junk', data: { rules: { allowTopics: ['repo-x'], blockKeywords: 'junk' } },
+      emitted: { rules: { allowTopics: ['repo-x'] } }, provided: ['rules.allowTopics'] },
+    { name: 'F-V19-5 rules (b) PARTIAL blockKeywords only (S13 row 5 shape)', data: { rules: { blockKeywords: ['keepme'] } },
+      emitted: { rules: { blockKeywords: ['keepme'] } }, provided: ['rules.blockKeywords'] },
+    { name: 'F-V19-5 rules (b) __proto__ carrier (S13 row 7)', data: JSON.parse('{"rules":{"__proto__":{"allowTopics":["evil"]}}}'), emitted: { rules: null }, provided: [], refused: true },
+    { name: 'F-V19-5 smart (b) stuckMin:"x" (S13 row 11)', data: { followupSmart: { stuckMin: 'x' } }, emitted: { followupSmart: null }, provided: [], refused: true },
+    { name: 'F-V19-5 smart (b) MIXED stuckMin valid + errorRecovery junk', data: { followupSmart: { stuckMin: 3, errorRecovery: 'yes' } },
+      emitted: { followupSmart: { stuckMin: 3 } }, provided: ['followupSmart.stuckMin'] },
+    { name: 'F-V19-5 smart (b) empty smart object', data: { followupSmart: {} }, emitted: { followupSmart: null }, provided: [], refused: true },
+    { name: 'F-V19-5 schedule (b) enabled:"yes" (S13 row 9)', data: { followupSchedule: { enabled: 'yes' } }, emitted: { followupSchedule: null }, provided: [], refused: true },
+    { name: 'F-V19-5 schedule (b) start:99 (S13 row 10)', data: { followupSchedule: { start: 99 } }, emitted: { followupSchedule: null }, provided: [], refused: true },
+    { name: 'F-V19-5 schedule (b) MIXED start/end valid + enabled junk', data: { followupSchedule: { start: 10, end: 16, enabled: 'yes' } },
+      emitted: { followupSchedule: { start: 10, end: 16 } }, provided: ['followupSchedule.start', 'followupSchedule.end'] },
+    { name: 'F-V19-5 schedule (b) empty schedule object', data: { followupSchedule: {} }, emitted: { followupSchedule: null }, provided: [], refused: true },
+    // (c) junk-only container alongside an ACCEPTED scalar => the file imports, NO container emitted
+    { name: 'F-V19-5 rules (c) junk-only container + accepted scalar', data: { enabled: true, rules: { allowTopics: 'nope' } }, emitted: { rules: null }, provided: [] },
+    { name: 'F-V19-5 smart (c) junk-only container + accepted scalar', data: { enabled: true, followupSmart: { stuckMin: 'x' } }, emitted: { followupSmart: null }, provided: [] },
+    { name: 'F-V19-5 schedule (c) junk-only container + accepted scalar', data: { enabled: true, followupSchedule: { enabled: 'yes' } }, emitted: { followupSchedule: null }, provided: [] },
+    // (d) the explicitly-empty-array facet (decision: NEVER imported — see the stats.js comment)
+    { name: 'F-V19-5 rules (d) blockKeywords:[] is NOT imported (S13 row 6)', data: { rules: { blockKeywords: [] } }, emitted: { rules: null }, provided: [], refused: true },
+    { name: 'F-V19-5 rules (d) allowTopics:[] dropped, sibling valid key wins', data: { rules: { allowTopics: [], blockKeywords: ['keepme'] } },
+      emitted: { rules: { blockKeywords: ['keepme'] } }, provided: ['rules.blockKeywords'] },
+    { name: 'F-V19-5 rules (d) empty [] + accepted scalar => stored blocklist preserved', data: { enabled: true, rules: { blockKeywords: [] } }, emitted: { rules: null }, provided: [] },
+  ];
+  let cleared = 0;
+  for (const c of CASES) {
+    const { clean, after } = await runCase(c.data);
+    // shape: every container is emitted EXACTLY as decided, or DROPPED entirely (never {})
+    const shapeBad = [];
+    for (const cont of Object.keys(CONTAINER_SUBS)) {
+      const want = c.emitted[cont];
+      const got = clean ? clean[cont] : undefined;
+      if ((want === undefined || want === null) ? got !== undefined : !eq(got, want)) shapeBad.push({ cont, want, got });
+    }
+    check(c.name + ' — sanitizer container shape', shapeBad.length === 0, { bad: shapeBad });
+    check(c.name + ' — file ' + (c.refused ? 'REFUSED (seen===0 => null)' : 'accepted'), c.refused ? clean === null : clean !== null, { clean });
+    // engine: effective == the file's value (when validly provided) else the STORED effective value
+    const effBad = [];
+    for (const [cont, subs] of Object.entries(CONTAINER_SUBS)) {
+      for (const sk of subs) {
+        const path = cont + '.' + sk;
+        const expected = c.provided.indexOf(path) >= 0 ? (c.emitted[cont] || {})[sk] : effOf(BASELINE, cont, sk);
+        const got = effOf(after, cont, sk);
+        if (!eq(got, expected)) effBad.push({ path, expected, got });
+      }
+    }
+    check(c.name + ' — engine EFFECTIVE state after a real boot', effBad.length === 0, { bad: effBad });
+    // the PROPERTY itself
+    const lo = looseness(after, BASELINE, c.provided);
+    if (lo.length) cleared++;
+    check(c.name + ' — engine state is NOT looser than the stored state', lo.length === 0, { loosened: lo });
+  }
+  check('F-V19-5 PROPERTY: 0 of ' + CASES.length + ' crafted files clear a stored restriction (S13 measured 13/16 before this fix)',
+    cleared === 0 && CASES.length >= 16, { cleared, cases: CASES.length });
 
   // ---------- report ----------
   for (const c of checks) {

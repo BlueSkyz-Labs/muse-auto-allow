@@ -302,12 +302,26 @@ const sanitizeBackup = (d) => {
   if (typeof d.missionEnabled === 'boolean') { out.missionEnabled = d.missionEnabled; seen++; }
   if (typeof d.onboarded === 'boolean') { out.onboarded = d.onboarded; seen++; }
   if (typeof d.userLocale === 'string' && (d.userLocale === 'auto' || LOCALE_IDS.indexOf(d.userLocale) >= 0)) { out.userLocale = d.userLocale; seen++; }
+  // F-V19-5: the three v1.8 CONTAINERS are COMPOSITE. The engine reads each sub-key with its own
+  // presence test over the WHOLE stored container (`if ('allowTopics' in rules)`, content.js:399),
+  // so a container written with even one missing sub-key makes the engine RESET that sub-key to its
+  // default on the next content-script boot (allowTopics -> [] = allow-all, blockKeywords -> the
+  // seed list, schedule -> {enabled:false,8,18}, smart -> the shipped prompts, errorRecovery:false).
+  // Therefore a container is emitted ONLY when it carries >= 1 ACCEPTED sub-key: an all-rejected (or
+  // empty) container is DROPPED entirely, never written as {} — "absent" then leaves the stored
+  // container untouched.
+  // An EMPTY allowTopics/blockKeywords array is dropped as well: the engine reads an explicit [] as
+  // "no topic restriction" / "nothing blocked" (content.js:399-403) — the LOOSEST value — and
+  // strList() cannot tell a user's deliberate [] from an all-junk array ([null,5,{}] reduces to []),
+  // so keeping [] would be a JUNK-reachable way to CLEAR a stored restriction. An empty list is
+  // therefore never imported; that state stays reachable from the popup UI (a deliberate fail-closed
+  // asymmetry: the import path can only tighten or preserve, never clear).
   const rules = plainObj(d.rules);
   if (rules) {
     const r = {};
-    if ('allowTopics' in rules) { const a = strList(rules.allowTopics, 50, 64); if (a) r.allowTopics = a; }   // engine TOPIC_MAX 50 x TOPIC_LEN 64
-    if ('blockKeywords' in rules) { const k = strList(rules.blockKeywords, 500, 0); if (k) r.blockKeywords = k; } // engine cap 500, no length slice
-    out.rules = r; seen++;
+    if ('allowTopics' in rules) { const a = strList(rules.allowTopics, 50, 64); if (a && a.length) r.allowTopics = a; }   // engine TOPIC_MAX 50 x TOPIC_LEN 64
+    if ('blockKeywords' in rules) { const k = strList(rules.blockKeywords, 500, 0); if (k && k.length) r.blockKeywords = k; } // engine cap 500, no length slice
+    if (Object.keys(r).length) { out.rules = r; seen++; }
   }
   const smart = plainObj(d.followupSmart);
   if (smart) {
@@ -316,7 +330,7 @@ const sanitizeBackup = (d) => {
     if (typeof smart.stuckPrompt === 'string' && smart.stuckPrompt.trim()) s.stuckPrompt = smart.stuckPrompt.trim().slice(0, 600);
     if (typeof smart.errorRecovery === 'boolean') s.errorRecovery = smart.errorRecovery;
     if (typeof smart.errorPrompt === 'string' && smart.errorPrompt.trim()) s.errorPrompt = smart.errorPrompt.trim().slice(0, 600);
-    out.followupSmart = s; seen++;
+    if (Object.keys(s).length) { out.followupSmart = s; seen++; }
   }
   const sch = plainObj(d.followupSchedule);
   if (sch) {
@@ -325,7 +339,7 @@ const sanitizeBackup = (d) => {
     if ('start' in sch) { const h = intHour(sch.start); if (h !== null) s.start = h; }
     if ('end' in sch) { const h = intHour(sch.end); if (h !== null) s.end = h; }
     if (typeof sch.onlyActiveTab === 'boolean') s.onlyActiveTab = sch.onlyActiveTab;
-    out.followupSchedule = s; seen++;
+    if (Object.keys(s).length) { out.followupSchedule = s; seen++; }
   }
   const mis = sanitizeMissionObj(d.mission);
   if (mis) { out.mission = mis; seen++; }
@@ -334,6 +348,30 @@ const sanitizeBackup = (d) => {
   out.schemaVersion = 2;
   return out;
 };
+// F-V19-5 (part 2): sub-key granularity for the three composite containers. The engine reads each
+// sub-key with its own presence test over the WHOLE stored container, so a restore that validly
+// provides only SOME sub-keys would otherwise reset the rest to the engine default — a stored
+// restriction cleared. The file's ACCEPTED sub-keys win; a sub-key the file did not validly provide
+// keeps its STORED value. Mirrors the engine's sub-key set exactly (content.js applyV18Settings
+// :397-419) and copies only those known names, so no crafted __proto__/extra key can ride along.
+const CONTAINER_SUBKEYS = {
+  rules: ['allowTopics', 'blockKeywords'],
+  followupSmart: ['stuckMin', 'stuckPrompt', 'errorRecovery', 'errorPrompt'],
+  followupSchedule: ['enabled', 'start', 'end', 'onlyActiveTab'],
+};
+function mergeStoredContainers(clean, cur) {
+  for (const [key, subs] of Object.entries(CONTAINER_SUBKEYS)) {
+    const from = plainObj(clean[key]);
+    if (!from) continue;
+    const stored = plainObj(cur[key]);
+    const merged = {};
+    for (const sk of subs) {
+      if (Object.prototype.hasOwnProperty.call(from, sk)) merged[sk] = from[sk];
+      else if (stored && Object.prototype.hasOwnProperty.call(stored, sk)) merged[sk] = stored[sk];
+    }
+    if (Object.keys(merged).length) clean[key] = merged; else delete clean[key];
+  }
+}
 const testBackupKey = async (raw, ctx) => {
   try {
     const b = (x) => Uint8Array.from(atob(x), (c) => c.charCodeAt(0));
@@ -388,12 +426,16 @@ $('importFile').addEventListener('change', async (ev) => {
       } else {
         // SA-1: a supplied key is adopted only after decrypt proof against a ctx-bearing
         // entry; with none present the rotation is refused and the current key is kept.
-        const cur = await chrome.storage.local.get({ cryptKeyRaw: null });
+        const cur = await chrome.storage.local.get({ cryptKeyRaw: null, rules: null, followupSmart: null, followupSchedule: null });
         const kr = await resolveImportedKey(clean, typeof cur.cryptKeyRaw === 'string' ? cur.cryptKeyRaw : null);
         if (!kr.ok) {
           alert(t('importBad', 'Not a Muse Auto-Allow backup file.'));
         } else if (confirm(t('importConfirm', 'Restore this backup? Current settings, log and statistics will be replaced.'))) {
           if (kr.adopt === null) delete clean.cryptKeyRaw; else clean.cryptKeyRaw = kr.adopt;
+          // F-V19-5: merge the three composite containers at SUB-KEY granularity with what is stored
+          // BEFORE the replace-write, so a crafted/partial file cannot reset a sibling sub-key the
+          // user had set (an absent sub-key is a reset-to-default for the engine).
+          mergeStoredContainers(clean, cur);
           try {
             await chrome.storage.local.set(clean);
             renderAll();

