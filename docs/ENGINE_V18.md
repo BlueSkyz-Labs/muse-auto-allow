@@ -337,6 +337,25 @@ the targeted guards, and no unrelated check flips in either direction. The mutat
 assert the source string occurs exactly once (so a drifted copy fails loudly instead of
 silently mutating the wrong line).
 
+### 8.1a Independent re-verification (coordinator, maker != judge)
+
+Re-run by the coordinating session on the committed HEAD (`b6faaa0`), not by this lane:
+
+- pristine `node test/e2e.mjs` -> exit 0, `ok:true`, `forbiddenHit: []`,
+  `connectorCheck.ok:true` (`blockedConnector:2`).
+- the connector-guard mutation re-applied by hand (scratch copy; `function connectorIn(scope) {`
+  -> `function connectorIn(scope) { return false;`, anchor asserted to occur exactly once) ->
+  `MAA_EXT_DIR=<mut> node test/e2e.mjs` exit **2**, `ok:false`, `forbiddenHit:["20"]`,
+  `extra:["20"]`, `blockedConnector:0` — F7's RED state reproduced independently.
+- full batch on the same HEAD: `lint.mjs` exit 0; `e2e.mjs` exit 0; `background-unit.mjs`
+  **29/29**; `followup-e2e.mjs` exit 0 with **0 failed checks in two consecutive runs**;
+  `import-security.mjs` exit 0.
+- residual flake found by that verification and fixed at the source (never by weakening a
+  check): the harness raced the engine's in-flight send lock, so the `followup-status` ping now
+  echoes `sending: followup.sending` and the harness waits for `sending === false` before the
+  manual send-now — the engine's refusal with reason `'sending'` was correct behaviour, not a
+  defect, so the fix belongs in the harness's observation, not in the engine's guard.
+
 ## 8.2 Harness race root causes (follow-up suite) — fixed
 
 `test/followup-e2e.mjs` flapped between exit 0 and exit 2, and a *different* check failed each
