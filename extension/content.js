@@ -1,4 +1,4 @@
-// Muse Auto-Allow — content script (v1.8.0: pause / dry-run / rules gates + smart follow-up + v1.7.0 rotation).
+// Muse Auto-Allow — content script (v1.9.0: Mission Orchestrator engine + v1.8.0 pause/dry-run/rules + smart follow-up + v1.7.0 rotation).
 // Automatically clicks "Allow" on Muse (muse.ai) approval requests, and — when the
 // user enables Auto follow-up — keeps Muse working long-run by sending a chosen
 // prompt into the chat composer whenever Muse goes idle ('Connected' status).
@@ -820,6 +820,166 @@
     lastResult: null,
   };
 
+  // ===========================================================================
+  // v1.9.0 — Mission Orchestrator ENGINE (docs/MISSION_V19.md is the contract).
+  // A MISSION is an ordered, stateful sequence of SHIPPED, REVIEWED directives that the
+  // follow-up engine sends on idle WHILE the user has an active mission — and advances the
+  // step ONLY on a VERIFIED send (the same rule as the phrase rotation: a blocked / failed /
+  // paused / dry-run attempt never skips a step). An active mission takes PRECEDENCE over the
+  // rotating phrase prompts. The directive TEXT is shipped content (never page-derived), it is
+  // English by decision, and the extension never reads the project repository: the Muse agent
+  // does the reading; we only decide WHICH prompt is sent and WHEN.
+  //
+  // Storage contracts (frozen):
+  //   missionEnabled: boolean (default false) — nothing auto-starts on install.
+  //   mission: { id, step, cycles, startedAt, lastSentAt } — ABSENT = no active mission.
+  //   Caps: MAX_STEPS_PER_MISSION (12) lifetime sends + MAX_MISSION_CYCLES (3) full cycles;
+  //   whichever is reached first ends the mission (silent stop + ONE 'mission' log line).
+  //   pauseUntil halts mission sends; dryRun logs 'mission-dry' and sends nothing.
+  // ===========================================================================
+  // MISSION_CORPUS_BEGIN
+  const MISSION_CORPUS = [
+    {
+      id: 'golive-ready',
+      title: 'GOLIVE READY — Project Orchestrator',
+      steps: [
+        'S1 CONTRACT — Read the project source of truth first (AGENTS.md, docs, ADRs, the active plan or wave state, recent commits, open PRs and issues) and treat already-made decisions as binding. Declare the execution contract: working mode, authority order, and what you will not change. Write no code yet — close this step with the contract and the binding-decision list.',
+        'S2 AUDIT — Audit the current state against that source of truth. List every gap with the evidence that proves it, draw the dependency graph of the open work, and rank the items: security and correctness first, then blocking defects, then approved work, then quality, then optimization.',
+        'S3 EXECUTE — Take the highest-priority READY item and finish it end-to-end now: implement, test, and prove it with real command output, then commit and open the PR following the repository rules. Do not stop to ask; continue while a READY item remains.',
+        'S4 CONTINUE — Refresh the live truth, reconcile the open work, pick the next READY item, and execute it. Report only what changed and the evidence for each change; do not restate the plan.',
+        'S5 RELEASE GATE — Prepare the release gate: exact-artifact readiness, run the repository gates, and produce landing proof. Do not promote on RED — list the blockers with owners instead.',
+        'S6 CONVERGE — Give the verdict: GOLIVE READY with the full evidence chain, or an explicit blocker list with owners and the exact next action for each.',
+      ],
+    },
+    {
+      id: 'audit-only',
+      title: 'AUDIT ONLY',
+      steps: [
+        'AUDIT ONLY S1 — Read the project source of truth and treat its decisions as binding. This mission is READ-ONLY: change nothing, approve nothing, and write nothing.',
+        'AUDIT ONLY S2 — Audit the current state against the source of truth and list every gap with the evidence that proves it. Build the dependency graph for the open work.',
+        'AUDIT ONLY S3 — Rank the findings: security and correctness first, then blocking defects, then approved work, then quality, then optimization. State the risk and the blast radius of each item.',
+        'AUDIT ONLY S4 — Deliver the verdict: a prioritised, evidence-backed findings report with owners and the recommended next action for each item. Make no change to the repository.',
+      ],
+    },
+    {
+      id: 'fix-findings',
+      title: 'FIX FINDINGS',
+      steps: [
+        'FIX FINDINGS S1 — Read the project source of truth and the open findings, treat approved decisions as binding, and confirm with current evidence which findings are still open.',
+        'FIX FINDINGS S2 — Take the highest-severity open finding and fix its root cause end-to-end. Add or extend the test that proves the fix, and show the real command output as evidence.',
+        'FIX FINDINGS S3 — Prove the fix does not regress: run the repository gates and confirm every touched area still passes. Report the evidence, not a summary.',
+        'FIX FINDINGS S4 — Land the fix under the repository rules, then reconcile the findings list: mark what is now closed with its evidence and name the next open finding to fix.',
+      ],
+    },
+    {
+      id: 'release-prep',
+      title: 'RELEASE PREP',
+      steps: [
+        'RELEASE PREP S1 — Freeze the scope for this release: read the source of truth, list what is in and what is explicitly out, and declare the exact artifact set under review.',
+        'RELEASE PREP S2 — Verify the frozen artifact: run the repository gates on the exact revision and capture the real, unpiped output as the evidence record.',
+        'RELEASE PREP S3 — Assemble the release packet: revision identity, the gate results, the remaining limitations, and a rollback path. Flag explicitly anything that is not verified.',
+        'RELEASE PREP S4 — Deliver the promotion decision: GO or NO-GO with the evidence chain. Do not promote on RED or on an unverified item; list the blockers with owners.',
+      ],
+    },
+  ];
+  // MISSION_CORPUS_END
+  const MISSION_MAX_STEPS_PER_MISSION = 12; // hard LIFETIME cap on steps a mission may send
+  const MISSION_MAX_CYCLES = 3;             // hard cap on full cycles — a mission never loops unbounded
+  const MISSION_IDS = MISSION_CORPUS.map((m) => m.id);
+  const missionById = (id) => { for (const m of MISSION_CORPUS) if (m.id === id) return m; return null; };
+  // A mission's step list, bounded by the cap (a custom/huge mission definition can never exceed it).
+  const missionStepsOf = (id) => { const m = missionById(id); return m ? m.steps.slice(0, MISSION_MAX_STEPS_PER_MISSION) : []; };
+
+  // Runtime mission state. `id: ''` = no active mission.
+  const mission = {
+    enabled: false,   // missionEnabled
+    id: '',           // active mission id ('' = none)
+    step: 0,          // index of the NEXT step to send (0-based, within the current cycle)
+    cycles: 0,        // completed cycles
+    startedAt: 0,
+    lastSentAt: 0,    // last VERIFIED mission send (observability)
+    completedId: '',  // last completed mission id (observability for the popup/tests)
+    lastResult: null,
+  };
+  const missionActive = () => mission.enabled && !!mission.id && !!missionById(mission.id);
+  const missionCycleNo = () => mission.cycles + 1; // 1-based number of the current cycle
+  const missionStepText = () => {
+    const steps = missionStepsOf(mission.id);
+    if (!steps.length) return '';
+    return String(steps[Math.min(mission.step, steps.length - 1)] || '');
+  };
+  // The override a mission send passes to followupAttempt: the CURRENT step, tagged so the
+  // verifier advances the MISSION (never the phrase rotation) and logs kind 'mission'.
+  function missionSendOverride() {
+    if (!missionActive()) return null;
+    const text = missionStepText();
+    if (!text) return null;
+    return { text, source: 'mission', mission: { id: mission.id, step: mission.step, cycle: missionCycleNo() } };
+  }
+  function persistMission() {
+    try {
+      if (!mission.id) chrome.storage.local.remove('mission');
+      else chrome.storage.local.set({ mission: { id: mission.id, step: mission.step, cycles: mission.cycles, startedAt: mission.startedAt, lastSentAt: mission.lastSentAt } });
+    } catch { /* ignore */ }
+  }
+  // Advance ONLY on a verified send — the exact mirror of advanceFollowupRotation(). Logs the
+  // delivered step/cycle as a 'mission' entry, then either starts cycle+1 or completes.
+  function missionOnVerifiedSend(m) {
+    if (!missionActive() || !m || m.id !== mission.id) return; // stale/foreign mission — ignore
+    const L = missionStepsOf(mission.id).length;
+    if (!L) return;
+    const sentStep = mission.step;
+    const sentCycle = missionCycleNo();
+    const entry = { at: new Date().toISOString(), kind: 'mission', label: 'mission',
+                    context: ('mission ' + mission.id + ' step ' + sentStep + ' cycle ' + sentCycle).slice(0, 240),
+                    source: 'mission', mission: { id: mission.id, step: sentStep, cycle: sentCycle } };
+    recordClick(entry, entry.context, false);
+    mission.lastResult = { at: entry.at, kind: 'mission', id: mission.id, step: sentStep, cycle: sentCycle, verified: true };
+    console.log('[muse-auto-allow] mission ' + mission.id + ' step ' + sentStep + ' cycle ' + sentCycle + ' sent');
+    mission.lastSentAt = Date.now();
+    mission.step += 1;
+    if (mission.step >= L) { mission.step = 0; mission.cycles += 1; } // cycle complete
+    const sent = mission.cycles * L + mission.step;
+    if (sent >= MISSION_MAX_STEPS_PER_MISSION || mission.cycles >= MISSION_MAX_CYCLES) { missionComplete(); return; }
+    persistMission();
+  }
+  // Completed mission: stop SILENTLY (no notification, no further send) with exactly ONE
+  // 'mission' log line, and drop the stored mission so nothing runs until the user starts one.
+  function missionComplete() {
+    const id = mission.id;
+    const cycles = mission.cycles;
+    mission.completedId = id;
+    mission.id = ''; mission.step = 0; mission.cycles = 0; mission.startedAt = 0; mission.lastSentAt = 0;
+    try { chrome.storage.local.remove('mission'); } catch { /* ignore */ }
+    const entry = { at: new Date().toISOString(), kind: 'mission', label: 'mission',
+                    context: ('mission complete: ' + id + ' (' + cycles + ' cycles)').slice(0, 240),
+                    source: 'mission', mission: { id, complete: true, cycles } };
+    recordClick(entry, entry.context, false);
+    mission.lastResult = { at: entry.at, kind: 'mission', id, complete: true, cycles };
+    console.log('[muse-auto-allow] mission ' + id + ' complete');
+  }
+  // Presence-aware sanitizer for the stored mission object (unknown id / bad shape => no mission).
+  function sanitizeMission(m) {
+    const o = asObj(m);
+    const id = typeof o.id === 'string' ? o.id : '';
+    if (!missionById(id)) return null;
+    const L = missionStepsOf(id).length;
+    const st0 = Number(o.step); const step = Number.isInteger(st0) && st0 > 0 ? Math.min(st0, Math.max(0, L - 1)) : 0;
+    const cy0 = Number(o.cycles); const cycles = Number.isInteger(cy0) && cy0 > 0 ? Math.min(cy0, MISSION_MAX_CYCLES) : 0;
+    const s0 = Number(o.startedAt); const startedAt = Number.isFinite(s0) && s0 > 0 ? s0 : Date.now();
+    const l0 = Number(o.lastSentAt); const lastSentAt = Number.isFinite(l0) && l0 > 0 ? l0 : 0;
+    return { id, step, cycles, startedAt, lastSentAt };
+  }
+  function applyMissionSettings(s) {
+    if (!s || typeof s !== 'object') return;
+    if ('missionEnabled' in s) mission.enabled = s.missionEnabled === true;
+    if ('mission' in s) {
+      const m = sanitizeMission(s.mission);
+      if (m) { mission.id = m.id; mission.step = m.step; mission.cycles = m.cycles; mission.startedAt = m.startedAt; mission.lastSentAt = m.lastSentAt; }
+      else { mission.id = ''; mission.step = 0; mission.cycles = 0; mission.startedAt = 0; mission.lastSentAt = 0; }
+    }
+  }
+
   // ---- v1.7.0 rotation helpers ----
   // The text a send would type right now: the rotation item when a list is stored,
   // otherwise the legacy single prompt.
@@ -1140,6 +1300,9 @@
       }
     }
     if (!followupEligible(now)) return;
+    // v1.9.0 mission precedence: an ACTIVE mission takes precedence over the rotating phrases.
+    const mis = missionSendOverride();
+    if (mis) { followupAttempt(false, mis); return; }
     followupAttempt(false);
   }
   // One attempt. Manual (popup 'Send now') skips the idle wait, the cooldown and the
@@ -1166,6 +1329,18 @@
     if (v18.dryRun) {
       followup.lastAttemptAt = now;
       if (!manual) followup.attempts.push(now);
+      const mis = (opts && opts.mission) || null;
+      if (mis) {
+        // v1.9.0: dry-run LOGS the mission step it would have sent ('mission-dry') and does
+        // NOT advance it — nothing is typed and nothing is submitted.
+        const entry = { at: new Date().toISOString(), kind: 'mission-dry', label: 'mission',
+                        context: ('mission ' + mis.id + ' step ' + mis.step + ' cycle ' + mis.cycle).slice(0, 240),
+                        dryRun: true, source, mission: { id: mis.id, step: mis.step, cycle: mis.cycle } };
+        recordClick(entry, entry.context, false);
+        followup.lastResult = { at: entry.at, kind: 'mission-dry', id: mis.id, step: mis.step, cycle: mis.cycle, verified: null, dryRun: true, source };
+        console.log('[muse-auto-allow] mission-dry ' + mis.id + ' step ' + mis.step + ' cycle ' + mis.cycle);
+        return { ok: true, reason: 'dry-run', via: null };
+      }
       const entry = { at: new Date().toISOString(), kind: 'followup-dry', label: 'follow-up', context: text.slice(0, 240), dryRun: true, source };
       recordClick(entry, text, false);
       followup.lastResult = { at: entry.at, kind: 'followup-dry', text: text.slice(0, 120), verified: null, dryRun: true, source };
@@ -1178,7 +1353,7 @@
     followup.sending = true;
     const first = findSendButton(composer) ? 'button' : 'enter';
     submitComposer(composer, first);
-    verifyFollowupSend(text, [first], { advanceRotation: !override, source });
+    verifyFollowupSend(text, [first], { advanceRotation: !override, source, mission: (opts && opts.mission) || null });
     followup.lastResult = { at: new Date().toISOString(), kind: 'followup', via: first, text: text.slice(0, 120), verified: null, source };
     return { ok: true, reason: 'attempted', via: first };
   }
@@ -1197,13 +1372,17 @@
         followup.sending = false;
         followup.lastSentAt = Date.now();
         if (followup.lastResult) followup.lastResult.verified = true;
-        if (!opts || opts.advanceRotation !== false) {
-          advanceFollowupRotation(); // verified send only — blocked/failed attempts must not skip a prompt
+        if (opts && opts.mission) {
+          missionOnVerifiedSend(opts.mission); // v1.9.0: advances the MISSION step — only on a verified send
+        } else {
+          if (!opts || opts.advanceRotation !== false) {
+            advanceFollowupRotation(); // verified send only — blocked/failed attempts must not skip a prompt
+          }
+          const entry = { at: new Date().toISOString(), kind: 'followup', label: 'follow-up', context: text.slice(0, 240), source: (opts && opts.source) || 'auto' };
+          recordClick(entry, text, false);
+          console.log('[muse-auto-allow] follow-up sent via ' + tried[tried.length - 1]);
         }
         bumpDigest({ followups: 1 });
-        const entry = { at: new Date().toISOString(), kind: 'followup', label: 'follow-up', context: text.slice(0, 240), source: (opts && opts.source) || 'auto' };
-        recordClick(entry, text, false);
-        console.log('[muse-auto-allow] follow-up sent via ' + tried[tried.length - 1]);
         return;
       }
       if (tried.length < 2 && c) {
@@ -1233,7 +1412,10 @@
     chrome.runtime.onMessage.addListener((m, _sender, sendResponse) => {
       if (!m || typeof m.type !== 'string') return;
       if (m.type === 'followup-send-now') {
-        const r = followupAttempt(true);
+        // v1.9.0: the manual 'send now' path respects the SAME rules — it sends the CURRENT
+        // mission step (and advances only on a verified send) when a mission is active.
+        const mov = missionSendOverride();
+        const r = mov ? followupAttempt(true, mov) : followupAttempt(true);
         try { sendResponse(Object.assign({ state: followup.state, lastSentAt: followup.lastSentAt || null }, r)); } catch { /* ignore */ }
         return;
       }
@@ -1259,7 +1441,17 @@
                          // in-flight send lock: a manual send-now is refused with reason
                          // 'sending' while this is true — the harness waits on it instead of
                          // racing the lock with a fixed sleep
-                         sending: followup.sending });
+                         sending: followup.sending,
+                         // v1.9.0 mission engine (observability for the popup/tests; the
+                         // harness waits on these applied fields instead of sleeping)
+                         missionEnabled: mission.enabled, missionId: mission.id || '',
+                         missionStep: mission.step, missionCycles: mission.cycles,
+                         missionSteps: missionStepsOf(mission.id).length,
+                         missionActive: missionActive(),
+                         missionCycleNo: missionActive() ? missionCycleNo() : 0,
+                         missionStepText: missionStepText(),
+                         missions: MISSION_IDS.slice(),
+                         completedMissionId: mission.completedId });
         } catch { /* ignore */ }
       }
     });
@@ -1352,8 +1544,9 @@
     // v1.6.0 auto follow-up settings (independent of the approve engine's toggle)
     chrome.storage.local.get(FOLLOWUP_DEFAULTS, (f) => { applyFollowupSettings(f); followupTick(); });
     // v1.8.0 frozen settings (pause / dry-run / rules / smart follow-up / schedule)
-    chrome.storage.local.get({ pauseUntil: 0, dryRun: false, allowOnceMode: false, rules: {}, followupSmart: {}, followupSchedule: {} },
-      (s) => { applyV18Settings(s); publishFlags(); });
+    // + v1.9.0 mission settings (missionEnabled / mission{id,step,cycles,startedAt,lastSentAt})
+    chrome.storage.local.get({ pauseUntil: 0, dryRun: false, allowOnceMode: false, rules: {}, followupSmart: {}, followupSchedule: {}, missionEnabled: false, mission: null },
+      (s) => { applyV18Settings(s); applyMissionSettings(s); publishFlags(); });
     chrome.storage.onChanged.addListener((ch) => {
       if (ch.enabled) state.enabled = !!ch.enabled.newValue;
       if (ch.minDelayMs) {
@@ -1372,7 +1565,10 @@
       for (const k of ['pauseUntil', 'dryRun', 'allowOnceMode', 'rules', 'followupSmart', 'followupSchedule']) {
         if (ch[k] && ch[k].newValue !== undefined) { vpatch[k] = ch[k].newValue; vch = true; }
       }
-      if (vch) { applyV18Settings(vpatch); publishFlags(); }
+      // v1.9.0 mission keys — 'mission' may be REMOVED (newValue undefined) which must clear it
+      if (ch.missionEnabled) { vpatch.missionEnabled = ch.missionEnabled.newValue === true; vch = true; }
+      if (ch.mission) { vpatch.mission = ch.mission.newValue; vch = true; }
+      if (vch) { applyV18Settings(vpatch); applyMissionSettings(vpatch); publishFlags(); }
       if (fch || vch) { try { followupTick(); } catch { /* ignore */ } }
     });
     chrome.runtime.onMessage.addListener((m) => { if (m && m.type === 'sweep') sweep('message'); });

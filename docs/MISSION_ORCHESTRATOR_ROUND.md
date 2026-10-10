@@ -7,9 +7,12 @@ harness**: a mission the user runs inside one Muse session that drives a project
 **GOLIVE READY** while obeying the project's source of truth and its already-made decisions,
 and that cooperates with the existing Auto follow-up prompt library / rotation.
 
-Status: **QUEUED — candidate for v1.9.0.** Entry: after the v1.8.0 freeze. Design work may
-start in parallel with the Global-Elite Benchmark Round (`docs/GLOBAL_ELITE_BENCHMARK_ROUND.md`);
-nothing here is implemented or claimed yet.
+Status: **IMPLEMENTING — v1.9.0.** The **ENGINE** lane is implemented (mission state machine on
+top of the follow-up engine, the shipped mission corpus, the `mission` log kind, the mission state
+exposed through the followup-status ping, and `test/mission-e2e.mjs`). The frozen contracts and the
+evidence record live in `docs/MISSION_V19.md`. The popup/UI lane (a Missions section) is still to
+be built against those contracts. Entry: after the v1.8.0 freeze; design work ran alongside the
+Global-Elite Benchmark Round (`docs/GLOBAL_ELITE_BENCHMARK_ROUND.md`).
 
 ## Routing record
 
