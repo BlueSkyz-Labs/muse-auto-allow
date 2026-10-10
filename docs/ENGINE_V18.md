@@ -490,3 +490,157 @@ Falsification runs (mutated copies): F1 → 2 RED / 116 green, F2 → 1 RED / 11
 F3 → 2 RED / 116 green, F4/F5/F6 → 1 RED / 25 green each, F7 → `test/e2e.mjs` RED
 (`forbiddenHit:["20"]`, `connectorCheck.ok:false`), F8 → 1 RED / 28 green (`S5b`); pristine
 re-runs fully green (§8.1).
+
+## 12. Performance — engine hot paths (measured, this round)
+
+Three measured optimizations of the frozen v1.8.0 engine, each taken **before and after with the
+repo's own harness** (`scripts/bench/perf.mjs`, Axis 1 of `docs/ELITE_BENCHMARK_REPORT.md`) on the
+same host and session. **No guard changed**: every rail in §2/§3 still decides the click — the
+changes only remove work between "a card appeared" and "the existing gates are consulted".
+
+Revision binding: BEFORE = a **byte-exact export of `HEAD e0a2752`**'s `extension/`
+(`content.js` 73,702 B) measured through `MAA_EXT_DIR`; AFTER = this lane's working tree
+(`content.js` 79,724 B; `background.js` unchanged at 13,685 B). The AFTER numbers below were
+taken on the 79,083 B build and **reproduced on the final 79,724 B build** (the only difference
+between the two is a header comment block) — final-build runs: latency quiet **median 1 ms /
+p95 32 ms** (raw 32,3,3,2,2,1,1,0,1,1,1,1), default pacing median 308 ms / p95 319 ms, scan
+**median 6.55 ms / p95 10.6 ms** (raw 7.3,6.2,7.2,6.2,6.1,9.0,6.7,6.0,6.7,6.2,6.4,10.6), writes
+**1 per click / 2 first / 1 per follow-up**. Host: Windows 11, Node `v26.7.0`,
+installed Chrome `154.0.8037.99`, CDP lane, **one harness Chrome at a time**. The user's own
+Chrome (18 processes) was open for the whole session, so the host was **not fully idle** — the
+latency and write numbers are unaffected by that (they are deterministic counts), the **scan**
+numbers are load-sensitive and are reported with their quiet-window pairs (see §12.2).
+
+### 12.1 Adaptive observer debounce (the core loop)
+
+`MutationObserver` now inspects each record: a **childList** record whose target is (or is inside)
+a `CARD_SEL` card — or that adds such a card — schedules the sweep on the **next task**
+(`OBSERVER_CARD_MS = 0`). Any other mutation (re-render storm, streaming text, attribute churn)
+keeps the previous **120 ms trailing debounce** (`OBSERVER_GENERIC_MS`). A pending *fast* sweep is
+never downgraded back to the slow debounce by a later generic mutation. `characterData`/
+`attributes` stay observed (the stuck detector needs "NO DOM mutation" to mean exactly that), and
+`lastDomActivityAt` is still stamped on every mutation.
+
+```
+node scripts/bench/perf.mjs --only=latency      # detect -> click, quiet (minDelayMs=0)
+```
+
+| Run | median | p95 | raw samples (ms) |
+|---|---|---|---|
+| BEFORE (pristine `e0a2752`) | **121.5 ms** | **132 ms** | 124, 131, 132, 128, 121, 70, 121, 39, 121, 122, 121, 122 |
+| AFTER | **2.5 ms** | **20 ms** | 20, 3, 3, 3, 3, 4, 2, 2, 1, 2, 1, 1 |
+| AFTER (second run) | **1.5 ms** | **15 ms** | 20, 3, 3, 3, 3, 3, 2, 2, 1, 1, 1, 1 |
+
+The ~120 ms was **exactly** the old fixed trailing debounce, so removing it for card-bearing
+mutations takes the row from `NOT MET` to `MET` against the 100 ms RAIL analogy. Shipped default
+pacing (`minDelayMs=300`, back-to-back) is **NOT_IMPROVED** and expected to be: 312.5/326 ms
+before vs 315/321 ms after — that latency is governed by `minDelayMs`, not by the observer.
+
+### 12.2 One query per scope + per-sweep read caches (the sweep gate)
+
+`sweep()` now takes **one `querySelectorAll(CARD_SEL)` and one `buttonsIn(document)`** and passes
+them to every detection path (`SURFACE_SEL` is a subset of `CARD_SEL`, so a single card query also
+feeds path D) instead of each of the four passes re-querying all buttons. A **gate** then returns
+before any path when the page has neither a candidate card nor a button whose text could be the
+entry point of *any* path (a strict superset of A–E: `isAllowText` / `PENDING_CARD_RE` /
+`^review$` / `SURFACE_BTN_RE`) — a page holding nothing any path could act on now costs one cheap
+text pass. During a sweep, `txt()` and `isVisible()` results are memoized (the sweep is one
+synchronous pass over a DOM that does not change until its single click at the end), which turns
+the four full passes over 700 buttons into **one** text pass plus cache hits; both caches are
+restored on exit so a page handler that re-enters `sweep()` cannot corrupt the outer pass.
+
+```
+node scripts/bench/perf.mjs --only=scan         # 5,000 nodes / 200 cards / 700 buttons, N=12
+```
+
+| Run (quiet window, back-to-back pairs) | median | p95 | min | raw samples (ms) |
+|---|---|---|---|---|
+| BEFORE (pristine `e0a2752`) | 13.9 ms | 18.3 ms | 11.9 | 12.2, 13.7, 11.9, 16.6, 13.2, 14.3, 13.7, 18.3, 14.1, 15.0, 12.6, 16.8 |
+| AFTER (next run) | **6.45 ms** | **8.5 ms** | 5.9 | 6.8, 6.2, 6.7, 6.1, 6.2, 8.5, 6.7, 6.1, 6.9, 5.9, 6.1, 8.4 |
+| BEFORE (second pair) | 15.65 ms | 25.5 ms | 10.9 | 11.8, 12.7, 10.9, 14.5, 11.7, 16.8, 14.5, 19.6, 17.2, 21.8, 20.2, 25.5 |
+| AFTER (next run) | **6.15 ms** | **10.2 ms** | 5.7 | 6.4, 5.7, 6.6, 5.8, 5.8, 8.0, 6.5, 5.9, 6.5, 5.7, 5.8, 10.2 |
+
+≈ **-55 % median / -55 % p95** at equal load. Two pristine runs taken while the host was busy read
+37.25 ms and 45.1 ms median (optimized 8.95 and 19.3 in the same interleaved pair) — that is the
+load sensitivity the report already documents, not a different result; the quiet-window pairs
+above are the trustworthy ones. The row stays comfortably inside the 50 ms long-task budget either
+way.
+
+### 12.3 Write merge — one action = one storage write
+
+`digestCounters` is no longer written by its own `flushDigest()`: the increment is accumulated in
+`digestDelta` and folded into the click flush's single `chrome.storage.local.set`, which already
+carries `log`/`stats`/`clickCount`/`schemaVersion`. The delta is read **inside** the flush callback
+(so a bump that arrives while the flush is in flight is still carried by that write), reset only
+when the write is built, and both the log and the counters now travel under the same cross-tab
+`maa-record-v1` lock. Digest semantics are unchanged: counters are incremented for real clicks,
+rule-blocked candidates and **verified** follow-ups, and are still reset only by the background
+when a digest notification is actually shown (§5.3).
+
+```
+node scripts/bench/perf.mjs --only=writes
+```
+
+| Action | BEFORE | AFTER |
+|---|---|---|
+| `chrome.storage.local.set` per click (steady) | **2** — `[log,stats,clickCount,schemaVersion]` + `[digestCounters]` | **1** — `[log,stats,clickCount,schemaVersion,digestCounters]` |
+| per click (first, incl. the one-time `cryptKeyRaw`) | 3 | 2 |
+| per follow-up send | **2** | **1** |
+| `chrome.storage.local.get` per click | 2 | **1** |
+
+### 12.4 Falsification (reverse-mutation proof)
+
+1. **The fast path reproduces the old latency when disabled.** A scratch copy of `extension/` with
+   one single-line mutation —
+   `scheduleSweep('observer', fast ? OBSERVER_CARD_MS : OBSERVER_GENERIC_MS, fast);` →
+   `scheduleSweep('observer', OBSERVER_GENERIC_MS, false);` (anchor asserted to occur exactly
+   once) — measured through `MAA_EXT_DIR`:
+
+   ```
+   node scripts/bench/perf.mjs --only=latency   # MAA_EXT_DIR=<mutated copy>
+   quiet_min0: median 123 ms / p95 131 ms   samples 130,126,131,121,131,122,124,36,121,121,130,121
+   ```
+   i.e. the old 121–123 ms, from the same 120 ms debounce — the optimization is what moved the
+   number, not the harness or the host.
+2. **The dedup invariants hold with the fast path ENABLED** (`node test/e2e.mjs`): `ok:true`,
+   **`n7count:1`**, **`n11count:1`**, `denyCount:0`, `forbiddenHit:[]`, `dupes:[]`,
+   `connectorCheck.ok:true` (`blockedConnector:2`). One click per node inside the 5 s window is
+   still exactly one.
+3. **The fast path changes latency only, not detection**: the *same* e2e suite run against the
+   mutated (fixed-120 ms) copy is also green — `ok:true`, `n7count:1`, `n11count:1`,
+   `denyCount:0`, `forbiddenHit:[]`. Nothing about which node is clicked depends on the debounce.
+
+### 12.5 NOT done — the optional service-worker boot deferral (honest trade-off)
+
+Deferring `pullFromSync()`/`updateBadge()` off the worker's top-level boot path was **not**
+implemented, because it cannot be proven on this harness and one variant collides with a frozen
+contract:
+
+- The harness measures **SW cold start** as the worker's own `performance.timeOrigin` minus the
+  `Extensions.loadUnpacked` call (worker global creation, *before* `background.js` evaluates) and
+  **wake** as the same `timeOrigin` minus the wake trigger. Neither includes `background.js`
+  top-level execution, so a deferral cannot move either number — it could not be reported as an
+  improvement.
+- `test/background-unit.mjs` **S7** snapshots the store **synchronously right after the worker
+  script evaluates** and asserts the load-time pull has already filled the absent keys. Moving
+  `pullFromSync()` to a macrotask makes S7 RED — the deferral would trade a pinned contract for a
+  gain that does not exist.
+- The four boot calls (`ensureAlarm`, `pullFromSync`, `schedulePauseBadgeRefresh`, `updateBadge`)
+  are all callback-registering and return immediately; they do not block the worker from
+  evaluating its listeners. Deferring them adds a task without shortening anything measurable.
+
+So: skipped rather than claimed. `background.js` is unchanged by this round.
+
+### 12.6 Gates on this revision (all green)
+
+```
+node scripts/lint.mjs             # exit 0 — 24 checks across 18 files
+node test/e2e.mjs                 # exit 0 — ok:true, 13 clicks, n7count:1, n11count:1, denyCount:0, forbiddenHit:[], connectorCheck.ok:true
+node test/followup-e2e.mjs        # exit 0 — 119 checks, 0 failed, 0 verification timeouts
+node test/lang-switch-e2e.mjs     # exit 0 — ok:true
+node test/background-unit.mjs     # exit 0 — 29 checks, 0 failed
+```
+
+`test/followup-e2e.mjs` records the digest counters after the run
+(`{clicks: 14, blocked: 5, followups: 17}`) — the write merge preserves the §5.3 semantics
+(`v18 digest. counters recorded real clicks + blocked + verified follow-ups` is green).

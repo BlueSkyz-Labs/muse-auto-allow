@@ -45,6 +45,15 @@
 //    script stops itself instead of continuing to click.
 //  - Every click is logged to chrome.storage.local (see popup).
 //
+// v1.8.0 performance (measured — see docs/ENGINE_V18.md §12 and
+// docs/ELITE_BENCHMARK_REPORT.md §1.2):
+//  - a card/surface-bearing MutationObserver mutation sweeps on the next task; generic
+//    mutations keep the 120 ms trailing debounce (detect -> click 121 ms -> ~2 ms);
+//  - ONE querySelectorAll per scope plus per-sweep text/visibility caches shared by every
+//    detection path, behind a gate that skips a page holding nothing any path could act on;
+//  - the digestCounters increment rides in the click flush: one action = ONE storage write.
+// None of these change a guard — every rail below still decides the click.
+//
 // v1.8.0 gates (frozen storage contracts — see docs/ENGINE_V18.md):
 //  - pauseUntil (epoch ms): while Date.now() < pauseUntil ALL automation is halted — every
 //    click path (A–E) and the follow-up engine, manual 'Send now' included.
@@ -116,6 +125,12 @@
   const REVIEW_BAR_THROTTLE_MS = 1000; // chat-level bar: snappy (the panel only renders after this click)
   const TEXT_COOLDOWN_MS = 30000;
   const ALLOW_DEDUP_MS = 5000;
+  // MutationObserver reaction delays. A mutation that brings in (or lands inside) an approval
+  // card/surface is the product's core loop: sweep on the next task. Generic mutations
+  // (re-render storms, streaming text, attribute churn) keep the 120 ms trailing debounce that
+  // coalesces them into one sweep.
+  const OBSERVER_CARD_MS = 0;
+  const OBSERVER_GENERIC_MS = 120;
   const ALLOW_RATE_MAX = 30;
   const AUX_RATE_MAX = 30;
   const AUX_RATE_WINDOW_MS = 60000;
@@ -155,19 +170,48 @@
   let lastDomActivityAt = Date.now(); // stuck detection: timestamp of the last DOM mutation
   let lastFlagPause = null, lastFlagDry = null; // publishFlags dedup (never re-set unchanged)
   let pendingTimer = null;
+  let pendingFast = false; // the pending sweep is the card-bearing (immediate) kind
   let obs = null;
   let heartbeat = null;
 
-  const txt = (el) => ((el.innerText || el.textContent || '').replace(/\s+/g, ' ')).trim();
+  // Per-sweep read caches. A sweep is a single synchronous pass over a DOM that does not change
+  // until its one click at the very end, so text and visibility reads are stable for the whole
+  // sweep. Caching them turns the four full passes over every button into ONE text pass plus
+  // cache hits — the layout reads behind innerText/getBoundingClientRect dominate a sweep.
+  // Both caches are dropped the instant the sweep returns (and restored, so a page handler that
+  // re-enters sweep() cannot corrupt the outer pass).
+  let sweepTxtCache = null;
+  let sweepVisCache = null;
+  const rawTxt = (el) => ((el.innerText || el.textContent || '').replace(/\s+/g, ' ')).trim();
+  const txt = (el) => {
+    if (sweepTxtCache && el && el.nodeType === 1) {
+      const hit = sweepTxtCache.get(el);
+      if (hit !== undefined) return hit;
+      const v = rawTxt(el);
+      sweepTxtCache.set(el, v);
+      return v;
+    }
+    return rawTxt(el);
+  };
   const isBtn = (el) => !!el && (el.tagName === 'BUTTON' || el.getAttribute('role') === 'button');
   const isEnabled = (el) => !el.disabled && el.getAttribute('aria-disabled') !== 'true';
-  const isVisible = (el) => {
+  const rawVisible = (el) => {
     const r = el.getBoundingClientRect();
     if (!(r.width > 2 && r.height > 2)) return false;
     try {
       const cs = getComputedStyle(el);
       return cs.visibility !== 'hidden' && cs.display !== 'none' && cs.pointerEvents !== 'none' && Number(cs.opacity) > 0;
     } catch { return true; }
+  };
+  const isVisible = (el) => {
+    if (sweepVisCache && el && el.nodeType === 1) {
+      const hit = sweepVisCache.get(el);
+      if (hit !== undefined) return hit;
+      const v = rawVisible(el);
+      sweepVisCache.set(el, v);
+      return v;
+    }
+    return rawVisible(el);
   };
   const clickable = (el) => isBtn(el) && isEnabled(el) && isVisible(el);
   // A node is "handled" when a real click happened on it, or (dry-run only) when it was
@@ -387,43 +431,34 @@
     } catch { /* ignore */ }
   }
   // Digest counters (chrome.storage.local.digestCounters) — the background service worker
-  // composes the startup digest from them. Serialized like the click queue (same cross-tab
-  // lock pattern) so parallel tabs cannot lose an increment.
-  const digestQueue = [];
-  let digestFlushing = false;
+  // composes the startup digest from them. The increment is NOT a write of its own: it is
+  // accumulated here and folded into the click flush (flushClicks), so one action costs ONE
+  // chrome.storage.local.set instead of two, and the counters travel under the same cross-tab
+  // lock as the log entry they accompany (parallel tabs cannot lose an increment).
+  const digestDelta = { clicks: 0, followups: 0, blocked: 0 };
+  let digestDirty = false;
   function bumpDigest(delta) {
-    digestQueue.push(delta);
-    flushDigest();
+    if (delta) {
+      digestDelta.clicks += Number(delta.clicks) || 0;
+      digestDelta.followups += Number(delta.followups) || 0;
+      digestDelta.blocked += Number(delta.blocked) || 0;
+    }
+    digestDirty = true;
+    flushClicks();
   }
-  function flushDigest() {
-    if (digestFlushing || !digestQueue.length) return;
-    digestFlushing = true;
-    const run = () => new Promise((resolve) => {
-      try {
-        chrome.storage.local.get({ digestCounters: null }, (s) => {
-          const d = asObj(s.digestCounters);
-          while (digestQueue.length) {
-            const x = digestQueue.shift();
-            d.clicks = (Number(d.clicks) || 0) + (Number(x.clicks) || 0);
-            d.followups = (Number(d.followups) || 0) + (Number(x.followups) || 0);
-            d.blocked = (Number(d.blocked) || 0) + (Number(x.blocked) || 0);
-          }
-          try { chrome.storage.local.set({ digestCounters: d }); } catch { /* invalidated */ }
-          resolve();
-        });
-      } catch { resolve(); }
-    }).finally(() => { digestFlushing = false; });
-    let started = false;
-    const once = () => { if (started) return; started = true; return run(); };
-    try {
-      const p = navigator.locks.request('maa-digest-v1', () => once());
-      if (p && typeof p.catch === 'function') p.catch(() => once());
-    } catch { once(); }
+
+  // Sweep gate predicate — a strict SUPERSET of every way a click path can start: a marked card
+  // (path A), an allow-ish button (B), a collapsed pending card (C), a surface open button (D) or
+  // the chat review bar (E). The gate may therefore never refuse a path that could have clicked;
+  // anything it lets through is still fully refused downstream by the unchanged guards.
+  function approvalShapedButton(b) {
+    const t = txt(b);
+    return isAllowText(t) || PENDING_CARD_RE.test(t) || /^review$/i.test(t.trim()) || SURFACE_BTN_RE.test(t);
   }
 
   // Path A — Muse-marked approval cards.
-  function findMarkedAllow() {
-    for (const card of document.querySelectorAll(CARD_SEL)) {
+  function findMarkedAllow(cards) {
+    for (const card of (cards || document.querySelectorAll(CARD_SEL))) {
       if (card.matches(SURFACE_SEL) || !isVisible(card)) continue;
       // connector hard-block: never interact with the container, even with a pair inside
       if (connectorNear(card, 1)) { noteBlocked('Connect', 'connector', txt(card), 'connector:' + txt(card).slice(0, 160)); continue; }
@@ -444,8 +479,8 @@
   }
 
   // Path B — text pair heuristic (cards without the marker).
-  function findPairAllow() {
-    for (const b of buttonsIn(document)) {
+  function findPairAllow(btns) {
+    for (const b of (btns || buttonsIn(document))) {
       if (handledNode(b) || !clickable(b) || !isAllowText(txt(b)) || unsafeTarget(b)) continue;
       let node = b;
       for (let depth = 0; depth < 4 && node; depth++) {
@@ -482,9 +517,9 @@
   }
 
   // Path C — collapsed pending cards: expand to reveal Allow/Deny.
-  function findCollapsedPending() {
+  function findCollapsedPending(btns) {
     if (!auxRateOk()) return null;
-    for (const b of buttonsIn(document)) {
+    for (const b of (btns || buttonsIn(document))) {
       if (handledNode(b) || !clickable(b) || unsafeTarget(b)) continue;
       const t = txt(b);
       if (!PENDING_CARD_RE.test(t)) continue;
@@ -500,9 +535,10 @@
   }
 
   // Path D — background approval surface: open the approvals panel.
-  function findSurfaceButton() {
+  function findSurfaceButton(cards) {
     if (!auxRateOk()) return null;
-    for (const surface of document.querySelectorAll(SURFACE_SEL)) {
+    for (const surface of (cards || document.querySelectorAll(CARD_SEL))) {
+      if (!surface.matches(SURFACE_SEL)) continue; // SURFACE_SEL is a subset of CARD_SEL
       if (!isVisible(surface)) continue;
       const t = txt(surface);
       if (!NEED_APPROVAL_RE.test(t)) continue;
@@ -526,9 +562,9 @@
   // "Review" and its short enclosing container must carry the task-needs-review
   // wording (the chat message itself is far too long to match).
   const REVIEW_BAR_RE = /(a task|one task|\d+\s*tasks?|tasks?)\s+need(s|ed)?\s+(review|your approval)/i;
-  function findReviewBarButton() {
+  function findReviewBarButton(btns) {
     if (!auxRateOk()) return null;
-    for (const b of buttonsIn(document)) {
+    for (const b of (btns || buttonsIn(document))) {
       if (handledNode(b) || !clickable(b) || unsafeTarget(b)) continue;
       const bt = txt(b).trim();
       if (!/^review$/i.test(bt) || DESTRUCTIVE_RE.test(bt)) continue;
@@ -620,17 +656,18 @@
       return { iv: b64(iv), ct: b64(ct) };
     } catch { return null; }
   }
-  // One get->set per flush, updating log + counter + aggregates together. Flushes are
-  // serialized per tab (clickFlushing) and, when the Web Locks API is available, across
-  // tabs of the same origin too (redteam V3-2: the 1-minute alarm can nudge several
-  // muse.ai tabs at once). Counts are coerced with Number() so a corrupt stored shape
-  // can never turn a write into a silent no-op or a string concatenation (V3-3).
+  // One get->set per flush, updating log + counter + aggregates together — and, since v1.8.0's
+  // write merge, the digestCounters increment rides in the SAME set (one action = one
+  // chrome.storage.local.set). Flushes are serialized per tab (clickFlushing) and, when the Web
+  // Locks API is available, across tabs of the same origin too (redteam V3-2: the 1-minute alarm
+  // can nudge several muse.ai tabs at once). Counts are coerced with Number() so a corrupt stored
+  // shape can never turn a write into a silent no-op or a string concatenation (V3-3).
   function flushClicks() {
-    if (clickFlushing || !clickQueue.length) return;
+    if (clickFlushing || (!clickQueue.length && !digestDirty)) return;
     clickFlushing = true;
     const run = () => new Promise((resolve) => {
       try {
-        chrome.storage.local.get({ log: [], stats: null, clickCount: 0 }, async (s) => {
+        chrome.storage.local.get({ log: [], stats: null, clickCount: 0, digestCounters: null }, async (s) => {
           const log = Array.isArray(s.log) ? s.log : [];
           let count = Number(s.clickCount) || 0;
           const st = asObj(s.stats);
@@ -653,7 +690,19 @@
             }
           }
           pruneKeys(st.byDay, 400); pruneKeys(st.byMonth, 24); pruneTopics(st.byTopic, 100);
-          try { chrome.storage.local.set({ log: log.slice(0, 50), stats: st, clickCount: count, schemaVersion: 2 }); } catch { /* invalidated */ }
+          const patch = { log: log.slice(0, 50), stats: st, clickCount: count, schemaVersion: 2 };
+          // the digest increment accumulated for this action, read here (not at flush start) so a
+          // bump that arrived while this flush was already in flight is carried by this write
+          if (digestDirty) {
+            const d = asObj(s.digestCounters);
+            d.clicks = (Number(d.clicks) || 0) + digestDelta.clicks;
+            d.followups = (Number(d.followups) || 0) + digestDelta.followups;
+            d.blocked = (Number(d.blocked) || 0) + digestDelta.blocked;
+            digestDelta.clicks = 0; digestDelta.followups = 0; digestDelta.blocked = 0;
+            digestDirty = false;
+            patch.digestCounters = d;
+          }
+          try { chrome.storage.local.set(patch); } catch { /* invalidated */ }
           resolve();
         });
       } catch { resolve(); }
@@ -1238,32 +1287,57 @@
       return;
     }
 
-    const hit = findMarkedAllow() || findPairAllow();
-    if (hit) {
-      if (!allowRateOk()) return; // global ceiling — a page cannot drive unbounded real approvals (F3)
-      doClick(hit.btn, hit.card, 'allow', null, hit.ctx);
-      return;
-    }
+    // ONE query per scope for the whole sweep, shared by every detection path (SURFACE_SEL is a
+    // subset of CARD_SEL, so a single card query feeds both path A and path D) instead of each of
+    // the four passes re-querying all buttons. The gate then skips every path when the page holds
+    // nothing any path (A–E) could act on: a page with no candidate card and no approval-shaped
+    // button costs one text pass and nothing else. The per-sweep read caches are dropped on exit.
+    const prevTxtCache = sweepTxtCache, prevVisCache = sweepVisCache;
+    sweepTxtCache = new Map();
+    sweepVisCache = new Map();
+    try {
+      const cards = document.querySelectorAll(CARD_SEL);
+      const btns = buttonsIn(document);
+      if (!cards.length && !btns.length) return;
+      if (!cards.length && !btns.some(approvalShapedButton)) return;
 
-    if (now - state.lastExpandAt >= EXPAND_THROTTLE_MS) {
-      const c = findCollapsedPending();
-      if (c) { doClick(c.btn, null, 'expand', c.key); return; }
-    }
+      const hit = findMarkedAllow(cards) || findPairAllow(btns);
+      if (hit) {
+        if (!allowRateOk()) return; // global ceiling — a page cannot drive unbounded real approvals (F3)
+        doClick(hit.btn, hit.card, 'allow', null, hit.ctx);
+        return;
+      }
 
-    if (now - state.lastReviewBarAt >= REVIEW_BAR_THROTTLE_MS) {
-      const rb = findReviewBarButton();
-      if (rb) { doClick(rb.btn, null, 'review-bar', rb.key); return; }
-    }
+      if (now - state.lastExpandAt >= EXPAND_THROTTLE_MS) {
+        const c = findCollapsedPending(btns);
+        if (c) { doClick(c.btn, null, 'expand', c.key); return; }
+      }
 
-    if (now - state.lastSurfaceAt >= SURFACE_THROTTLE_MS) {
-      const s = findSurfaceButton();
-      if (s) { doClick(s.btn, null, 'open-panel', s.key); return; }
+      if (now - state.lastReviewBarAt >= REVIEW_BAR_THROTTLE_MS) {
+        const rb = findReviewBarButton(btns);
+        if (rb) { doClick(rb.btn, null, 'review-bar', rb.key); return; }
+      }
+
+      if (now - state.lastSurfaceAt >= SURFACE_THROTTLE_MS) {
+        const s = findSurfaceButton(cards);
+        if (s) { doClick(s.btn, null, 'open-panel', s.key); return; }
+      }
+    } finally {
+      sweepTxtCache = prevTxtCache;
+      sweepVisCache = prevVisCache;
     }
   }
 
-  function scheduleSweep(reason, ms) {
-    if (pendingTimer) clearTimeout(pendingTimer);
-    pendingTimer = setTimeout(() => { pendingTimer = null; sweep(reason); }, ms);
+  // A pending sweep remembers whether it is the FAST (card-bearing) kind: a later generic
+  // mutation must never downgrade it back to the slow trailing debounce, or a card that just
+  // rendered would have to wait out an unrelated re-render storm before it is approved.
+  function scheduleSweep(reason, ms, fast) {
+    if (pendingTimer) {
+      if (pendingFast && !fast) return;
+      clearTimeout(pendingTimer);
+    }
+    pendingFast = !!fast;
+    pendingTimer = setTimeout(() => { pendingTimer = null; pendingFast = false; sweep(reason); }, ms);
   }
 
   // Boot: load persisted settings, then first sweep.
@@ -1306,10 +1380,41 @@
     sweep('init');
   }
 
-  // Instant reaction: re-sweep on any DOM change (trailing debounce). characterData/attributes
-  // are observed too: the stuck detector needs "NO DOM mutation" to mean exactly that.
+  // True when a mutation record is about an approval card/surface (the engine's own CARD_SEL
+  // scope — SURFACE_SEL is a subset of it): the card itself appeared, or the change landed inside
+  // one. Only childList records qualify: a characterData/attribute change inside a card is a
+  // re-render, not a new approval, so it keeps the coalescing trailing debounce.
+  function cardBearingMutation(rec) {
+    if (!rec || rec.type !== 'childList') return false;
+    const t = rec.target;
+    if (t && t.nodeType === 1) {
+      if (t.matches && t.matches(CARD_SEL)) return true;
+      if (t.closest && t.closest(CARD_SEL)) return true;
+    }
+    const added = rec.addedNodes;
+    if (added) {
+      for (let i = 0; i < added.length; i++) {
+        const n = added[i];
+        if (!n || n.nodeType !== 1) continue;
+        if (n.matches && n.matches(CARD_SEL)) return true;
+        if (n.querySelector && n.querySelector(CARD_SEL)) return true;
+      }
+    }
+    return false;
+  }
+
+  // Instant reaction: re-sweep on DOM changes. A card/surface-bearing mutation sweeps on the NEXT
+  // task — the card IS the product's core loop, and the fixed 120 ms trailing debounce was pure
+  // added latency for it. Generic mutations (re-render storms, streaming text, attribute churn)
+  // keep the 120 ms trailing debounce that coalesces them into one sweep. characterData/attributes
+  // stay observed too: the stuck detector needs "NO DOM mutation" to mean exactly that.
   try {
-    obs = new MutationObserver(() => { lastDomActivityAt = Date.now(); scheduleSweep('observer', 120); });
+    obs = new MutationObserver((records) => {
+      lastDomActivityAt = Date.now();
+      let fast = false;
+      for (const rec of records) { if (cardBearingMutation(rec)) { fast = true; break; } }
+      scheduleSweep('observer', fast ? OBSERVER_CARD_MS : OBSERVER_GENERIC_MS, fast);
+    });
     obs.observe(document.documentElement || document, { childList: true, subtree: true, characterData: true, attributes: true });
   } catch {}
 

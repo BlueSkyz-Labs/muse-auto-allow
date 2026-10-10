@@ -120,6 +120,58 @@ run's warm-popup p95 is noisy (this host is memory-constrained): the warm wall-c
 271–365 ms across three runs while the FCP median stayed 98–106 ms — re-run before treating a
 p95 as a regression.
 
+### 1.3 Engine hot-path optimization — before/after (measured 2026-10-10)
+
+Same harness, same host/session, taken **before and after** the engine lane's content-script
+optimization (three changes: adaptive `MutationObserver` debounce for card-bearing mutations;
+one query per scope + per-sweep read caches behind a detection gate; `digestCounters` folded into
+the click flush so one action = one storage write). The engine's own contract doc carries the
+detail: `docs/ENGINE_V18.md` §12.
+
+- **BEFORE** = a byte-exact export of `HEAD e0a2752`'s `extension/` (`content.js` 73,702 B),
+  measured via `MAA_EXT_DIR`.
+- **AFTER** = the engine lane's working tree (`content.js` 79,724 B; `background.js` unchanged).
+  The AFTER cells below were taken on the 79,083 B build and **reproduced on the final 79,724 B
+  build** (only a header comment block differs): latency quiet median 1 ms · p95 32 ms, default
+  pacing 308/319 ms, scan median 6.55 ms · p95 10.6 ms, writes 1 per click / 2 first / 1 per
+  follow-up.
+- Host: Windows 11, Node `v26.7.0`, installed Chrome `154.0.8037.99`, one harness Chrome at a
+  time. **The host was NOT fully idle**: the user's own Chrome (18 processes) was open for the
+  whole session, so the **scan** row below is reported as quiet-window back-to-back pairs and is
+  load-directional; the latency and write rows are deterministic counts and are unaffected.
+
+```
+node scripts/bench/perf.mjs --only=latency   # detect -> click, quiet (minDelayMs=0)
+node scripts/bench/perf.mjs --only=scan      # content-script scan cost per sweep
+node scripts/bench/perf.mjs --only=writes    # storage write amplification
+```
+
+| Metric | BEFORE (`e0a2752`, pristine) | AFTER | Target |
+|---|---|---|---|
+| Detect → click, quiet (`minDelayMs=0`) | **median 121.5 ms · p95 132 ms** — raw 124,131,132,128,121,70,121,39,121,122,121,122 | **median 2.5 ms · p95 20 ms** (2nd run 1.5 / 15) — raw 20,3,3,3,3,4,2,2,1,2,1,1 | ≤ 100 ms (RAIL analogy) — **now MET** |
+| Detect → click, shipped default pacing (`minDelayMs=300`) | median 312.5 ms · p95 326 ms | median 315 ms · p95 321 ms — **NOT_IMPROVED** (governed by `minDelayMs`, not the debounce) | TARGET PENDING (unsourced) |
+| Scan per sweep (5,000 nodes / 200 cards / 700 buttons, N=12) | quiet pair: **median 13.9 ms · p95 18.3 ms** (min 11.9) — raw 12.2,13.7,11.9,16.6,13.2,14.3,13.7,18.3,14.1,15.0,12.6,16.8; second pair 15.65 / 25.5 | quiet pair: **median 6.45 ms · p95 8.5 ms** (min 5.9) — raw 6.8,6.2,6.7,6.1,6.2,8.5,6.7,6.1,6.9,5.9,6.1,8.4; second pair 6.15 / 10.2 | ≤ 50 ms — MET (≈ -55 % median/p95 at equal load) |
+| Storage writes per click (`chrome.storage.local.set`) | **2** steady / 3 first — `[log,stats,clickCount,schemaVersion]` + `[digestCounters]`; 2 `get`s | **1** steady / 2 first — `[log,stats,clickCount,schemaVersion,digestCounters]`; 1 `get` | TARGET PENDING (unsourced) |
+| Storage writes per follow-up send | **2** (3 `get`s) | **1** (2 `get`s) | TARGET PENDING (unsourced) |
+
+**Verdict delta.** The detect → click row moves from **NOT MET (121 ms vs the 100 ms RAIL
+analogy)** to **MET (2.5 ms)**: the ~120 ms was exactly the engine's fixed `MutationObserver`
+trailing debounce, which is now applied only to *generic* mutations — a mutation that brings in
+(or lands inside) an approval card sweeps on the next task. The scan row roughly halves; the
+write row halves. **Default-pacing latency does not move** and is reported NOT_IMPROVED: it is
+paced by `minDelayMs` (300 ms) by design, not by the observer.
+
+**Falsification (this section's numbers are not host luck).** Disabling the fast path with one
+single-line mutation (`scheduleSweep('observer', fast ? OBSERVER_CARD_MS : OBSERVER_GENERIC_MS,
+fast)` → `scheduleSweep('observer', OBSERVER_GENERIC_MS, false)`, anchor asserted to occur exactly
+once) and re-running the latency harness through `MAA_EXT_DIR` reproduces the old latency —
+**median 123 ms · p95 131 ms**, raw 130,126,131,121,131,122,124,36,121,121,130,121. The dedup
+invariants hold with the fast path enabled (`test/e2e.mjs`: `ok:true`, `n7count:1`, `n11count:1`,
+`denyCount:0`, `forbiddenHit:[]`), and the same e2e suite is also green against the mutated
+(fixed-120 ms) copy — the debounce change is a latency change only, never a detection change. The
+optional service-worker boot deferral was **not** done (it cannot move the harness's
+`timeOrigin`-based SW metrics and would break `background-unit` S7) — `docs/ENGINE_V18.md` §12.5.
+
 ## Axis 2 — Design (UI)
 
 **Method note (2026-10-10, after the composition iteration):** the vision instrument was
