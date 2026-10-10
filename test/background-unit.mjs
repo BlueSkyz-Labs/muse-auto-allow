@@ -8,7 +8,7 @@
  *
  * Checks:
  *   M1-M3  manifest: notifications permission, the two commands (Alt+Shift+P / Alt+Shift+F),
- *          version still 1.7.0 (release freeze) + MV3 + __MSG_ indirection
+ *          version 1.8.0 (release freeze) + MV3 + __MSG_ indirection
  *   P1-P2  toggle-pause command: arms pauseUntil ~15 min; clears an active pause
  *   B1-B2  badge: paused => '||' (grey); otherwise today's count ('' when zero)
  *   A1-A2  one-shot pause-expiry alarm armed at pauseUntil, cleared when not paused
@@ -51,8 +51,8 @@ check('M2 manifest. commands: toggle-pause (Alt+Shift+P) + send-followup (Alt+Sh
   !!(cmds['toggle-pause'] && cmds['toggle-pause'].suggested_key && cmds['toggle-pause'].suggested_key.default === 'Alt+Shift+P' &&
      cmds['send-followup'] && cmds['send-followup'].suggested_key && cmds['send-followup'].suggested_key.default === 'Alt+Shift+F'),
   { commands: cmds });
-check('M3 manifest. version stays 1.7.0 (release freeze) + MV3 + __MSG_ name',
-  man.version === '1.7.0' && man.manifest_version === 3 && man.name === '__MSG_extName__',
+check('M3 manifest. version 1.8.0 (release freeze) + MV3 + __MSG_ name',
+  man.version === '1.8.0' && man.manifest_version === 3 && man.name === '__MSG_extName__',
   { version: man.version, mv: man.manifest_version });
 
 // ---------- sandbox: chrome stubs around the REAL background.js ----------
