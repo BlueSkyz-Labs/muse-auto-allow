@@ -77,6 +77,38 @@ path, screen-reader path, and failure honesty (never a silent wrong click).
 3. The upgrade waves themselves, executed under the standing non-stop law, each proven by
    re-measurement on the frozen revision.
 
+## Instrument calibration — vision scores are NOT an acceptance gate (measured 2026-10-10)
+
+The design axis was originally gated on a vision score (">=8/10 premium"). The iteration lane
+proved that gate unsound, and the coordinator reproduced the evidence:
+
+- In ONE session, with one identical prompt: the phase-1 mockup scored **5/10** (recorded 8/10
+  in its own round), the Statistics page scored **5/10** (recorded 9/10), and the SAME popup
+  render scored **6, then 4, then 7, then 3** across passes.
+- One pass "found" a typo (`vour`) that does not exist in the DOM; another called the today
+  legend dot a different colour from the today bar although both are painted with the same
+  `--c-now` gradient (verified in the CSS).
+- The coordinator's own pass on the same render scored 3/10 while an earlier pass on the
+  pre-iteration render scored 6/10 — a 3-point swing with no code change between the prompts'
+  subjects.
+
+**Rule that follows:** vision stays a DIRECTIONAL signal (does this look better/worse than the
+other render in THIS session?) and must always be anchored by scoring the known references in
+the same session. Design acceptance is DETERMINISTIC:
+
+| Criterion | How it is checked |
+|---|---|
+| Alignment grid conformance | measured element right/left edges == the declared content column |
+| Contrast | computed ratios from the shipped tokens + pixel verification in the render (text >=4.5:1, non-text >=3:1, documented decorative exceptions) |
+| Spacing ladder | declared scale (2/4/6/8/12/16/20/24/32/40) — no off-ladder values |
+| Browser-default artifacts | none: no native resize handle, no unthemed scrollbar, no text-triangle chevrons |
+| i18n | no overflow/clipping in any of the 6 locales at worst-case content |
+| Heights | popup <=600 px in every state (harness-asserted) |
+| Functional | all 5 suites green |
+
+A vision score may still be REPORTED (labelled directional, with its anchors), but it can no
+longer pass or fail this round.
+
 ## Exit criteria
 
 - Every axis either MEETS its sourced target or is reported `NOT_MET` with rationale and a

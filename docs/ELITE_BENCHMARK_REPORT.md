@@ -52,30 +52,40 @@ before they can be called targets — see the charter's "benchmarks are measured
 
 ## Axis 2 — Design (UI)
 
-Instrument: `vision_analyze` over REAL CDP renders (popup 640x1200 @2x; stats 1280x800).
-Scores are qualitative and labelled as such; the SCALE is anchored by scoring the shipped
-pre-change popup and the phase-1 mockup with the same prompt in the same session.
+**Method note (2026-10-10, after the composition iteration):** the vision instrument was
+measured to be UNRELIABLE as an absolute scale — see the charter's "Instrument calibration"
+section. Scores below are DIRECTIONAL, always anchored in the same session, and no longer gate
+the round. Design acceptance is deterministic (grid, contrast, spacing ladder, artifacts, i18n,
+heights, suites).
 
-| Surface | Score (premium / craft) | Notes |
+| Surface | Directional score (premium / craft) | Notes |
 |---|---|---|
 | Popup, light — shipped pre-Quiet-Luxury (anchor) | 6 / 7 | the calibration anchor |
-| Popup, light — after the token re-skin (91f4c14) | 4–7 / 4–6 across rounds; independent coordinator pass: **6 / 5** | **GATE NOT MET** — the tokens are fine, the COMPOSITION is the gap |
-| Popup, dark — after the token re-skin | 6–7 / 5.5–6 | same composition gap |
-| Phase-1 mockup popup (anchor for the target) | 8 / 8.5 | the target quality bar |
-| Statistics, light / dark | 9 / 8 and 8 / 7 | meets the bar |
+| Popup — after the token re-skin (91f4c14) | 4–7 / 4–6; coordinator pass 6 / 5 | tokens fine, composition was the gap |
+| Popup — after the composition pass (555f9f0) | 3–7 across passes (instrument noise) | craft axis moved: light CRAFT 8/10 in 2 of the iteration rounds vs 4/10 for the token-only state; the remaining reviewer complaints are frozen-intent items (pill language, no per-bar values, uppercase captions) and density/progressive-disclosure opinions |
+| Phase-1 mockup (anchor) | 5–8.5 depending on the session | the anchor itself moves with the instrument |
+| Statistics, light / dark | 5–9 depending on the session | 9/10 in its own round, 5/10 in the iteration session |
 
-Measured contrast improvements (in the rendered output, not by eye): mini-chart day bars
-**1.88 → 3.32:1** light and **2.06 → 4.52:1** dark; dark toggle ON-vs-OFF track **1.85 → 4.83:1**;
-all spec text pairs >=4.5:1 (light 16.86…5.22:1, dark 15.44…5.61:1).
+Deterministic results of the composition pass (all measured): one content column [14,306] with
+every right edge on it; type tiers separated (title 15/600, section titles 11/600 uppercase
+--ink-2 at 10.34:1/11.25:1); colour roles split (state carried by dots/tags, not whole-pill
+tints); action hierarchy corrected ('Send now' primary graphite/ivory 17.74:1/14.86:1, footer
+Statistics ghost); browser artifacts gone (resize:none, one inline-SVG chevron, 5px scrollbar);
+chart given a dashed y-max gridline + tick + today legend at ZERO extra height; header no longer
+renders a truncated sentence (locale-stable count badge, full text in title/aria); net height
+SHORTER (follow-up-ON empty 590 → 571) with crowded states at the 600 cap.
 
-Composition defects driving the gap (both passes agree): broken-looking truncated domain badge;
-inconsistent right-edge alignment; flat type hierarchy; one blue doing six jobs; inverted action
-hierarchy (Send now vs footer Statistics); browser-default artifacts (unthemed scrollbar,
-textarea resize handle, native-looking chevrons/toggles); chart with no scale/legend; cramped
-rows (pause row, follow-up container, log vs scrollbar, footer).
+Measured contrast (rendered output, pixel-verified): mini-chart day bars **1.88 → 3.32:1** light
+and **2.06 → 4.52:1** dark; dark toggle ON-vs-OFF track **1.85 → 4.83:1**; all text pairs
+>=4.5:1 (light 16.86…5.22:1, dark 15.44…5.61:1); one documented decorative exception: the new
+--grid hairline 1.59:1 light / 3.47:1 dark (same class as the spec's existing --axis/--divide,
+value carried by the muted tick numeral at 5.99:1 / 7.78:1).
 
-Active work: the design iteration lane (`deleg_8245e4b3`) targets **>=8/10 premium light+dark in
->=2 anchored vision rounds** with all gates green.
+**Store assets (deterministic fix):** `store/screenshot1.png` was clipping ~42px off the popup
+header — the capture was scaled width-only (440px → 825px tall) inside a 730px `overflow:hidden`
+stage. Fixed with max-width+max-height (aspect preserved), the log-expansion framing hack removed,
+and the follow-up section seeded ON; regenerated and verified by vision (header visible, footer
+visible, no clip). `store/screenshot3-popup.png` was already correct (`max-height: 740px`).
 
 ## Axis 3 — Experience (trải nghiệm)
 
@@ -90,3 +100,10 @@ keyboard/a11y floor is partially covered by the language switcher's Escape/focus
   later commit invalidates it (re-measure, never reuse).
 - Vision scores are qualitative; they never substitute for a measured metric.
 - Maker != judge: the lane that implements an upgrade does not certify its own measurement.
+- **Known residual flakiness (open):** the Chrome/CDP suites are intermittently flaky in a way
+  that is independent of the product — a pristine `git archive HEAD` copy failed 1 of 3 runs
+  with a CDP `Runtime.evaluate timed out`, and `test/followup-e2e.mjs` has been seen failing the
+  engine check `rot. a blocked send (approval present) does not advance the index` in this tree
+  while passing on re-run (two consecutive clean runs were reproduced by the coordinator on
+  555f9f0). Treat a single red run as INCONCLUSIVE and re-run before concluding; a repeatable
+  red is a finding.
