@@ -1,8 +1,9 @@
 # Security & Paid Go-Live Round — charter (queued after the UI upgrade round)
 
 Prompt: `docs/SGPS_SECURITY_PAID_v1.6_ROUND_PROMPT.md` (owner-supplied, vendored verbatim).
-This charter maps that operating prompt onto THIS product. Status: **QUEUED** — runs after
-the UI upgrade round (v1.7.0) lands and freezes.
+This charter maps that operating prompt onto THIS product. Status: **AUDIT ROUND RUN** — the audit
+lane produced `docs/SECURITY_V19_AUDIT.md` at the frozen revision `9e6b151` (v1.9.1); remediation
+(S12), independent re-attack (S13) and the rebind remain separate lanes.
 
 ## Routing record
 
