@@ -247,11 +247,17 @@ followupSmart, followupSchedule
 Enabling the toggle pushes a snapshot of the present subset keys. **On load**, sync values are
 applied only to keys **absent** from local storage — a local choice is never overwritten.
 
-**8KB quota (documented limit):** `chrome.storage.sync` allows 8 192 bytes per item
-(`QUOTA_BYTES_PER_ITEM`; 100 KB total, 512 items). An item whose JSON exceeds 8 KB is **skipped
-with a console warning** (local storage remains the source of truth; the rest of the subset
-still syncs) — e.g. a 20-item `followupPrompts` list near the 600-char prompt cap can exceed the
-per-item quota and will simply not sync.
+**8KB quota (documented limit — measured in BYTES):** `chrome.storage.sync` allows 8 192
+**bytes** per item (`QUOTA_BYTES_PER_ITEM`; 100 KB total, 512 items) — bytes of the serialized
+JSON, **not** UTF-16 code units. The guard measures the real size
+(`new TextEncoder().encode(JSON.stringify(value)).length`), because a code-unit `.length` check
+waves through multibyte content (Vietnamese/CJK — exactly what users write into
+`followupPrompts`/`followupChips`): 4 000 `ế` characters are 4 002 code units but 12 002 bytes,
+so the write would have been attempted, rejected by the API and — before this fix — silently
+never synced. An oversized item is **skipped with a console warning naming the measured byte
+size** (local storage remains the source of truth; the rest of the subset still syncs). A
+rejected `chrome.storage.sync.set` (quota or any other failure) is **never silent**: the
+callback reads `chrome.runtime.lastError` and logs the reason (local console only).
 
 ## 6. New log kinds (popup renders them via its generic chip fallback)
 
@@ -281,7 +287,7 @@ per-item quota and will simply not sync.
 | digest counters | `test/followup-e2e.mjs` | `v18 digest. counters…` |
 | hygiene (no deny, ever) | `test/followup-e2e.mjs` | `v18 hygiene. pre-reload…` + the existing `z.` checks |
 | connector hard-block (owner-reported) | `test/e2e.mjs` | `FORBIDDEN` now includes `20` (any button inside the connector card) and `lone-connect`; `connectorCheck` asserts the refusal is logged (`blocked` / `connector`) |
-| badge / commands / digest / sync / manifest | `test/background-unit.mjs` | `M1–M3, P1–P2, B1–B2, A1–A2, C1–C2, D1–D1b–D4, S1–S8, L1–L2, G1` (27 checks) |
+| badge / commands / digest / sync / manifest | `test/background-unit.mjs` | `M1–M3, P1–P2, B1–B2, A1–A2, C1–C2, D1–D1b–D4, S1–S8 + **S5b–S5c** (byte-accurate quota, surfaced write failure), L1–L2, G1` (**29 checks**) |
 | v1.7.0 regression (all rails) | `test/e2e.mjs`, `test/followup-e2e.mjs` | every pre-existing check stays green |
 
 ## 8. Falsification (reverse-mutation proof)
@@ -310,14 +316,75 @@ Results (this round):
 | F4 | `background.js` `updateBadge()`: pause branch `if (Date.now() < pu) {` → `if (false) {` | exactly 1: `B1 badge. paused => pause marker "||"…` | 25 green | 26/26 green |
 | F5 | `background.js` `digestOnStartup()`: `if (d.clicks <= 0) return;` → `if (false) return;` | exactly 1: `D2 digest. clicks=0 => no notification…` | 25 green | 26/26 green |
 | F6 | `background.js` `storage.onChanged`: `if (area && area !== 'local') return;` → `if (false) return;` | exactly 1: `S8 sync echo. onChanged(area=sync) is ignored…` | 25 green | 26/26 green |
-| F7 | `content.js` `connectorIn()`: `function connectorIn(scope) {` → `function connectorIn(scope) { return false;` | `test/e2e.mjs`: `forbiddenHit: ["20"]` + `extra: ["20"]` (the Allow/Deny pair inside the connector card is clicked) | clicked set unchanged, no other forbidden id | pristine `ok:true`, `forbiddenHit: []`, `connectorCheck.ok` |
+| F7 | `content.js` `connectorIn()`: `function connectorIn(scope) {` → `function connectorIn(scope) { return false;` | `test/e2e.mjs` (mutated run, `ok:false`): `forbiddenHit:["20"]` + `extra:["20"]` — the Allow option inside the connector card is clicked — and the refusal log is gone (`connectorCheck.ok:false`, `blockedConnector:0`) | no other forbidden id, `denyCount:0`; clicks 13→15 | pristine `ok:true`, `forbiddenHit: []`, `connectorCheck.ok:true` (`blockedConnector:2`) |
+| F8 | `background.js` `syncValueBytes()`: `return new TextEncoder().encode(json).length;` → `return json.length;` (the pre-fix code-unit check) | `test/background-unit.mjs`: `S5b sync quota. a value over 8192 BYTES but under 8192 code units is skipped (byte-accurate guard)` | exactly 1 RED (`S5b`, detail `jsonBytes:12002, jsonUnits:4002`, `keys:["followupPrompt","followupChips"]` — the 4 000-char multibyte value was NOT skipped) | 28 green | 29/29 green |
+
+F1–F6 are the transcript of the round that shipped those guards (suite sizes then: follow-up
+**118** checks, background-unit **26**); F7 (connector hard-block) and F8 (byte-accurate sync
+quota) were re-run in this round against the current suites (follow-up **119**,
+background-unit **29**).
+
+Note on F7: the `lone-connect` twin (a bare `Connect` button with no pair) is held by the
+lone/pair rail on its own — `Connect` is not an allow-ish label, so no click path reaches it
+even with the connector guard disabled. The connector guard's own falsification is therefore
+the `20` container: with the guard off the pair inside the card IS clicked and the refusal log
+disappears, which is exactly the RED state asserted (`forbiddenHit`/`extra` + `connectorCheck`).
 
 Each mutated run is a full harness pass over a scratch copy of `extension/`
-(`MAA_EXT_DIR=<mut-dir>/extension node test/followup-e2e.mjs`; `node test/background-unit.mjs
-<mut-dir>/extension/background.js`) — the RED sets are exactly the targeted guards, and no
-unrelated check flips in either direction. The mutation builders are one-line string edits that
+(`MAA_EXT_DIR=<mut-dir>/extension node test/e2e.mjs` / `node test/followup-e2e.mjs`;
+`node test/background-unit.mjs <mut-dir>/extension/background.js`) — the RED sets are exactly
+the targeted guards, and no unrelated check flips in either direction. The mutation builders are one-line string edits that
 assert the source string occurs exactly once (so a drifted copy fails loudly instead of
 silently mutating the wrong line).
+
+## 8.2 Harness race root causes (follow-up suite) — fixed
+
+`test/followup-e2e.mjs` flapped between exit 0 and exit 2, and a *different* check failed each
+time: `v18 error. after the error clears, the same text is answerable again`,
+`v18 pause. manual send-now is refused with reason "paused"`, and
+`v18 stuck. a custom stuckPrompt override is honored`. All of them were **harness races
+against the engine's own asynchronous clocks** — no engine defect — and **no assertion was
+weakened, loosened or deleted to get green** (the follow-up check count is unchanged at 119).
+
+Root causes:
+
+1. **Sampled fingerprint clear vs a fixed clear-window** (`v18 error` re-entry). The engine
+   clears `followup.lastErrorFp` on a tick that *samples* `errorPresent()` as empty, and it
+   samples DOM state on its 1 s heartbeat. The harness cleared the error and then waited a
+   fixed 600 ms before re-setting the SAME text: whenever no heartbeat tick landed inside that
+   window (~40 % of runs) the fingerprint was never cleared, the re-appearing text looked
+   "already answered", and no third send fired → RED.
+2. **Seeding is not applying** (`v18 pause` manual refusal, `v18 stuck` custom prompt,
+   `v18 schedule` / `onlyActiveTab`). `chrome.storage.local.set` resolves in the WRITER's
+   process (the popup page); the content script takes the value in later, on
+   `storage.onChanged`. "seed → fixed sleep → assert" therefore races the engine: a negative
+   assertion can pass because the config has not been applied *yet*, and a positive one can
+   fail because it was applied too late (e.g. stuck send #2 firing with the stale default
+   prompt before the custom override had been taken in).
+3. **Visibility/seed ordering** (`onlyActiveTab`). Arming `followupSchedule.onlyActiveTab`
+   while the fixture tab was still visible let a legitimate visible-tab send fire before the
+   tab was hidden.
+
+Fixes (all in the harness — the engine keeps its frozen contract):
+
+- `content.js`'s `followup-status` response now additionally echoes the engine's **applied**
+  config — `pauseUntil`, `schedule`, `stuckPrompt`, `errorPrompt`, `allowTopics`,
+  `blockKeywords`, `lastErrorFp` (additive keys only; every frozen field is unchanged) — and
+  `window.__museAutoAllow.followup` also exposes `lastErrorFp` / `workingSince` / `domIdleMs`.
+- New `waitEngine(pred, ms, label)` polls that ping until the engine reports the seeded state.
+  Every v18 gate now asserts only after the engine has confirmed the config, and the confirmed
+  pings are recorded as `results.v18.applied` so a failure is diagnosable.
+- `v18 error`: waits for `lastErrorFp === ''` — the engine's own "the error cleared" signal —
+  instead of a fixed 600 ms.
+- `v18 stuck`: waits for `stuckPrompt === 'CUSTOM STUCK PROMPT'` before the next silence
+  window (3 s) can elapse.
+- `v18 pause` / `v18 schedule` / `onlyActiveTab` / the v18-A click gates: the pause, schedule
+  window, visibility gate, dry-run, blocklist, topic and allow-once configs are all confirmed
+  applied before the probe card is shown; the `onlyActiveTab` fixture tab is hidden FIRST and
+  the gate confirmed closed before the negative assertion.
+
+Result: **five consecutive full runs, each 119 checks / 0 failed / 0 verification timeouts**
+(§11.1).
 
 ## 9. Limits / NOT VERIFIED
 
@@ -334,8 +401,10 @@ silently mutating the wrong line).
 - **Digest notification**: shown only on browser startup (`chrome.runtime.onStartup`); it is not
   re-shown if the browser stays open for days. Counters keep accumulating until a digest is
   actually shown.
-- **Sync**: the 8KB per-item cap means large `followupPrompts` lists silently (console-warn)
-  stay local; cross-device propagation of such an item does not happen.
+- **Sync**: the 8KB per-item cap is measured in BYTES, so a large or multibyte
+  `followupPrompts` list stays local with an explicit console warning naming the size;
+  cross-device propagation of such an item does not happen. A rejected `chrome.storage.sync.set`
+  is logged with its reason rather than swallowed.
 - **Keyword matching is substring-based** and therefore over-blocks (see §3.3). The UI copy
   should warn users before adding short keywords like `pay`.
 - **Connector recognition is heuristic** (word `connector`, Connect-family button text,
@@ -367,6 +436,10 @@ node test/background-unit.mjs
 
 - Results: recorded in §8/§11 (final gate table below). The e2e harnesses launch a scratch
   Chrome (detached via PowerShell) and reap it by scratch-profile path at teardown.
+- **The Chrome/CDP suites MUST run FOREGROUND (a real TTY).** In a non-TTY / background shell
+  they abort with `stdin is not a tty` and rc=1 before executing a single check — that is a
+  launcher limitation, NOT a test failure. Give each run a generous timeout, and re-run a
+  single flaky run before concluding.
 - Limitations: browser gates are Windows-only by design (see `.github/workflows/ci.yml`);
   the vm/unit harnesses are OS-independent.
 
@@ -375,11 +448,26 @@ node test/background-unit.mjs
 | Gate | Result |
 |---|---|
 | `node scripts/lint.mjs` | exit 0 — “lint OK — 24 checks across 18 files (syntax, JSON, i18n parity, no remote code, minimal permissions)” |
-| `node test/e2e.mjs` | exit 0 — `ok:true`; 13 expected clicks, no missing/extra/forbidden (incl. the connector card `20` + `lone-connect`), 0 deny, dedup n7=1/n11=1, Web Locks + stats + encryption + stats-page + connector-log checks green |
-| `node test/followup-e2e.mjs` | exit 0 — **119 checks, 0 failed** (74 pre-existing + 45 v18; no verification timeouts) |
+| `node test/e2e.mjs` | exit 0 — `ok:true`; 13 expected clicks, no missing/extra/forbidden, 0 deny, dedup n7=1/n11=1, `connectorCheck.ok:true` (`blockedConnector:2`), Web Locks + stats + encryption + stats-page green |
+| `node test/followup-e2e.mjs` | exit 0 — **119 checks, 0 failed, 0 verification timeouts** on each of five consecutive runs after the race fixes (§11.1) |
+| `node test/background-unit.mjs` | exit 0 — **29 checks, 0 failed** (27 + `S5b`/`S5c`) |
 | `node test/import-security.mjs` | exit 0 — 29 checks, 0 failed (stats.js untouched) |
-| `node test/background-unit.mjs` | exit 0 — 27 checks, 0 failed |
+
+Test-count changes this round: `background-unit.mjs` **27 → 29** (byte-accurate sync quota
+`S5b`, surfaced sync write failure `S5c`); `followup-e2e.mjs` unchanged at **119** (the race
+fixes added no assertions and removed none); `lint.mjs` unchanged at 24 checks.
+
+### 11.1 Consecutive follow-up-e2e runs (post-fix)
+
+```
+run 1  rc=0  ok:true  checks:119  failed:0  timeouts:[]
+run 2  rc=0  ok:true  checks:119  failed:0  timeouts:[]
+run 3  rc=0  ok:true  checks:119  failed:0  timeouts:[]
+run 4  rc=0  ok:true  checks:119  failed:0  timeouts:[]
+run 5  rc=0  ok:true  checks:119  failed:0  timeouts:[]
+```
 
 Falsification runs (mutated copies): F1 → 2 RED / 116 green, F2 → 1 RED / 117 green,
-F3 → 2 RED / 116 green, F4/F5/F6 → 1 RED / 25 green each; pristine re-runs fully green
-(§8.1).
+F3 → 2 RED / 116 green, F4/F5/F6 → 1 RED / 25 green each, F7 → `test/e2e.mjs` RED
+(`forbiddenHit:["20"]`, `connectorCheck.ok:false`), F8 → 1 RED / 28 green (`S5b`); pristine
+re-runs fully green (§8.1).

@@ -308,6 +308,9 @@ const checks = [];
 const check = (name, ok, detail) => { checks.push({ name, ok: !!ok, detail: detail === undefined ? null : detail }); return !!ok; };
 const results = { ok: false };
 const timeouts = [];
+// v1.8.0: the engine's APPLIED config at each v18 gate (what the engine had actually taken in
+// when the behaviour was measured) — recorded so a failure is diagnosable, never assumed.
+const v18Applied = {};
 
 async function ev(sessionId, expression, awaitPromise = false) {
   const r = await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise }, sessionId);
@@ -457,6 +460,19 @@ async function settlePrompt(text) {
   await sleep(700);
   const st = await popStore(['followupPrompt', 'followupChips']);
   return { prompt: st && st.followupPrompt, chips: st && st.followupChips };
+}
+// v1.8.0 RACE FIX (root cause of the flaky v18 phases): the content script takes settings in
+// ASYNCHRONOUSLY (chrome.storage.onChanged) and samples DOM state on its own 1s heartbeat, so
+// "seed then sleep N ms then assert" races the engine — a negative assertion (nothing clicked /
+// nothing sent) can pass because the config was not applied YET, and a positive one can fail
+// because the state was not sampled yet. Poll the ENGINE's own status (followup-status, which
+// echoes the applied config) until it reports what was just seeded, then assert on behaviour.
+async function enginePing() {
+  const p = await fixtureMsg({ type: 'followup-status' });
+  return (p && p.resp) || null;
+}
+async function waitEngine(pred, timeoutMs, label) {
+  return waitUntil(async () => { const r = await enginePing(); return r && pred(r) ? r : null; }, timeoutMs, label);
 }
 
 try {
@@ -755,6 +771,13 @@ try {
   await fEval("window.__hideSend()");
   await sleep(300);
   const baseF = (await sentList()).length;
+  // The engine refuses a manual send-now while a send is in flight (reason 'sending').
+  // Case (e) has just fired an automatic send, so wait for that lock to clear — polling the
+  // engine's own in-memory state — instead of racing it with a fixed sleep.
+  await waitUntil(async () => {
+    const p = await fixtureMsg({ type: 'followup-status' });
+    return (p && p.resp && p.resp.sending === false) ? true : null;
+  }, 8000, 'send lock cleared');
   const rF = await fixtureMsg({ type: 'followup-send-now' });
   check('f. manual send-now accepted (attempt started)', !!(rF.resp && rF.resp.ok === true), rF);
   const gotF = await waitUntil(async () => { const l = await sentList(); return l.length > baseF ? l : null; }, 6000, 'manual send');
@@ -1006,11 +1029,13 @@ try {
     followupSchedule: { enabled: false, start: 8, end: 18, onlyActiveTab: false },
     followupSmart: { stuckMin: 0, errorRecovery: false },
     onboarded: true }); // UI-only key: the whole v18-A phase runs with it set and must not care
+  // RACE FIX: confirm the engine took the base config in before any probe card is shown
+  await waitEngine((r) => r.paused === false && r.dryRun === false && r.allowOnceMode === false, 6000, 'v18-A base config applied');
   await sleep(400);
 
   // ---- dry-run: detection + 'allow-dry' log, NO click; toggling off re-arms the node ----
   await seed({ dryRun: true });
-  await sleep(200);
+  await waitEngine((r) => r.dryRun === true, 6000, 'dryRun on applied'); // RACE FIX: applied before the probe shows
   await fEval("window.__setV18('dry')");
   const dryEntry = await waitUntil(async () => findLog('allow-dry'), 9000, 'allow-dry log entry');
   check('v18 dry-run. detection runs: log entry kind "allow-dry" with dryRun:true', !!dryEntry && dryEntry.dryRun === true, { entry: dryEntry });
@@ -1034,7 +1059,7 @@ try {
     !blNames.includes('v18-blocked-allow') && !blNames.includes('v18-blocked-deny'), { names: blNames.filter((n) => /blocked|clean/.test(n)) });
   await fEval("window.__setV18('off')");
   await seed({ rules: { allowTopics: [], blockKeywords: ['banana'] } });
-  await sleep(200);
+  await waitEngine((r) => r.blockKeywords.includes('banana'), 6000, 'custom blocklist applied'); // RACE FIX
   await fEval("window.__setV18('banana')");
   const bananaEntry = await waitUntil(async () => findLog('blocked', 'keyword:banana'), 9000, 'blocked keyword:banana');
   check('v18 blocklist. a custom list replaces the seed — its own keyword blocks (path B too)', !!bananaEntry, { entry: bananaEntry });
@@ -1045,7 +1070,7 @@ try {
 
   // ---- topics: non-empty allowTopics => click ONLY on an exact (case-insensitive) match ----
   await seed({ rules: { allowTopics: ['TOPIC-OK'], blockKeywords: [] } });
-  await sleep(200);
+  await waitEngine((r) => r.allowTopics.includes('TOPIC-OK') && r.blockKeywords.length === 0, 6000, 'topic whitelist applied'); // RACE FIX
   await fEval("window.__setV18('topicOk')");
   const topicOkHit = await waitUntil(async () => { const c = await cardClicks(); return c.some((x) => x.n === 'v18-topic-ok-allow') ? c : null; }, 9000, 'topic-ok clicked');
   check('v18 topics. matching extractTopic() (case-insensitive exact) is clicked', !!topicOkHit, {});
@@ -1057,17 +1082,20 @@ try {
   const topicBadNames = (await cardClicks()).map((x) => x.n);
   check('v18 topics. the mismatched card is never clicked', !topicBadNames.includes('v18-topic-bad-allow'), { names: topicBadNames.filter((n) => /topic/.test(n)) });
   await seed({ rules: { allowTopics: [], blockKeywords: [] } });
+  await waitEngine((r) => r.allowTopics.length === 0, 6000, 'topic gate off applied'); // RACE FIX
   const topicBadHit = await waitUntil(async () => { const c = await cardClicks(); return c.some((x) => x.n === 'v18-topic-bad-allow') ? c : null; }, 10000, 'topic gate off => clicked');
   check('v18 topics. an empty allowTopics list disables the gate (same card is clicked)', !!topicBadHit, {});
   await fEval("window.__setV18('off')");
 
   // ---- allow-once: mode off leaves 'Allow once only' alone; mode on recognizes + prefers it ----
+  await waitEngine((r) => r.allowOnceMode === false, 6000, 'allowOnceMode off applied'); // RACE FIX (negative probe)
   await fEval("window.__setV18('onceOnly')");
   await sleep(2600);
   const onceOffNames = (await cardClicks()).map((x) => x.n);
   check('v18 allow-once. mode OFF: "Allow once only" is not recognized — the card is left to the user',
     !onceOffNames.some((n) => n.startsWith('v18-once')), { names: onceOffNames.filter((n) => /once/.test(n)) });
   await seed({ allowOnceMode: true });
+  await waitEngine((r) => r.allowOnceMode === true, 6000, 'allowOnceMode on applied'); // RACE FIX
   const onceHit = await waitUntil(async () => { const c = await cardClicks(); return c.some((x) => x.n === 'v18-once-only') ? c : null; }, 9000, 'once-only clicked');
   check('v18 allow-once. mode ON: "Allow once only" is recognized and clicked', !!onceHit, {});
   await sleep(1500);
@@ -1095,7 +1123,7 @@ try {
 
   // ---- pause: clicks halted while pauseUntil is in the future (seeded BEFORE the probe shows) ----
   await seed({ pauseUntil: Date.now() + 60000 });
-  await sleep(200);
+  v18Applied.pauseClickGate = await waitEngine((r) => r.paused === true, 6000, 'pause applied'); // RACE FIX (negative probe)
   await fEval("window.__setV18('pause')");
   await sleep(2600);
   const pauseNames = (await cardClicks()).map((x) => x.n);
@@ -1132,6 +1160,9 @@ try {
   await seed({ followupEnabled: true, followupPrompt: V18P, followupChips: [], followupPrompts: [], followupIdleMs: 400, followupCooldownMs: 1000,
     followupSchedule: { enabled: false, start: 8, end: 18, onlyActiveTab: false }, followupSmart: { stuckMin: 0, errorRecovery: false },
     dryRun: false, pauseUntil: Date.now() + 60000 });
+  // RACE FIX: the manual 'send-now' below must meet an engine that has ALREADY taken the pause
+  // in — otherwise it is refused for the wrong reason (or not refused at all).
+  v18Applied.pause = await waitEngine((r) => r.paused === true && r.enabled === true, 6000, 'v18 pause+enabled applied');
   await sleep(2600);
   check('v18 pause. no follow-up send while paused (idle)', (await sentList()).length === 0, { sent: (await sentList()).length });
   const manualPaused = await fixtureMsg({ type: 'followup-send-now' });
@@ -1146,6 +1177,7 @@ try {
   try { badge = JSON.parse(badgeRaw || '{}'); } catch { badge = { err: 'bad-json' }; }
   check('v18 pause. the toolbar badge shows the pause marker "||"', badge.err === null && badge.t === '||', badge);
   await seed({ pauseUntil: 0 });
+  v18Applied.pauseCleared = await waitEngine((r) => r.paused === false, 6000, 'v18 pause cleared'); // RACE FIX
   const resumeSent = await waitUntil(async () => { const l = await sentList(); return l.length > 0 ? l : null; }, 9000, 'send after pause cleared');
   check('v18 pause. clearing the pause resumes the follow-up engine', !!resumeSent, {});
   await seed({ followupEnabled: false });
@@ -1156,12 +1188,14 @@ try {
   const winIn = { start: hourNow, end: (hourNow + 23) % 24 };            // includes now (wraps unless hour 0)
   await seed({ followupEnabled: true, followupPrompt: V18P, followupIdleMs: 400, followupCooldownMs: 1500,
     followupSchedule: { enabled: true, start: winOut.start, end: winOut.end, onlyActiveTab: false } });
+  v18Applied.scheduleOut = await waitEngine((r) => r.scheduleAllowed === false, 6000, 'schedule window closed'); // RACE FIX (negative probe)
   await fEval("window.__setState('idle')");
   const schBase = (await sentList()).length; // 1 — the B1 resume send lives in this fixture session
   await sleep(3000);
   const schOutSent = (await sentList()).length;
   check('v18 schedule. outside the window => no send', schOutSent === schBase, { winOut, hourNow, sent: schOutSent, base: schBase });
   await seed({ followupSchedule: { enabled: true, start: winIn.start, end: winIn.end, onlyActiveTab: false } });
+  v18Applied.scheduleIn = await waitEngine((r) => r.scheduleAllowed === true, 6000, 'schedule window open'); // RACE FIX
   const schIn = await waitUntil(async () => { const l = await sentList(); return l.length > schBase ? l : null; }, 9000, 'scheduled send');
   check('v18 schedule. inside the window => the send fires (wrap-around supported)',
     !!(schIn && schIn[schBase] && schIn[schBase].text === V18P),
@@ -1183,10 +1217,14 @@ try {
   } catch (e) { visState = 'error: ' + (e && e.message); }
   await seed({ followupEnabled: true, followupPrompt: V18P, followupIdleMs: 400, followupCooldownMs: 1500,
     followupSchedule: { enabled: true, start: winIn.start, end: winIn.end, onlyActiveTab: true } });
+  // RACE FIX: the visibility gate is armed FIRST (tab hidden above) and only then confirmed
+  // applied — arming while the tab was still visible let a legitimate send fire before hiding.
+  v18Applied.visClosed = await waitEngine((r) => r.scheduleAllowed === false, 6000, 'onlyActiveTab gate closed');
   if (visState === 'hidden') {
     await sleep(3000);
     check('v18 schedule. onlyActiveTab: no send while the document is hidden', (await sentList()).length === 0, { visState });
     await seed({ followupSchedule: { enabled: true, start: winIn.start, end: winIn.end, onlyActiveTab: false } });
+    v18Applied.visOpen = await waitEngine((r) => r.scheduleAllowed === true, 6000, 'onlyActiveTab gate open'); // RACE FIX
     const backSend = await waitUntil(async () => { const l = await sentList(); return l.length > 0 ? l : null; }, 9000, 'send after visibility gate off');
     check('v18 schedule. onlyActiveTab off: the send fires again', !!backSend, {});
   } else {
@@ -1207,6 +1245,7 @@ try {
   await sleep(2600);
   check('v18 error. errorRecovery=false => nothing sent for the visible error', (await sentList()).length === 0, {});
   await seed({ followupSmart: { stuckMin: 0, errorRecovery: true } });
+  v18Applied.errorOn = await waitEngine((r) => r.errorRecovery === true, 6000, 'errorRecovery on applied'); // RACE FIX
   const errSend = await waitUntil(async () => { const l = await sentList(); return l.length > 0 ? l : null; }, 9000, 'error recovery send');
   check('v18 error. errorRecovery=true => the default recovery prompt is sent',
     !!(errSend && errSend[0] && errSend[0].text === ERROR_DEFAULT), { text: errSend && errSend[0] ? errSend[0].text : null, expected: ERROR_DEFAULT });
@@ -1218,10 +1257,14 @@ try {
   check('v18 error. a DIFFERENT error text triggers a new recovery send', !!errSend2, {});
   if (errSend2) await waitSendVerified(errSend2[1].t, 'error send 2 verified');
   await fEval("window.__setError('')");
-  await sleep(600);
+  // RACE FIX (the known flaky check): the error fingerprint is cleared by a tick that SAMPLES
+  // the error as absent, and the engine's sampling heartbeat is 1s — a fixed 600ms clear-window
+  // misses that sample ~40% of the time, so the re-appearing text looked 'already answered'.
+  // Wait for the engine to report the cleared fingerprint (deterministic) before re-setting it.
+  v18Applied.errCleared = await waitEngine((r) => r.lastErrorFp === '', 8000, 'error fingerprint cleared');
   await fEval("window.__setError('Traceback: unhandled exception in step 2')");
   const errSend3 = await waitUntil(async () => { const l = await sentList(); return l.length > 2 ? l : null; }, 9000, 'error recovery send 3');
-  check('v18 error. after the error clears, the same text is answerable again', !!errSend3, {});
+  check('v18 error. after the error clears, the same text is answerable again', !!errSend3, { cleared: !!v18Applied.errCleared });
   await fEval("window.__setError('')");
   await seed({ followupEnabled: false });
 
@@ -1234,16 +1277,20 @@ try {
   await sleep(3000);
   check('v18 stuck. stuckMin=0 => no stuck send while working and silent', (await sentList()).length === 0, { sent: (await sentList()).length });
   await seed({ followupSmart: { stuckMin: 0.05, errorRecovery: false } }); // 3 s — fractional minutes allowed
+  v18Applied.stuckMin = await waitEngine((r) => r.stuckMin === 0.05, 6000, 'stuckMin applied'); // RACE FIX
   const stuckSend = await waitUntil(async () => { const l = await sentList(); return l.length > 0 ? l : null; }, 9000, 'stuck recovery send');
   check('v18 stuck. after the silence threshold the default stuck-recovery prompt is sent',
-    !!(stuckSend && stuckSend[0] && stuckSend[0].text === STUCK_DEFAULT), { text: stuckSend && stuckSend[0] ? stuckSend[0].text : null, expected: STUCK_DEFAULT });
+    !!(stuckSend && stuckSend[0] && stuckSend[0].text === STUCK_DEFAULT), { entry: stuckSend && stuckSend[0] ? stuckSend[0] : null, expected: STUCK_DEFAULT });
   // seed the custom prompt IMMEDIATELY: the next silence window is already counting down from the
   // first attempt, so waiting for the verification first would let send #2 fire with the old prompt
   await seed({ followupSmart: { stuckMin: 0.05, stuckPrompt: 'CUSTOM STUCK PROMPT', errorRecovery: false } });
+  // RACE FIX: seeding is not the same as APPLIED — confirm the engine holds the override before
+  // the next silence window (3s) can elapse and fire send #2 with the stale default prompt.
+  v18Applied.stuckPrompt = await waitEngine((r) => r.stuckPrompt === 'CUSTOM STUCK PROMPT', 6000, 'custom stuck prompt applied');
   if (stuckSend) await waitSendVerified(stuckSend[0].t, 'stuck send verified');
   const stuckSend2 = await waitUntil(async () => { const l = await sentList(); return l.length > 1 ? l : null; }, 15000, 'stuck recovery send 2 (custom)');
   check('v18 stuck. a custom stuckPrompt override is honored', !!(stuckSend2 && stuckSend2[1] && stuckSend2[1].text === 'CUSTOM STUCK PROMPT'),
-    { text: stuckSend2 && stuckSend2[1] ? stuckSend2[1].text : null });
+    { entry: stuckSend2 && stuckSend2[1] ? stuckSend2[1] : null, all: (stuckSend2 || []).map((x) => x.text) });
   if (stuckSend2) await waitSendVerified(stuckSend2[1].t, 'stuck send 2 verified');
   await fEval("window.__setApproval(true)");
   const stuckBase3 = (await sentList()).length;
@@ -1258,6 +1305,7 @@ try {
   await seed({ followupEnabled: true, followupPrompt: V18P, followupIdleMs: 400, followupCooldownMs: 1000,
     followupSchedule: { enabled: false, start: 8, end: 18, onlyActiveTab: false },
     followupSmart: { stuckMin: 0, errorRecovery: false }, dryRun: true });
+  v18Applied.followupDry = await waitEngine((r) => r.dryRun === true, 6000, 'follow-up dryRun applied'); // RACE FIX
   const fdEntry = await waitUntil(async () => findLog('followup-dry'), 9000, 'followup-dry log entry');
   check('v18 dry-run. the follow-up logs kind "followup-dry" (dryRun:true) and does NOT send',
     !!fdEntry && fdEntry.dryRun === true && (await sentList()).length === 0, { entry: fdEntry, sent: (await sentList()).length });
@@ -1272,7 +1320,7 @@ try {
   const dg = (dgStore && dgStore.digestCounters) || null;
   check('v18 digest. counters recorded real clicks + blocked + verified follow-ups',
     !!dg && dg.clicks >= 1 && dg.blocked >= 2 && dg.followups >= 1, { counters: dg });
-  results.v18 = { dryEntry, blEntry, bananaEntry, topicBadEntry, badge, visState, counters: dg };
+  results.v18 = { dryEntry, blEntry, bananaEntry, topicBadEntry, badge, visState, counters: dg, applied: v18Applied };
 
   // ---- fixture-side evidence + hygiene ----
   const finalSent = await sentList();

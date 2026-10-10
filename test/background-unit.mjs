@@ -16,8 +16,9 @@
  *   D1-D4  startup digest: notification + lastDigestAt + counters reset when clicks>0;
  *          no notification (nothing touched) when clicks=0; notify failure keeps lastDigestAt;
  *          singular/plural message text exact
- *   S1-S6  syncSettings: write-through on subset changes only, snapshot on enable, 8KB
- *          per-item skip, load-time pull fills only ABSENT keys, sync-area echoes ignored
+ *   S1-S8  syncSettings: write-through on subset changes only, snapshot on enable,
+ *          BYTE-accurate 8KB per-item skip (multibyte content included) + surfaced write
+ *          failures, load-time pull fills only ABSENT keys, sync-area echoes ignored
  *   L1-L2  startup listeners run cleanly; sweep alarm nudges muse tabs, pause alarm refreshes
  *   G1     migrate() seeds schemaVersion while preserving explicit values
  *
@@ -60,7 +61,7 @@ function makeEnv() {
     store: {}, syncStore: {}, changeListeners: [], alarms: {}, alarmListeners: [],
     badge: { text: null, color: null }, notifications: [], notifyFail: false,
     sentMessages: [], startupListeners: [], installedListeners: [], updatedListeners: [],
-    commandListeners: [], warns: [], logs: [], tabQueryResult: [],
+    commandListeners: [], warns: [], logs: [], tabQueryResult: [], syncSetFail: false,
   };
   const fireChange = (area, oldVals, newVals) => {
     const changes = {};
@@ -72,7 +73,7 @@ function makeEnv() {
       for (const fn of state.changeListeners) { try { fn(changes, area); } catch (e) { state.warns.push('onChanged threw: ' + e.message); } }
     });
   };
-  const makeStorage = (area, store) => ({
+  const makeStorage = (area, store, shouldFailSet) => ({
     get(keys, cb) {
       const read = () => {
         if (keys === null || keys === undefined) return { ...store };
@@ -87,7 +88,15 @@ function makeEnv() {
     set(obj, cb) {
       const oldVals = {}; const newVals = {};
       for (const [k, v] of Object.entries(obj)) { oldVals[k] = store[k]; newVals[k] = v; }
+      // simulate a REJECTED write (e.g. QUOTA_BYTES_PER_ITEM exceeded): the store is left
+      // untouched and chrome.runtime.lastError is set for the callback to read
+      if (typeof shouldFailSet === 'function' && shouldFailSet()) {
+        chromeStub.runtime.lastError = { message: 'QUOTA_BYTES_PER_ITEM quota exceeded' };
+        if (typeof cb === 'function') cb();
+        return Promise.resolve();
+      }
       Object.assign(store, obj);
+      chromeStub.runtime.lastError = undefined;
       fireChange(area, oldVals, newVals);
       if (typeof cb === 'function') cb();
       return Promise.resolve();
@@ -124,7 +133,7 @@ function makeEnv() {
     },
     storage: {
       local: makeStorage('local', state.store),
-      sync: makeStorage('sync', state.syncStore),
+      sync: makeStorage('sync', state.syncStore, () => state.syncSetFail),
       onChanged: { addListener: (fn) => state.changeListeners.push(fn) },
     },
     commands: { onCommand: { addListener: (fn) => state.commandListeners.push(fn) } },
@@ -132,6 +141,8 @@ function makeEnv() {
   const sandbox = {
     self: { addEventListener: () => {} },
     chrome: chromeStub,
+    // the MV3 service worker provides the WHATWG encoding globals; the vm context must too
+    TextEncoder, TextDecoder,
     console: { log: (...a) => state.logs.push(a.map(String).join(' ')), warn: (...a) => state.warns.push(a.map(String).join(' ')), error: () => {} },
     setTimeout: (fn, ms) => setTimeout(fn, ms),
     clearTimeout: (t) => clearTimeout(t),
@@ -292,8 +303,33 @@ async function main() {
   T.maybeSetSyncItem(out, 'followupPrompt', 'z'.repeat(9000));
   T.maybeSetSyncItem(out, 'enabled', false);
   check('S5 sync quota. an item over 8KB is skipped with a warning; normal items still mirror',
-    !('followupPrompt' in out) && out.enabled === false && state.warns.some((w) => /8KB/.test(w)),
+    !('followupPrompt' in out) && out.enabled === false && state.warns.some((w) => /8KB|per-item quota/.test(w)),
     { keys: Object.keys(out), warns: state.warns.slice(-2) });
+  // The 8KB per-item quota is measured in BYTES (QUOTA_BYTES_PER_ITEM), NOT UTF-16 code units:
+  // multibyte content (Vietnamese/CJK prompts — exactly what users write) can fit the code-unit
+  // count and still exceed the byte quota. A `.length` guard lets it through and the write then
+  // fails at the API. Falsification: with the code-unit check this assertion is RED.
+  const outMb = {};
+  const mbBig = '\u1ebf'.repeat(4000); // 'ế': 4000 code units, 12000 UTF-8 bytes
+  T.maybeSetSyncItem(outMb, 'followupPrompt', mbBig);
+  T.maybeSetSyncItem(outMb, 'followupChips', ['\u1ebf'.repeat(100)]); // 300 bytes — still syncs
+  const mbJsonBytes = new TextEncoder().encode(JSON.stringify(mbBig)).length;
+  const mbJsonUnits = JSON.stringify(mbBig).length;
+  check('S5b sync quota. a value over 8192 BYTES but under 8192 code units is skipped (byte-accurate guard)',
+    !('followupPrompt' in outMb) && Array.isArray(outMb.followupChips) && outMb.followupChips.length === 1 &&
+    mbJsonBytes > 8192 && mbJsonUnits < 8192,
+    { jsonBytes: mbJsonBytes, jsonUnits: mbJsonUnits, keys: Object.keys(outMb) });
+  // a rejected chrome.storage.sync.set must be SURFACED, never swallowed (silent no-sync)
+  resetStore({ syncSettings: true, enabled: true });
+  resetSync({});
+  state.warns.length = 0;
+  state.syncSetFail = true;
+  state.changeListeners.forEach((fn) => fn({ enabled: { oldValue: false, newValue: true } }, 'local'));
+  await tick();
+  state.syncSetFail = false;
+  check('S5c sync write failure. a rejected sync write warns with the reason (never silent); local stays authoritative',
+    state.warns.some((w) => /sync/i.test(w) && /failed/i.test(w)) && Object.keys(state.syncStore).length === 0,
+    { warns: state.warns.slice(-2), syncStore: { ...state.syncStore } });
   // load-time pull: fills ABSENT local keys only (boot pull already ran once — re-run explicitly)
   resetStore({ enabled: true }); // followupPrompt absent
   resetSync({ followupPrompt: 'SYNC PROMPT (from another device)', enabled: false, dryRun: true, followupRotateIdx: 7 });

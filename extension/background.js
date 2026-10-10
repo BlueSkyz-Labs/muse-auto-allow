@@ -28,7 +28,7 @@ const DIGEST_ICON = 'icons/icon128.png';
 // mirrored — it is a per-device opt-in. followupRotateIdx is device-local too.
 const SYNC_SUBSET = ['enabled', 'minDelayMs', 'dryRun', 'allowOnceMode', 'rules',
   'followupEnabled', 'followupPrompt', 'followupPrompts', 'followupChips', 'followupSmart', 'followupSchedule'];
-const SYNC_ITEM_MAX_BYTES = 8192; // chrome.storage.sync QUOTA_BYTES_PER_ITEM
+const SYNC_ITEM_MAX_BYTES = 8192; // chrome.storage.sync QUOTA_BYTES_PER_ITEM — BYTES (UTF-8), not code units
 
 // Surface worker errors in the console instead of silent promise deaths (debuggability;
 // local logging only — nothing is transmitted).
@@ -167,21 +167,46 @@ function digestOnStartup() {
 // --- syncSettings write-through mirror ------------------------------------------------
 // Items above the 8KB per-item sync quota are skipped with a console warning (local storage
 // remains the source of truth; the rest of the subset still syncs).
+// QUOTA_BYTES_PER_ITEM counts BYTES of the serialized JSON, NOT UTF-16 code units: a
+// `.length` check waves through multibyte content (Vietnamese/CJK text is exactly what users
+// write into followupPrompts/followupChips) whose UTF-8 form exceeds 8192 bytes. The write
+// then fails at the API — and if the callback ignored lastError, it silently never synced.
+function syncValueBytes(value) {
+  let json;
+  try { json = JSON.stringify(value); } catch { return Infinity; }
+  if (typeof json !== 'string') return Infinity; // undefined/function => nothing to sync
+  try { return new TextEncoder().encode(json).length; } catch { return json.length; }
+}
 function maybeSetSyncItem(out, key, value) {
   try {
-    if (JSON.stringify(value).length > SYNC_ITEM_MAX_BYTES) {
-      console.warn('[Muse Auto-Allow] sync: "' + key + '" exceeds the 8KB per-item quota — kept local only');
+    const bytes = syncValueBytes(value);
+    if (bytes > SYNC_ITEM_MAX_BYTES) {
+      console.warn('[Muse Auto-Allow] sync: "' + key + '" is ' + (Number.isFinite(bytes) ? bytes + ' bytes' : 'unserializable') +
+        ' — over the ' + SYNC_ITEM_MAX_BYTES + '-byte per-item quota; kept local only');
       return;
     }
     out[key] = value;
   } catch { /* unserializable value — skip */ }
+}
+// A quota/IO failure must never be silent: read lastError in the callback and report why.
+// Local console only — nothing is transmitted, and local storage stays authoritative.
+function setSyncItems(out) {
+  if (!out || !Object.keys(out).length) return;
+  try {
+    chrome.storage.sync.set(out, () => {
+      try {
+        const e = chrome.runtime.lastError;
+        if (e) console.warn('[Muse Auto-Allow] sync: chrome.storage.sync.set failed — ' + (e.message || e));
+      } catch { /* ignore */ }
+    });
+  } catch { /* ignore */ }
 }
 function pushAllToSync() {
   try {
     chrome.storage.local.get(SYNC_SUBSET, (s) => {
       const out = {};
       for (const k of SYNC_SUBSET) if (k in s && s[k] !== undefined) maybeSetSyncItem(out, k, s[k]);
-      if (Object.keys(out).length) { try { chrome.storage.sync.set(out, () => void chrome.runtime.lastError); } catch { /* ignore */ } }
+      setSyncItems(out);
     });
   } catch { /* ignore */ }
 }
@@ -192,7 +217,7 @@ function mirrorToSync(changes) {
       if (s.syncSettings !== true) return; // opt-in only
       const out = {};
       for (const k of SYNC_SUBSET) if (changes[k] && changes[k].newValue !== undefined) maybeSetSyncItem(out, k, changes[k].newValue);
-      if (Object.keys(out).length) { try { chrome.storage.sync.set(out, () => void chrome.runtime.lastError); } catch { /* ignore */ } }
+      setSyncItems(out);
     });
   } catch { /* ignore */ }
 }

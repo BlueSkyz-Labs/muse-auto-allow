@@ -1191,12 +1191,26 @@
       if (m.type === 'followup-status') {
         try {
           const rn = followup.prompts.length; // v1.7.0: rotation position for the popup's 'Next: i/n'
+          // v1.8.0: the status ping is also the test harness's window into the engine's
+          // IN-MEMORY state. Settings are applied asynchronously (storage.onChanged) and DOM
+          // state is sampled on the 1s heartbeat, so a harness that asserts on a fixed sleep
+          // races the engine; polling these fields lets it wait for the applied state instead.
           sendResponse({ state: followup.state, lastSentAt: followup.lastSentAt || null, enabled: followup.enabled,
                          rotateIdx: rn ? followup.rotateIdx % rn : 0, rotateCount: rn,
                          // v1.8.0 engine state (observability for the popup/tests)
                          paused: paused(), dryRun: v18.dryRun, allowOnceMode: v18.allowOnceMode,
                          scheduleAllowed: scheduleAllows(), stuckMin: v18.smart.stuckMin,
-                         errorRecovery: v18.smart.errorRecovery, domIdleMs: Date.now() - lastDomActivityAt });
+                         errorRecovery: v18.smart.errorRecovery, domIdleMs: Date.now() - lastDomActivityAt,
+                         // applied-config echoes (what the engine has actually taken in)
+                         pauseUntil: Number(v18.pauseUntil) || 0, schedule: { ...v18.schedule },
+                         stuckPrompt: v18.smart.stuckPrompt, errorPrompt: v18.smart.errorPrompt,
+                         allowTopics: [...v18.allowTopics], blockKeywords: [...v18.blockKeywords],
+                         // '' = no error fingerprint held (a re-appearing error is answerable again)
+                         lastErrorFp: followup.lastErrorFp,
+                         // in-flight send lock: a manual send-now is refused with reason
+                         // 'sending' while this is true — the harness waits on it instead of
+                         // racing the lock with a fixed sleep
+                         sending: followup.sending });
         } catch { /* ignore */ }
       }
     });
@@ -1313,7 +1327,8 @@
     get followup() {
       return { state: followup.state, enabled: followup.enabled, idleSince: followup.idleSince, lastSentAt: followup.lastSentAt,
                lastAttemptAt: followup.lastAttemptAt, attempts: followup.attempts.length, sending: followup.sending, lastResult: followup.lastResult,
-               rotateIdx: followup.rotateIdx, rotateCount: followup.prompts.length };
+               rotateIdx: followup.rotateIdx, rotateCount: followup.prompts.length, lastErrorFp: followup.lastErrorFp,
+               workingSince: followup.workingSince, domIdleMs: Date.now() - lastDomActivityAt };
     },
   };
 })();
