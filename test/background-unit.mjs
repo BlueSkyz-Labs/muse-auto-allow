@@ -51,8 +51,8 @@ check('M2 manifest. commands: toggle-pause (Alt+Shift+P) + send-followup (Alt+Sh
   !!(cmds['toggle-pause'] && cmds['toggle-pause'].suggested_key && cmds['toggle-pause'].suggested_key.default === 'Alt+Shift+P' &&
      cmds['send-followup'] && cmds['send-followup'].suggested_key && cmds['send-followup'].suggested_key.default === 'Alt+Shift+F'),
   { commands: cmds });
-check('M3 manifest. version 1.8.0 (release freeze) + MV3 + __MSG_ name',
-  man.version === '1.8.0' && man.manifest_version === 3 && man.name === '__MSG_extName__',
+check('M3 manifest. version 1.9.0 (release freeze) + MV3 + __MSG_ name',
+  man.version === '1.9.0' && man.manifest_version === 3 && man.name === '__MSG_extName__',
   { version: man.version, mv: man.manifest_version });
 
 // ---------- sandbox: chrome stubs around the REAL background.js ----------
