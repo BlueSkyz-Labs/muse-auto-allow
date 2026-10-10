@@ -172,3 +172,37 @@ fixture's send recorder:
   `store/*.png` were **not** touched.
 - The sheet is a full-popup overlay (like the Safety panel); it does not implement a focus trap,
   matching the shipped overlays.
+
+## 11. v1.9.1 — experience-axis fixes (popup surface)
+
+Three defects from `docs/ELITE_BENCHMARK_REPORT.md` Axis 3 §3.7 (#1/#2/#3) were fixed in the popup
+(`extension/popup.html` + `extension/popup.js` + the 6 locales). The frozen design is unchanged —
+no token, no size, no layout rule was touched.
+
+- **Modal background isolation (§3.7 #1).** While `#missionSheet`, `#safetyPanel` or `#onboard` is
+  open, every other top-level child of `<body>` gets the `inert` attribute (`syncModalInert()`),
+  which removes the obscured popup from the accessibility tree and from hit-testing; it is restored
+  on close. Every open/close path funnels through `setSafety` / `setMissionOpen` / `renderOnboard`,
+  so button, Escape and programmatic closes all restore it. Measured (`--only=ax`): interactive AX
+  nodes `safety_open` **99 → 83**, `mission_open` **22 → 6**, `onboarding` **13 → 2**, and the
+  background interactive count with a dialog open is **0**.
+  Two documented exceptions inside `syncModalInert`: an OPEN non-modal popover in the background
+  (the language menu) keeps its own subtree operable (`openLangMenu`/`closeLangMenu` re-sync), and
+  the subtree that currently holds focus is never inerted — Chrome blurs a focused descendant on the
+  next task once an ancestor becomes inert, so inerting it would silently steal focus.
+- **Send-blocked reason map (§3.7 #2).** `SEND_BLOCKED_KEY` gained `paused`, `schedule` and `dead`
+  (the third engine reason that previously fell back to the generic line), with 3 new keys in all
+  six locales (`followupSendBlockedPaused/Schedule/Dead`; parity now **172 × 6**).
+  `scripts/bench/experience.mjs --only=assert` enumerates every `reason:` literal in `content.js`
+  and fails if the map misses one.
+- **Blocked reason in the accessible name (§3.7 #3).** The log chip now carries
+  `aria-label="<kind> — <reason>"` **and** a bounded visible `.kreason` span
+  (`blocked · keyword:delete`). The span is `max-width: 92px` + ellipsis, so a long
+  `keyword:<kw>` reason can never widen the chip past the 320 px popup (measured chip right edge
+  **194 px**). New visible-text contrast **5.84:1** light / **6.72:1** dark (AA pass).
+
+Gates on this revision: all six suites green, foreground + unpiped — `lint` 24 checks ·
+`e2e` ok:true · `followup-e2e` 119 checks / 0 failed (heights 594/594/594) · `lang-switch-e2e`
+36 passed / 0 failed (menu-open 423, +full log 594) · `background-unit` 29/29 · `mission-e2e`
+39 checks / 0 failed — plus `experience.mjs --only=assert` 22 passed / 0 failed. Reverse-mutation
+(revert each fix in a copy, `MAA_EXT_DIR`) turns 12 of the 22 assertions RED.

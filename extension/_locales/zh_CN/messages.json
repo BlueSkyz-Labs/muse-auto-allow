@@ -245,6 +245,15 @@
   "followupSendBlockedSending": {
     "message": "跟进消息正在发送中"
   },
+  "followupSendBlockedPaused": {
+    "message": "无法发送 — 自动操作已暂停"
+  },
+  "followupSendBlockedSchedule": {
+    "message": "无法发送 — 不在跟进时段内"
+  },
+  "followupSendBlockedDead": {
+    "message": "无法发送 — Muse 标签页无响应"
+  },
   "followupRotateStarterConfirm": {
     "message": "替换已保存的 $1 个组合？再次点按"
   },

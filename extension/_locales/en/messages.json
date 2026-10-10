@@ -245,6 +245,15 @@
   "followupSendBlockedSending": {
     "message": "A follow-up is already being sent"
   },
+  "followupSendBlockedPaused": {
+    "message": "Couldn't send — automation is paused"
+  },
+  "followupSendBlockedSchedule": {
+    "message": "Couldn't send — outside the follow-up hours"
+  },
+  "followupSendBlockedDead": {
+    "message": "Couldn't send — the Muse tab is not responding"
+  },
   "followupRotateStarterConfirm": {
     "message": "Replace your $1 saved combos? Tap again"
   },

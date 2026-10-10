@@ -295,6 +295,10 @@
   .item .top { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
   .item .t { position: absolute; left: 0; top: 5px; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
   .item .k { font-size: 10.5px; font-weight: 500; padding: 1px 7px; border-radius: 999px; flex: none; }
+  /* v1.9.1: the blocked reason, shown compactly next to the kind word. Bounded + ellipsised so
+     a long `keyword:<kw>` reason can never widen the chip past the frozen 320px layout. */
+  .item .k .kreason { display: inline-block; vertical-align: bottom; margin-left: 1px; font-weight: 400;
+                      max-width: 92px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .item b { color: var(--ink); font-weight: 500; flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis;
             white-space: nowrap; }
   .item .c { color: var(--muted); font-size: 13px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2;

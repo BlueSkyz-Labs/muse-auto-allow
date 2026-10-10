@@ -323,7 +323,38 @@ node scripts/bench/experience.mjs --only=trust    # trust signals
 node scripts/bench/experience.mjs --only=errors   # error recovery
 node scripts/bench/experience.mjs --only=keyboard # keyboard-only path
 node scripts/bench/experience.mjs --only=ax       # accessibility tree
+node scripts/bench/experience.mjs --only=assert   # explicit PASS/FAIL for the §3.7 fixes
 ```
+
+### 3.0 Post-fix revision — the §3.7 defects (measured 2026-10-10)
+
+The §3.7 list was produced by the audit above. This lane then fixed the fixable ones at the
+root cause and re-measured. The harness gained a `--only=assert` metric: **22 explicit
+PASS/FAIL assertions** (`node scripts/bench/experience.mjs --only=assert` → `22 passed / 0
+failed`, exit 0). Every claim below is that command's output.
+
+| # | Defect (§3.7) | Status | Evidence (command + numbers) |
+|---|---|---|---|
+| 1 | Modal overlays do not hide the background from AT | **FIXED** | Background top-level children of `<body>` are made `inert` while any of the three dialogs is open and restored on close (button / Escape / programmatic). AX `Accessibility.getFullAXTree` interactive nodes **before → after**: `safety_open` **99 → 83**, `mission_open` **22 → 6**, `onboarding` **13 → 2**; **background interactive nodes with a dialog open = 0** in all three states (`--only=ax` + the F1/F1b assertions). The one deliberate exception: an open non-modal popover in the background (the language menu) keeps its own subtree operable — exactly ONE subtree exempt, asserted. |
+| 2 | Paused / schedule-closed manual send reports the wrong cause | **FIXED** | `SEND_BLOCKED_KEY` gained `paused`, `schedule` **and** `dead` (the third missing engine reason). The F2 assertion enumerates every `reason:` literal from `content.js` (12 reasons; 10 failure reasons) and proves the map covers all of them; a missing entry now fails the harness. |
+| 3 | The blocked reason is a tooltip only | **FIXED** | The chip carries the reason in its **accessible name** (`aria-label="blocked — keyword:delete"`, verified via `Accessibility.getPartialAXTree`, not just the attribute) **and** as compact visible text (`blocked · keyword:delete`, bounded `.kreason` span) — measured chip right edge **194 px** inside the **320 px** popup. Contrast of the new visible text: **5.84:1** light / **6.72:1** dark (AA pass). |
+| 4 | The engine ignores REMOVAL of a settings key | **FIXED** | A removed key (storage `newValue === undefined`) now resets to that key's shipped DEFAULT for the whole `storage.onChanged` surface (v18 keys, follow-up keys, `enabled`, `mission`). Driven at runtime: closed schedule → `reason:'schedule'`; after `storage.local.remove('followupSchedule')` → **`reason:'attempted'`** (no longer `schedule`). Future pause → `'paused'`; after removing `pauseUntil` → **`'attempted'`**. |
+| 5 | A failed log flush is silent | **FIXED** | `content.js` `flushClicks` now `console.warn`s the failure. Proven at runtime by forcing `chrome.storage.local.set` to throw in the content world, then firing a real click: the captured console line is `[muse-auto-allow] log flush failed — record dropped: probe-quota-exceeded`. |
+| 6 | Phrase-library discoverability (4 interactions) | **NOT DONE** | Unchanged at **4** interactions (`--only=reach`: phrase_library reach 2 / operate 4, still the only `>3` flag). The depth is structural: the entire `.fadvhead`/`.fadvgroup` is `display:none` while follow-up is off, so reaching a phrase needs follow-up ON → Advanced → Phrase library → tap. The only ways to cut a step both regress a frozen contract — a permanently-visible library row risks the ≤600 px cap in the crowded states, and auto-opening the library sheet on Advanced-expand changes the disclosure/sheet contract `test/followup-e2e.mjs` exercises (`#flibbtn` toggling would then CLOSE an already-open sheet). Reported NOT DONE rather than traded against a frozen behaviour. |
+
+**Falsification (reverse-mutation).** The assertions were proven to *detect* the defects, not just
+pass: a mutated copy of `extension/` with each fix reverted (`MAA_EXT_DIR` points the harness at
+it) turns **12 of the 22 checks RED** and exits 2 — F2 coverage (2), F1 safety/mission (3), F1b
+(2), F3 accessible-name (2), F4 removal (2), F5 (1). The pre-fix AX counts reproduced exactly
+(`safety_open` 99, `mission_open` 22, `onboarding` 13).
+
+**Gates on the fixed revision (all six suites, foreground + unpiped):** `node scripts/lint.mjs`
+exit 0 — 24 checks / 18 files · `node test/e2e.mjs` exit 0 (`"ok": true`) ·
+`node test/followup-e2e.mjs` exit 0 (`"ok": true`, 119 checks, 0 failed; heights
+**594/594/594**) · `node test/lang-switch-e2e.mjs` exit 0 (36 passed / 0 failed; heights
+menu-open **423**, menu + full log **594**) · `node test/background-unit.mjs` 29/29 ·
+`node test/mission-e2e.mjs` exit 0 (**39 checks**, 0 failed). i18n parity: **172 keys × 6
+locales** (169 + the 3 new `followupSendBlockedPaused/Schedule/Dead`).
 
 ### 3.1 Time-to-first-value (fresh scratch profile, extension loaded unpacked)
 
@@ -403,10 +434,12 @@ open-panel, open-panel-dry, review-bar, review-bar-dry`.
 Runtime result: **all six actions logged = true** (`--only=trust`); rendered classes =
 `[allow, blocked, dry, mission]` (a follow-up entry renders as `k-allow` by design —
 `popup.js:98` — so it is not separately classed). **No engine action was found that leaves no
-visible trace.** One caveat on *how much* is explained: the blocked **reason** is carried only as a
-`title` tooltip on the chip (`popup.js:585`); the chip's text is the localized word "blocked"
-(measured `blocked_chip = {title: "keyword:delete", text: "blocked"}`), so the *why* is a
-mouse-hover affordance, not visible text and not in the accessible name (defect #3 below).
+visible trace.** One caveat on *how much* is explained: the blocked **reason** was carried only
+as a `title` tooltip on the chip (`popup.js:585`); the chip's text was the localized word
+"blocked" (measured `blocked_chip = {title: "keyword:delete", text: "blocked"}`), so the *why*
+was a mouse-hover affordance, not visible text and not in the accessible name (defect #3 below).
+**FIXED in §3.0** — the reason now rides the chip's `aria-label` *and* a bounded visible span
+(measured `{aria: "blocked — keyword:delete", text: "blocked · keyword:delete"}`).
 
 ### 3.4 Error recovery — each failure path, surfaced? recovery path?
 
@@ -418,8 +451,8 @@ from source.
 |---|---|---|---|---|
 | Success (control) | `{ok:true, reason:'attempted'}` | — | — | `content.js:1358` |
 | Follow-up off | `{ok:false, reason:'disabled'}` | ✓ "Enable Auto follow-up first" | turn the toggle on | `content.js:1316`; `popup.js:1411` |
-| Paused | `{ok:false, reason:'paused'}` | ✗ **generic** "Couldn't send the follow-up" | wait / Resume | `content.js:1317`; missing from `popup.js:1404-1412` → generic at `popup.js:1436` |
-| Schedule closed | `{ok:false, reason:'schedule'}` | ✗ **generic** | change the window / disable the schedule | `content.js:1318`; `scheduleAllows` `content.js:336-344`; missing from `popup.js:1404-1412` |
+| Paused | `{ok:false, reason:'paused'}` | **FIXED** — "Couldn't send — automation is paused" | wait / Resume | `content.js:1317`; **now mapped** in `SEND_BLOCKED_KEY` → `followupSendBlockedPaused` |
+| Schedule closed | `{ok:false, reason:'schedule'}` | **FIXED** — "Couldn't send — outside the follow-up hours" | change the window / disable the schedule | `content.js:1318`; `scheduleAllows` `content.js:336-344`; **now mapped** → `followupSendBlockedSchedule` |
 | Approval present | `{ok:false, reason:'approval-present'}` | ✓ "Muse is waiting for your approval" | clear the approval | `content.js:1320`; `popup.js:1405` |
 | Composer not empty | `{ok:false, reason:'composer-not-empty'}` | ✓ "Muse's message box already has text" | clear the draft | `content.js:1323`; `popup.js:1406` |
 | No composer | `{ok:false, reason:'no-composer'}` | ✓ "no message box found on the Muse page" | — | `content.js:1322`; `popup.js:1407` |
@@ -430,16 +463,19 @@ from source.
 | Sync write rejected | `console.warn "chrome.storage.sync.set failed — …"` | console only | — | `background.js:191-200` |
 | Import refused (bad file) | `alert "Not a Muse Auto-Allow backup file."` | ✓ blocking alert | pick a valid backup | `stats.js:293,297,304,320` |
 | Import refused (quota) | `alert "Could not restore the backup: browser storage is full."` | ✓ dedicated message | free storage | `stats.js:312-314` |
-| Storage quota on click flush | `chrome.storage.local.set` wrapped in try/catch | ✗ silent (record dropped) | — | `content.js:705` |
+| Storage quota on click flush | `chrome.storage.local.set` wrapped in try/catch | **FIXED** — `console.warn` with the reason (no new UI, no network) | — | `content.js` `flushClicks` |
 | No cards found | nothing happens (no log entry) | n/a (no action taken) | — | by design |
 
-**Gaps (reported, not fixed):** (1) a **paused** or **schedule-closed** manual send shows the
-generic "Couldn't send the follow-up" instead of naming the cause — the two reasons exist in the
-engine but are absent from `popup.js:1404-1412`; (2) a failed log flush is silent
-(`content.js:705` catches and drops); (3) removing a v1.8 settings key from storage does **not**
-reset the engine — `content.js:1565-1567` applies only `newValue !== undefined`, so a key deleted
-out from under the page leaves the engine on its stale value until the page reloads (observed live:
-after a `storage.local.clear()` the engine kept refusing every send with `reason:'schedule'`).
+**Gaps (reported by the audit, then FIXED in §3.0):** (1) a **paused** or **schedule-closed**
+manual send showed the generic "Couldn't send the follow-up" instead of naming the cause — both
+reasons are now mapped in `SEND_BLOCKED_KEY` (plus the third missing engine reason `dead`), and
+the harness asserts the map covers the engine's full reason set; (2) a failed log flush was
+silent (`content.js:705` caught and dropped) — it now `console.warn`s the reason; (3) removing a
+v1.8 settings key from storage did **not** reset the engine — `content.js:1565-1567` applied only
+`newValue !== undefined`, so a key deleted out from under the page left the engine on its stale
+value until reload (observed live: after a `storage.local.clear()` the engine kept refusing every
+send with `reason:'schedule'`). A removed key now resets to that key's shipped default, proven at
+runtime for `followupSchedule` and `pauseUntil`.
 
 ### 3.5 Keyboard-only path
 
@@ -473,13 +509,13 @@ while the Safety modal is open was also checked: 10 consecutive `Tab`s stayed in
 
 `CDP Accessibility.getFullAXTree` in each main state.
 
-| Popup state | Interactive nodes | **Unnamed interactive** | Focusable & unnamed | Roles used |
+| Popup state | Interactive nodes (before → after §3.0) | **Unnamed interactive** | Focusable & unnamed | Roles used |
 |---|---|---|---|---|
-| default | 16 | **0** | 0 | button, checkbox, spinbutton, textbox, status |
-| safety_open | 99 | **0** | 0 | + dialog, combobox, option |
-| mission_open | 22 | **0** | 0 | + dialog, radiogroup, radio |
-| advanced_open | 21 | **0** | 0 | button, checkbox, spinbutton, textbox |
-| onboarding (fresh) | 13 | **0** | 0 | button, dialog, status |
+| default | 16 → 16 | **0** | 0 | button, checkbox, spinbutton, textbox, status |
+| safety_open | 99 → **83** | **0** | 0 | + dialog, combobox, option |
+| mission_open | 22 → **6** | **0** | 0 | + dialog, radiogroup, radio |
+| advanced_open | 21 → 21 | **0** | 0 | button, checkbox, spinbutton, textbox |
+| onboarding (fresh) | 13 → **2** | **0** | 0 | button, dialog, status |
 
 **No interactive node with an empty or missing accessible name in any state.** Roles for the custom
 controls: toggles are native `checkbox` (real `<input type=checkbox>`, `checked` state exposed);
@@ -490,35 +526,47 @@ aria-checked` rows (`popup.html:655`, `popup.js:1148`); the schedule hours are n
 `#enabled` checkbox → "Auto-click Allow"; mission rows → "GOLIVE READY — Project Orchestrator 6
 steps …").
 
-**One a11y gap (defect #1):** in `safety_open` (99 interactive nodes) and `mission_open` (22) the
-tree still exposes the **background** popup controls (Statistics, Language, Auto-click Allow,
-Missions, the pause pills, …) — `aria-modal="true"` is set but nothing makes the background
-`inert`/`aria-hidden`, so a screen-reader user can navigate out of the modal into the obscured popup.
+**One a11y gap (defect #1) — FIXED in §3.0:** in `safety_open` (99 interactive nodes) and
+`mission_open` (22) the tree exposed the **background** popup controls (Statistics, Language,
+Auto-click Allow, Missions, the pause pills, …) — `aria-modal="true"` was set but nothing made
+the background `inert`/`aria-hidden`, so a screen-reader user could navigate out of the modal
+into the obscured popup. The background is now `inert` while any of the three dialogs is open:
+the interactive-node delta is exactly the background (**99 → 83**, **22 → 6**, **13 → 2**) and
+the background interactive count with a dialog open is **0**.
 
-### 3.7 Defects found (reported, not fixed — ranked)
+### 3.7 Defects found (ranked — status as of the §3.0 fix pass)
 
 1. **Modal overlays do not hide the background from assistive tech (medium).** `#safetyPanel`,
    `#missionSheet`, `#onboard` are `role="dialog" aria-modal="true"` (`popup.html:636,662,716`) but
-   the background stays in the AX tree and focusable — measured: safety_open = 99 interactive nodes
+   the background stayed in the AX tree and focusable — measured: safety_open = 99 interactive nodes
    including every background control. No `inert`/`aria-hidden` on the background. (Keyboard Tab
-   happens to stay inside, so this is a screen-reader-only leak.)
+   happens to stay inside, so this is a screen-reader-only leak.) — **FIXED** (§3.0): background
+   `inert` while any of the three dialogs is open, restored on close; background interactive nodes
+   with a dialog open = **0** (99 → 83, 22 → 6, 13 → 2).
 2. **A paused / schedule-closed manual send reports the wrong cause (medium).** The engine returns
    `reason:'paused'` (`content.js:1317`) and `reason:'schedule'` (`content.js:1318`), but
-   `SEND_BLOCKED_KEY` (`popup.js:1404-1412`) has no entry for either, so `#fsendnote` shows the
+   `SEND_BLOCKED_KEY` (`popup.js:1404-1412`) had no entry for either, so `#fsendnote` showed the
    generic "Couldn't send the follow-up" (`popup.js:1436`). Measured: both reasons
-   `surfaced_in_popup_message_map: false`.
+   `surfaced_in_popup_message_map: false`. — **FIXED** (§3.0): both mapped, plus `dead`; the map is
+   now asserted against the engine's full reason set.
 3. **The blocked reason is a tooltip only (low/medium).** `popup.js:585` renders `blockedReason` as
-   a `title` attribute on a chip whose text is the word "blocked"; it is neither visible text nor in
+   a `title` attribute on a chip whose text is the word "blocked"; it was neither visible text nor in
    the accessible name (measured `blocked_chip = {title:"keyword:delete", text:"blocked"}`), so a
-   screen-reader user hears *that* a card was blocked but never *why*.
-4. **The engine ignores removal of a v1.8 settings key (low).** `content.js:1565-1567` only applies
+   screen-reader user heard *that* a card was blocked but never *why*. — **FIXED** (§3.0): the
+   reason now rides `aria-label` **and** a bounded visible span.
+4. **The engine ignores removal of a v1.8 settings key (low).** `content.js:1565-1567` only applied
    a change when `newValue !== undefined`; a key deleted from storage (newValue `undefined`) never
-   resets the engine's in-memory value until reload. Observed live: after `storage.local.clear()`
-   the engine kept a closed schedule and refused every send with `reason:'schedule'`.
-5. **A failed log flush is silent (low).** `content.js:705` catches `chrome.storage.local.set`
-   failures with an empty handler — a dropped click record leaves no trace.
+   reset the engine's in-memory value until reload. Observed live: after `storage.local.clear()`
+   the engine kept a closed schedule and refused every send with `reason:'schedule'`. — **FIXED**
+   (§3.0): a removed key resets to that key's shipped default (proven for `followupSchedule` and
+   `pauseUntil`).
+5. **A failed log flush is silent (low).** `content.js:705` caught `chrome.storage.local.set`
+   failures with an empty handler — a dropped click record left no trace. — **FIXED** (§3.0): it now
+   `console.warn`s the reason (local only).
 6. **Phrase library discoverability (low).** 4 interactions from the default popup state (flag in
-   §3.2); its parent controls are `display:none` until follow-up is on *and* Advanced is expanded.
+   §3.2); its parent controls are `display:none` until follow-up is on *and* Advanced is expanded. —
+   **NOT DONE** (§3.0): the depth is structural and the only step-cutting changes regress a frozen
+   contract (see the §3.0 row).
 7. **Follow-up entries are visually indistinguishable from allow clicks (info).** `popup.js:98`
    maps kind `followup` to the `allow` chip class, so in the rendered log the two share a chip and
    only the label differs.

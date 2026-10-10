@@ -245,6 +245,15 @@
   "followupSendBlockedSending": {
     "message": "Ya se está enviando un seguimiento"
   },
+  "followupSendBlockedPaused": {
+    "message": "No se pudo enviar — la automatización está en pausa"
+  },
+  "followupSendBlockedSchedule": {
+    "message": "No se pudo enviar — fuera del horario de seguimiento"
+  },
+  "followupSendBlockedDead": {
+    "message": "No se pudo enviar — la pestaña de Muse no responde"
+  },
   "followupRotateStarterConfirm": {
     "message": "¿Reemplazar tus $1 combos guardados? Toca de nuevo"
   },

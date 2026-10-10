@@ -644,3 +644,59 @@ node test/background-unit.mjs     # exit 0 — 29 checks, 0 failed
 `test/followup-e2e.mjs` records the digest counters after the run
 (`{clicks: 14, blocked: 5, followups: 17}`) — the write merge preserves the §5.3 semantics
 (`v18 digest. counters recorded real clicks + blocked + verified follow-ups` is green).
+
+## 13. Storage-removal reset + flush-failure visibility (v1.9.1)
+
+Two defects from the experience-axis audit (`docs/ELITE_BENCHMARK_REPORT.md` Axis 3 §3.7 #4/#5)
+were fixed in the engine (`extension/content.js`). Neither changes an engine decision rule; both
+close a fail-open/silent-failure hole.
+
+### 13.1 A REMOVED settings key resets to that key's DEFAULT
+
+Before: the `chrome.storage.onChanged` listener applied a value only when
+`newValue !== undefined`, so a key DELETED from storage (`storage.local.clear()`, a restore, a
+manual cleanup) left the engine on its stale in-memory value until the page reloaded. Observed
+live: after a `storage.local.clear()` the engine kept a closed schedule and refused every send
+with `reason:'schedule'`.
+
+Now: `newValue === undefined` means "removed", and the key is reset to its shipped default —
+captured once in `v18Defaults` (from the `v18` object literal, before any storage read) and applied
+by `resetV18Key(k)`. Covered keys: `pauseUntil`, `dryRun`, `allowOnceMode`, `rules`,
+`followupSmart`, `followupSchedule`, plus the follow-up keys (`followupEnabled`, `followupPrompt`,
+`followupPrompts`, `followupRotateIdx`, `followupIdleMs`, `followupCooldownMs`), `enabled`
+(default **true** — a removal must not silently disable the engine), `minDelayMs` (default 300) and
+`mission` (cleared). Fail-closed to the DEFAULT, never to a stale value.
+
+Proof (runtime, `node scripts/bench/experience.mjs --only=assert`, F4):
+`followupSchedule {enabled:true, start:h+1, end:h}` → `{ok:false, reason:'schedule'}`; after
+`chrome.storage.local.remove('followupSchedule')` → `{ok:true, reason:'attempted'}`. Same for
+`pauseUntil`: `'paused'` → `'attempted'` after removal.
+
+### 13.2 A failed log flush is surfaced
+
+Before: `flushClicks` wrapped `chrome.storage.local.set(patch)` in a bare `catch { /* invalidated */ }`
+— a dropped click record (context invalidated, serialization/quota throw) left no trace.
+
+Now: `catch (e) { console.warn('[muse-auto-allow] log flush failed — record dropped:', (e && e.message) || e); }`
+— the same local-only `console.warn` discipline as the sync mirror (`background.js` §5.4). No new
+UI, no network.
+
+Proof (runtime, `--only=assert`, F5): `chrome.storage.local.set` is forced to throw inside the
+content world, then a real click is driven; the captured console line is
+`[muse-auto-allow] log flush failed — record dropped: probe-quota-exceeded`.
+
+### 13.3 Gates on this revision (all green, foreground + unpiped)
+
+```
+node scripts/lint.mjs                     # exit 0 — 24 checks across 18 files
+node test/e2e.mjs                         # exit 0 — ok:true, n7count:1, n11count:1, denyCount:0, forbiddenHit:[]
+node test/followup-e2e.mjs                # exit 0 — 119 checks, 0 failed; heights 594/594/594
+node test/lang-switch-e2e.mjs             # exit 0 — 36 passed / 0 failed
+node test/background-unit.mjs             # exit 0 — 29 checks, 0 failed
+node test/mission-e2e.mjs                 # exit 0 — 39 checks, 0 failed
+node scripts/bench/experience.mjs --only=assert   # exit 0 — 22 passed / 0 failed
+```
+
+Reverse-mutation: reverting §13.1 and §13.2 in a mutated `extension/` copy (pointed at with
+`MAA_EXT_DIR`) turns the corresponding assertions RED (F4 removal ×2, F5 ×1) — the checks detect
+the defect, they are not vacuous.

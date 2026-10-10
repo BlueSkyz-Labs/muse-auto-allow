@@ -245,6 +245,15 @@
   "followupSendBlockedSending": {
     "message": "フォローアップを送信中です"
   },
+  "followupSendBlockedPaused": {
+    "message": "送信できません — 自動操作は一時停止中です"
+  },
+  "followupSendBlockedSchedule": {
+    "message": "送信できません — フォローアップの時間帯外です"
+  },
+  "followupSendBlockedDead": {
+    "message": "送信できません — Muse タブが応答していません"
+  },
   "followupRotateStarterConfirm": {
     "message": "保存済みの $1 件のコンボを置き換えますか？もう一度タップ"
   },

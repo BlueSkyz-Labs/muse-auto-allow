@@ -23,6 +23,10 @@
  *                       records the {ok, reason} + whether the popup has a message for it.
  *   --only=keyboard     Keyboard-only path: trusted CDP key events over every focusable control.
  *   --only=ax           Screen-reader path: CDP Accessibility.getFullAXTree per popup state.
+ *   --only=assert       Explicit PASS/FAIL assertions for the experience-axis fixes (inert
+ *                       modal background, send-blocked reason coverage, blocked-reason
+ *                       accessible name, removed-key reset, surfaced flush failure). A failed
+ *                       assertion makes the process exit non-zero.
  *   --only=all          every metric (default), in the order above.
  *
  * Usage:
@@ -840,6 +844,241 @@ async function measureAX(extId) {
   return rec;
 }
 
+// ---- 6. assertions (explicit pass/fail for the experience-axis fixes) -------------------
+// Each check drives the REAL product and asserts a measurable property, so a regression makes
+// this metric FAIL (and the process exit non-zero) instead of silently reporting a number.
+const AX_ROLES = ['button', 'checkbox', 'combobox', 'textbox', 'radio', 'menuitem', 'link', 'switch', 'listbox', 'option', 'tab', 'spinbutton', 'slider', 'searchbox'];
+async function axRaw(sessionId) {
+  await send('Accessibility.enable', {}, sessionId);
+  const tree = await send('Accessibility.getFullAXTree', {}, sessionId);
+  return tree.nodes || [];
+}
+// Split the interactive AX nodes into "inside the open dialog" vs "background" by walking the
+// AX parentId tree up from every role=dialog root.
+function axSplit(nodes) {
+  const childrenOf = new Map();
+  for (const n of nodes) { if (!n.parentId) continue; if (!childrenOf.has(n.parentId)) childrenOf.set(n.parentId, []); childrenOf.get(n.parentId).push(n.nodeId); }
+  const roots = nodes.filter((n) => n.role && n.role.value === 'dialog' && !n.ignored).map((n) => n.nodeId);
+  const inDialog = new Set();
+  const stack = [...roots];
+  while (stack.length) { const id = stack.pop(); if (inDialog.has(id)) continue; inDialog.add(id); for (const c of (childrenOf.get(id) || [])) stack.push(c); }
+  const inter = nodes.filter((n) => n.role && AX_ROLES.includes(n.role.value));
+  return {
+    dialog_roots: roots.length,
+    interactive_total: inter.length,
+    interactive_in_dialog: inter.filter((n) => inDialog.has(n.nodeId)).length,
+    background: inter.filter((n) => !inDialog.has(n.nodeId)).map((n) => ({ role: n.role.value, name: (n.name && n.name.value) || '' })),
+  };
+}
+// The AX accessible name of a DOM node (proves the name, not just the attribute).
+async function axNameOf(sessionId, selector) {
+  try {
+    await send('DOM.enable', {}, sessionId);
+    const doc = await send('DOM.getDocument', {}, sessionId);
+    const q = await send('DOM.querySelector', { nodeId: doc.root.nodeId, selector }, sessionId);
+    if (!q || !q.nodeId) return null;
+    const part = await send('Accessibility.getPartialAXTree', { nodeId: q.nodeId, fetchRelatives: false }, sessionId);
+    const first = (part.nodes || [])[0];
+    return first && first.name ? first.name.value : null;
+  } catch { return null; }
+}
+async function measureAssertions(extId) {
+  const rec = { cmd: 'node scripts/bench/experience.mjs --only=assert', checks: [], pass: 0, fail: 0 };
+  const add = (id, pass, detail) => { rec.checks.push({ id, pass: !!pass, detail }); pass ? rec.pass++ : rec.fail++; };
+  const popupSrc = fs.readFileSync(path.join(EXT_DIR, 'popup.js'), 'utf8');
+  const contentSrc = fs.readFileSync(path.join(EXT_DIR, 'content.js'), 'utf8');
+  const readJSON = (p) => { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return {}; } };
+
+  // ===== F2 — the send-blocked reason map covers EVERY engine failure reason ==============
+  const mapMatch = popupSrc.match(/const SEND_BLOCKED_KEY = \{([\s\S]*?)\n\};/);
+  const mapKeys = mapMatch ? [...mapMatch[1].matchAll(/'([a-z-]+)':/g)].map((m) => m[1]) : [];
+  const engineReasons = [...new Set([...contentSrc.matchAll(/reason:\s*'([a-z-]+)'/g)].map((m) => m[1]))].sort();
+  const SUCCESS = new Set(['attempted', 'dry-run']);
+  const failureReasons = engineReasons.filter((r) => !SUCCESS.has(r));
+  const missingReasons = failureReasons.filter((r) => !mapKeys.includes(r));
+  add('F2. SEND_BLOCKED_KEY covers every engine failure reason (enumerated from content.js)',
+    missingReasons.length === 0,
+    { engine_reasons: engineReasons, failure_reasons: failureReasons, map_keys: mapKeys.slice().sort(), missing: missingReasons });
+  add('F2. the two reported reasons (paused, schedule) are mapped',
+    mapKeys.includes('paused') && mapKeys.includes('schedule'),
+    { paused: mapKeys.includes('paused'), schedule: mapKeys.includes('schedule') });
+  const locDir = path.join(EXT_DIR, '_locales');
+  const locales = fs.readdirSync(locDir).filter((d) => fs.statSync(path.join(locDir, d)).isDirectory()).sort();
+  const locKeySets = {};
+  for (const l of locales) locKeySets[l] = new Set(Object.keys(readJSON(path.join(locDir, l, 'messages.json'))));
+  const mappedI18nAll = mapMatch ? [...mapMatch[1].matchAll(/'[a-z-]+':\s*\[\s*'([A-Za-z0-9_]+)'/g)].map((m) => m[1]) : [];
+  const mappedI18n = [...new Set(mappedI18nAll)];
+  const i18nMissing = [];
+  for (const k of mappedI18n) for (const l of locales) if (!locKeySets[l].has(k)) i18nMissing.push(l + ':' + k);
+  add('F2. every reason-map i18n key exists in ALL 6 locales',
+    i18nMissing.length === 0 && mappedI18nAll.length === mapKeys.length,
+    { keys: mappedI18n, entries: mappedI18nAll.length, map_keys: mapKeys.length, missing: i18nMissing });
+  const NEW_KEYS = ['followupSendBlockedPaused', 'followupSendBlockedSchedule', 'followupSendBlockedDead'];
+  const newMissing = [];
+  for (const k of NEW_KEYS) for (const l of locales) if (!locKeySets[l].has(k)) newMissing.push(l + ':' + k);
+  add('F2. the new keys exist in ALL 6 locales', newMissing.length === 0, { new_keys: NEW_KEYS, missing: newMissing });
+  const counts = Object.fromEntries(locales.map((l) => [l, locKeySets[l].size]));
+  add('F2. i18n parity holds (identical key count in every locale)',
+    new Set(Object.values(counts)).size === 1 && locales.length === 6, counts);
+
+  // ===== F1 — the background is inert (removed from the AX tree) while a dialog is open ===
+  {
+    const p = await openPopup(extId, 500);
+    await clearStorage(p.sessionId, { onboarded: true, followupEnabled: true });
+    await reloadPopup(p.sessionId);
+    await sleep(350);
+    const base = axSplit(await axRaw(p.sessionId));
+    add('F1. baseline: the default state has interactive nodes and no dialog',
+      base.interactive_total > 0 && base.dialog_roots === 0,
+      { interactive_total: base.interactive_total, dialog_roots: base.dialog_roots });
+
+    await clickSel(p.sessionId, '#safetyBtn'); // trusted click = the real user path
+    await sleep(450);
+    const dom = JSON.parse(await evalIn(p.sessionId, `(() => {
+      const open = ['missionSheet','safetyPanel','onboard'].map((id) => document.getElementById(id)).find((el) => el && !el.hidden) || null;
+      const kids = Array.from(document.body.children).filter((el) => el.tagName !== 'SCRIPT');
+      return JSON.stringify({ open: open ? open.id : null, total: kids.length,
+        background_inert: kids.filter((el) => el !== open).every((el) => el.hasAttribute('inert')),
+        dialog_inert: open ? open.hasAttribute('inert') : null });
+    })()`));
+    add('F1. safety open: EVERY background top-level child is inert and the dialog is not',
+      dom.open === 'safetyPanel' && dom.background_inert === true && dom.dialog_inert === false, dom);
+    const ax1 = axSplit(await axRaw(p.sessionId));
+    add('F1. safety open: ZERO background interactive nodes in the AX tree',
+      ax1.background.length === 0,
+      { interactive_total: ax1.interactive_total, interactive_in_dialog: ax1.interactive_in_dialog, background_count: ax1.background.length, background_sample: ax1.background.slice(0, 10) });
+
+    await keyPress(p.sessionId, 'Escape'); // close by keyboard, the second path
+    await sleep(400);
+    const afterClose = Number(await evalIn(p.sessionId, `document.querySelectorAll('body > [inert]').length`));
+    add('F1. Escape close restores the background (no inert left behind)', afterClose === 0, { inert_after_close: afterClose });
+
+    await clickSel(p.sessionId, '#misbtn');
+    await sleep(450);
+    const ax2 = axSplit(await axRaw(p.sessionId));
+    add('F1. mission sheet open: ZERO background interactive nodes in the AX tree',
+      ax2.dialog_roots >= 1 && ax2.background.length === 0,
+      { dialog_roots: ax2.dialog_roots, background_count: ax2.background.length, background_sample: ax2.background.slice(0, 10) });
+
+    await evalIn(p.sessionId, `document.getElementById('missionClose').click()`); // third path: the close button
+    await sleep(350);
+    const afterBtn = Number(await evalIn(p.sessionId, `document.querySelectorAll('body > [inert]').length`));
+    add('F1. close-button path restores the background', afterBtn === 0, { inert_after_close: afterBtn });
+    await closeTarget(p.targetId);
+  }
+
+  // ===== F1b — the onboarding overlay also isolates the background ========================
+  {
+    const p = await openPopup(extId, 400);
+    await clearStorage(p.sessionId, {}); // fresh install -> onboarding shown
+    await reloadPopup(p.sessionId);
+    await sleep(400);
+    const ax = axSplit(await axRaw(p.sessionId));
+    const dom = JSON.parse(await evalIn(p.sessionId, `(() => {
+      const open = document.getElementById('onboard');
+      const kids = Array.from(document.body.children).filter((el) => el.tagName !== 'SCRIPT');
+      return JSON.stringify({ onboard_shown: !open.hidden, background_inert: kids.filter((el) => el !== open).every((el) => el.hasAttribute('inert')) });
+    })()`));
+    add('F1b. onboarding (fresh install): background inert + ZERO background interactive AX nodes',
+      dom.onboard_shown === true && dom.background_inert === true && ax.background.length === 0,
+      { ...dom, background_count: ax.background.length, interactive_total: ax.interactive_total });
+    // the ONE documented exception: an open non-modal popover (the language menu) keeps its own
+    // subtree operable, so the menu the user just opened is not made inert underneath them.
+    const pop = JSON.parse(await evalIn(p.sessionId, `(() => {
+      document.getElementById('langBtn').click();
+      const active = document.activeElement;
+      const kids = Array.from(document.body.children).filter((el) => el.tagName !== 'SCRIPT');
+      return JSON.stringify({ menuOpen: !document.getElementById('langMenu').hidden,
+        focusInMenu: !!(active && String(active.className || '').indexOf('langitem') >= 0),
+        headInert: document.querySelector('.head').hasAttribute('inert'),
+        inertCount: kids.filter((el) => el.hasAttribute('inert')).length, totalKids: kids.length });
+    })()`));
+    add('F1b. with a dialog open the language popover stays operable and exactly ONE subtree is exempt',
+      pop.menuOpen === true && pop.focusInMenu === true && pop.headInert === false && pop.inertCount === pop.totalKids - 2, pop);
+    await closeTarget(p.targetId);
+  }
+
+  // ===== F3 — the blocked reason is in the ACCESSIBLE NAME (and visible) ==================
+  {
+    const p = await openPopup(extId, 400);
+    const now = new Date().toISOString();
+    await clearStorage(p.sessionId, { onboarded: true, log: [
+      { at: now, kind: 'blocked', label: 'Delete production', blockedReason: 'keyword:delete', context: 'Delete the production database' },
+      { at: now, kind: 'allow', label: 'Allow', context: 'run the tests' },
+    ] });
+    await reloadPopup(p.sessionId);
+    await sleep(600);
+    const chip = JSON.parse(await evalIn(p.sessionId, `(() => { const c = document.querySelector('#logList .k-blocked'); return c ? JSON.stringify({ aria: c.getAttribute('aria-label'), title: c.getAttribute('title'), text: c.textContent, right: Math.round(c.getBoundingClientRect().right), bodyW: Math.round(document.body.getBoundingClientRect().width) }) : 'null'; })()`) || 'null');
+    add('F3. blocked chip: the reason is in the aria-label (accessible name)', !!chip && String(chip.aria || '').includes('keyword:delete'), chip);
+    add('F3. blocked chip: the reason is ALSO visible text', !!chip && String(chip.text || '').includes('keyword:delete'), chip);
+    add('F3. blocked chip: the chip stays inside the 320px popup (no horizontal overflow)', !!chip && chip.right <= chip.bodyW, chip);
+    const axName = await axNameOf(p.sessionId, '#logList .k-blocked');
+    add('F3. blocked chip: the resolved AX accessible name carries the reason', String(axName || '').includes('keyword:delete'), { ax_name: axName });
+    await closeTarget(p.targetId);
+  }
+
+  // ===== F4 — a REMOVED settings key resets the engine to that key's DEFAULT =============
+  {
+    const boot = await openPopup(extId, 400);
+    const fixture = await openFixtureWithContent(FOLLOWUP_URL);
+    const cid = fixture.cid;
+    if (!cid) {
+      add('F4. removed-key reset (schedule/pause)', false, { error: 'content ctx not found' });
+    } else {
+      await waitFor(async () => (await evalIn(fixture.sessionId, 'typeof window.__setV18')) === 'function', 8000, 80);
+      await evalIn(fixture.sessionId, `window.__setV18('off'); window.__setApproval(false); window.__setComposer(''); document.getElementById('composer').style.display=''`);
+      const base = { enabled: true, minDelayMs: 0, pauseUntil: 0, dryRun: false, onboarded: true, rules: {},
+        followupSmart: {}, followupEnabled: true, followupPrompt: 'Keep going', followupIdleMs: 3600000, followupCooldownMs: 3600000 };
+      const send = async () => { await sleep(1200); return JSON.parse(await evalIn(boot.sessionId, SEND_ALL_TABS, { awaitPromise: true })); };
+      const h = await evalIn(fixture.sessionId, 'new Date().getHours()');
+
+      await clearStorage(boot.sessionId, Object.assign({}, base, { followupSchedule: { enabled: true, start: (h + 1) % 24, end: h, onlyActiveTab: false } }));
+      const schBefore = await send();
+      add('F4. control: a closed schedule refuses the send with reason "schedule"', schBefore && schBefore.reason === 'schedule', schBefore);
+      await evalIn(boot.sessionId, `new Promise((res) => chrome.storage.local.remove('followupSchedule', () => res(1)))`, { awaitPromise: true });
+      const schAfter = await send();
+      add('F4. after REMOVING followupSchedule the engine resets to the default (no longer "schedule")',
+        schAfter && schAfter.reason !== 'schedule', { before: schBefore && schBefore.reason, after: schAfter });
+
+      await clearStorage(boot.sessionId, Object.assign({}, base, { pauseUntil: Date.now() + 3600000 }));
+      const pauseBefore = await send();
+      add('F4. control: a future pauseUntil refuses the send with reason "paused"', pauseBefore && pauseBefore.reason === 'paused', pauseBefore);
+      await evalIn(boot.sessionId, `new Promise((res) => chrome.storage.local.remove('pauseUntil', () => res(1)))`, { awaitPromise: true });
+      const pauseAfter = await send();
+      add('F4. after REMOVING pauseUntil the engine resets to the default (no longer "paused")',
+        pauseAfter && pauseAfter.reason !== 'paused', { before: pauseBefore && pauseBefore.reason, after: pauseAfter });
+    }
+    await closeTarget(fixture.targetId);
+    await closeTarget(boot.targetId);
+  }
+
+  // ===== F5 — a failed log flush is surfaced locally, not dropped silently ===============
+  {
+    const boot = await openPopup(extId, 400);
+    const fixture = await openFixtureWithContent(FOLLOWUP_URL);
+    const cid = fixture.cid;
+    if (!cid) {
+      add('F5. a failed log flush warns locally', false, { error: 'content ctx not found' });
+    } else {
+      await waitFor(async () => (await evalIn(fixture.sessionId, 'typeof window.__setV18')) === 'function', 8000, 80);
+      await clearStorage(boot.sessionId, { enabled: true, minDelayMs: 0, pauseUntil: 0, dryRun: false, onboarded: true, rules: {}, log: [], clickCount: 0, digestCounters: { clicks: 0, followups: 0, blocked: 0 } });
+      await sleep(500);
+      const patch = await evalCtx(fixture.sessionId, cid, `(() => { try { window.__origSet = chrome.storage.local.set; chrome.storage.local.set = function () { throw new Error('probe-quota-exceeded'); }; return typeof chrome.storage.local.set; } catch (e) { return 'ERR:' + e.message; } })()`);
+      consoleBySession.set(fixture.sessionId, []);
+      await evalIn(fixture.sessionId, `window.__setV18('clean')`);
+      const hit = await waitFor(() => (consoleBySession.get(fixture.sessionId) || []).find((c) => c.text.includes('log flush failed')), 12000, 250);
+      const lines = (consoleBySession.get(fixture.sessionId) || []).map((c) => c.text.slice(0, 140));
+      add('F5. a failed log flush surfaces a local console.warn (the record is not dropped silently)', !!hit,
+        { patched: patch, console: lines.slice(0, 6) });
+      await evalCtx(fixture.sessionId, cid, `(() => { try { if (window.__origSet) chrome.storage.local.set = window.__origSet; } catch (e) { /* ignore */ } return 1; })()`);
+    }
+    await closeTarget(fixture.targetId);
+    await closeTarget(boot.targetId);
+  }
+
+  return rec;
+}
+
 // =========================================================================================
 // main
 // =========================================================================================
@@ -861,6 +1100,7 @@ try {
   if (want('errors')) { try { out.metrics.errors = await measureErrors(extId); } catch (e) { out.errors.push('errors: ' + e.message); } }
   if (want('keyboard')) { try { out.metrics.keyboard = await measureKeyboard(extId); } catch (e) { out.errors.push('keyboard: ' + e.message); } }
   if (want('ax')) { try { out.metrics.ax = await measureAX(extId); } catch (e) { out.errors.push('ax: ' + e.message); } }
+  if (want('assert')) { try { out.metrics.assert = await measureAssertions(extId); } catch (e) { out.errors.push('assert: ' + e.message); } }
 
   out.measured_on = new Date().toISOString();
 } catch (e) {
@@ -921,7 +1161,13 @@ if (m.ax) {
   console.log('\n[accessibility tree] ' + m.ax.cmd);
   for (const k of Object.keys(m.ax.states)) line(k, 'interactive=' + m.ax.states[k].interactive_count + ' unnamed=' + m.ax.states[k].interactive_unnamed.length + ' focusable-unnamed=' + m.ax.states[k].focusable_unnamed.length);
 }
+if (m.assert) {
+  console.log('\n[assertions] ' + m.assert.cmd);
+  for (const c of m.assert.checks) console.log('  ' + (c.pass ? 'PASS' : 'FAIL') + '  ' + c.id);
+  line('checks', m.assert.pass + ' passed / ' + m.assert.fail + ' failed');
+}
 if (out.errors.length) console.log('\nerrors: ' + JSON.stringify(out.errors));
 console.log('\n--- JSON ---');
 console.log(JSON.stringify(out, null, 2));
-process.exit(out.errors.length ? 2 : 0);
+const assertFail = m.assert ? m.assert.fail : 0;
+process.exit(out.errors.length || assertFail ? 2 : 0);

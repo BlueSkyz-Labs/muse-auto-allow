@@ -245,6 +245,15 @@
   "followupSendBlockedSending": {
     "message": "후속 프롬프트를 보내는 중입니다"
   },
+  "followupSendBlockedPaused": {
+    "message": "보낼 수 없음 — 자동 실행이 일시중지되었습니다"
+  },
+  "followupSendBlockedSchedule": {
+    "message": "보낼 수 없음 — 팔로우업 시간대가 아닙니다"
+  },
+  "followupSendBlockedDead": {
+    "message": "보낼 수 없음 — Muse 탭이 응답하지 않습니다"
+  },
   "followupRotateStarterConfirm": {
     "message": "저장된 조합 $1개를 교체할까요? 다시 탭하세요"
   },

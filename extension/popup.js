@@ -581,8 +581,15 @@ async function renderLog(log) {
         }
         // timestamp column on the left; the kind chip opens the message column and the
         // clamped context hangs under it (no full-margin continuation lines)
+        // v1.9.1: a blocked entry carries its reason in the chip's ACCESSIBLE NAME (aria-label),
+        // not only as a hover title — a screen-reader user must hear WHY, not just "blocked".
+        // The reason is also shown compactly: the chip stays on ONE line and the reason span is
+        // bounded (max-width + ellipsis, see .kreason), so a long `keyword:<kw>` reason can never
+        // widen the chip past the frozen layout.
+        const kAria = kTitle ? ' aria-label="' + esc(kLbl + ' — ' + kTitle) + '"' : '';
+        const kVis = kTitle ? '<span class="kreason" aria-hidden="true"> · ' + esc(kTitle) + '</span>' : '';
         return '<div class="item"><span class="t" title="' + esc(localFull(e.at)) + '">' + esc(localTime(e.at)) + '</span>' +
-          '<div class="top"><span class="k k-' + esc(kCls) + '"' + (kTitle ? ' title="' + esc(kTitle) + '"' : '') + '>' + esc(kLbl) + '</span>' + mTitle + '</div>' +
+          '<div class="top"><span class="k k-' + esc(kCls) + '"' + (kTitle ? ' title="' + esc(kTitle) + '"' : '') + kAria + '>' + esc(kLbl) + kVis + '</span>' + mTitle + '</div>' +
           '<div class="c" title="' + esc(cTitle) + '">' + esc(ctxS) + '</div></div>';
       }).join('')
     : '<div class="empty">' + esc(t('noClicks', 'No clicks yet')) + '</div>';
@@ -736,6 +743,39 @@ const v18 = { pauseUntil: 0, dryRun: false, allowOnce: false, syncSettings: fals
               counters: {}, rules: { topics: [], keywords: [], keywordsSeeded: true } };
 let safetyOpen = false;
 const pausedNow = () => Date.now() < (Number(v18.pauseUntil) || 0);
+
+// ---- v1.9.1 — modal background isolation ---------------------------------------------
+// The three full-popup overlays (#missionSheet / #safetyPanel / #onboard) are role="dialog"
+// aria-modal="true"; aria-modal alone does NOT remove the obscured popup from the
+// accessibility tree (measured: 99 interactive nodes with the Safety sheet open). While any
+// one of them is open, every OTHER top-level child of <body> is made `inert`, which removes
+// it from the AX tree and from hit-testing, and restores it on close. Every open/close path
+// (button, Escape, programmatic) funnels through setSafety / setMissionOpen / renderOnboard,
+// so this single sync keeps the background hidden in all of them. `inert` is supported by the
+// extension's minimum_chrome_version (116).
+// One deliberate exception: an OPEN non-modal popover that lives in the background (the
+// language menu) keeps its own trigger subtree operable — making the menu the user just
+// opened inert underneath them would be a worse bug than the leak it closes. The subtree that
+// currently HOLDS FOCUS is likewise never made inert: Chrome blurs a focused descendant on the
+// next task once an ancestor becomes inert, so inerting it would silently steal focus.
+const MODAL_IDS = ['missionSheet', 'safetyPanel', 'onboard'];
+function syncModalInert() {
+  const body = document.body;
+  if (!body) return;
+  let openEl = null;
+  for (const id of MODAL_IDS) { const el = $(id); if (el && !el.hidden) { openEl = el; break; } }
+  const langWrap = $('langWrap');
+  const active = document.activeElement;
+  const kids = body.children;
+  for (let i = 0; i < kids.length; i++) {
+    const el = kids[i];
+    if (el.tagName === 'SCRIPT') continue;
+    if (!openEl || el === openEl) { el.removeAttribute('inert'); continue; }
+    const holdsFocus = !!(active && active !== body && el.contains(active));
+    if (holdsFocus || (langOpen && langWrap && el.contains(langWrap))) el.removeAttribute('inert');
+    else el.setAttribute('inert', '');
+  }
+}
 
 // ---- pause: quick durations + a state banner in the SAME 26px row -------------------
 let pauseTimer = null;
@@ -918,6 +958,7 @@ function setSafety(open) {
   } else {
     kwResetDisarm();
   }
+  syncModalInert();
 }
 
 // ---- onboarding wizard (3 steps, shown while onboarded !== true) ---------------------
@@ -935,6 +976,7 @@ function renderOnboard() {
   if (!ov) return;
   const show = v18.onboarded !== true;
   ov.hidden = !show;
+  syncModalInert();
   if (!show) return;
   const step = OB_STEPS[obStep] || OB_STEPS[0];
   const ti = $('obTitle'), bo = $('obBody'), pr = $('obPrimary');
@@ -1027,6 +1069,7 @@ function openLangMenu(focusItem) {
   langOpen = true;
   menu.hidden = false;
   btn.setAttribute('aria-expanded', 'true');
+  syncModalInert(); // an open popover keeps its own subtree operable (see syncModalInert)
   if (focusItem) {
     const target = menu.querySelector('.langitem.on') || menu.querySelector('.langitem');
     if (target) target.focus();
@@ -1041,6 +1084,7 @@ function closeLangMenu(refocus) {
   menu.hidden = true;
   btn.setAttribute('aria-expanded', 'false');
   if (refocus && wasOpen) btn.focus();
+  syncModalInert(); // the popover is gone again — restore the modal background isolation
 }
 
 function moveLangFocus(delta) {
@@ -1212,6 +1256,7 @@ function setMissionOpen(open) {
     const c = $('missionClose');
     if (c) c.focus();
   }
+  syncModalInert();
 }
 function applyMissionUI(s) {
   misEnabled = s.missionEnabled === true;
@@ -1401,6 +1446,11 @@ $('fcool').addEventListener('change', () => {
 // content.js followupAttempt). When NO tab accepted the send, the first reason is shown
 // inline next to the button (#fsendnote, role=status so screen readers hear it too).
 // A successful send keeps the existing 'Follow-up sent HH:MM' pill path (2.5 s poll).
+// Coverage contract: EVERY reason the engine's followupAttempt can return as a FAILURE must
+// have an entry here (success reasons 'attempted' / 'dry-run' are never looked up — the note
+// is only shown when no tab accepted the send). scripts/bench/experience.mjs asserts this
+// against the reason strings enumerated from content.js, so a future reason cannot silently
+// fall back to the generic line.
 const SEND_BLOCKED_KEY = {
   'approval-present': ['followupSendBlockedApproval', "Couldn't send — Muse is waiting for your approval"],
   'composer-not-empty': ['followupSendBlockedDraft', "Couldn't send — Muse's message box already has text"],
@@ -1409,6 +1459,9 @@ const SEND_BLOCKED_KEY = {
   'no-prompt': ['followupSendBlockedNoPrompt', "Couldn't send — no follow-up prompt is set"],
   'sending': ['followupSendBlockedSending', 'A follow-up is already being sent'],
   'disabled': ['followupSendNowHint', 'Enable Auto follow-up first'],
+  'paused': ['followupSendBlockedPaused', "Couldn't send — automation is paused"],
+  'schedule': ['followupSendBlockedSchedule', "Couldn't send — outside the follow-up hours"],
+  'dead': ['followupSendBlockedDead', "Couldn't send — the Muse tab is not responding"],
 };
 let fSendNoteTimer = null;
 function fSendNote(text) {

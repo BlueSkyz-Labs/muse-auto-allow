@@ -418,6 +418,23 @@
       if ('onlyActiveTab' in sch) v18.schedule.onlyActiveTab = sch.onlyActiveTab === true;
     }
   }
+  // Shipped v18 defaults, captured ONCE (before any storage read applies a value). A key
+  // REMOVED from storage (storage.onChanged newValue === undefined) resets to THIS snapshot —
+  // fail-closed to the default, never to a stale in-memory value. Observed live: after a
+  // storage.local.clear() the engine kept a closed schedule and refused every send.
+  const v18Defaults = {
+    pauseUntil: v18.pauseUntil, dryRun: v18.dryRun, allowOnceMode: v18.allowOnceMode,
+    allowTopics: v18.allowTopics.slice(), blockKeywords: v18.blockKeywords.slice(),
+    smart: Object.assign({}, v18.smart), schedule: Object.assign({}, v18.schedule),
+  };
+  function resetV18Key(k) {
+    if (k === 'pauseUntil') v18.pauseUntil = v18Defaults.pauseUntil;
+    else if (k === 'dryRun') v18.dryRun = v18Defaults.dryRun;
+    else if (k === 'allowOnceMode') v18.allowOnceMode = v18Defaults.allowOnceMode;
+    else if (k === 'rules') { v18.allowTopics = v18Defaults.allowTopics.slice(); v18.blockKeywords = v18Defaults.blockKeywords.slice(); }
+    else if (k === 'followupSmart') v18.smart = Object.assign({}, v18Defaults.smart);
+    else if (k === 'followupSchedule') v18.schedule = Object.assign({}, v18Defaults.schedule);
+  }
   // Observability only (no behavior): mirrors the pause/dry flags onto <html>. Written ONLY on
   // change — an unconditional setAttribute would register as DOM activity and starve the stuck
   // detector (every tick would look like a mutation).
@@ -702,7 +719,11 @@
             digestDirty = false;
             patch.digestCounters = d;
           }
-          try { chrome.storage.local.set(patch); } catch { /* invalidated */ }
+          // A failed flush must not vanish: a dropped click record is surfaced locally (same
+          // local-only console.warn discipline as the sync mirror) so a quota/context error
+          // leaves a trace instead of silently losing the entry.
+          try { chrome.storage.local.set(patch); }
+          catch (e) { console.warn('[muse-auto-allow] log flush failed — record dropped:', (e && e.message) || e); }
           resolve();
         });
       } catch { resolve(); }
@@ -1548,26 +1569,46 @@
     chrome.storage.local.get({ pauseUntil: 0, dryRun: false, allowOnceMode: false, rules: {}, followupSmart: {}, followupSchedule: {}, missionEnabled: false, mission: null },
       (s) => { applyV18Settings(s); applyMissionSettings(s); publishFlags(); });
     chrome.storage.onChanged.addListener((ch) => {
-      if (ch.enabled) state.enabled = !!ch.enabled.newValue;
+      // A key REMOVED from storage (newValue === undefined) resets to that key's shipped DEFAULT —
+      // never a stale in-memory value (fail-closed). Observed live: after storage.local.clear() a
+      // closed schedule kept refusing every send with reason 'schedule'.
+      const removed = (c) => !c || c.newValue === undefined;
+      if (ch.enabled) state.enabled = removed(ch.enabled) ? DEFAULT.enabled : !!ch.enabled.newValue;
       if (ch.minDelayMs) {
-        const n = Number(ch.minDelayMs.newValue);
-        if (Number.isFinite(n) && n >= 0) state.minDelayMs = n;
+        if (removed(ch.minDelayMs)) state.minDelayMs = DEFAULT.minDelayMs;
+        else { const n = Number(ch.minDelayMs.newValue); if (Number.isFinite(n) && n >= 0) state.minDelayMs = n; }
       }
       let fch = false;
-      if (ch.followupEnabled) { followup.enabled = !!ch.followupEnabled.newValue; fch = true; }
-      if (ch.followupPrompt && typeof ch.followupPrompt.newValue === 'string') { followup.prompt = ch.followupPrompt.newValue; fch = true; }
-      if (ch.followupPrompts) { followup.prompts = sanitizeFollowupPrompts(ch.followupPrompts.newValue); fch = true; }
-      if (ch.followupRotateIdx) { const fr = Number(ch.followupRotateIdx.newValue); if (Number.isInteger(fr) && fr >= 0) followup.rotateIdx = fr; }
-      if (ch.followupIdleMs) { const fn = Number(ch.followupIdleMs.newValue); if (Number.isFinite(fn) && fn >= 0) followup.idleMs = fn; fch = true; }
-      if (ch.followupCooldownMs) { const fc = Number(ch.followupCooldownMs.newValue); if (Number.isFinite(fc) && fc >= 0) followup.cooldownMs = fc; fch = true; }
+      if (ch.followupEnabled) { followup.enabled = removed(ch.followupEnabled) ? FOLLOWUP_DEFAULTS.followupEnabled : !!ch.followupEnabled.newValue; fch = true; }
+      if (ch.followupPrompt) {
+        if (removed(ch.followupPrompt)) followup.prompt = FOLLOWUP_DEFAULTS.followupPrompt;
+        else if (typeof ch.followupPrompt.newValue === 'string') followup.prompt = ch.followupPrompt.newValue;
+        fch = true;
+      }
+      if (ch.followupPrompts) { followup.prompts = removed(ch.followupPrompts) ? [] : sanitizeFollowupPrompts(ch.followupPrompts.newValue); fch = true; }
+      if (ch.followupRotateIdx) {
+        if (removed(ch.followupRotateIdx)) followup.rotateIdx = 0;
+        else { const fr = Number(ch.followupRotateIdx.newValue); if (Number.isInteger(fr) && fr >= 0) followup.rotateIdx = fr; }
+      }
+      if (ch.followupIdleMs) {
+        if (removed(ch.followupIdleMs)) { followup.idleMs = FOLLOWUP_DEFAULTS.followupIdleMs; fch = true; }
+        else { const fn = Number(ch.followupIdleMs.newValue); if (Number.isFinite(fn) && fn >= 0) { followup.idleMs = fn; fch = true; } }
+      }
+      if (ch.followupCooldownMs) {
+        if (removed(ch.followupCooldownMs)) { followup.cooldownMs = FOLLOWUP_DEFAULTS.followupCooldownMs; fch = true; }
+        else { const fc = Number(ch.followupCooldownMs.newValue); if (Number.isFinite(fc) && fc >= 0) { followup.cooldownMs = fc; fch = true; } }
+      }
       const vpatch = {};
       let vch = false;
       for (const k of ['pauseUntil', 'dryRun', 'allowOnceMode', 'rules', 'followupSmart', 'followupSchedule']) {
-        if (ch[k] && ch[k].newValue !== undefined) { vpatch[k] = ch[k].newValue; vch = true; }
+        if (!ch[k]) continue;
+        vch = true;
+        if (removed(ch[k])) resetV18Key(k); // a deleted key falls back to that key's default, never stale
+        else vpatch[k] = ch[k].newValue;
       }
       // v1.9.0 mission keys — 'mission' may be REMOVED (newValue undefined) which must clear it
       if (ch.missionEnabled) { vpatch.missionEnabled = ch.missionEnabled.newValue === true; vch = true; }
-      if (ch.mission) { vpatch.mission = ch.mission.newValue; vch = true; }
+      if (ch.mission) { vpatch.mission = removed(ch.mission) ? null : ch.mission.newValue; vch = true; }
       if (vch) { applyV18Settings(vpatch); applyMissionSettings(vpatch); publishFlags(); }
       if (fch || vch) { try { followupTick(); } catch { /* ignore */ } }
     });

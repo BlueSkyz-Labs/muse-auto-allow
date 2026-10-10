@@ -245,6 +245,15 @@
   "followupSendBlockedSending": {
     "message": "Đang gửi một tin nhắn gửi tiếp"
   },
+  "followupSendBlockedPaused": {
+    "message": "Không gửi được — tự động đang tạm dừng"
+  },
+  "followupSendBlockedSchedule": {
+    "message": "Không gửi được — ngoài khung giờ gửi tiếp"
+  },
+  "followupSendBlockedDead": {
+    "message": "Không gửi được — tab Muse không phản hồi"
+  },
   "followupRotateStarterConfirm": {
     "message": "Thay thế $1 combo đã lưu? Chạm lần nữa"
   },
