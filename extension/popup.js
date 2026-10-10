@@ -193,6 +193,9 @@ let fRotItems = [];     // followupPrompts from storage (rotation list)
 let fRotIdx = 0;        // followupRotateIdx from storage
 let fGroupSaveFlash = false; // transient 'added' confirmation on the per-group save button
 let fGroupSaveTimer = null;
+let advancedOpen = false;    // progressive disclosure: persisted `followupAdvancedOpen` (default collapsed)
+let fIdleMs = 60000;         // followupIdleMs, mirrored for the collapsed summary
+let fCoolMs = 600000;        // followupCooldownMs, mirrored for the collapsed summary
 const fTextarea = () => $('fprompt');
 
 function fPreviewText() {
@@ -327,8 +330,43 @@ function fRender() {
   if (fSheetMode === 'rotation') fRenderRotList();
   const btn = $('flibbtn');
   if (btn) btn.setAttribute('aria-expanded', fSheetMode ? 'true' : 'false');
+  renderAdvancedSummary();
 }
-function fSheet(next) { fSheetMode = next; fRender(); }
+// ---- progressive disclosure: the follow-up settings a user touches once ----------
+// applyAdvancedUI reflects the persisted open state onto the group + its disclosure
+// button; while collapsed the button also carries a one-line summary of what is hidden
+// (rotation position + wait/cooldown), so nothing is invisible.
+function renderAdvancedSummary() {
+  const el = $('fadvsum');
+  if (!el) return;
+  const parts = [];
+  const n = fRotItems.length;
+  if (n) {
+    let idx = ((fRotIdx % n) + n) % n;
+    if (fAgg && fAgg.rotateCount === n && Number.isFinite(fAgg.rotateIdx)) idx = ((fAgg.rotateIdx % n) + n) % n;
+    parts.push(t('followupRotateNext', 'Next: $1/$2', [String(idx + 1), String(n)]));
+  }
+  parts.push(Math.max(1, Math.round(fIdleMs / 1000)) + 's');
+  parts.push(Math.max(1, Math.round(fCoolMs / 60000)) + 'min');
+  el.textContent = parts.join(' · ');
+}
+function applyAdvancedUI() {
+  const grp = $('fadv'), btn = $('fadvbtn'), sum = $('fadvsum');
+  const gated = !!($('followupEnabled') && !$('followupEnabled').checked);
+  const open = advancedOpen && !gated;
+  if (grp) grp.hidden = !open;
+  if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (sum) sum.hidden = open; // the summary describes the HIDDEN state
+  renderAdvancedSummary();
+}
+function setAdvancedOpen(v) {
+  const next = !!v;
+  const changed = next !== advancedOpen;
+  advancedOpen = next;
+  applyAdvancedUI();
+  if (changed) { try { chrome.storage.local.set({ followupAdvancedOpen: next }); } catch { /* ignore */ } }
+}
+function fSheet(next) { fSheetMode = next; if (next) setAdvancedOpen(true); fRender(); }
 function applyFollowupUI(s) {
   const on = s.followupEnabled === true;
   const cb = $('followupEnabled');
@@ -362,10 +400,12 @@ function applyFollowupUI(s) {
   // ---- rotation list ----
   fRotItems = Array.isArray(s.followupPrompts) ? s.followupPrompts.filter((p) => typeof p === 'string' && p.trim()) : [];
   fRotIdx = Number.isInteger(s.followupRotateIdx) && s.followupRotateIdx >= 0 ? s.followupRotateIdx : 0;
+  fIdleMs = Number(s.followupIdleMs) || 60000;
+  fCoolMs = Number(s.followupCooldownMs) || 600000;
   const idle = $('fidle');
-  if (idle && document.activeElement !== idle) idle.value = Math.max(1, Math.round((Number(s.followupIdleMs) || 60000) / 1000));
+  if (idle && document.activeElement !== idle) idle.value = Math.max(1, Math.round(fIdleMs / 1000));
   const cool = $('fcool');
-  if (cool && document.activeElement !== cool) cool.value = Math.max(1, Math.round((Number(s.followupCooldownMs) || 600000) / 60000));
+  if (cool && document.activeElement !== cool) cool.value = Math.max(1, Math.round(fCoolMs / 60000));
   const btn = $('fsendnow');
   if (btn) {
     btn.disabled = !on;
@@ -382,7 +422,10 @@ function applyFollowupUI(s) {
   }
   const hint = $('fhint');
   if (hint) hint.hidden = on;
+  // progressive disclosure: the group's open state comes from storage (default collapsed)
+  advancedOpen = s.followupAdvancedOpen === true;
   fRender();
+  applyAdvancedUI();
   renderFollowupStatus(fAgg); // the toggle re-words the pill (Waiting vs Idle)
 }
 // Status pill: informative states only — Working / Sent HH:MM / Waiting (armed) / Idle.
@@ -405,6 +448,7 @@ function fstatHide() {
 function renderFollowupStatus(agg) {
   fAgg = agg || null;
   fRenderRot(); // the ping is the freshest source for the 'Next: i/n' line
+  renderAdvancedSummary(); // ... and for the collapsed summary of the hidden state
   const cb = $('followupEnabled');
   const on = !!(cb && cb.checked);
   if (!agg) return fstatHide();
@@ -593,7 +637,7 @@ function refresh() {
   // followupSmart, followupSchedule, digestCounters) — absent = the engine's default.
   chrome.storage.local.get({ enabled: true, minDelayMs: 300, clickCount: 0, log: [], stats: null,
     followupEnabled: false, followupPrompt: PRESETS[0], followupIdleMs: 60000, followupCooldownMs: 600000,
-    followupChips: null, followupPrompts: [], followupRotateIdx: 0,
+    followupChips: null, followupPrompts: [], followupRotateIdx: 0, followupAdvancedOpen: false,
     pauseUntil: 0, dryRun: false, allowOnceMode: false, rules: null, followupSmart: null, followupSchedule: null,
     syncSettings: false, onboarded: false, digestCounters: null, lastDigestAt: 0 }, (s) => {
     $('enabled').checked = s.enabled !== false;
@@ -1080,6 +1124,12 @@ if (fTa) {
 }
 $('flibbtn').addEventListener('click', () => fSheet(fSheetMode === 'library' ? '' : 'library'));
 $('frotnext').addEventListener('click', () => fSheet(fSheetMode === 'rotation' ? '' : 'rotation'));
+// progressive disclosure: one control reveals the settings a user touches once
+$('fadvbtn').addEventListener('click', () => {
+  const next = !advancedOpen;
+  if (!next) fSheet(''); // collapsing the group closes any sheet it owns
+  setAdvancedOpen(next);
+});
 $('ftabs').addEventListener('click', (e) => {
   const b = e.target.closest('[data-g]');
   if (b) { fTab = b.dataset.g; fRender(); }
@@ -1170,7 +1220,9 @@ document.addEventListener('click', (e) => {
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
   if (safetyOpen) { setSafety(false); return; } // v1.8.0: Escape closes the Safety panel first
-  if (fSheetMode) fSheet('');
+  if (fSheetMode) { fSheet(''); return; }       // then the phrase-library sheet
+  // progressive disclosure: Escape closes the Advanced group and returns focus to its button
+  if (advancedOpen) { setAdvancedOpen(false); const b = $('fadvbtn'); if (b) b.focus(); }
 });
 $('fidle').addEventListener('change', () => {
   const v = Math.max(1, Math.min(3600, Math.round(Number($('fidle').value) || 60)));

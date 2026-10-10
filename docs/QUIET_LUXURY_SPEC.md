@@ -417,5 +417,83 @@ Phase 1) and the Statistics page **5/10** (recorded 9/10) — the whole scale si
 the run the Phase-2 calibration used, and the same popup render swung 6 → 4 → 7 → 3 premium across four
 rounds (one pass hallucinated a "vour" typo that is not in the DOM). What the rounds *do* show is a
 real craft gain on the axis the tokens could not reach: light craft **8/10** (twice) vs the 4/10 the
-baseline re-skin scored, with the recurring defects now being frozen-intent items (pill language,
+the baseline re-skin scored, with the recurring defects now being frozen-intent items (pill language,
 no per-bar values, uppercase captions) rather than composition breakage.
+
+---
+
+## 11. Progressive disclosure — the follow-up ADVANCED group (2026-10-10)
+
+**Decision (defaulted, documented).** The owner was asked which direction to take the popup and did
+not answer; the defaulted decision is **progressive disclosure** — keep the top of the popup calm and
+move the follow-up settings a user touches once behind ONE disclosure. This addresses the recurring
+independent-review complaint ("it reads like a dense dashboard, not a premium popup") without touching
+the already-verified composition pass (`555f9f0`).
+
+**Scope.** Flagship controls stay visible: the follow-up toggle, the quick combos, the prompt
+textarea, the live preview, `Send now`. Behind the disclosure: the **rotation row**, the
+**wait/cooldown inputs** and the **`Phrase library` entry** (with its sheet).
+
+**Control.** `.fadvbtn` — a real `<button>` with `aria-expanded` + `aria-controls="fadv"`; keyboard
+operable (Tab reaches it; Enter/Space toggle), **Escape closes it and returns focus to the button**.
+State persists in the new storage key **`followupAdvancedOpen`** (default `false`).
+
+**Collapsed summary.** While collapsed the button carries a one-line summary of the hidden state —
+rotation position + wait/cooldown, composed from the EXISTING key `followupRotateNext` plus the unit
+glyphs: `Next: 1/3 · 60s · 10min`. Nothing is invisible. **One new i18n key** was unavoidable for the
+label (`followupAdvanced`, added to all 6 locales, parity green); the summary reuses existing keys.
+
+**Spacing.** The new row sits on the §2.5 ladder (margin 4/2, padding 3px 10px). Net effect is
+**shorter**: the follow-up-ON empty state measures **515px body / 509px total** (was 571 / 565) and
+every crowded state stays at the 600 cap.
+
+**Sheet geometry preserved.** `.fsheet` keeps `position:absolute; top:30px` against its `.fpanel`
+containing block, so it stays exactly where the verified `555f9f0` pass put it (305…555). Opening the
+sheet forces the group open (`fSheet(next)` → `setAdvancedOpen(true)`), so the library can never be
+reachable inside a collapsed group.
+
+### 11.1 Measured heights (≤600 in every state)
+
+| State | body | total (foot bottom) |
+|---|---|---|
+| empty (collapsed, default) | **515** | **509** |
+| full 12-entry log | 600 | 594 |
+| disclosure open | 600 | 594 |
+| phrase-library sheet open | 600 | 594 |
+| Safety overlay open | 515 | 509 |
+| language menu open | 515 | 509 |
+| onboarding wizard | 515 | 509 |
+
+`document.scrollWidth` stays **320** in every state. (`test/followup-e2e.mjs` reports 594/594/594 with
+`"ok": true` — its popup phase opens the library, which force-opens the group, so it measures the
+OPEN state; the 515/509 above is the shipped default.)
+
+### 11.2 Contrast (pixel-measured in the real 2x render)
+
+| Pair | Light | Dark |
+|---|---|---|
+| label (`--ink`) on the panel | **15.86:1** | **14.20:1** |
+| collapsed summary (`--muted`) on the panel | **5.63:1** (matches §5.2) | **7.16:1** |
+| chevron (`--muted`) on the panel | **4.51:1** | **6.07:1** |
+| button border hairline (`--stroke`) | 1.39:1 | 1.59:1 — decorative, same class as §5.4 |
+
+### 11.3 i18n sweep (6 locales, worst-case content)
+
+Worst case seeded: 12 rotation items, index 11, wait 3600s, cooldown 1440min. All six locales report
+`document.scrollWidth` **320**, no element past the **306** content column, and the summary not
+clipped: en 195 · vi 196 · zh_CN 223 · ja 199 · ko 223 · es 195 px (available ≈ 196–225).
+
+### 11.4 Keyboard path (real Chrome, trusted key events)
+
+Tab reaches the disclosure in 12 tabs; **Enter opens** (`aria-expanded=true`, group visible,
+`followupAdvancedOpen=true`); **Escape closes** (`aria-expanded=false`, group hidden, focus back on the
+button, `followupAdvancedOpen=false`); **Space also opens**.
+
+### 11.5 Directional vision (not a gate)
+
+Same session, same prompt, anchored by scoring the pre-change render too: **pre-change 4/10 premium ·
+5/10 craft; post-change 4/10 premium · 5/10 craft** — the instrument does not resolve the change
+(consistent with the charter's "Instrument calibration" finding). The reviewer's post-change defect
+list is shorter and it explicitly reads the new row ("Advanced row with right text
+Next: 1/3 · 60s · 10min"), but the score band is unchanged. Design acceptance is deterministic
+(§11.1–§11.4).

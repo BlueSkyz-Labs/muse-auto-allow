@@ -146,6 +146,16 @@
   .fcount { font-size: 10.5px; font-weight: 500; padding: 0 6px; border-radius: 999px;
             background: var(--accent-tint); color: var(--accent-text); }
   .flibbtn .chev { margin-left: auto; color: var(--muted); }
+  /* progressive disclosure: one control hides the follow-up settings a user touches once
+     (phrase library, rotation, wait/cooldown); collapsed it carries a one-line summary */
+  .fadvhead { margin-top: 7px; }
+  .fadvbtn { display: flex; align-items: center; gap: 6px; width: 100%; box-sizing: border-box; font: inherit;
+             font-size: 12px; text-align: left; background: transparent; color: var(--ink);
+             border: 1px solid var(--stroke); border-radius: 12px; padding: 4px 10px; cursor: pointer; }
+  .fadvlabel { flex: none; }
+  .fadvsum { flex: 1 1 auto; min-width: 0; text-align: right; font-size: 11px; color: var(--muted);
+             overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .fadvbtn .chev { transform: rotate(-90deg); }
   .chev { width: 11px; height: 11px; flex: none; display: block; color: var(--muted); opacity: .9; }
   .chev path { stroke: currentColor; }
   .tbox { width: 100%; margin-top: 7px; background: var(--fill); color: var(--ink); border: 1px solid var(--stroke);
@@ -291,16 +301,11 @@
           <div class="fpanel">
             <div class="fquick"><span class="fqlabel muted">Quick combos</span>
               <button class="qbtn on">Keep going</button><button class="qbtn">Long-run</button><button class="qbtn">Best practice</button></div>
-            <button class="flibbtn">Phrase library<span class="fcount">4</span><svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <div class="fadvhead">
+              <button class="fadvbtn"><span class="fadvlabel">Advanced</span><span class="fadvsum">Next: 1/3 &middot; 60s &middot; 10min</span><svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            </div>
             <textarea class="tbox" rows="1" placeholder="Type your follow-up prompt&hellip;"></textarea>
             <div class="fprev"><span class="plabel">Preview</span><span class="ptext">Approve and continue working</span></div>
-            <div class="frot"><span class="fqlabel muted">Rotation</span>
-              <button class="qbtn">Save combo</button><button class="qbtn">Starter rotation</button>
-              <span class="frotnext">Next: 1/3</span></div>
-            <div class="frow fset"><span class="muted">Wait</span>
-              <span class="numwrap">60<span class="unit">s</span></span>
-              <span class="muted">Cooldown</span>
-              <span class="numwrap">10<span class="unit">min</span></span></div>
             <div class="sendrow"><button class="btn">Send now</button></div>
           </div>
         </div>
@@ -377,16 +382,11 @@
           <div class="fpanel">
             <div class="fquick"><span class="fqlabel muted">Quick combos</span>
               <button class="qbtn on">Keep going</button><button class="qbtn">Long-run</button><button class="qbtn">Best practice</button></div>
-            <button class="flibbtn">Phrase library<span class="fcount">4</span><svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <div class="fadvhead">
+              <button class="fadvbtn"><span class="fadvlabel">Advanced</span><span class="fadvsum">Next: 1/3 &middot; 60s &middot; 10min</span><svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            </div>
             <textarea class="tbox" rows="1" placeholder="Type your follow-up prompt&hellip;"></textarea>
             <div class="fprev"><span class="plabel">Preview</span><span class="ptext">Approve and continue working</span></div>
-            <div class="frot"><span class="fqlabel muted">Rotation</span>
-              <button class="qbtn">Save combo</button><button class="qbtn">Starter rotation</button>
-              <span class="frotnext">Next: 1/3</span></div>
-            <div class="frow fset"><span class="muted">Wait</span>
-              <span class="numwrap">60<span class="unit">s</span></span>
-              <span class="muted">Cooldown</span>
-              <span class="numwrap">10<span class="unit">min</span></span></div>
             <div class="sendrow"><button class="btn">Send now</button></div>
           </div>
         </div>

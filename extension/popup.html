@@ -167,7 +167,8 @@
   /* off = collapsed settings + the disabled Send-now pill (explicit treatment + tooltip);
      the tinted panel shows only while the settings are open */
   .fpanel.gated { background: transparent; }
-  .fpanel.gated > .fblock:not(.sendrow), .fpanel.gated > .row, .fpanel.gated > .fsheet { display: none; }
+  .fpanel.gated > .fblock:not(.sendrow), .fpanel.gated > .row, .fpanel.gated > .fsheet,
+  .fpanel.gated > .fadvgroup { display: none; }
   .fblock { margin: 2px 0; }
   .fblock:first-child { margin-top: 0; }
   .fblock:last-child { margin-bottom: 0; }
@@ -213,6 +214,26 @@
   .flibbtn[aria-expanded="true"] .chev { transform: rotate(0deg); }
   .fcount { font-size: 10.5px; font-weight: 500; padding: 0 6px; border-radius: 999px;
             background: var(--accent-tint); color: var(--accent-text); }
+  /* Progressive disclosure — ONE control hides the follow-up settings a user touches
+     once (phrase library, rotation, wait/cooldown), so the popup opens calm; the
+     flagship controls (toggle, prompt, preview, Send now) stay visible. It is a real
+     button (aria-expanded + aria-controls), keyboard operable, Escape closes it and
+     returns focus; the open state persists (storage `followupAdvancedOpen`). While
+     collapsed it carries a compact one-line summary of what is hidden, so nothing is
+     invisible. Spacing sits on the spec ladder (margin 4 / 2, padding 3px 10px). */
+  .fadvhead { margin: 4px 0 0; }
+  .fadvbtn { display: flex; align-items: center; gap: 6px; width: 100%; box-sizing: border-box;
+             font: inherit; font-size: 12px; text-align: left; background: transparent; color: var(--ink);
+             border: 1px solid var(--stroke); border-radius: 12px; padding: 3px 10px; cursor: pointer;
+             transition: background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out); }
+  .fadvbtn:hover { background: var(--fill); border-color: var(--stroke-hover); }
+  .fadvlabel { flex: none; }
+  /* the collapsed summary: one line, tabular, ellipsised — it can never push the row */
+  .fadvsum { flex: 1 1 auto; min-width: 0; text-align: right; font-size: 11px; color: var(--muted);
+             overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .fadvbtn .chev { margin-left: 0; color: var(--muted); transform: rotate(-90deg); }
+  .fadvbtn[aria-expanded="true"] .chev { transform: rotate(0deg); }
+  .fadvgroup { margin: 2px 0 0; }
   /* the library/list sheet overlays the rows below it, so the popup height never grows
      while browsing (W1 discipline: <=600px). The sheet CLIPS to its own box and the
      phrase/selection area scrolls internally, so a long selection can never push the
@@ -490,6 +511,14 @@
         <button type="button" class="qbtn" id="fq1" data-i18n="followupQuick2">Long-run</button>
         <button type="button" class="qbtn" id="fq2" data-i18n="followupQuick3">Best practice</button>
       </div>
+      <div class="fblock fadvhead">
+        <button type="button" class="fadvbtn" id="fadvbtn" aria-expanded="false" aria-controls="fadv">
+          <span class="fadvlabel" data-i18n="followupAdvanced">Advanced</span>
+          <span class="fadvsum" id="fadvsum"></span>
+          <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <div class="fadvgroup" id="fadv" hidden>
       <div class="fblock">
         <button type="button" class="flibbtn" id="flibbtn" aria-expanded="false" aria-controls="flibsheet">
           <span data-i18n="followupLibrary">Phrase library</span><span class="fcount" id="flibcount" hidden></span>
@@ -508,8 +537,6 @@
         </div>
         <div class="fprev"><span class="plabel" data-i18n="followupPreview">Preview</span><span class="fprevtext" id="fprevA"></span></div>
       </div>
-      <div class="fblock"><textarea id="fprompt" class="tbox" rows="1" placeholder="Type your follow-up prompt…" data-i18n-ph="followupCustomPlaceholder"></textarea></div>
-      <div class="fblock fprev"><span class="plabel" data-i18n="followupPreview">Preview</span><span class="fprevtext" id="fprevB" aria-live="polite" aria-atomic="true"></span></div>
       <div class="fblock frot" id="frotrow">
         <span class="fqlabel muted" data-i18n="followupRotateLabel">Rotation</span>
         <button type="button" class="qbtn" id="frotadd" data-i18n="followupRotateSave">Save combo</button>
@@ -522,6 +549,9 @@
         <label class="muted" for="fcool" data-i18n="followupCooldownShort">Cooldown</label>
         <span class="numwrap"><input type="number" id="fcool" min="1" max="1440" step="1"><span class="unit muted">min</span></span>
       </div>
+      </div>
+      <div class="fblock"><textarea id="fprompt" class="tbox" rows="1" placeholder="Type your follow-up prompt…" data-i18n-ph="followupCustomPlaceholder"></textarea></div>
+      <div class="fblock fprev"><span class="plabel" data-i18n="followupPreview">Preview</span><span class="fprevtext" id="fprevB" aria-live="polite" aria-atomic="true"></span></div>
       <div class="fblock sendrow" id="fsendrow"><span class="fsendnote" id="fsendnote" role="status"></span><button class="btn" id="fsendnow" data-i18n="followupSendNow">Send now</button></div>
     </div>
   </div>

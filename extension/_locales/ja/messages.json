@@ -203,6 +203,9 @@
   "followupRotateRemove": {
     "message": "削除"
   },
+  "followupAdvanced": {
+    "message": "詳細設定"
+  },
   "followupWaiting": {
     "message": "待機中"
   },

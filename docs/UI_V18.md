@@ -171,3 +171,23 @@ Functional probe (own CDP harness): **58/58** checks — wizard steps and their 
 Suite results for this change: `node scripts/lint.mjs` **exit 0** (24 checks, i18n parity green over 6 locales), `node test/e2e.mjs` **exit 0**, `node test/followup-e2e.mjs` **exit 0** (heights unchanged at 572 / 594 / 594), `node test/lang-switch-e2e.mjs` **exit 0** (36/36 checks).
 
 **Deleted:** `extension/lang-switch.mjs` — the earlier standalone draft (unwired, wrong approach: it never overrode `chrome.i18n`, and it injected hardcoded dark colours). The feature lives in `popup.js` / `popup.html` only.
+
+---
+
+## 8. Progressive disclosure — the follow-up Advanced group (2026-10-10)
+
+**Ask / decision.** The popup read as a dense dashboard (the recurring independent-review complaint). The owner was asked which direction to take it and did not answer, so the **defaulted, documented** decision is **progressive disclosure**: the follow-up settings a user touches once move behind ONE disclosure, while the flagship controls stay visible.
+
+**What stays visible:** the follow-up toggle, the quick combos, the prompt textarea, the live preview, `Send now`. **What moves behind the disclosure (`#fadv`, hidden by default):** the rotation row, the wait/cooldown inputs, and the `Phrase library` entry (with its sheet).
+
+**The control.** `.fadvbtn` (`#fadvbtn`) is a real `<button>` with `aria-expanded` + `aria-controls="fadv"`; Tab-reachable, Enter/Space toggle it, **Escape closes it and returns focus to the button**. While collapsed it carries a one-line summary of the hidden state — `Next: 1/3 · 60s · 10min`, from the status ping's rotation position + the stored wait/cooldown — so nothing is invisible. The summary reuses the existing `followupRotateNext` key plus the unit glyphs.
+
+**Storage.** New key `followupAdvancedOpen` in `chrome.storage.local` (default `false`) — read in `refresh()`'s defaults like the other follow-up keys, written only by the disclosure, so the open state survives a reopen. The popup still writes no key outside the §2 table + this one.
+
+**i18n.** One new key, `followupAdvanced` ("Advanced"), is the only addition; it is in all 6 locales (en now **148** keys) and `scripts/lint.mjs` parity stays green.
+
+**Sheet geometry.** `.fsheet` is unchanged (`position:absolute; top:30px` against `.fpanel`), so the verified `555f9f0` overflow fix keeps its exact position. Opening the sheet **force-opens the group** (`fSheet(next)` → `setAdvancedOpen(true)`), so the library can never be reachable inside a collapsed group — which is also why `test/followup-e2e.mjs` now measures the OPEN state (594 / 594 / 594, all ≤ 600).
+
+**Heights (measured, real Chrome CDP).** Collapsed empty **515px body / 509px total** (was 571 / 565); full log / disclosure open / sheet open all 600; Safety overlay and language menu 515; `document.scrollWidth` stays 320. Full table + the contrast and i18n sweeps: `docs/QUIET_LUXURY_SPEC.md` §11.
+
+**Suites.** `lint` exit 0 · `e2e` exit 0 · `followup-e2e` exit 0 (119 checks, `"ok": true`, no failed check) · `lang-switch-e2e` exit 0 · `background-unit` 29/29.

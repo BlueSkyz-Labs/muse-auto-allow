@@ -203,6 +203,9 @@
   "followupRotateRemove": {
     "message": "Xóa"
   },
+  "followupAdvanced": {
+    "message": "Nâng cao"
+  },
   "followupWaiting": {
     "message": "Đang chờ"
   },

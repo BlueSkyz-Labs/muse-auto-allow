@@ -203,6 +203,9 @@
   "followupRotateRemove": {
     "message": "Remove"
   },
+  "followupAdvanced": {
+    "message": "Advanced"
+  },
   "followupWaiting": {
     "message": "Waiting"
   },
