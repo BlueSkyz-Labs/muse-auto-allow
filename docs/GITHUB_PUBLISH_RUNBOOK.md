@@ -162,7 +162,7 @@ green on the exact commit you will tag.
 ## 3. Tag + GitHub Release (attach the store zip)
 
 ```bash
-# <VERSION> = the version in extension/manifest.json (release freeze owns it), e.g. 1.9.0
+# <VERSION> = the version in extension/manifest.json (release freeze owns it), e.g. 1.9.1
 git tag -a "v<VERSION>" -m "Muse Auto-Allow v<VERSION>"
 git push origin "v<VERSION>"
 

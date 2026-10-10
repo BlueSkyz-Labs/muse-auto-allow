@@ -13,9 +13,9 @@ provided in all six supported languages (en, vi, zh_CN, ja, ko, es). Values mark
 | Item name | **Muse Auto-Allow** |
 | Category | **Productivity** |
 | Default language | English (en) |
-| Version | 1.9.0 |
+| Version | 1.9.1 |
 | Manifest version | Manifest V3 |
-| Extension package | `dist/muse-auto-allow-v1.9.0.zip` |
+| Extension package | `dist/muse-auto-allow-v1.9.1.zip` |
 | License | MIT © 2026 BlueSkyz Labs |
 | Homepage / support URL | `TODO: fill before submit` |
 | Privacy policy URL | `TODO: fill before submit` (host `store/PRIVACY.md` and paste the public link) |
@@ -38,11 +38,11 @@ Auto-click Allow on Muse (muse.ai) approval requests so your agent keeps running
 | Locale | Short description | Characters |
 |---|---|---|
 | en | Auto-click Allow on Muse (muse.ai) approval requests so your agent keeps running. Local-only by default; optional settings sync. | 128 |
-| vi | Tự động bấm Allow cho yêu cầu phê duyệt của Muse (muse.ai) để agent chạy liên tục. Mặc định lưu cục bộ; tuỳ chọn đồng bộ cài đặt. | 129 |
-| zh_CN | 自动点击 Muse（muse.ai）批准请求中的“Allow”，让你的智能体持续运行。默认仅本地保存，可选同步设置。 | 58 |
-| ja | Muse（muse.ai）の承認リクエストで「Allow」を自動クリックし、エージェントを止めずに動かします。既定ではローカル保存のみ、設定の同期は任意。 | 77 |
-| ko | Muse(muse.ai)의 승인 요청에서 'Allow'를 자동으로 클릭해 에이전트가 계속 실행되도록 합니다. 기본적으로 로컬 저장만, 설정 동기화는 선택 사항입니다. | 92 |
-| es | Clic automático en Allow cuando Muse (muse.ai) pide aprobación, para que tu agente siga. Local por defecto; ajustes sincronizables. | 131 |
+| vi | Tự động bấm Allow cho yêu cầu phê duyệt Muse (muse.ai) để agent chạy liên tục, có nhiệm vụ nhiều bước. Lưu cục bộ, tuỳ chọn đồng bộ. | 132 |
+| zh_CN | 自动点击 Muse（muse.ai）批准请求中的“Allow”，让智能体持续运行；内置分步任务并显示进度。默认仅本地保存，可选同步设置。 | 68 |
+| ja | Muse（muse.ai）の承認リクエストで「Allow」を自動クリックし、エージェントを止めずに動かします。ミッションは進捗表示つき。既定はローカル保存のみ、設定の同期は任意。 | 89 |
+| ko | Muse(muse.ai)의 승인 요청에서 'Allow'를 자동으로 클릭해 에이전트가 계속 실행되도록 합니다. 미션은 진행 상황을 표시합니다. 기본은 로컬 저장, 설정 동기화는 선택입니다. | 104 |
+| es | Auto-clic en Allow cuando Muse (muse.ai) pide aprobación y tu agente sigue; misiones. Local por defecto; ajustes sincronizables. | 128 |
 
 ---
 
@@ -53,12 +53,14 @@ Auto-click Allow on Muse (muse.ai) approval requests so your agent keeps running
 > startup digest, optional settings sync, and onboarding — using the same in-product
 > wording as `extension/_locales/*/messages.json`.
 >
-> **v1.9 — English updated; localized descriptions pending:** the English description
-> below now also covers the v1.9 Mission Orchestrator. The five localized descriptions
-> (vi, zh_CN, ja, ko, es) still describe v1.8 and have **not** been updated for v1.9 —
-> they need a v1.9 pass before a localized listing is published. English is the
-> reference text; every localized feature list and privacy line makes the same claims as
-> it (minus the Mission Orchestrator until that pass lands).
+> **v1.9 / v1.9.1 — localization done:** the English description covers the v1.9 Mission
+> Orchestrator, and all five localized descriptions (vi, zh_CN, ja, ko, es) were brought
+> to the same feature set for the v1.9.1 packet — the Mission Orchestrator plus the
+> user-visible v1.9.1 experience work (missions with live progress and pause, faster
+> reaction, the exact reason on a refused send or a blocked card, keyboard/assistive-tech
+> support). Each localized description uses the same in-product wording as
+> `extension/_locales/*/messages.json` and makes the same claims as the English text,
+> including the identical privacy/permission lines. English is the reference text.
 
 ### English (en)
 
@@ -103,6 +105,9 @@ keeps moving.
   Release prep) the follow-up engine sends on each idle detection. Watch live progress
   (step n/N · cycle c), send the next step on demand, or pause the mission; a step only
   advances when the send is verified.
+- Fast and accessible: approvals are handled faster, a refused send or a blocked card
+  always shows its exact reason, the common actions have keyboard shortcuts, and while a
+  dialog is open the background is kept out of reach of assistive technology.
 - Startup digest: a desktop notification summarizing recent activity (clicks,
   follow-ups, blocked items) — composed on your device.
 - Optional settings sync: carry your settings to other Chrome profiles through Chrome's
@@ -159,6 +164,14 @@ bị ngắt quãng.
   (loại thao tác, nhãn nút, ngữ cảnh).
 - Nhắc tiếp thông minh: tuỳ chọn nhắc Muse tiếp tục chạy — kể cả câu nhắc phục hồi khi
   Muse có vẻ bị kẹt hoặc gặp lỗi — và chỉ gửi trong khung giờ bạn chọn.
+- Nhiệm vụ: chạy một nhiệm vụ điều phối dự án nhiều bước ngay trong một phiên Muse — chuỗi
+  câu nhắc theo thứ tự (thang SẴN SÀNG GOLIVE — Điều phối dự án, hoặc Chỉ kiểm toán / Sửa
+  phát hiện / Chuẩn bị phát hành) mà bộ máy gửi tiếp phát đi mỗi lần phát hiện Muse ngừng
+  chạy. Theo dõi tiến độ trực tiếp (bước n/N · vòng c), gửi bước kế tiếp khi cần, hoặc tạm
+  dừng nhiệm vụ; một bước chỉ tiến khi lần gửi được xác nhận.
+- Nhanh và dễ tiếp cận: phê duyệt được xử lý nhanh hơn, lần gửi bị từ chối hoặc thẻ bị
+  chặn luôn hiện đúng lý do, phím tắt bao quát các thao tác thường dùng, và khi một hộp
+  thoại mở ra thì phần nền được tách khỏi công nghệ hỗ trợ.
 - Tóm tắt khi khởi động: thông báo trên máy tóm tắt hoạt động gần đây (lượt bấm, câu
   nhắc, mục bị chặn) — tạo ngay trên thiết bị của bạn.
 - Tuỳ chọn đồng bộ cài đặt: mang cài đặt sang các hồ sơ Chrome khác qua tính năng đồng
@@ -206,6 +219,8 @@ Muse（muse.ai）在执行操作前会暂停并向你请求批准。你一旦离
 - 可调整点击间隔（毫秒）。
 - 点击计数器和最近 50 次点击的日志，清楚记录它做了什么（类型、按钮文字、上下文）。
 - 智能跟进：可选择催促 Muse 继续工作——包括它看似卡住或出现错误时的恢复提示——并限制在你选择的时间段内发送。
+- 任务：在同一个 Muse 会话中运行多步项目编排任务——由自动跟进引擎在每次检测到空闲时按顺序发送的一组提示（“GOLIVE 就绪 — 项目编排”阶梯，或“仅审计 / 修复问题 / 发布准备”）。可实时查看进度（第 n/N 步 · 第 c 轮）、按需发送下一步，或暂停任务；只有发送得到确认后，步骤才会推进。
+- 更快、更易用：批准处理更快；发送被拒绝或卡片被拦截时总会显示确切原因；常用操作都有快捷键；对话框打开时，背景会对辅助技术隐藏。
 - 启动摘要：桌面通知汇总近期活动（点击、跟进、被拦截项）——在你的设备上生成。
 - 可选设置同步：通过 Chrome 内置同步把设置带到其他 Chrome 配置文件——默认关闭，仅同步设置（日志与统计绝不同步）。
 - 首次使用时提供三步设置向导。
@@ -249,6 +264,8 @@ Muse（muse.ai）は操作の前に承認を求めて一時停止します。席
 - クリック回数と直近 50 件のクリックログで、何をしたかを確認できます
   （種類・ボタン名・コンテキスト）。
 - スマートフォロー：Muse の続行をうながす通知（停止しているように見えるときやエラーが出たときの復帰プロンプトを含む）を任意で送信でき、送信する時間帯も指定できます。
+- ミッション：1 つの Muse セッション内で多段階のプロジェクト統括ミッションを実行します。自動フォローアップがアイドル検出ごとに順番に送るプロンプト群（「GOLIVE レディ — プロジェクト統括」のラダー、または「監査のみ／指摘の修正／リリース準備」）です。進捗（ステップ n/N · サイクル c）をライブで確認し、次のステップをその場で送信したり、ミッションを一時停止できます。送信が確認されたときだけステップが進みます。
+- すばやく、使いやすく：承認の処理が速くなり、送信が拒否されたときやカードがブロックされたときは必ず正確な理由が表示されます。よく使う操作はキーボードショートカットに対応し、ダイアログを開いている間は背景が支援技術から切り離されます。
 - 起動時のダイジェスト：最近の動き（クリック、フォロー、ブロック）をまとめたデスクトップ通知 — 端末上で作成されます。
 - 設定の同期（任意）：Chrome 標準の同期で設定を他の Chrome プロファイルへ引き継ぎます — 既定でオフ、同期するのは設定のみ（ログと統計は決して同期しません）。
 - 初回起動時の 3 ステップ設定ウィザード。
@@ -295,6 +312,8 @@ Muse(muse.ai)는 작업 전에 승인을 요청하며 잠시 멈춥니다. 자�
 - 클릭 횟수와 최근 50건의 클릭 로그로 무엇을 했는지 확인할 수 있습니다
   (종류, 버튼 이름, 맥락).
 - 스마트 팔로우: Muse가 계속 진행하도록 선택적으로 재촉하며(멈춘 것처럼 보이거나 오류가 날 때의 복구 프롬프트 포함), 보낼 시간대를 지정할 수 있습니다.
+- 미션: 하나의 Muse 세션 안에서 여러 단계로 이루어진 프로젝트 오케스트레이션 미션을 실행합니다. 자동 후속 엔진이 유휴 감지 때마다 순서대로 보내는 프롬프트 묶음('GOLIVE 준비 — 프로젝트 오케스트레이터' 사다리 또는 '감사 전용 / 지적 사항 수정 / 릴리스 준비')입니다. 진행 상황(n/N 단계 · c 사이클)을 실시간으로 보고, 다음 단계를 즉시 보내거나 미션을 일시정지할 수 있습니다. 전송이 확인될 때만 단계가 진행됩니다.
+- 빠르고 접근성 좋게: 승인 처리가 더 빨라졌고, 전송이 거부되거나 카드가 차단되면 정확한 사유를 항상 표시합니다. 자주 쓰는 동작은 키보드 단축키로 처리하며, 대화상자가 열려 있는 동안 배경은 보조 기술에서 분리됩니다.
 - 시작 시 요약: 최근 활동(클릭, 팔로우, 차단 항목)을 정리한 데스크톱 알림 — 기기에서 생성됩니다.
 - 설정 동기화(선택): Chrome 기본 동기화로 설정을 다른 Chrome 프로필로 가져갑니다 — 기본 꺼짐, 설정만 동기화되며 로그와 통계는 절대 동기화되지 않습니다.
 - 첫 실행 시 3단계 설정 마법사.
@@ -343,6 +362,8 @@ se detenga.
 - Contador de clics y registro de los últimos 50, para que veas exactamente qué hizo
   (tipo, texto del botón y contexto).
 - Seguimientos inteligentes: avisa opcionalmente a Muse para que siga trabajando —incluidos mensajes de recuperación cuando parece bloqueado o ha dado un error— y limita el envío a las horas que elijas.
+- Misiones: ejecuta una misión de orquestación de proyecto de varios pasos dentro de una sola sesión de Muse: una secuencia ordenada de mensajes (la escalera «LISTO PARA GOLIVE — Orquestador de proyecto», o «SOLO AUDITORÍA / CORREGIR HALLAZGOS / PREPARACIÓN DE LANZAMIENTO») que el motor de seguimiento envía en cada detección de inactividad. Sigue el progreso en vivo (paso n/N · ciclo c), envía el siguiente paso cuando quieras o pausa la misión; un paso solo avanza cuando el envío queda confirmado.
+- Ágil y accesible: las aprobaciones se gestionan más rápido, un envío rechazado o una tarjeta bloqueada siempre muestra el motivo exacto, los atajos de teclado cubren las acciones habituales y, mientras un cuadro de diálogo está abierto, el fondo queda fuera del alcance de las tecnologías de asistencia.
 - Resumen al arrancar: una notificación de escritorio que resume la actividad reciente (clics, seguimientos, bloqueos), compuesta en tu dispositivo.
 - Sincronización de ajustes opcional: lleva tus ajustes a otros perfiles de Chrome mediante la sincronización propia de Chrome — desactivada por defecto, solo ajustes (los registros y las estadísticas nunca se sincronizan).
 - Un asistente de configuración de 3 pasos en el primer uso.
@@ -431,7 +452,7 @@ Compliance notes for this declaration:
 - Manifest V3, no `content_security_policy` relaxation.
 - No analytics SDK, no CDN, no update endpoint. (The optional settings sync uses
   Chrome's built-in sync service — a browser feature, not an extension network call.)
-- `dist/muse-auto-allow-v1.9.0.zip` contains only static files with `manifest.json` at the
+- `dist/muse-auto-allow-v1.9.1.zip` contains only static files with `manifest.json` at the
   zip root.
 
 ---

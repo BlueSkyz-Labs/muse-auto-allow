@@ -60,17 +60,17 @@ of the artifact gets `http://127.0.0.1/*` appended to `content_scripts[0].matche
 fixture origin — the pristine extraction dir and the shipped manifest stay untouched,
 and the artifact's own bytes are what gets loaded everywhere else.
 
-## Freeze procedure (v1.9.0 freeze)
+## Freeze procedure (v1.9.1 freeze)
 
 Run from the repo root during the freeze, tree stable, editing lanes stopped.
 
-1. Confirm the version: `extension/manifest.json` reads `1.9.0` (the freeze owns
+1. Confirm the version: `extension/manifest.json` reads `1.9.1` (the freeze owns
    version bumps — no script edits it).
 2. Rebuild clean:
    `node scripts/build.mjs`
    Expect: `manifest at root: true`, an entry count equal to the number of files in
-   `extension/`, and a fresh `dist/muse-auto-allow-v1.9.0.zip` + `.sha256`.
-3. Record the hash: `sha256sum dist/muse-auto-allow-v1.9.0.zip` (must equal the
+   `extension/`, and a fresh `dist/muse-auto-allow-v1.9.1.zip` + `.sha256`.
+3. Record the hash: `sha256sum dist/muse-auto-allow-v1.9.1.zip` (must equal the
    sidecar; verify with `sha256sum -c` as above).
 4. Determinism proof: build once more; the hash must be **identical**. A differing
    hash means the tree changed between builds — stop and find out what moved.
@@ -78,11 +78,37 @@ Run from the repo root during the freeze, tree stable, editing lanes stopped.
    then `node scripts/smoke-zip.mjs` — exit 0 and `"ok": true` in the JSON summary.
 6. Attach to the GitHub Release: the zip **and** its `.sha256` sidecar, per
    `docs/GITHUB_PUBLISH_RUNBOOK.md` §3 —
-   `gh release create "v1.9.0" "dist/muse-auto-allow-v1.9.0.zip#…" "dist/muse-auto-allow-v1.9.0.zip.sha256#checksum" …`
+   `gh release create "v1.9.1" "dist/muse-auto-allow-v1.9.1.zip#…" "dist/muse-auto-allow-v1.9.1.zip.sha256#checksum" …`
    The attached zip must be the exact bytes that passed steps 2–5; if anything is
    rebuilt after step 5, restart from step 2.
 
-## Recorded evidence (v1.9.0 freeze)
+## Recorded evidence (v1.9.1 freeze)
+
+- Frozen tree: `extension/manifest.json` `"version": "1.9.1"`; git tag `v1.9.1` → `6187606`
+  (remote `main` = `6187606`).
+- Artifact: `dist/muse-auto-allow-v1.9.1.zip` — **180,069 bytes**, **18 entries**,
+  `manifest.json` at the zip root; sha256
+  `eec91d1d8f16005e2f34a748145d7a7d32c04b7d85f8ada267255fdb0ac8d1d8` (sidecar
+  `dist/muse-auto-allow-v1.9.1.zip.sha256`).
+- Determinism proof: two consecutive `node scripts/build.mjs` runs produced byte-identical
+  zips (same sha256).
+- `python scripts/verify-zip.py`: 18 matched, 0 mismatched, 0 disk-only, 0 zip-only (exit 0).
+- `node scripts/smoke-zip.mjs`: exit 0, `ok: true` (extracts the shipped zip and passes the
+  core e2e in scratch Chrome).
+- Gates on the frozen tree: `lint.mjs` 0 · `background-unit.mjs` 29/29 · `e2e.mjs` ok ·
+  `followup-e2e.mjs` 106 checks 0 failed · `lang-switch-e2e.mjs` ok · `mission-e2e.mjs`
+  39 checks 0 failed · `scripts/bench/experience.mjs --only=assert` 22 passed / 0 failed.
+- New in 1.9.1: the **accessibility/experience patch** — the popup background is `inert`
+  while a dialog (Safety, Missions, onboarding) is open (accessibility-tree background
+  nodes 99 → 0 safety, 22 → 0 missions, 13 → 0 onboarding); the send-refusal reason map now
+  covers **all 10** engine failure reasons (added paused / schedule / dead, 3 new i18n
+  keys); a blocked log chip shows `blocked · <reason>` in text **and** accessible name;
+  deleting a settings key resets it to its default immediately; a failed log flush warns
+  locally instead of dropping the record silently. i18n is now **172 keys × 6 locales**.
+- Not done: the package has **not** been uploaded to the Chrome Web Store; no CWS review, no
+  store publish.
+
+## Recorded evidence (v1.9.0 freeze — history)
 
 - Frozen tree: `extension/manifest.json` `"version": "1.9.0"`; git tag `v1.9.0` → `fcbdd63`
   (remote `main` = `fcbdd63`).
