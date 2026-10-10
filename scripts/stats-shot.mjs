@@ -153,7 +153,9 @@ try {
 
   // followupEnabled:true — the popup shot must show the Auto follow-up section in its
   // ON state (ungated panel, live controls), not the collapsed off-state.
-  const seedExpr = `new Promise((r) => chrome.storage.local.set(${JSON.stringify({ stats, clickCount: total, log, followupEnabled: true })}, r))`;
+  // v1.8: onboarded:true keeps the onboarding wizard from covering the popup shot; pause/
+  // dry-run are pinned to their canonical OFF state.
+  const seedExpr = `new Promise((r) => chrome.storage.local.set(${JSON.stringify({ stats, clickCount: total, log, followupEnabled: true, onboarded: true, pauseUntil: 0, dryRun: false })}, r))`;
 
   // ---- stats page ----
   const t1 = await send('Target.createTarget', { url: `chrome-extension://${extId}/stats.html` });

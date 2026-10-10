@@ -221,7 +221,9 @@ try {
     const seed = JSON.stringify({ stats: { byDay, byMonth: {}, byYear: {}, byTopic: { 'demo-project': 8, 'sample-app': 4 } }, clickCount: 489 });
     await send('Runtime.evaluate', { expression: `chrome.storage.local.set(${seed}); "ok"`, returnByValue: true }, ppS);
   }
-  await send('Runtime.evaluate', { expression: 'chrome.storage.local.set({ enabled: true }); "ok"', returnByValue: true }, ppS);
+  // v1.8: the onboarding wizard (onboarded defaults to false) would cover the popup, and the
+  // pause/dry-run surfaces must be in their canonical OFF state for the store shot.
+  await send('Runtime.evaluate', { expression: 'chrome.storage.local.set({ enabled: true, onboarded: true, pauseUntil: 0, dryRun: false }); "ok"', returnByValue: true }, ppS);
   // Nudge the content script with a DOM mutation so a sweep fires immediately
   // (otherwise we'd wait for the 1s heartbeat), then give it time to click the
   // showcase cards — their log entries carry real, meaningful context text.
