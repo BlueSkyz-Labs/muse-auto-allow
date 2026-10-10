@@ -301,6 +301,8 @@
              -webkit-box-orient: vertical; overflow: hidden; }
   /* the amber "expand" and neutral kinds keep their tinted fills; an allow entry is an outline tag */
   .k-allow { background: var(--accent-tint); color: var(--accent-text); }
+  /* v1.9.0: a mission entry shares the outline-tag recipe (the accent carries a state) */
+  .k-mission { background: var(--accent-tint); color: var(--accent-text); }
   .k-expand { background: var(--amber-bg); color: var(--amber); }
   .k-open-panel { background: var(--fill); color: var(--muted); }
   /* v1.8.0 log kinds: blocked (safety) + the dry-run variants (log-only) */
@@ -449,6 +451,52 @@
   /* the header now carries a third control; the title must never wrap when space is
      tight — the status chip (already ellipsised + titled) absorbs the shrink instead */
   .head h1 { flex: 0 0 auto; white-space: nowrap; }
+
+  /* ======================================================================
+     v1.9.0 — Mission Orchestrator UI.
+     The mission ENGINE ships in content.js (docs/MISSION_V19.md); this surface only
+     DRIVES it through the frozen keys (missionEnabled + mission{id,step,cycles,...})
+     and reads the APPLIED state back from the followup-status ping. Step DIRECTIVES
+     stay English (shipped); names/labels/descriptions are localized x6.
+     Placement: a compact entry on the Auto-follow-up header row (the mission rides the
+     follow-up engine) that opens a FULL-POPUP sheet — the established Safety-panel
+     pattern — so the rich surface never adds height and the popup stays <=600px in
+     every state (the header row it joins is only ~15-23px tall, so the entry costs
+     ~0-6px, absorbed by the log; a dedicated full-width row would eat the ~22px of
+     slack the crowded states have left before the 600 cap).
+     ====================================================================== */
+  /* the follow-up status pill ellipsises instead of pushing the new entry off the row
+     (defensive only — it changes nothing until the row is genuinely full) */
+  .fstat { min-width: 0; }
+  #fstatText { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .misbtn { display: inline-flex; align-items: center; gap: 4px; flex: 0 0 auto; font: inherit; font-size: 11px;
+            line-height: 1.4; background: transparent; color: var(--muted); border: 1px solid var(--stroke);
+            border-radius: 999px; padding: 1px 8px; cursor: pointer; white-space: nowrap;
+            transition: background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out); }
+  .misbtn:hover { background: var(--fill); border-color: var(--stroke-hover); color: var(--ink); }
+  /* state is not colour-only: tint + border + weight + the presence of the dot */
+  .misbtn.on { background: var(--accent-tint); border-color: var(--accent-line); color: var(--accent-text); font-weight: 500; }
+  .misbtn .misdot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-state); flex: none; }
+  .misbtn .chev { width: 10px; height: 10px; }
+  /* sheet body (full-popup overlay; .ovbody owns the scroll) */
+  .misprogrow { display: flex; align-items: baseline; gap: 6px; margin: 3px 0; }
+  .misprog { font-size: 13px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .miscyc { font-size: 11px; color: var(--muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .misstep { font-size: 12px; line-height: 1.45; color: var(--ink-2); margin: 0 0 6px; display: -webkit-box;
+             -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .misacts { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .misacts .btn { font-size: 12px; padding: 4px 14px; }
+  .mislist { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+  .misrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 8px; width: 100%; box-sizing: border-box;
+            text-align: left; font: inherit; background: transparent; color: var(--ink);
+            border: 1px solid var(--stroke); border-radius: 12px; padding: 6px 10px; cursor: pointer;
+            transition: background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out); }
+  .misrow:hover { background: var(--fill); border-color: var(--stroke-hover); }
+  .misrow.on { background: var(--accent-tint); border-color: var(--accent-line); color: var(--accent-text); }
+  .misname { font-size: 12.5px; font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .miscount { font-size: 10.5px; font-weight: 500; color: var(--muted); align-self: start; white-space: nowrap; }
+  .misdesc { grid-column: 1 / -1; font-size: 11px; line-height: 1.4; color: var(--muted); margin-top: 1px; }
+  .mislast { font-size: 11px; margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -501,6 +549,14 @@
   <!-- v1.7.0 — phrase library + combo builder + round-robin prompt rotation -->
   <div class="sect" id="followupSect">
     <div class="secthead"><span class="secttitle" data-i18n="followupTitle">Auto follow-up</span>
+      <!-- v1.9.0 — Missions entry: a compact control on this header row that opens a
+           FULL-POPUP sheet (the Safety-panel pattern), so the mission surface never adds
+           height. aria-expanded/aria-controls; Escape closes the sheet and returns focus. -->
+      <button type="button" class="misbtn" id="misbtn" aria-expanded="false" aria-controls="missionSheet">
+        <span data-i18n="missionTitle">Missions</span>
+        <span class="misdot" id="misdot" hidden aria-hidden="true"></span>
+        <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
       <span class="fstat" id="fstat" hidden><i class="fd" aria-hidden="true"></i><span id="fstatText" aria-live="polite"></span></span></div>
     <label class="sw"><input type="checkbox" id="followupEnabled"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="followupToggle">Continue when Muse is idle</span></label>
     <div class="fhint muted" id="fhint" hidden>Enable Auto follow-up to change these settings</div>
@@ -572,6 +628,35 @@
     <div id="logList"></div>
   </div>
   <div class="row foot"><span class="note muted" data-i18n="onlyMuse">Works only on muse.ai</span><button class="btn ghost" id="openstats" data-i18n="statsOpen">Statistics</button></div>
+
+  <!-- v1.9.0 — Mission Orchestrator sheet (full-popup overlay: opening it never grows the
+       popup). Reached from the compact entry on the Auto-follow-up header row. Drives the
+       frozen engine keys (missionEnabled + mission{id,step,cycles,startedAt,lastSentAt});
+       reads the applied state from the followup-status ping. Step DIRECTIVES stay English. -->
+  <div class="overlay" id="missionSheet" hidden role="dialog" aria-modal="true" aria-labelledby="missionH">
+    <div class="ovhead"><h2 id="missionH" data-i18n="missionTitle">Missions</h2>
+      <button type="button" class="ovclose" id="missionClose" aria-label="Close">&#10005;</button></div>
+    <div class="ovbody">
+      <div class="rgroup">
+        <label class="sw"><input type="checkbox" id="missionEnabled"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="missionToggle">Enable mission</span></label>
+        <div class="rnote" id="missionGate" hidden data-i18n="missionGateNote">Turn on Auto follow-up to run a mission</div>
+      </div>
+      <div class="rgroup" id="misActive" hidden>
+        <div class="misprogrow"><span class="misprog" id="misProg"></span><span class="miscyc" id="misCyc"></span></div>
+        <div class="misstep" id="misStepText"></div>
+        <div class="misacts">
+          <button type="button" class="btn" id="misSendNow" data-i18n="missionSendStep">Send step now</button>
+          <button type="button" class="rbtn" id="misPause" data-i18n="missionPause">Pause mission</button>
+        </div>
+        <div class="misnote" id="misSendNote" role="status"></div>
+      </div>
+      <div class="rgroup">
+        <div class="rlabel" data-i18n="missionChoose">Choose a mission</div>
+        <div class="mislist" id="misList" role="radiogroup" aria-label="Missions"></div>
+      </div>
+      <div class="mislast muted" id="misLast" hidden></div>
+    </div>
+  </div>
 
   <!-- v1.8.0 — Safety & Control panel (full-popup overlay: opening it never grows the popup) -->
   <div class="overlay" id="safetyPanel" hidden role="dialog" aria-modal="true" aria-labelledby="safetyH">

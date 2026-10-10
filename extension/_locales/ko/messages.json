@@ -442,5 +442,26 @@
   },
   "langMenuAria": {
     "message": "언어"
-  }
+  },
+  "missionTitle": { "message": "미션" },
+  "missionToggle": { "message": "미션 사용" },
+  "missionChoose": { "message": "미션 선택" },
+  "missionSendStep": { "message": "지금 단계 보내기" },
+  "missionPause": { "message": "미션 일시정지" },
+  "missionProgress": { "message": "$1/$2 단계 · $3 사이클" },
+  "missionStepCtx": { "message": "$1/$2 단계 · $3 사이클" },
+  "missionCompleteCtx": { "message": "완료 · $1 사이클" },
+  "missionSteps": { "message": "$1단계" },
+  "missionGateNote": { "message": "미션을 실행하려면 자동 팔로업을 켜세요" },
+  "missionLastDone": { "message": "마지막 완료: $1" },
+  "kindMission": { "message": "미션" },
+  "kindMissionDry": { "message": "미션(드라이런)" },
+  "missionGolive": { "message": "GOLIVE 준비 — 프로젝트 오케스트레이터" },
+  "missionGoliveDesc": { "message": "계약 → 감사 → 실행 → 수렴하여 GOLIVE READY로." },
+  "missionAudit": { "message": "감사 전용" },
+  "missionAuditDesc": { "message": "읽기 전용: 격차를 찾아 순위를 매기고 증거와 함께 보고." },
+  "missionFix": { "message": "지적 사항 수정" },
+  "missionFixDesc": { "message": "미해결 지적을 끝까지 수정하고 증명한 뒤 정리." },
+  "missionRelease": { "message": "릴리스 준비" },
+  "missionReleaseDesc": { "message": "범위를 동결하고 산출물을 검증하고 릴리스 패킷을 구성해 GO를 결정." }
 }

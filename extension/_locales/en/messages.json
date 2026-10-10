@@ -442,5 +442,26 @@
   },
   "langMenuAria": {
     "message": "Language"
-  }
+  },
+  "missionTitle": { "message": "Missions" },
+  "missionToggle": { "message": "Enable mission" },
+  "missionChoose": { "message": "Choose a mission" },
+  "missionSendStep": { "message": "Send step now" },
+  "missionPause": { "message": "Pause mission" },
+  "missionProgress": { "message": "step $1/$2 · cycle $3" },
+  "missionStepCtx": { "message": "step $1/$2 · cycle $3" },
+  "missionCompleteCtx": { "message": "complete · $1 cycles" },
+  "missionSteps": { "message": "$1 steps" },
+  "missionGateNote": { "message": "Turn on Auto follow-up to run a mission" },
+  "missionLastDone": { "message": "Last completed: $1" },
+  "kindMission": { "message": "mission" },
+  "kindMissionDry": { "message": "mission (dry)" },
+  "missionGolive": { "message": "GOLIVE READY — Project Orchestrator" },
+  "missionGoliveDesc": { "message": "Contract → audit → execute → converge to GOLIVE READY." },
+  "missionAudit": { "message": "AUDIT ONLY" },
+  "missionAuditDesc": { "message": "Read-only: find gaps, rank them, report with evidence." },
+  "missionFix": { "message": "FIX FINDINGS" },
+  "missionFixDesc": { "message": "Fix open findings end-to-end, prove each fix, then reconcile." },
+  "missionRelease": { "message": "RELEASE PREP" },
+  "missionReleaseDesc": { "message": "Freeze scope, verify the artifact, assemble the packet, decide GO." }
 }

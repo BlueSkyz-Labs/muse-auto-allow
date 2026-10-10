@@ -442,5 +442,26 @@
   },
   "langMenuAria": {
     "message": "Ngôn ngữ"
-  }
+  },
+  "missionTitle": { "message": "Nhiệm vụ" },
+  "missionToggle": { "message": "Bật nhiệm vụ" },
+  "missionChoose": { "message": "Chọn một nhiệm vụ" },
+  "missionSendStep": { "message": "Gửi bước ngay" },
+  "missionPause": { "message": "Tạm dừng nhiệm vụ" },
+  "missionProgress": { "message": "bước $1/$2 · vòng $3" },
+  "missionStepCtx": { "message": "bước $1/$2 · vòng $3" },
+  "missionCompleteCtx": { "message": "hoàn tất · $1 vòng" },
+  "missionSteps": { "message": "$1 bước" },
+  "missionGateNote": { "message": "Bật Tự động theo dõi để chạy nhiệm vụ" },
+  "missionLastDone": { "message": "Hoàn tất gần nhất: $1" },
+  "kindMission": { "message": "nhiệm vụ" },
+  "kindMissionDry": { "message": "nhiệm vụ (thử)" },
+  "missionGolive": { "message": "SẴN SÀNG GOLIVE — Điều phối dự án" },
+  "missionGoliveDesc": { "message": "Hợp đồng → kiểm toán → thực thi → hội tụ về GOLIVE READY." },
+  "missionAudit": { "message": "CHỈ KIỂM TOÁN" },
+  "missionAuditDesc": { "message": "Chỉ đọc: tìm lỗ hổng, xếp hạng, báo cáo kèm bằng chứng." },
+  "missionFix": { "message": "SỬA PHÁT HIỆN" },
+  "missionFixDesc": { "message": "Sửa các phát hiện đang mở từ đầu đến cuối, chứng minh rồi đối chiếu." },
+  "missionRelease": { "message": "CHUẨN BỊ PHÁT HÀNH" },
+  "missionReleaseDesc": { "message": "Đóng băng phạm vi, xác minh, lập gói phát hành, quyết định GO." }
 }

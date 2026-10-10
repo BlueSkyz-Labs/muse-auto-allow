@@ -442,5 +442,26 @@
   },
   "langMenuAria": {
     "message": "语言"
-  }
+  },
+  "missionTitle": { "message": "任务" },
+  "missionToggle": { "message": "启用任务" },
+  "missionChoose": { "message": "选择任务" },
+  "missionSendStep": { "message": "立即发送步骤" },
+  "missionPause": { "message": "暂停任务" },
+  "missionProgress": { "message": "第 $1/$2 步 · 第 $3 轮" },
+  "missionStepCtx": { "message": "第 $1/$2 步 · 第 $3 轮" },
+  "missionCompleteCtx": { "message": "完成 · $1 轮" },
+  "missionSteps": { "message": "$1 步" },
+  "missionGateNote": { "message": "请先开启自动跟进以运行任务" },
+  "missionLastDone": { "message": "上次完成：$1" },
+  "kindMission": { "message": "任务" },
+  "kindMissionDry": { "message": "任务（试运行）" },
+  "missionGolive": { "message": "GOLIVE 就绪 — 项目编排" },
+  "missionGoliveDesc": { "message": "契约 → 审计 → 执行 → 收敛到 GOLIVE READY。" },
+  "missionAudit": { "message": "仅审计" },
+  "missionAuditDesc": { "message": "只读：找出差距、排序，并附证据报告。" },
+  "missionFix": { "message": "修复问题" },
+  "missionFixDesc": { "message": "端到端修复未解决的问题，证明修复后再核对。" },
+  "missionRelease": { "message": "发布准备" },
+  "missionReleaseDesc": { "message": "冻结范围、验证产物、组装发布包并决定 GO。" }
 }

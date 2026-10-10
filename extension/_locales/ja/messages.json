@@ -442,5 +442,26 @@
   },
   "langMenuAria": {
     "message": "言語"
-  }
+  },
+  "missionTitle": { "message": "ミッション" },
+  "missionToggle": { "message": "ミッションを有効化" },
+  "missionChoose": { "message": "ミッションを選択" },
+  "missionSendStep": { "message": "今すぐステップを送信" },
+  "missionPause": { "message": "ミッションを一時停止" },
+  "missionProgress": { "message": "ステップ $1/$2 · サイクル $3" },
+  "missionStepCtx": { "message": "ステップ $1/$2 · サイクル $3" },
+  "missionCompleteCtx": { "message": "完了 · $1 サイクル" },
+  "missionSteps": { "message": "$1 ステップ" },
+  "missionGateNote": { "message": "ミッションを実行するには自動フォローアップをオンにしてください" },
+  "missionLastDone": { "message": "前回の完了: $1" },
+  "kindMission": { "message": "ミッション" },
+  "kindMissionDry": { "message": "ミッション（ドライ）" },
+  "missionGolive": { "message": "GOLIVE レディ — プロジェクト統括" },
+  "missionGoliveDesc": { "message": "契約 → 監査 → 実行 → 収束して GOLIVE READY へ。" },
+  "missionAudit": { "message": "監査のみ" },
+  "missionAuditDesc": { "message": "読み取り専用: ギャップを洗い出し、優先順位づけし、証拠とともに報告。" },
+  "missionFix": { "message": "指摘の修正" },
+  "missionFixDesc": { "message": "未解決の指摘を最後まで修正し、証明してから突き合わせる。" },
+  "missionRelease": { "message": "リリース準備" },
+  "missionReleaseDesc": { "message": "範囲を凍結し、成果物を検証し、パケットをまとめ、GO を判断。" }
 }

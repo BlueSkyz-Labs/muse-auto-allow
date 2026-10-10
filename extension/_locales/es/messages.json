@@ -442,5 +442,26 @@
   },
   "langMenuAria": {
     "message": "Idioma"
-  }
+  },
+  "missionTitle": { "message": "Misiones" },
+  "missionToggle": { "message": "Activar misión" },
+  "missionChoose": { "message": "Elige una misión" },
+  "missionSendStep": { "message": "Enviar el paso ahora" },
+  "missionPause": { "message": "Pausar la misión" },
+  "missionProgress": { "message": "paso $1/$2 · ciclo $3" },
+  "missionStepCtx": { "message": "paso $1/$2 · ciclo $3" },
+  "missionCompleteCtx": { "message": "completa · $1 ciclos" },
+  "missionSteps": { "message": "$1 pasos" },
+  "missionGateNote": { "message": "Activa el seguimiento automático para ejecutar una misión" },
+  "missionLastDone": { "message": "Última completada: $1" },
+  "kindMission": { "message": "misión" },
+  "kindMissionDry": { "message": "misión (prueba)" },
+  "missionGolive": { "message": "LISTO PARA GOLIVE — Orquestador de proyecto" },
+  "missionGoliveDesc": { "message": "Contrato → auditoría → ejecución → convergencia a GOLIVE READY." },
+  "missionAudit": { "message": "SOLO AUDITORÍA" },
+  "missionAuditDesc": { "message": "Solo lectura: halla brechas, priorízalas e informa con evidencia." },
+  "missionFix": { "message": "CORREGIR HALLAZGOS" },
+  "missionFixDesc": { "message": "Corrige los hallazgos abiertos de extremo a extremo, pruébalo y concilia." },
+  "missionRelease": { "message": "PREPARACIÓN DE LANZAMIENTO" },
+  "missionReleaseDesc": { "message": "Congela el alcance, verifica el artefacto, arma el paquete y decide GO." }
 }

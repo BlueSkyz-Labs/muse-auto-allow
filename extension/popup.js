@@ -67,6 +67,7 @@ function applyI18n() {
   // v1.8.0 — aria labels / titles that are not plain textContent
   const aria = (id, key, fb) => { const el = $(id); if (el) el.setAttribute('aria-label', t(key, fb)); };
   aria('safetyClose', 'safetyClose', 'Close');
+  aria('missionClose', 'safetyClose', 'Close'); // v1.9.0: the mission sheet's close button
   aria('schStart', 'scheduleStart', 'Start hour');
   aria('schEnd', 'scheduleEnd', 'End hour');
   const pt = $('ptom');
@@ -84,7 +85,9 @@ function esc(s) {
 const KIND_KEY = { allow: 'kindAllow', expand: 'kindExpand', 'open-panel': 'kindOpenPanel', 'review-bar': 'kindOpenPanel',
   // v1.8.0 kinds: the safety block + the follow-up entry + the dry-run variants
   blocked: 'kindBlocked', followup: 'kindFollowup', 'allow-dry': 'kindAllowDry', 'expand-dry': 'kindExpandDry',
-  'open-panel-dry': 'kindOpenPanelDry', 'review-bar-dry': 'kindOpenPanelDry', 'followup-dry': 'kindFollowupDry' };
+  'open-panel-dry': 'kindOpenPanelDry', 'review-bar-dry': 'kindOpenPanelDry', 'followup-dry': 'kindFollowupDry',
+  // v1.9.0 mission kinds: a verified mission send ('mission') + its dry-run twin
+  mission: 'kindMission', 'mission-dry': 'kindMissionDry' };
 const kindLabel = (k) => t(KIND_KEY[k] || '', k);
 // v1.8.0: chip class per kind — the dry variants share one quiet tint, 'blocked' keeps its
 // own, a follow-up entry reads like an allow entry (the label already says 'follow-up')
@@ -449,6 +452,7 @@ function renderFollowupStatus(agg) {
   fAgg = agg || null;
   fRenderRot(); // the ping is the freshest source for the 'Next: i/n' line
   renderAdvancedSummary(); // ... and for the collapsed summary of the hidden state
+  renderMission(); // v1.9.0: the applied mission state drives the Missions entry + sheet
   const cb = $('followupEnabled');
   const on = !!(cb && cb.checked);
   if (!agg) return fstatHide();
@@ -487,6 +491,15 @@ function refreshFollowupStatus() {
               if (ts > (agg.lastSentAt || 0)) agg.lastSentAt = ts;
               const rc = Number(r.rotateCount) || 0; // rotation: first tab that reports wins
               if (rc > 0 && !agg.rotateCount) { agg.rotateCount = rc; agg.rotateIdx = Math.max(0, Number(r.rotateIdx) || 0); }
+              // v1.9.0: the APPLIED mission state (first tab reporting an active mission wins)
+              const mp = agg.mission || (agg.mission = { enabled: false, active: false, id: '', step: 0, cycles: 0, steps: 0, stepText: '', completedId: '' });
+              if (r.missionEnabled === true) mp.enabled = true;
+              if (r.missionActive === true && !mp.active) {
+                mp.active = true; mp.id = r.missionId || ''; mp.step = Number(r.missionStep) || 0;
+                mp.cycles = Number(r.missionCycles) || 0; mp.steps = Number(r.missionSteps) || 0;
+                mp.stepText = String(r.missionStepText || '');
+              }
+              if (r.completedMissionId) mp.completedId = String(r.completedMissionId);
             }
             settle();
           });
@@ -550,12 +563,27 @@ async function renderLog(log) {
         // clip the context at a WORD boundary at roughly two lines (the CSS clamp stays as a
         // safety net) so the ellipsis never lands mid-word
         let ctxS = String(plain);
+        let cTitle = String(plain);
         if (ctxS.length > 78) { const cut = ctxS.slice(0, 78); const sp = cut.lastIndexOf(' '); ctxS = (sp > 48 ? cut.slice(0, sp) : cut) + '…'; }
+        // v1.9.0: a mission entry shows its mission NAME + a localized step/cycle line
+        // (the engine's own context is a raw English id string; the label is localized while
+        // the shipped step DIRECTIVES stay English). All interpolated via esc().
+        let mTitle = title;
+        if (k === 'mission' || k === 'mission-dry') {
+          const m = (e && e.mission) || {};
+          const name = m.id ? missionNameOf(m.id) : '';
+          mTitle = name ? '<b title="' + esc(name) + '">' + esc(name) + '</b>' : '';
+          const N = missionStepsOfId(m.id);
+          ctxS = m.complete === true
+            ? t('missionCompleteCtx', 'complete · $1 cycles', [String(m.cycles == null ? '' : m.cycles)])
+            : t('missionStepCtx', 'step $1/$2 · cycle $3', [String((Number(m.step) || 0) + 1), String(N || '?'), String(m.cycle == null ? '' : m.cycle)]);
+          cTitle = ctxS;
+        }
         // timestamp column on the left; the kind chip opens the message column and the
         // clamped context hangs under it (no full-margin continuation lines)
         return '<div class="item"><span class="t" title="' + esc(localFull(e.at)) + '">' + esc(localTime(e.at)) + '</span>' +
-          '<div class="top"><span class="k k-' + esc(kCls) + '"' + (kTitle ? ' title="' + esc(kTitle) + '"' : '') + '>' + esc(kLbl) + '</span>' + title + '</div>' +
-          '<div class="c" title="' + esc(plain) + '">' + esc(ctxS) + '</div></div>';
+          '<div class="top"><span class="k k-' + esc(kCls) + '"' + (kTitle ? ' title="' + esc(kTitle) + '"' : '') + '>' + esc(kLbl) + '</span>' + mTitle + '</div>' +
+          '<div class="c" title="' + esc(cTitle) + '">' + esc(ctxS) + '</div></div>';
       }).join('')
     : '<div class="empty">' + esc(t('noClicks', 'No clicks yet')) + '</div>';
 }
@@ -639,7 +667,8 @@ function refresh() {
     followupEnabled: false, followupPrompt: PRESETS[0], followupIdleMs: 60000, followupCooldownMs: 600000,
     followupChips: null, followupPrompts: [], followupRotateIdx: 0, followupAdvancedOpen: false,
     pauseUntil: 0, dryRun: false, allowOnceMode: false, rules: null, followupSmart: null, followupSchedule: null,
-    syncSettings: false, onboarded: false, digestCounters: null, lastDigestAt: 0 }, (s) => {
+    syncSettings: false, onboarded: false, digestCounters: null, lastDigestAt: 0,
+    missionEnabled: false, mission: null }, (s) => {
     $('enabled').checked = s.enabled !== false;
     $('delay').value = s.minDelayMs ?? 300;
     const c = $('count');
@@ -659,6 +688,7 @@ function refresh() {
     renderMini(byDay, now);
     applyV18UI(s); // v1.8.0: pause / dry-run / rules / schedule / sync / digest / onboarding
     applyFollowupUI(s);
+    applyMissionUI(s); // v1.9.0: missionEnabled + the stored mission object
     renderLog(Array.isArray(s.log) ? s.log : []);
   });
 }
@@ -1062,6 +1092,135 @@ chrome.storage.onChanged.addListener((ch) => {
   if (next !== userLocale) applyLocale(next);
 });
 
+// ======================================================================
+// v1.9.0 — Mission Orchestrator UI.
+// The ENGINE (mission corpus + state machine) ships in content.js and is FROZEN
+// (docs/MISSION_V19.md); this surface only DRIVES it through the frozen keys —
+// missionEnabled + mission{id,step,cycles,startedAt,lastSentAt} (absent = none) — and
+// reads the APPLIED state back from the followup-status ping. Step DIRECTIVES stay
+// English (the shipped, reviewed text); names/labels/descriptions are localized x6.
+// The entry lives on the Auto-follow-up header row and opens a FULL-POPUP sheet (the
+// Safety-panel pattern), so the rich surface never grows the popup (<=600px everywhere).
+// ======================================================================
+const MISSION_META = [
+  { id: 'golive-ready', nameKey: 'missionGolive', descKey: 'missionGoliveDesc', steps: 6 },
+  { id: 'audit-only', nameKey: 'missionAudit', descKey: 'missionAuditDesc', steps: 4 },
+  { id: 'fix-findings', nameKey: 'missionFix', descKey: 'missionFixDesc', steps: 4 },
+  { id: 'release-prep', nameKey: 'missionRelease', descKey: 'missionReleaseDesc', steps: 4 },
+];
+const MISSION_BY_ID = new Map(MISSION_META.map((m) => [m.id, m]));
+const missionStepsOfId = (id) => { const m = MISSION_BY_ID.get(id); return m ? m.steps : 0; };
+const missionNameOf = (id) => { const m = MISSION_BY_ID.get(id); return m ? t(m.nameKey, id) : String(id || ''); };
+
+let misOpen = false;
+let misEnabled = false;      // mirror of storage `missionEnabled`
+let misStore = null;         // stored mission {id,step,cycles,...} or null (= none)
+let misCompleted = null;     // {id,cycles} of the last completion found in the log
+let misSendNoteTimer = null;
+
+const misActiveNow = () => !!(misEnabled && misStore && MISSION_BY_ID.has(misStore.id));
+// The progress numbers: prefer the APPLIED ping (fresher) when it reports the same
+// mission, else the stored shape. n is 1-based (the step the NEXT send will carry).
+function misProgress() {
+  if (!misStore) return null;
+  const p = fAgg && fAgg.mission;
+  if (p && p.active && p.id === misStore.id) {
+    return { N: Number(p.steps) || missionStepsOfId(misStore.id) || 1, step: Number(p.step) || 0, cyc: Number(p.cycles) || 0, text: String(p.stepText || '') };
+  }
+  return { N: missionStepsOfId(misStore.id) || 1, step: Number(misStore.step) || 0, cyc: Number(misStore.cycles) || 0, text: '' };
+}
+const misStepLine = (pg) => t('missionProgress', 'step $1/$2 · cycle $3', [String(pg.step + 1), String(pg.N), String(pg.cyc + 1)]);
+// the last completed mission (the log is the durable record — it survives without a live tab)
+function scanCompletion(log) {
+  const arr = Array.isArray(log) ? log : [];
+  for (const e of arr) {
+    if (e && e.kind === 'mission' && e.mission && e.mission.complete === true) return { id: e.mission.id, cycles: e.mission.cycles };
+  }
+  return null;
+}
+function renderMissionList() {
+  const box = $('misList');
+  if (!box) return;
+  box.setAttribute('aria-label', t('missionTitle', 'Missions'));
+  box.innerHTML = MISSION_META.map((m) => {
+    const on = !!(misEnabled && misStore && misStore.id === m.id);
+    const desc = t(m.descKey, '');
+    return '<button type="button" class="misrow' + (on ? ' on' : '') + '" role="radio" aria-checked="' + on +
+      '" data-mid="' + esc(m.id) + '" title="' + esc(desc) + '">' +
+      '<span class="misname">' + esc(t(m.nameKey, m.id)) + '</span>' +
+      '<span class="miscount">' + esc(t('missionSteps', '$1 steps', [String(m.steps)])) + '</span>' +
+      '<span class="misdesc">' + esc(desc) + '</span></button>';
+  }).join('');
+}
+function renderMissionLast() {
+  const el = $('misLast');
+  if (!el) return;
+  const done = (fAgg && fAgg.mission && fAgg.mission.completedId) || (misCompleted && misCompleted.id) || '';
+  if (done) { el.hidden = false; el.textContent = t('missionLastDone', 'Last completed: $1', [missionNameOf(done)]); }
+  else { el.hidden = true; el.textContent = ''; }
+}
+function renderMission() {
+  const active = misActiveNow();
+  const prog = misProgress();
+  const btn = $('misbtn'), dot = $('misdot');
+  if (btn) {
+    btn.classList.toggle('on', active);
+    // the accessible name carries the live state (the visual is a pill + dot)
+    btn.setAttribute('aria-label', active && prog ? t('missionTitle', 'Missions') + ' — ' + misStepLine(prog) : t('missionTitle', 'Missions'));
+  }
+  if (dot) dot.hidden = !active;
+  const en = $('missionEnabled');
+  if (en) en.checked = misEnabled;
+  const gate = $('missionGate');
+  if (gate) gate.hidden = !!($('followupEnabled') && $('followupEnabled').checked);
+  const block = $('misActive');
+  if (block) block.hidden = !active;
+  if (active && prog) {
+    const pp = $('misProg');
+    if (pp) pp.textContent = misStepLine(prog);
+    const cy = $('misCyc');
+    if (cy) cy.textContent = missionNameOf(misStore.id);
+    const st = $('misStepText');
+    if (st) { const tx = prog.text || ''; st.textContent = tx; st.title = tx; st.hidden = !tx; }
+  }
+  // 'Pause mission' reuses the ONE pause (pauseUntil): paused -> the same button resumes
+  const pause = $('misPause');
+  if (pause) pause.textContent = pausedNow() ? t('pauseResume', 'Resume') : t('missionPause', 'Pause mission');
+  renderMissionList();
+  renderMissionLast();
+}
+function misSendNote(text) {
+  const el = $('misSendNote');
+  if (!el) return;
+  if (misSendNoteTimer) { clearTimeout(misSendNoteTimer); misSendNoteTimer = null; }
+  el.textContent = text || '';
+  if (!text) return;
+  misSendNoteTimer = setTimeout(() => { misSendNoteTimer = null; el.textContent = ''; }, 8000);
+}
+function setMissionOpen(open) {
+  const next = !!open;
+  misOpen = next;
+  const sh = $('missionSheet');
+  if (sh) sh.hidden = !next;
+  const b = $('misbtn');
+  if (b) b.setAttribute('aria-expanded', next ? 'true' : 'false');
+  if (next) {
+    if (safetyOpen) setSafety(false);   // one overlay at a time
+    if (fSheetMode) fSheet('');
+    if (langOpen) closeLangMenu(false);
+    renderMission();
+    const c = $('missionClose');
+    if (c) c.focus();
+  }
+}
+function applyMissionUI(s) {
+  misEnabled = s.missionEnabled === true;
+  const m = s.mission;
+  misStore = (m && typeof m === 'object' && !Array.isArray(m) && MISSION_BY_ID.has(m.id)) ? m : null;
+  misCompleted = scanCompletion(s.log);
+  renderMission();
+}
+
 async function boot() {
   try {
     const s = await chrome.storage.local.get({ userLocale: 'auto' });
@@ -1219,6 +1378,8 @@ document.addEventListener('click', (e) => {
 });
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
+  // v1.9.0: Escape closes the mission sheet and returns focus to its entry
+  if (misOpen) { setMissionOpen(false); const mb = $('misbtn'); if (mb) mb.focus(); return; }
   if (safetyOpen) { setSafety(false); return; } // v1.8.0: Escape closes the Safety panel first
   if (fSheetMode) { fSheet(''); return; }       // then the phrase-library sheet
   // progressive disclosure: Escape closes the Advanced group and returns focus to its button
@@ -1258,18 +1419,22 @@ function fSendNote(text) {
   if (!text) return;
   fSendNoteTimer = setTimeout(() => { fSendNoteTimer = null; el.textContent = ''; }, 8000);
 }
-$('fsendnow').addEventListener('click', () => {
-  fSendNote(''); // a new attempt supersedes the previous reason
+// v1.9.0: shared by the panel's 'Send now' and the mission sheet's 'Send step now'. When a
+// mission is active the engine sends the CURRENT mission step through this same path (manual
+// 'send now' respects the mission rules — pause/approval/composer — and advances only on a
+// verified send); only the inline note target differs.
+function doFollowupSend(note) {
+  note(''); // a new attempt supersedes the previous reason
   try {
     chrome.tabs.query({ url: ['https://muse.ai/*', 'https://*.muse.ai/*'] }, (tabs) => {
       const list = tabs || [];
-      if (!list.length) { fSendNote(t('museTabsNone', 'No muse.ai tab found')); return; }
+      if (!list.length) { note(t('museTabsNone', 'No muse.ai tab found')); return; }
       let pending = list.length, anyOk = false, firstFail = '';
       const settle = () => {
         if (--pending > 0) return;
         if (anyOk) return; // a tab took the send — the status pill reports the outcome
         const k = SEND_BLOCKED_KEY[firstFail] || ['followupSendBlocked', "Couldn't send the follow-up"];
-        fSendNote(t(k[0], k[1]));
+        note(t(k[0], k[1]));
       };
       list.forEach((tb) => {
         let settled = false;
@@ -1287,7 +1452,8 @@ $('fsendnow').addEventListener('click', () => {
       setTimeout(refreshFollowupStatus, 1500);
     });
   } catch { /* ignore */ }
-});
+}
+$('fsendnow').addEventListener('click', () => doFollowupSend(fSendNote));
 refresh(); // boot: apply the stored state immediately (was missing — popup rendered default DOM until the first storage event)
 refreshFollowupStatus();
 setInterval(refreshFollowupStatus, 2500);
@@ -1335,3 +1501,23 @@ $('obSkip').addEventListener('click', finishOnboard);
     finishOnboard();
   });
 });
+
+// ---- v1.9.0 wiring: the Missions sheet (entry -> full-popup overlay) -----------------
+$('misbtn').addEventListener('click', () => setMissionOpen(!misOpen));
+$('missionClose').addEventListener('click', () => setMissionOpen(false));
+// the enable switch writes the frozen key `missionEnabled` (default false; nothing auto-starts)
+$('missionEnabled').addEventListener('change', () => {
+  try { chrome.storage.local.set({ missionEnabled: $('missionEnabled').checked }); } catch { /* ignore */ }
+});
+// selecting a mission STARTS it: write the frozen `mission` object (step 0 / cycle 0) AND switch
+// `missionEnabled` on, so the very next idle send carries that mission's first step.
+$('misList').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-mid]');
+  if (!b || !MISSION_BY_ID.has(b.dataset.mid)) return;
+  misSendNote('');
+  try { chrome.storage.local.set({ missionEnabled: true, mission: { id: b.dataset.mid, step: 0, cycles: 0, startedAt: Date.now(), lastSentAt: 0 } }); } catch { /* ignore */ }
+});
+// 'Send step now' rides the SAME manual send path (the engine sends the CURRENT step)
+$('misSendNow').addEventListener('click', () => doFollowupSend(misSendNote));
+// 'Pause mission' reuses the ONE pause semantic (pauseUntil) — no second pause is invented
+$('misPause').addEventListener('click', () => { if (pausedNow()) setPause(0); else setPause(Date.now() + PAUSE_1H); });
