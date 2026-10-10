@@ -1,13 +1,21 @@
 # Global-Elite Benchmark Report — Muse Auto-Allow
 
-Status: **IN PROGRESS** — baseline measured for the package (speed axis) and the design axis;
-runtime latency/memory and the experience axis are still PENDING. Charter:
-`docs/GLOBAL_ELITE_BENCHMARK_ROUND.md`. Rule of this report: **every number is measured by a
-command in this repo and pasted with it**; a value that has not been measured says PENDING, it
-is never estimated.
+Status: **IN PROGRESS** — the package + runtime speed axes and the design axis are measured; the
+experience axis is still PENDING. Charter: `docs/GLOBAL_ELITE_BENCHMARK_ROUND.md`. Rule of this
+report: **every number is measured by a command in this repo and pasted with it**; a value that
+has not been measured says PENDING, it is never estimated.
 
-Live truth at first measurement: `HEAD ee3e1bb` · `OBSERVED_AT 2026-10-10` · branch `main`
-(a HEAD change invalidates the measurements below; re-measure, do not reuse).
+Live truth: package/design measurements were first taken at `HEAD ee3e1bb`; the runtime speed
+axis (§1.2) was measured at the frozen `HEAD 531cbca` on a **byte-exact export** of that revision
+(the live tree was being edited by another lane at the time). `OBSERVED_AT 2026-10-10` · branch
+`main` (a HEAD change invalidates the measurements below; re-measure, do not reuse).
+
+**Load sensitivity (measured 2026-10-10):** the runtime harness is sensitive to machine load. An
+independent coordinator re-run of `node scripts/bench/perf.mjs --only=scan` **while another lane's
+Chrome suite was running** reported min 28.2 ms / p95 48.7 ms, versus the baseline's median
+11.25 ms / p95 15.1 ms taken on an idle machine against the pristine export — a ~3-4x inflation
+from contention alone. Therefore: take baselines on an idle machine, one Chrome instance at a
+time, and treat any run taken under concurrent load as INVALID for the baseline.
 
 ## Axis 1 — Speed (tốc độ)
 
@@ -35,20 +43,82 @@ Reference point: the last shipped package `dist/muse-auto-allow-v1.7.0.zip` = **
 every popup open.** `content.js` at 73,702 bytes is the second lever (it is parsed in every
 muse.ai frame on every load).
 
-### 1.2 Runtime (PENDING — harness not built yet)
+### 1.2 Runtime (measured on `HEAD 531cbca` — the v1.8.0 freeze)
 
-| Metric | Status |
-|---|---|
-| Popup open → painted (cold/warm, median+p95, N=20) | PENDING |
-| Content-script scan cost per sweep (heavy synthetic DOM, median+p95) | PENDING |
-| Detect → click latency on an approval card | PENDING |
-| Service-worker wake cost (cold-start ms) | PENDING |
-| Storage write amplification (writes per click / per follow-up) | PENDING |
-| Memory footprint (idle / during sweeps) | PENDING |
-| Popup layout stability (no shift) | covered indirectly: popup <=600 px asserted in every state by `test/followup-e2e.mjs` + `test/lang-switch-e2e.mjs` |
+Harness: `scripts/bench/perf.mjs` (CDP lane, real Chrome `154.0.8037.99`, scratch profile —
+the same installed-Chrome + `Extensions.loadUnpacked` launcher as `test/e2e.mjs`; the extension
+is loaded from a temp copy whose manifest also matches `http://127.0.0.1/*`). Every number
+below is that command's output; the JSON block it prints carries the raw samples, so anyone can
+re-run and compare sample-for-sample. One Chrome instance at a time.
 
-Targets for this axis are also PENDING: they must be sourced (published extension/perf budgets)
-before they can be called targets — see the charter's "benchmarks are measured, not asserted".
+**Revision binding.** The numbers were taken against a **byte-exact export of `HEAD 531cbca`**
+(`git cat-file blob HEAD:<path>` for every tracked file, so LF endings and sizes match the
+committed blobs: `popup.html` 50,445 B, `popup.js` 63,840 B, `content.js` 73,702 B) because the
+working tree was being edited by another lane while this lane ran — measuring the live tree
+would have bound the numbers to an uncommitted revision. Re-run it the same way:
+
+```
+node scripts/bench/perf.mjs --only=popup      # popup open -> painted (cold + warm N=20)
+node scripts/bench/perf.mjs --only=scan       # content-script scan cost per sweep
+node scripts/bench/perf.mjs --only=latency    # detect -> click latency
+node scripts/bench/perf.mjs --only=sw         # service-worker cold start + wake
+node scripts/bench/perf.mjs --only=writes     # storage write amplification
+node scripts/bench/perf.mjs --only=memory     # JS heap footprint
+node scripts/bench/perf.mjs                   # everything (sw, popup, latency, scan, writes, memory)
+```
+
+(To bind a run to a revision, point `MAA_EXT_DIR` at that revision's `extension/` directory;
+unset, it measures the working tree.)
+
+| Metric | Measured (frozen `531cbca`) | Target | Target source |
+|---|---|---|---|
+| Popup open → painted, COLD (first open in a fresh profile) | **484 ms** FCP (DCL 260 ms; wall 540 ms) | ≤ 1000 ms ("first meaningful paint" in the page-load window) | web.dev RAIL — https://web.dev/articles/rail |
+| Popup open → painted, WARM (N=20 consecutive opens) | **median 100 ms · p95 112 ms** FCP (wall median 148 ms · p95 271) | ≤ 200 ms (p75 "good" responsiveness) | web.dev INP — https://web.dev/articles/inp |
+| Content-script scan cost per sweep (5,000 nodes · 200 approval-like cards · 700 buttons; worst case = no eligible hit, full traversal) | **median 11.3 ms · p95 15.1 ms** (min 10.1 · max 15.1, N=12) | ≤ 50 ms (long-task threshold) | web.dev "Optimize long tasks" — https://web.dev/articles/optimize-long-tasks |
+| Detect → click latency, quiet page (`minDelayMs=0`, 400 ms gap) | **median 121 ms · p95 131 ms** (N=12) | ≤ 100 ms (RAIL "respond to input") — *analogy*, see note | web.dev RAIL — https://web.dev/articles/rail |
+| Detect → click latency, shipped default pacing (`minDelayMs=300`, back-to-back) | **median 307 ms · p95 320 ms** (N=12) | TARGET PENDING (unsourced) | — |
+| Service-worker cold start (extension load → worker global created) | **614 ms** (`Extensions.loadUnpacked` call itself 397 ms) | TARGET PENDING (unsourced) | — |
+| Service-worker wake (stopped worker → restarted by a message) | **median 5.0 ms · p95 10.9 ms** (N=5) | TARGET PENDING (unsourced) | — |
+| Storage write amplification, per click (`chrome.storage.local.set` calls) | **2** steady-state and first click — keys `log,stats,clickCount,schemaVersion` + `digestCounters`; 2–3 `get`s | TARGET PENDING (unsourced) | — |
+| Storage write amplification, per follow-up send | **2** (same key pair; 3 `get`s) | TARGET PENDING (unsourced) | — |
+| Memory — popup JS heap, idle | **1.09 MB** | ≤ 5–15 MB (popup) | bestchromeextensions.com memory guide — https://bestchromeextensions.com/guides/chrome-memory-optimization-developer-guide |
+| Memory — content-script renderer JS heap: idle / heavy DOM / during sweeps | **5.15 / 5.45 / 5.51 MB** (repeated sweeps add **+0.06 MB**) | ≤ 2–5 MB per tab | bestchromeextensions.com memory guide — https://bestchromeextensions.com/guides/chrome-memory-optimization-developer-guide |
+| Popup layout stability (no shift) | covered indirectly: popup <=600 px asserted in every state by `test/followup-e2e.mjs` + `test/lang-switch-e2e.mjs` | — | — |
+
+**Sourcing discipline.** Rows whose target reads `TARGET PENDING (unsourced)` have no credible
+published budget for that exact metric; they stay unmeasured-against rather than get an invented
+number. The popup / scan / detect rows are anchored to Google's published web-performance
+budgets (RAIL response 100 ms, INP "good" 200 ms at p75, long-task 50 ms, page-load first
+meaningful paint 1000 ms) — these are general web budgets, not extension-specific ones, and the
+"detect → click" row is an **analogy** (a machine reaction to a DOM change, not a user input),
+labelled as such. The size budgets come from the Extension.js performance playbook (content
+script ≤ 512 KiB, service worker ≤ 512 KiB, UI page ≤ 1 MiB —
+https://extension.js.org/docs/workflows/performance-playbook); `content.js` 73,702 B and the
+~110 KB popup payload are both comfortably inside those, and §1.1's hard budget check in
+`scripts/lint.mjs` remains the enforcing gate.
+
+**Verdicts against the sourced targets (frozen `531cbca`).** MET — popup warm 100 ms ≤ 200 ms;
+popup cold 484 ms ≤ 1000 ms; scan per sweep 11.3 ms ≤ 50 ms; popup memory 1.09 MB ≤ 5 MB.
+NOT MET — content-script per-tab memory 5.51 MB vs the 2–5 MB vendor rule of thumb (marginal,
+and that guide is a vendor heuristic, not a standards body); detect → click 121 ms vs the 100 ms
+RAIL analogy (the ~120 ms is the engine's 120 ms `MutationObserver` trailing debounce). PENDING
+(unsourced target) — default-pacing latency, service-worker cold start and wake, storage writes
+per click/follow-up.
+
+**Method caveats (read before reusing a number).** (a) The content-script heap figure is the
+renderer's JS heap (page + content script share one renderer) measured after a forced GC — it is
+not an isolated per-script allocation, so treat it as an upper bound on the content script's own
+footprint. (b) The scan-cost fixture makes every injected card ineligible on purpose (the
+Allow/Deny pair sits inside a `<form>`, which the engine's `unsafeTarget()` refuses) so a sweep
+traverses the whole tree instead of clicking the first hit — that is the worst case, not the
+common one. (c) The service-worker "wake" is measured by stopping the worker with
+`Target.closeTarget` and re-triggering it with a `runtime.sendMessage` from an extension page;
+the cold start is the worker's own `performance.timeOrigin` minus the trigger timestamp, so it
+excludes the harness's polling latency. (d) The popup FCP is the in-page
+`first-contentful-paint` entry (relative to navigation start), not a CDP round-trip. (e) A single
+run's warm-popup p95 is noisy (this host is memory-constrained): the warm wall-clock p95 swung
+271–365 ms across three runs while the FCP median stayed 98–106 ms — re-run before treating a
+p95 as a regression.
 
 ## Axis 2 — Design (UI)
 

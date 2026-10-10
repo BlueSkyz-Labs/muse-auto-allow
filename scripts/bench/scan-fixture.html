@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Muse Auto-Allow — speed bench fixture</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: #0b0b0c; color: #eee; padding: 24px; }
+  .card { border: 1px solid #333; border-radius: 12px; padding: 16px; margin: 12px 0; background: #151517; }
+  button { padding: 8px 18px; border-radius: 999px; border: 0; margin-right: 8px; font-size: 14px; cursor: pointer; }
+  .allow { background: #2f6df6; color: #fff; }
+  .deny { background: #333; color: #ddd; }
+  .filler { color: #444; font-size: 1px; }
+</style>
+</head>
+<body>
+<!-- Deliberately empty: scripts/bench/perf.mjs injects the synthetic DOM it needs.
+     Served over http://127.0.0.1/ so the temp-copy manifest matches and the content
+     script injects. Nothing here is interactive. -->
+<p id="bench-root">speed bench fixture — DOM injected by scripts/bench/perf.mjs</p>
+</body>
+</html>
