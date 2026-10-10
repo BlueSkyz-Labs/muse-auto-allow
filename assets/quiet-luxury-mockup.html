@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Muse Auto-Allow — Quiet Luxury mockup (Phase 1)</title>
+<!--
+  Standalone design mockup (Phase 1). Not a source of truth: Phase 2 applies
+  docs/QUIET_LUXURY_SPEC.md to the real extension files, then store/runtime
+  evidence is re-rendered from the product.
+  Shows: popup at 320 CSS px (light + dark) and a Statistics fragment (KPI cards + chart).
+  All demo data is fictional and matches the shipped store screenshots (489 / 14 / 77 / 117).
+-->
+<style>
+  * { box-sizing: border-box; }
+  html { background: #efedea; }
+  body {
+    width: 1040px; margin: 0 auto; padding: 40px 40px 56px;
+    background: #efedea; color: #17181c;
+    font: 13px/1.5 "Optimistic", "optimisticAI", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- Quiet Luxury tokens ---------- */
+  .theme-light {
+    --bg: #faf9f7; --surface: #ffffff;
+    --ink: #17181c; --muted: #5c6069;
+    --line: #e8e6e0; --divide: rgba(23,24,28,.10); --stroke: rgba(23,24,28,.16);
+    --fill: rgba(23,24,28,.045); --fill-hover: rgba(23,24,28,.075); --panel: rgba(23,24,28,.03);
+    --accent: #005abf; --accent-state: #005abf; --accent-text: #005abf;
+    --accent-tint: rgba(0,90,191,.10); --accent-line: rgba(0,90,191,.28);
+    --btn-ink: #17181c; --on-btn: #ffffff; --focus: #005abf;
+    --ok: #146c2e; --ok-bg: rgba(49,162,76,.14);
+    --amber: #7a5a20; --amber-bg: rgba(243,217,180,.55);
+    --bar-day: #0f63e6; --bar-day-o: .75;
+    --bar-today-paint: url(#mtl); --chart-today-paint: url(#stln);
+    --c-blue: #0f63e6; --c-rose: #c2263f; --c-teal: #0e8571; --c-amber: #bf5700; --c-violet: #6d3ad6;
+    --c-blue-g: #0a4fc4; --c-rose-g: #a51e35; --c-teal-g: #0a6d5d; --c-amber-g: #a34705;
+    --axis: rgba(23,24,28,.20); --grid: rgba(23,24,28,.22);
+    --sh1: 0 1px 2px rgba(23,24,28,.05);
+    --sh2: 0 1px 1px rgba(23,24,28,.03), 0 14px 34px -22px rgba(23,24,28,.26);
+    --sh3: 0 2px 6px rgba(23,24,28,.05), 0 28px 60px -30px rgba(23,24,28,.38);
+  }
+  .theme-dark {
+    --bg: #161719; --surface: #1f2023;
+    --ink: #eceef2; --muted: #a6abb5;
+    --line: #2c2e33; --divide: rgba(236,238,242,.18); --stroke: rgba(236,238,242,.16);
+    --fill: rgba(236,238,242,.06); --fill-hover: rgba(236,238,242,.10); --panel: rgba(236,238,242,.04);
+    --accent: #0a5ce0; --accent-state: #4d8ef7; --accent-text: #8ab8ff;
+    --accent-tint: rgba(10,92,224,.22); --accent-line: rgba(10,92,224,.50);
+    --btn-ink: #e9ebef; --on-btn: #17181c; --focus: #7cb0ff;
+    --ok: #5fd07a; --ok-bg: rgba(69,196,99,.18);
+    --amber: #e8c98a; --amber-bg: rgba(243,217,180,.18);
+    --bar-day: #5aa5ff; --bar-day-o: .75;
+    --bar-today-paint: url(#mtd); --chart-today-paint: url(#stdn);
+    --c-blue: #5aa5ff; --c-rose: #ff8296; --c-teal: #35d2b8; --c-amber: #f2b435; --c-violet: #ab93fb;
+    --c-blue-g: #5aa5ff; --c-rose-g: #ff8296; --c-teal-g: #35d2b8; --c-amber-g: #f2b435;
+    --axis: rgba(228,230,235,.36); --grid: rgba(228,230,235,.40);
+    --sh1: 0 1px 2px rgba(0,0,0,.35);
+    --sh2: 0 1px 1px rgba(0,0,0,.30), 0 16px 36px -24px rgba(0,0,0,.75);
+    --sh3: 0 2px 8px rgba(0,0,0,.45), 0 30px 64px -32px rgba(0,0,0,.90);
+  }
+
+  /* ---------- page chrome ---------- */
+  .phead { display: flex; align-items: center; gap: 10px; padding-bottom: 14px; border-bottom: 1px solid #e3e0db; }
+  .phead .mark { width: 26px; height: 26px; border-radius: 8px; display: block; box-shadow: 0 8px 18px -8px rgba(0,64,220,.5); }
+  .phead h1 { font-size: 16px; font-weight: 500; letter-spacing: -0.01em; margin: 0; color: #17181c; }
+  .phead .meta { margin-left: auto; font-size: 10.5px; font-weight: 500; letter-spacing: .08em;
+                 text-transform: uppercase; color: #6a6f77; }
+  .micro { font-size: 10.5px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: #6a6f77; margin: 0; }
+
+  .row { display: flex; gap: 40px; margin-top: 28px; align-items: flex-start; justify-content: center; }
+  .col { width: 320px; flex: none; }
+  .col > .micro { margin-bottom: 10px; }
+
+  /* ---------- popup frame (presentation only; the real popup is the window itself) ---------- */
+  .pop { width: 320px; background: var(--bg); color: var(--ink); border-radius: 16px;
+         box-shadow: 0 0 0 1px var(--line), var(--sh3); padding: 12px 14px 12px; }
+  .pop > * { margin-left: 0; margin-right: 0; }
+
+  .head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .head .mark { width: 24px; height: 24px; border-radius: 7px; display: block; flex: none;
+                box-shadow: 0 6px 14px -7px rgba(0,64,220,.55); }
+  .head h1 { font-size: 14px; font-weight: 500; margin: 0; letter-spacing: -0.01em; min-width: 0; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; font-size: 11px; font-weight: 500;
+          letter-spacing: .01em; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--stroke);
+          background: transparent; color: var(--muted); max-width: 158px; }
+  .chip.on { background: var(--accent-tint); border-color: var(--accent-line); color: var(--accent-text); }
+  .chip .cd { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; opacity: .9; }
+
+  .sw { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+  .track { width: 38px; height: 22px; border-radius: 999px; background: var(--fill);
+           box-shadow: inset 0 0 0 1px var(--stroke); position: relative; flex: none; }
+  .track.on { background: var(--accent-state); box-shadow: none; }
+  .knob { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff;
+          box-shadow: 0 1px 2px rgba(23,24,28,.30), 0 0 0 1px rgba(23,24,28,.05); }
+  .track.on .knob { transform: translateX(16px); }
+
+  .frow { display: flex; align-items: center; gap: 8px; margin: 5px 0; }
+  .muted { color: var(--muted); }
+  .numwrap { margin-left: auto; flex: 0 0 86px; justify-content: flex-end; display: inline-flex; align-items: center; gap: 7px;
+             background: var(--fill); border: 1px solid var(--stroke); border-radius: 999px; padding: 3px 10px;
+             font-weight: 500; font-variant-numeric: tabular-nums; }
+  .numwrap .unit { color: var(--muted); font-size: 11px; font-weight: 400; }
+
+  .statsrow { display: flex; align-items: baseline; gap: 14px; margin: 7px 0 2px; }
+  .stat { display: inline-flex; align-items: baseline; gap: 6px; }
+  .stat b { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .stat + .stat { border-left: 1px solid var(--divide); padding-left: 14px; margin-left: auto; }
+
+  .mini { margin-top: 6px; }
+  .mcap { margin-bottom: 4px; }
+  .mini svg { display: block; width: 100%; height: auto; }
+  .mini rect { fill: var(--bar-day); fill-opacity: var(--bar-day-o); }
+  .mini rect.today { fill: var(--bar-today-paint); fill-opacity: 1; }
+  .mini text { font-size: 11px; fill: var(--muted); letter-spacing: .01em; }
+  .mini text.today { fill: var(--accent-text); font-weight: 600; }
+  .mini .baseline { stroke: var(--axis); stroke-width: 1; }
+
+  .sect { margin-top: 8px; border-top: 1px solid var(--divide); padding-top: 8px; }
+  .secthead { display: flex; align-items: center; gap: 8px; font-weight: 500; }
+  .fstat { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; font-size: 11px; font-weight: 500;
+           padding: 3px 9px; border-radius: 999px; background: var(--accent-tint);
+           border: 1px solid var(--accent-line); color: var(--accent-text); white-space: nowrap; }
+  .fstat .fd { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; opacity: .9; }
+
+  .fpanel { margin-top: 6px; background: var(--panel); border-radius: 14px; padding: 7px 0; }
+  .fquick { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-bottom: 6px; }
+  .fqlabel { font-size: 10.5px; }
+  .qbtn { font: inherit; font-size: 10.5px; font-weight: 400; line-height: 1.4; background: transparent; color: var(--ink);
+          border: 1px solid var(--stroke); border-radius: 999px; padding: 2px 7px; cursor: pointer; white-space: nowrap; }
+  .qbtn.on { background: var(--accent-tint); border-color: var(--accent-line); color: var(--accent-text); font-weight: 500; }
+  .flibbtn { display: flex; align-items: center; gap: 6px; width: 100%; font: inherit; font-size: 12px; text-align: left;
+             background: transparent; color: var(--ink); border: 1px solid var(--stroke); border-radius: 12px;
+             padding: 4px 10px; cursor: pointer; }
+  .fcount { font-size: 10.5px; font-weight: 500; padding: 0 6px; border-radius: 999px;
+            background: var(--accent-tint); color: var(--accent-text); }
+  .flibbtn .chev { margin-left: auto; font-size: 10px; color: var(--muted); }
+  .tbox { width: 100%; margin-top: 7px; background: var(--fill); color: var(--ink); border: 1px solid var(--stroke);
+          border-radius: 12px; padding: 6px 10px; font: inherit; font-size: 13px; resize: none; min-height: 34px; }
+  .tbox::placeholder { color: var(--muted); }
+  .fprev { display: flex; gap: 6px; font-size: 12px; margin-top: 7px; }
+  .fprev .plabel { color: var(--muted); flex: none; }
+  .fprev .ptext { min-width: 0; }
+  .frot { display: flex; align-items: center; gap: 6px; margin-top: 7px; flex-wrap: wrap; }
+  .frotnext { margin-left: auto; font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .fset { gap: 6px; margin-top: 7px; }
+  .fset .numwrap { margin-left: 0; }
+  .sendrow { display: flex; justify-content: flex-end; margin-top: 7px; }
+  .btn { background: var(--btn-ink); color: var(--on-btn); border: 0; border-radius: 999px; padding: 5px 16px;
+         cursor: pointer; font: inherit; font-size: 13px; font-weight: 500; }
+  .btn.tonal { background: var(--accent-tint); color: var(--accent-text); border: 1px solid var(--accent-line); }
+
+  .log { margin-top: 8px; border-top: 1px solid var(--divide); padding-top: 6px; }
+  .item { position: relative; padding: 5px 0 5px 52px; border-bottom: 1px solid var(--divide); }
+  .item:last-child { border-bottom: 0; }
+  .item .t { position: absolute; left: 0; top: 5px; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+  /* the context line hangs under the message column (grid), never under the chip */
+  .item .body { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 6px; row-gap: 2px; align-items: baseline; }
+  .item .k { font-size: 10.5px; font-weight: 500; padding: 1px 7px; border-radius: 999px; align-self: center; }
+  .k-allow { background: transparent; border: 1px solid var(--accent-line); color: var(--accent-text); }
+  .k-panel { background: var(--fill); color: var(--muted); }
+  .item b { font-weight: 500; min-width: 0; }
+  .item .c { color: var(--muted); font-size: 12.5px; grid-column: 2; }
+
+  .foot { display: flex; align-items: center; justify-content: space-between; margin-top: 8px;
+          border-top: 1px solid var(--divide); padding-top: 8px; }
+  .foot .note { color: var(--muted); font-size: 11px; }
+
+  /* ---------- statistics fragment ---------- */
+  .stats { margin-top: 40px; padding-top: 18px; border-top: 1px solid #e3e0db; }
+  .stats .micro { margin-bottom: 14px; }
+  .frag { background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 16px;
+          box-shadow: var(--sh2); padding: 20px; margin-bottom: 16px; }
+  .frag .tag { margin-bottom: 12px; }
+  .kgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 14px; }
+  .kpi { display: flex; align-items: center; gap: 13px; background: var(--surface); border: 1px solid var(--line);
+         border-radius: 16px; padding: 16px 18px; box-shadow: var(--sh2); }
+  .kpi .ic { flex: none; width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center;
+             color: var(--kcg); background: color-mix(in srgb, var(--kc) 8%, transparent);
+             box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--kc) 16%, transparent); }
+  .kpi .ic svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.25;
+                 stroke-linecap: round; stroke-linejoin: round; }
+  .kpi .kv { display: flex; flex-direction: column; min-width: 0; }
+  .kpi .v { font-size: 30px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.1;
+            font-variant-numeric: tabular-nums; }
+  .kpi .l { margin-top: 4px; }
+  .k-blue   { --kc: var(--c-blue);   --kcg: var(--c-blue-g); }
+  .k-rose   { --kc: var(--c-rose);   --kcg: var(--c-rose-g); }
+  .k-teal   { --kc: var(--c-teal);   --kcg: var(--c-teal-g); }
+  .k-amber  { --kc: var(--c-amber);  --kcg: var(--c-amber-g); }
+  .chart { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px 20px;
+           box-shadow: var(--sh2); }
+  .chart .ccap { margin-bottom: 10px; }
+  .chart svg { display: block; width: 100%; height: auto; }
+  .chart line.base { stroke: var(--axis); stroke-width: 1.25; }
+  .chart line.grid { stroke: var(--grid); stroke-width: 1; stroke-dasharray: 3 4; }
+  .chart text { fill: var(--muted); font-size: 11px; letter-spacing: .01em; }
+  .chart text.val { fill: var(--ink); font-weight: 500; }
+  .chart text.tick { font-size: 10.5px; letter-spacing: .02em; }
+  .chart text.now { fill: var(--accent-text); font-weight: 600; }
+  .chart text.val.now { fill: var(--accent-text); font-weight: 600; }
+  .chart rect.bar { fill: var(--bar-day); fill-opacity: var(--bar-day-o); }
+  .chart rect.bar.now { fill: var(--chart-today-paint); fill-opacity: 1; stroke: var(--accent-text); stroke-width: 1.5; }
+</style>
+</head>
+<body>
+  <header class="phead">
+    <svg class="mark" viewBox="0 0 512 512" aria-hidden="true"><defs>
+      <linearGradient id="mk" x1="72" y1="60" x2="452" y2="464" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#0082FB"/><stop offset="0.62" stop-color="#0064E0"/><stop offset="1" stop-color="#0040DC"/>
+      </linearGradient></defs>
+      <rect x="16" y="16" width="480" height="480" rx="133" fill="url(#mk)"/>
+      <path d="M124 284 L214 374 L368 182" fill="none" stroke="#fff" stroke-width="76" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <h1>Muse Auto-Allow</h1>
+    <span class="meta">Quiet Luxury — design language preview</span>
+  </header>
+
+  <div class="row">
+    <!-- ================= POPUP · LIGHT ================= -->
+    <figure class="col" style="margin:0">
+      <figcaption class="micro">Light &middot; Ivory</figcaption>
+      <div class="pop theme-light">
+        <div class="head">
+          <svg class="mark" viewBox="0 0 512 512" aria-hidden="true"><defs>
+            <linearGradient id="mkl" x1="72" y1="60" x2="452" y2="464" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stop-color="#0082FB"/><stop offset="0.62" stop-color="#0064E0"/><stop offset="1" stop-color="#0040DC"/>
+            </linearGradient></defs>
+            <rect x="16" y="16" width="480" height="480" rx="133" fill="url(#mkl)"/>
+            <path d="M124 284 L214 374 L368 182" fill="none" stroke="#fff" stroke-width="76" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <h1>Muse Auto-Allow</h1>
+          <span class="chip on"><i class="cd"></i>1 muse.ai tab open</span>
+        </div>
+
+        <div class="sw"><span class="track on"><span class="knob"></span></span><span>Auto-click Allow</span></div>
+
+        <div class="frow"><span class="muted">Delay between clicks:</span>
+          <span class="numwrap">300<span class="unit">ms</span></span></div>
+
+        <div class="statsrow">
+          <span class="stat"><span class="muted">Clicked:</span><b>489</b></span>
+          <span class="stat"><span class="muted">Today</span><b>14</b></span>
+        </div>
+
+        <div class="mini">
+          <div class="mcap micro">Last 7 days</div>
+          <svg viewBox="0 0 292 46" aria-hidden="true"><defs>
+            <linearGradient id="mtl" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#0040DC"/><stop offset="0.62" stop-color="#0030b0"/><stop offset="1" stop-color="#00289c"/>
+            </linearGradient></defs>
+            <line class="baseline" x1="0" y1="32.5" x2="292" y2="32.5"/>
+            <rect x="0" y="15" width="38" height="17" rx="4"/>
+            <rect x="42" y="21" width="38" height="11" rx="4"/>
+            <rect x="84" y="8" width="38" height="24" rx="4"/>
+            <rect x="126" y="13" width="38" height="19" rx="4"/>
+            <rect x="168" y="4" width="38" height="28" rx="4"/>
+            <rect x="210" y="6" width="38" height="26" rx="4"/>
+            <rect class="today" x="252" y="2" width="38" height="30" rx="4"/>
+            <text x="19" y="43" text-anchor="middle">Sat</text>
+            <text x="61" y="43" text-anchor="middle">Sun</text>
+            <text x="103" y="43" text-anchor="middle">Mon</text>
+            <text x="145" y="43" text-anchor="middle">Tue</text>
+            <text x="187" y="43" text-anchor="middle">Wed</text>
+            <text x="229" y="43" text-anchor="middle">Thu</text>
+            <text x="271" y="43" text-anchor="middle" class="today">Fri</text>
+          </svg>
+        </div>
+
+        <div class="sect">
+          <div class="secthead"><span>Auto follow-up</span>
+            <span class="fstat"><i class="fd"></i>Waiting</span></div>
+          <div class="sw"><span class="track on"><span class="knob"></span></span><span>Continue when Muse is idle</span></div>
+          <div class="fpanel">
+            <div class="fquick"><span class="fqlabel muted">Quick combos</span>
+              <button class="qbtn on">Keep going</button><button class="qbtn">Long-run</button><button class="qbtn">Best practice</button></div>
+            <button class="flibbtn">Phrase library<span class="fcount">4</span><span class="chev">&#9654;</span></button>
+            <textarea class="tbox" rows="1" placeholder="Type your follow-up prompt&hellip;"></textarea>
+            <div class="fprev"><span class="plabel">Preview</span><span class="ptext">Approve and continue working</span></div>
+            <div class="frot"><span class="fqlabel muted">Rotation</span>
+              <button class="qbtn">Save combo</button><button class="qbtn">Starter rotation</button>
+              <span class="frotnext">Next: 1/3</span></div>
+            <div class="frow fset"><span class="muted">Wait</span>
+              <span class="numwrap">60<span class="unit">s</span></span>
+              <span class="muted">Cooldown</span>
+              <span class="numwrap">10<span class="unit">min</span></span></div>
+            <div class="sendrow"><button class="btn tonal">Send now</button></div>
+          </div>
+        </div>
+
+        <div class="log">
+          <div class="item"><span class="t">23:10:29</span>
+            <div class="body"><span class="k k-allow">Allow</span><b>GitHub &middot; Pull request read</b>
+              <div class="c">Allow Muse to perform this action on your GitHub account?</div></div></div>
+          <div class="item"><span class="t">23:06:29</span>
+            <div class="body"><span class="k k-allow">Allow</span><b>GitHub &middot; Create branch</b>
+              <div class="c">Allow Muse to perform this action on your GitHub account?</div></div></div>
+        </div>
+
+        <div class="foot"><span class="note">Works only on muse.ai</span><button class="btn">Statistics</button></div>
+      </div>
+    </figure>
+
+    <!-- ================= POPUP · DARK ================= -->
+    <figure class="col" style="margin:0">
+      <figcaption class="micro">Dark &middot; Graphite</figcaption>
+      <div class="pop theme-dark">
+        <div class="head">
+          <svg class="mark" viewBox="0 0 512 512" aria-hidden="true"><defs>
+            <linearGradient id="mkd" x1="72" y1="60" x2="452" y2="464" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stop-color="#0082FB"/><stop offset="0.62" stop-color="#0064E0"/><stop offset="1" stop-color="#0040DC"/>
+            </linearGradient></defs>
+            <rect x="16" y="16" width="480" height="480" rx="133" fill="url(#mkd)"/>
+            <path d="M124 284 L214 374 L368 182" fill="none" stroke="#fff" stroke-width="76" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <h1>Muse Auto-Allow</h1>
+          <span class="chip on"><i class="cd"></i>1 muse.ai tab open</span>
+        </div>
+
+        <div class="sw"><span class="track on"><span class="knob"></span></span><span>Auto-click Allow</span></div>
+
+        <div class="frow"><span class="muted">Delay between clicks:</span>
+          <span class="numwrap">300<span class="unit">ms</span></span></div>
+
+        <div class="statsrow">
+          <span class="stat"><span class="muted">Clicked:</span><b>489</b></span>
+          <span class="stat"><span class="muted">Today</span><b>14</b></span>
+        </div>
+
+        <div class="mini">
+          <div class="mcap micro">Last 7 days</div>
+          <svg viewBox="0 0 292 46" aria-hidden="true"><defs>
+            <linearGradient id="mtd" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#a9caff"/><stop offset="0.62" stop-color="#97c0ff"/><stop offset="1" stop-color="#7fb0ff"/>
+            </linearGradient></defs>
+            <line class="baseline" x1="0" y1="32.5" x2="292" y2="32.5"/>
+            <rect x="0" y="15" width="38" height="17" rx="4"/>
+            <rect x="42" y="21" width="38" height="11" rx="4"/>
+            <rect x="84" y="8" width="38" height="24" rx="4"/>
+            <rect x="126" y="13" width="38" height="19" rx="4"/>
+            <rect x="168" y="4" width="38" height="28" rx="4"/>
+            <rect x="210" y="6" width="38" height="26" rx="4"/>
+            <rect class="today" x="252" y="2" width="38" height="30" rx="4"/>
+            <text x="19" y="43" text-anchor="middle">Sat</text>
+            <text x="61" y="43" text-anchor="middle">Sun</text>
+            <text x="103" y="43" text-anchor="middle">Mon</text>
+            <text x="145" y="43" text-anchor="middle">Tue</text>
+            <text x="187" y="43" text-anchor="middle">Wed</text>
+            <text x="229" y="43" text-anchor="middle">Thu</text>
+            <text x="271" y="43" text-anchor="middle" class="today">Fri</text>
+          </svg>
+        </div>
+
+        <div class="sect">
+          <div class="secthead"><span>Auto follow-up</span>
+            <span class="fstat"><i class="fd"></i>Waiting</span></div>
+          <div class="sw"><span class="track on"><span class="knob"></span></span><span>Continue when Muse is idle</span></div>
+          <div class="fpanel">
+            <div class="fquick"><span class="fqlabel muted">Quick combos</span>
+              <button class="qbtn on">Keep going</button><button class="qbtn">Long-run</button><button class="qbtn">Best practice</button></div>
+            <button class="flibbtn">Phrase library<span class="fcount">4</span><span class="chev">&#9654;</span></button>
+            <textarea class="tbox" rows="1" placeholder="Type your follow-up prompt&hellip;"></textarea>
+            <div class="fprev"><span class="plabel">Preview</span><span class="ptext">Approve and continue working</span></div>
+            <div class="frot"><span class="fqlabel muted">Rotation</span>
+              <button class="qbtn">Save combo</button><button class="qbtn">Starter rotation</button>
+              <span class="frotnext">Next: 1/3</span></div>
+            <div class="frow fset"><span class="muted">Wait</span>
+              <span class="numwrap">60<span class="unit">s</span></span>
+              <span class="muted">Cooldown</span>
+              <span class="numwrap">10<span class="unit">min</span></span></div>
+            <div class="sendrow"><button class="btn tonal">Send now</button></div>
+          </div>
+        </div>
+
+        <div class="log">
+          <div class="item"><span class="t">23:10:29</span>
+            <div class="body"><span class="k k-allow">Allow</span><b>GitHub &middot; Pull request read</b>
+              <div class="c">Allow Muse to perform this action on your GitHub account?</div></div></div>
+          <div class="item"><span class="t">23:06:29</span>
+            <div class="body"><span class="k k-allow">Allow</span><b>GitHub &middot; Create branch</b>
+              <div class="c">Allow Muse to perform this action on your GitHub account?</div></div></div>
+        </div>
+
+        <div class="foot"><span class="note">Works only on muse.ai</span><button class="btn">Statistics</button></div>
+      </div>
+    </figure>
+  </div>
+
+  <!-- ================= STATISTICS FRAGMENT ================= -->
+  <section class="stats">
+    <p class="micro">Statistics &middot; fragment &mdash; KPI cards + trend chart</p>
+
+    <div class="frag theme-light">
+      <p class="micro tag">Light &middot; Ivory</p>
+      <div class="kgrid">
+        <div class="kpi k-blue"><span class="ic"><svg viewBox="0 0 24 24"><path d="M5 12.6l4.4 4.4L19 6.4"/></svg></span>
+          <span class="kv"><span class="v">489</span><span class="l micro">Total</span></span></div>
+        <div class="kpi k-rose"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.4V12l3.1 2.1"/></svg></span>
+          <span class="kv"><span class="v">14</span><span class="l micro">Today</span></span></div>
+        <div class="kpi k-teal"><span class="ic"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3.5"/><path d="M3.5 9.8h17"/><circle cx="12" cy="14.8" r="1.9"/></svg></span>
+          <span class="kv"><span class="v">77</span><span class="l micro">This week</span></span></div>
+        <div class="kpi k-amber"><span class="ic"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3.5"/><path d="M8 3.2v3.6M16 3.2v3.6M3.5 10.2h17"/></svg></span>
+          <span class="kv"><span class="v">117</span><span class="l micro">This month</span></span></div>
+      </div>
+      <div class="chart">
+        <p class="ccap micro">Day &middot; Last 14 days</p>
+        <svg viewBox="0 0 920 158" role="img" aria-label="Clicks per day, last 14 days">
+          <defs><linearGradient id="stl" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#0f63e6"/><stop offset="1" stop-color="#0a4fc4"/></linearGradient>
+            <linearGradient id="stln" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#0040DC"/><stop offset="0.62" stop-color="#0030b0"/><stop offset="1" stop-color="#00289c"/></linearGradient>
+          </defs>
+          <line class="base" x1="0" y1="132.5" x2="920" y2="132.5"/>
+          <line class="grid" x1="0" y1="24.5" x2="920" y2="24.5"/>
+          <text x="916" y="20" text-anchor="end" class="tick">19</text>
+          <g>
+            <rect class="bar" x="10" y="97.9" width="40" height="34.1" rx="4"/>
+            <rect class="bar" x="74.3" y="86.5" width="40" height="45.5" rx="4"/>
+            <rect class="bar" x="138.6" y="41.1" width="40" height="90.9" rx="4"/>
+            <rect class="bar" x="202.9" y="80.8" width="40" height="51.2" rx="4"/>
+            <rect class="bar" x="267.1" y="69.5" width="40" height="62.5" rx="4"/>
+            <rect class="bar" x="331.4" y="58.1" width="40" height="73.9" rx="4"/>
+            <rect class="bar" x="395.7" y="46.7" width="40" height="85.3" rx="4"/>
+            <rect class="bar" x="460" y="103.6" width="40" height="28.4" rx="4"/>
+            <rect class="bar" x="524.3" y="92.2" width="40" height="39.8" rx="4"/>
+            <rect class="bar" x="588.6" y="46.7" width="40" height="85.3" rx="4"/>
+            <rect class="bar" x="652.9" y="35.4" width="40" height="96.6" rx="4"/>
+            <rect class="bar" x="717.1" y="24" width="40" height="108" rx="4"/>
+            <rect class="bar" x="781.4" y="63.8" width="40" height="68.2" rx="4"/>
+            <rect class="bar now" x="845.7" y="52.4" width="40" height="79.6" rx="4"/>
+          </g>
+          <g class="vals">
+            <text class="val" x="30" y="91.9" text-anchor="middle">6</text>
+            <text class="val" x="94.3" y="80.5" text-anchor="middle">8</text>
+            <text class="val" x="158.6" y="35.1" text-anchor="middle">16</text>
+            <text class="val" x="222.9" y="74.8" text-anchor="middle">9</text>
+            <text class="val" x="287.1" y="63.5" text-anchor="middle">11</text>
+            <text class="val" x="351.4" y="52.1" text-anchor="middle">13</text>
+            <text class="val" x="415.7" y="40.7" text-anchor="middle">15</text>
+            <text class="val" x="480" y="97.6" text-anchor="middle">5</text>
+            <text class="val" x="544.3" y="86.2" text-anchor="middle">7</text>
+            <text class="val" x="608.6" y="40.7" text-anchor="middle">15</text>
+            <text class="val" x="672.9" y="29.4" text-anchor="middle">17</text>
+            <text class="val" x="737.1" y="18" text-anchor="middle">19</text>
+            <text class="val" x="801.4" y="57.8" text-anchor="middle">12</text>
+            <text class="val now" x="865.7" y="46.4" text-anchor="middle">14</text>
+          </g>
+          <g class="ticks">
+            <text class="tick" x="94.3" y="150" text-anchor="middle">27/09</text>
+            <text class="tick" x="222.9" y="150" text-anchor="middle">29/09</text>
+            <text class="tick" x="351.4" y="150" text-anchor="middle">01/10</text>
+            <text class="tick" x="480" y="150" text-anchor="middle">03/10</text>
+            <text class="tick" x="608.6" y="150" text-anchor="middle">05/10</text>
+            <text class="tick" x="737.1" y="150" text-anchor="middle">07/10</text>
+            <text class="tick now" x="865.7" y="150" text-anchor="middle">09/10</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <div class="frag theme-dark">
+      <p class="micro tag">Dark &middot; Graphite</p>
+      <div class="kgrid">
+        <div class="kpi k-blue"><span class="ic"><svg viewBox="0 0 24 24"><path d="M5 12.6l4.4 4.4L19 6.4"/></svg></span>
+          <span class="kv"><span class="v">489</span><span class="l micro">Total</span></span></div>
+        <div class="kpi k-rose"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.4V12l3.1 2.1"/></svg></span>
+          <span class="kv"><span class="v">14</span><span class="l micro">Today</span></span></div>
+        <div class="kpi k-teal"><span class="ic"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3.5"/><path d="M3.5 9.8h17"/><circle cx="12" cy="14.8" r="1.9"/></svg></span>
+          <span class="kv"><span class="v">77</span><span class="l micro">This week</span></span></div>
+        <div class="kpi k-amber"><span class="ic"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3.5"/><path d="M8 3.2v3.6M16 3.2v3.6M3.5 10.2h17"/></svg></span>
+          <span class="kv"><span class="v">117</span><span class="l micro">This month</span></span></div>
+      </div>
+      <div class="chart">
+        <p class="ccap micro">Day &middot; Last 14 days</p>
+        <svg viewBox="0 0 920 158" role="img" aria-label="Clicks per day, last 14 days">
+          <defs><linearGradient id="std" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#5aa5ff"/><stop offset="1" stop-color="#3f8ceb"/></linearGradient>
+            <linearGradient id="stdn" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#a9caff"/><stop offset="0.62" stop-color="#97c0ff"/><stop offset="1" stop-color="#7fb0ff"/></linearGradient>
+          </defs>
+          <line class="base" x1="0" y1="132.5" x2="920" y2="132.5"/>
+          <line class="grid" x1="0" y1="24.5" x2="920" y2="24.5"/>
+          <text x="916" y="20" text-anchor="end" class="tick">19</text>
+          <g>
+            <rect class="bar" x="10" y="97.9" width="40" height="34.1" rx="4"/>
+            <rect class="bar" x="74.3" y="86.5" width="40" height="45.5" rx="4"/>
+            <rect class="bar" x="138.6" y="41.1" width="40" height="90.9" rx="4"/>
+            <rect class="bar" x="202.9" y="80.8" width="40" height="51.2" rx="4"/>
+            <rect class="bar" x="267.1" y="69.5" width="40" height="62.5" rx="4"/>
+            <rect class="bar" x="331.4" y="58.1" width="40" height="73.9" rx="4"/>
+            <rect class="bar" x="395.7" y="46.7" width="40" height="85.3" rx="4"/>
+            <rect class="bar" x="460" y="103.6" width="40" height="28.4" rx="4"/>
+            <rect class="bar" x="524.3" y="92.2" width="40" height="39.8" rx="4"/>
+            <rect class="bar" x="588.6" y="46.7" width="40" height="85.3" rx="4"/>
+            <rect class="bar" x="652.9" y="35.4" width="40" height="96.6" rx="4"/>
+            <rect class="bar" x="717.1" y="24" width="40" height="108" rx="4"/>
+            <rect class="bar" x="781.4" y="63.8" width="40" height="68.2" rx="4"/>
+            <rect class="bar now" x="845.7" y="52.4" width="40" height="79.6" rx="4"/>
+          </g>
+          <g class="vals">
+            <text class="val" x="30" y="91.9" text-anchor="middle">6</text>
+            <text class="val" x="94.3" y="80.5" text-anchor="middle">8</text>
+            <text class="val" x="158.6" y="35.1" text-anchor="middle">16</text>
+            <text class="val" x="222.9" y="74.8" text-anchor="middle">9</text>
+            <text class="val" x="287.1" y="63.5" text-anchor="middle">11</text>
+            <text class="val" x="351.4" y="52.1" text-anchor="middle">13</text>
+            <text class="val" x="415.7" y="40.7" text-anchor="middle">15</text>
+            <text class="val" x="480" y="97.6" text-anchor="middle">5</text>
+            <text class="val" x="544.3" y="86.2" text-anchor="middle">7</text>
+            <text class="val" x="608.6" y="40.7" text-anchor="middle">15</text>
+            <text class="val" x="672.9" y="29.4" text-anchor="middle">17</text>
+            <text class="val" x="737.1" y="18" text-anchor="middle">19</text>
+            <text class="val" x="801.4" y="57.8" text-anchor="middle">12</text>
+            <text class="val now" x="865.7" y="46.4" text-anchor="middle">14</text>
+          </g>
+          <g class="ticks">
+            <text class="tick" x="94.3" y="150" text-anchor="middle">27/09</text>
+            <text class="tick" x="222.9" y="150" text-anchor="middle">29/09</text>
+            <text class="tick" x="351.4" y="150" text-anchor="middle">01/10</text>
+            <text class="tick" x="480" y="150" text-anchor="middle">03/10</text>
+            <text class="tick" x="608.6" y="150" text-anchor="middle">05/10</text>
+            <text class="tick" x="737.1" y="150" text-anchor="middle">07/10</text>
+            <text class="tick now" x="865.7" y="150" text-anchor="middle">09/10</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </section>
+</body>
+</html>
