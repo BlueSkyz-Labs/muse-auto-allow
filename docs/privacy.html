@@ -4,12 +4,12 @@
 <style>body{max-width:760px;margin:2rem auto;padding:0 1rem;font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;color:#111112}h1{font-size:1.6rem}h2{font-size:1.15rem;margin-top:1.6rem}ul{padding-left:1.2rem}footer{margin-top:2.5rem;color:#666;font-size:.85rem}</style>
 </head><body>
 <h1>Privacy Policy — Muse Auto-Allow</h1>
-<p>**Effective date:** TODO: fill before submit (e.g. 2026-01-01)</p>
-<p>**Last updated:** TODO: fill before submit</p>
+<p>**Effective date:** 2026-10-10</p>
+<p>**Last updated:** 2026-10-11 — adds the optional settings-sync disclosure, the desktop-notification (digest) disclosure and the current log-kind list.</p>
 <p>This privacy policy applies to the **Muse Auto-Allow** browser extension for Google</p>
 <p>Chrome (&quot;the extension&quot;), published by **BlueSkyz Labs** (&quot;we&quot;, &quot;us&quot;).</p>
 <p>Contact: **TODO: fill before submit** (support email)</p>
-<p>Publisher / homepage: **TODO: fill before submit**</p>
+<p>Publisher / homepage: <https://github.com/BlueSkyz-Labs/muse-auto-allow></p>
 <p>Muse Auto-Allow has one job: on **muse.ai** pages, it automatically clicks the</p>
 <p>**Allow** button on Muse&#x27;s approval requests so your Muse agent does not stop for</p>
 <p>manual approvals. This policy explains exactly what that involves — which is very little,</p>
@@ -26,6 +26,7 @@
 <li>It **transmits nothing** to us or anyone else.</li>
 <li>There is **no analytics**, **no tracking**, and **no advertising**.</li>
 <li>There is **no remote code** — all code is bundled inside the package.</li>
+<li>The optional **settings sync** (off by default) mirrors only your settings through your own Google Account; logs and statistics are never synced.</li>
 </ul>
 <p>---</p>
 <h2>2. What the extension can access, and why</h2>
@@ -36,16 +37,29 @@
 <p>**Your browser storage.** The extension saves, locally in your browser</p>
 <p>(`chrome.storage.local`):</p>
 <ul>
-<li>your settings — whether auto-clicking is on or off, the delay between clicks, and a click counter;</li>
-<li>a click log — the **last 50 clicks** it performed, each described by timestamp, kind (allow /</li>
+<li>your settings — whether auto-clicking is on or off, the delay between clicks, dry-run and allow-once preferences, topic and keyword rules, your follow-up options (prompts, chips, smart follow-up, schedule), a mission choice, and a click counter;</li>
+<li>a click log — the **last 50 actions** it performed, each described by timestamp, kind</li>
 </ul>
-<p>  expand / open panel), button label, and context;</p>
+<p>  (allow / expand / open panel / review bar / blocked / follow-up / mission), button label,</p>
+<p>  and context;</p>
 <ul>
 <li>click statistics — compact counters only: clicks per day, per month, per year, and per topic</li>
 </ul>
 <p>  (a repository or host name, up to 40 characters, taken from the approval text). No page</p>
 <p>  content is stored.</p>
-<p>This information never leaves your device.</p>
+<p>This information never leaves your device — with one exception you control: the optional</p>
+<p>**settings sync** described below.</p>
+<p>**Optional settings sync (off by default).** If you turn on **Sync settings** in the</p>
+<p>extension, a compact settings-only subset — on/off state, click delay, dry-run and</p>
+<p>allow-once preferences, topic and keyword rules, and your follow-up options (prompts,</p>
+<p>chips, smart follow-up, and schedule) — is mirrored through `chrome.storage.sync` into</p>
+<p>your own Google Account, so your settings follow you to your other Chrome profiles. Your</p>
+<p>click log, click statistics, counters and digest timestamps are **never** synced. You can</p>
+<p>turn it off at any time; removing the synced copy uses Chrome&#x27;s own sync data controls.</p>
+<p>**Desktop notifications (the digest).** On browser startup, the extension can show one</p>
+<p>desktop notification summarizing recent local activity (clicks, follow-ups, blocked</p>
+<p>items). This summary is composed on your device from your own local counters; the</p>
+<p>`notifications` permission is used only to display it. No data leaves your device.</p>
 <p>**A once-a-minute timer.** The extension uses a one-minute alarm purely to check for</p>
 <p>approval requests in background tabs. It makes no network requests.</p>
 <p>---</p>
@@ -62,7 +76,8 @@
 <li>It does **not** collect your web history, keystrokes, or activity outside muse.ai.</li>
 <li>It does **not** transmit any data to our servers or to any third party — **there are no</li>
 </ul>
-<p>  servers**. The extension makes no outbound network calls.</p>
+<p>  servers**. The extension makes no outbound network calls (the optional settings sync uses</p>
+<p>  Chrome&#x27;s built-in sync into your own account, never a server of ours).</p>
 <ul>
 <li>It does **not** sell, rent, or share data, because it holds no data to sell.</li>
 <li>It does **not** use data for advertising, profiling, creditworthiness, or lending.</li>
@@ -86,6 +101,8 @@
 </ul>
 <p>  delete all stored settings and logs. You can also clear the extension&#x27;s data from your</p>
 <p>  browser&#x27;s site/extension data controls.</p>
+<p>If you enabled the optional settings sync, turning it off stops future mirroring; deleting the</p>
+<p>synced copy uses your Google Account&#x27;s sync data controls.</p>
 <p>Because we never receive this data, there is nothing for us to delete on our side.</p>
 <p>---</p>
 <h2>5. Permissions explained</h2>
@@ -93,9 +110,11 @@
 <p>|---|---|</p>
 <p>| `storage` | Save your on/off setting, click delay, click counter, the local last-50 click log, and compact click statistics. |</p>
 <p>| `alarms` | Run a once-a-minute check so approvals in background tabs are handled. |</p>
+<p>| `notifications` | Show the optional startup digest. It is composed locally on your device; no data leaves it. |</p>
 <p>| Host: `https://muse.ai/*`, `https://*.muse.ai/*` | Detect and click the Allow button on Muse pages. No other site is accessed. |</p>
 <p>The extension deliberately does **not** request `tabs`, `scripting`, `webRequest`,</p>
-<p>`cookies`, `downloads`, or `&lt;all_urls&gt;`.</p>
+<p>`cookies`, `downloads`, or `&lt;all_urls&gt;`. Its two keyboard shortcuts (`commands`: pause,</p>
+<p>follow-up) are a manifest key, not a permission.</p>
 <p>---</p>
 <h2>6. Changes to this policy</h2>
 <p>If we change how the extension handles data, we will update this policy and revise the</p>
@@ -105,19 +124,19 @@
 <h2>7. Contact</h2>
 <p>Questions about this policy or the extension&#x27;s data practices:</p>
 <p>**TODO: fill before submit** (support email)</p>
-<p>**TODO: fill before submit** (support / homepage URL)</p>
+<p><https://github.com/BlueSkyz-Labs/muse-auto-allow></p>
 <p>---</p>
 <h2>Ghi chú tiếng Việt (tóm tắt)</h2>
 <p>Muse Auto-Allow chỉ đọc nội dung trang **muse.ai** để tìm nút Allow của Muse. Tiện ích</p>
 <p>lưu cục bộ trong trình duyệt của bạn: cài đặt bật/tắt, độ trễ bấm, nhật ký 50 lần bấm</p>
 <p>gần nhất, và thống kê đếm gọn (theo ngày / tháng / năm và theo chủ đề). Tiện ích **không thu thập** dữ liệu nào, **không gửi** dữ liệu đi đâu, không có</p>
-<p>analytics, không có mã từ xa. Gỡ tiện ích khỏi Chrome là xoá sạch dữ liệu đã lưu. Liên hệ:</p>
+<p>analytics, không có mã từ xa. Nếu bạn bật **Đồng bộ cài đặt** (mặc định tắt), chỉ một tập cài đặt gọn được đồng bộ qua tài khoản Google của chính bạn — nhật ký và thống kê **không bao giờ** được đồng bộ. Thông báo khởi động (digest) được tạo cục bộ trên máy bạn. Gỡ tiện ích khỏi Chrome là xoá sạch dữ liệu đã lưu. Liên hệ:</p>
 <p>TODO: fill before submit.</p>
 <h2>中文说明（摘要）</h2>
 <p>Muse Auto-Allow 仅读取 **muse.ai** 页面的内容，用于查找 Muse 的 Allow（允许）按钮。</p>
 <p>扩展在你的浏览器中本地保存：开关设置、点击间隔、最近 50 次点击的日志，以及精简的点击统计</p>
 <p>（按日 / 月 / 年与主题）。扩展</p>
-<p>**不收集**任何数据，**不向任何地方发送**数据，没有分析统计，也没有远程代码。从</p>
+<p>**不收集**任何数据，**不向任何地方发送**数据，没有分析统计，也没有远程代码。可选的**设置同步**（默认关闭）仅通过你自己的 Google 账户同步精简的设置子集；日志与统计**绝不**同步。启动摘要通知在本地生成。从</p>
 <p>Chrome 移除该扩展即可清除已保存的数据。联系方式：TODO: fill before submit。</p>
 <footer>Muse Auto-Allow is an unofficial extension by BlueSkyz Labs and is not affiliated with Meta or Muse.</footer>
 </body></html>
