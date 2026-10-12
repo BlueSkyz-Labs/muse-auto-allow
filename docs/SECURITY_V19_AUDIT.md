@@ -201,10 +201,28 @@ Legend: **SAFE** = the rails hold under the probe; **BOUNDED** = residual accept
   from a forged one — that is the nature of auto-allow.
 - **Mitigations (present):** visible toggle; audit log (context + `at`, encrypted at rest, cap 50);
   rate cap; never-Deny; pause (`Alt+Shift+P` / 15 min); schedule; blocklist/topic rules; connector
-  hard-block; `dryRun`.
-- **Remediation (owner decision):** first-run consent explaining default-ON; keep the "turn OFF
-  when unattended" advice in the listing/privacy. **Muse-side session security is out of scope.**
-- **Residual:** ACCEPTED — must stay explicit in the verdict (R8–R11; R11 = this chain).
+  hard-block; `dryRun`; **logging-only-by-default on a fresh install (v1.9.3 — see below)**.
+- **Remediation (owner decision) — IMPLEMENTED in v1.9.3 (informed consent):** the owner approved
+  "a fresh install starts in dry-run (logging-only) so the user sees exactly what would be clicked
+  before granting live approval authority". Shipped as: `background.js` `migrate()` seeds
+  `dryRun: true` when the key is ABSENT (never overwriting an explicit choice), the onboarding
+  wizard's step 2 states the logging-only default plainly, shows the live
+  "Logging only — nothing will be clicked" state, offers the one-tap **"Turn on live clicking"**
+  (an explicit `dryRun:false`), and carries the consent line "This tool grants approvals in your
+  name — you stay responsible for what your agent does." (`onbConsent`, all 6 locales). The
+  "turn OFF when unattended" advice stays in the listing/privacy. **Muse-side session security is
+  out of scope.**
+- **Residual:** ACCEPTED — unchanged (R8–R11; R11 = this chain). This revision adds informed
+  consent; it does **not** change the accepted risk.
+- **Open finding (honest note, 2026-10-12):** the new end-to-end proof (`test/e2e.mjs` dry-run
+  pre-phase) shows the engine applies `dryRun` AFTER its first sweep — with `dryRun:true` stored,
+  a page load can leak ONE live click before the flag lands (boot-order race in
+  `content.js`; v1.8/v1.9 carried the same window for opt-in dry-run). The pre-phase therefore
+  exits RED on the shipped engine, and the packet reports it instead of claiming a mitigation it
+  cannot yet prove. Root cause, the 4-line fix and its validated proof are in
+  `docs/ENGINE_V18.md` §14.4; the fix is **pending** because `content.js` is outside this packet's
+  write set (and its hash is pinned above). Until it lands, treat "a fresh install clicks nothing"
+  as true for every sweep after the first one on each page load, not for the first sweep.
 
 ### Chain G — Send-authority abuse via Mission + follow-up — **SAFE / BOUNDED** (`INDEPENDENTLY_VERIFIED` + `RUNTIME_VERIFIED`)
 - **Objective:** steer **which** prompt is sent, the **timing**, or the **count past the caps** via

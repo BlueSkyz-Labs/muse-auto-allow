@@ -399,13 +399,16 @@
     "message": "Turn on"
   },
   "onbStep2Title": {
-    "message": "Start in Dry-run"
+    "message": "You start in logging-only mode"
   },
   "onbStep2Body": {
-    "message": "Recommended: let it log for a day and watch. Nothing is clicked until you switch Dry-run off."
+    "message": "Fresh installs start in logging-only mode: the extension detects and logs what it would click, but nothing is clicked until you turn live clicking on."
   },
-  "onbDryRun": {
-    "message": "Turn on Dry-run"
+  "onbLive": {
+    "message": "Turn on live clicking"
+  },
+  "onbConsent": {
+    "message": "This tool grants approvals in your name — you stay responsible for what your agent does."
   },
   "onbStep3Title": {
     "message": "Pick a follow-up"

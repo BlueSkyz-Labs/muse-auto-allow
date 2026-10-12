@@ -270,6 +270,16 @@ try {
     try { return JSON.parse(out); } catch { return null; }
   }
 
+  // v1.9.3: the popup layout is measured with dry-run stated EXPLICITLY off. A fresh install now
+  // starts in dry-run (logging-only) via the background migration, and the fresh-install state
+  // renders the logging-only banner inside the log's sticky top — a real ~19px addition to the
+  // CALM layout (still <=600; the crowded states absorb it in the log's scroll area, measured
+  // 594/594/594 in test/followup-e2e.mjs). Pinning the state keeps every documented reference
+  // number (default 423 / menu+full log 594) comparable, and the <=600 assertions hold in BOTH
+  // states — docs/UI_V19.md §3 records the dry-run-on height too.
+  await seed({ dryRun: false });
+  await sleep(300);
+
   const EN = pre.expected.en;
 
   // ---- (a) DEFAULT = browser-locale behaviour, unchanged ----

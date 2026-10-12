@@ -8,6 +8,13 @@
  * The extension is loaded from a TEMP COPY whose manifest additionally matches
  * http://127.0.0.1/* (the shipped manifest stays muse.ai-only).
  *
+ * PRE-PHASE (v1.9.3) — a FRESH INSTALL starts in dry-run (logging-only):
+ *  0. storage reports dryRun === true (the installer migration) and the popup renders the
+ *     logging-only state (sticky banner + Safety toggle checked); the onboarding consent step
+ *     states the default, shows that state, carries the consent line and its one-tap
+ *     'Turn on live clicking' writes the explicit dryRun:false; a real approval card driven
+ *     while logging-only is NOT clicked and a '-dry' log entry appears instead.
+ *
  * Asserts (fixture):
  *  1. path B: classic Allow+Deny pairs clicked (cards 1, 2)
  *  2. path A: [data-testid=hatch-inline-approval-card] card clicked (card 4)
@@ -181,6 +188,132 @@ try {
   const extId = loaded?.id;
   if (!extId) throw new Error('Extensions.loadUnpacked returned no extension id');
   console.log('extensionId:', extId);
+
+  // ---- PRE-PHASE (v1.9.3): a FRESH INSTALL starts in dry-run (logging-only) --------------
+  // The owner-approved first-run safety default: background.js migrate() seeds dryRun:true when
+  // the key is absent, so a new user sees exactly what WOULD be clicked before granting live
+  // approval authority (the informed-consent mitigation for the Muse ToS §7.6 oversight tension).
+  // Nothing has been seeded on this scratch profile yet, so this phase proves it end-to-end:
+  //   1. the installer migration reports dryRun === true (storage) and the popup renders the
+  //      logging-only state (the sticky banner + the Safety toggle checked);
+  //   2. the onboarding consent step states the default plainly, shows the live logging-only
+  //      state, carries the consent line, and its one-tap 'Turn on live clicking' writes the
+  //      EXPLICIT dryRun:false;
+  //   3. a real approval card is driven WHILE logging-only: it is NOT clicked and a '-dry' log
+  //      entry appears instead. A live click in this window is a FAILURE (and the log then holds
+  //      a real 'allow' entry instead of '-dry' — the fail-open signature, recorded as `leak`).
+  // Falsification: revert the migrate() seed in a mutated copy (MAA_EXT_DIR) -> these
+  // assertions go RED (no dryRun:true in storage and the card is clicked live); restore -> GREEN.
+  const dryPhase = { ok: false };
+  try {
+    const tp = await send('Target.createTarget', { url: `chrome-extension://${extId}/popup.html` });
+    const { sessionId: sp } = await send('Target.attachToTarget', { targetId: tp.targetId, flatten: true });
+    const peval = async (expression, awaitPromise) => {
+      const r = await send('Runtime.evaluate', { expression, returnByValue: true, ...(awaitPromise ? { awaitPromise: true } : {}) }, sp);
+      return r?.result?.value;
+    };
+    const readLog = async () => JSON.parse(await peval(`new Promise((res) => chrome.storage.local.get(['log'], (s) => res(JSON.stringify(s.log || []))))`, true) || '[]');
+
+    // (1) the installer migration + the rendered logging-only state
+    let seeded = {};
+    const seedDeadline = Date.now() + 10000;
+    while (Date.now() < seedDeadline) {
+      const raw = await peval(`new Promise((res) => chrome.storage.local.get(['dryRun', 'schemaVersion'], (s) => res(JSON.stringify(s))))`, true);
+      seeded = JSON.parse(raw || '{}');
+      if (seeded.dryRun === true) break;
+      await sleep(250);
+    }
+    dryPhase.installerSeed = seeded; // fresh install => { dryRun: true, schemaVersion: 2 }
+    dryPhase.popup = JSON.parse(await peval(`(() => {
+      const band = document.getElementById('dryBand');
+      document.getElementById('safetyBtn').click();
+      const checked = document.getElementById('dryRun').checked;
+      return JSON.stringify({ bannerVisible: !band.hidden, bannerText: band.textContent.trim(), safetyChecked: checked });
+    })()`) || '{}');
+
+    // (2) the onboarding consent step (step 2 of 3)
+    await peval(`document.getElementById('obPrimary').click()`); // step 1 -> step 2 (dry-run/consent)
+    await sleep(250);
+    dryPhase.onboarding = JSON.parse(await peval(`(() => JSON.stringify({
+      onboardShown: !document.getElementById('onboard').hidden,
+      title: document.getElementById('obTitle').textContent,
+      body: document.getElementById('obBody').textContent,
+      stateVisible: !document.getElementById('obDryState').hidden,
+      stateText: document.getElementById('obDryState').textContent.trim(),
+      consentVisible: !document.getElementById('obConsent').hidden,
+      consentText: document.getElementById('obConsent').textContent.trim(),
+      primary: document.getElementById('obPrimary').textContent,
+    }))()`) || '{}');
+
+    // (3) drive a real approval card WHILE still logging-only
+    let dryTid = null;
+    let drySid = null;
+    let injected = false;
+    let dryEntry = null;
+    let dryClicks = [];
+    let leak = null;
+    // target bookkeeping must never abort the phase: a transient CDP timeout here would
+    // otherwise lose the evidence collected so far (the falsification run depends on it)
+    const safeClose = async (id) => { if (id) { try { await send('Target.closeTarget', { targetId: id }); } catch { /* non-critical */ } } };
+    for (let attempt = 0; attempt < 2 && !dryEntry && !dryClicks.length && !leak; attempt++) {
+      await safeClose(dryTid);
+      let t = null;
+      try { t = await send('Target.createTarget', { url: fixtureUrl }); } catch (e) { dryPhase.fixtureError = e.message; break; }
+      dryTid = t.targetId;
+      try { drySid = (await send('Target.attachToTarget', { targetId: dryTid, flatten: true })).sessionId; } catch (e) { dryPhase.fixtureError = e.message; break; }
+      const injDeadline = Date.now() + 12000;
+      while (Date.now() < injDeadline) {
+        try {
+          const ra = await send('Runtime.evaluate', { expression: "document.documentElement.getAttribute('data-muse-auto-allow')", returnByValue: true }, drySid);
+          if (ra?.result?.value === '1') { injected = true; break; }
+        } catch { /* target may still be booting */ }
+        await sleep(250);
+      }
+      if (!injected) continue; // known CDP injection flake — reload once and retry
+      const dryDeadline = Date.now() + 14000;
+      while (Date.now() < dryDeadline) {
+        const log = await readLog();
+        // the fail-open signature: a REAL (non-dry) allow entry while dryRun is stored true
+        leak = log.find((e) => e && e.kind === 'allow' && e.dryRun !== true) || null;
+        dryEntry = log.find((e) => e && e.dryRun === true && typeof e.kind === 'string' && e.kind.endsWith('-dry')) || null;
+        try {
+          const rc = await send('Runtime.evaluate', { expression: 'JSON.stringify(window.__clicks || [])', returnByValue: true }, drySid);
+          dryClicks = JSON.parse(rc?.result?.value || '[]');
+        } catch { /* target may still be booting */ }
+        if (dryEntry || dryClicks.length || leak) break; // evidence either way — a click/leak is a FAILURE below
+        await sleep(400);
+      }
+    }
+    dryPhase.contentScriptInjected = injected;
+    dryPhase.logEntry = dryEntry;                                // { kind: 'allow-dry', dryRun: true, … }
+    dryPhase.clicksWhileDry = dryClicks.map((c) => String(c.n)); // must stay EMPTY
+    dryPhase.leak = leak;                                        // must stay null
+    await safeClose(dryTid);
+
+    // (4) the one-tap 'Turn on live clicking' — an EXPLICIT stored choice
+    await peval(`document.getElementById('obPrimary').click()`);
+    await sleep(400);
+    const afterTap = JSON.parse(await peval(`new Promise((res) => chrome.storage.local.get(['dryRun'], (s) => res(JSON.stringify({ dryRun: s.dryRun, step: document.getElementById('obStep').textContent }))))`, true) || '{}');
+    dryPhase.afterOneTap = afterTap;
+    await peval(`document.getElementById('obSkip').click()`); // the wizard stays skippable
+    await sleep(300);
+    dryPhase.onboardedAfterSkip = JSON.parse(await peval(`new Promise((res) => chrome.storage.local.get(['onboarded'], (s) => res(JSON.stringify({ onboarded: s.onboarded }))))`, true) || '{}');
+    try { await send('Target.closeTarget', { targetId: tp.targetId }); } catch { /* non-critical */ }
+
+    dryPhase.ok = seeded.dryRun === true && dryPhase.popup.bannerVisible === true &&
+      dryPhase.popup.safetyChecked === true && dryPhase.onboarding.stateVisible === true &&
+      dryPhase.onboarding.consentVisible === true && dryPhase.onboarding.onboardShown === true &&
+      injected === true && !!dryEntry && dryEntry.dryRun === true && dryClicks.length === 0 && leak === null &&
+      afterTap.dryRun === false;
+  } catch (e) { dryPhase.error = e.message; }
+  console.log('dry-run pre-phase:', JSON.stringify(dryPhase));
+  if (!dryPhase.ok && (dryPhase.leak || (dryPhase.clicksWhileDry || []).length)) {
+    console.error('dry-run pre-phase FAILED: a LIVE click leaked while dryRun was stored true. ' +
+      'Root cause: the content script applies the v18 settings (dryRun) in a storage callback that ' +
+      'lands AFTER its first sweep, so a fresh install / page reload in logging-only mode can click ' +
+      'one card before the flag applies. Fix: gate the first sweep on the v18 settings read ' +
+      '(content.js boot block). The leak evidence is in dryPhase.leak / dryPhase.clicksWhileDry.');
+  }
 
   // ---- fixture test ----
   const { targetId } = await send('Target.createTarget', { url: fixtureUrl });
@@ -377,11 +510,12 @@ try {
 
   const pass = missing.length === 0 && extra.length === 0 && dupes.length === 0 && denyCount === 0 && orderOk && dedupSepOk
     && forbiddenHit.length === 0 && n7count === 1 && n11count === 1 && !surface2Hit && statsCheck.ok && statsPage.ok
-    && encCheck.ok && connectorCheck.ok && locksProbe === true;
+    && encCheck.ok && connectorCheck.ok && locksProbe === true && dryPhase.ok === true;
   Object.assign(results, {
     ok: pass,
     extId,
     fixtureUrl,
+    dryPhase,
     clicked: got,
     missing,
     extra,

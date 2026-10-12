@@ -399,13 +399,16 @@
     "message": "开启"
   },
   "onbStep2Title": {
-    "message": "从试运行开始"
+    "message": "以仅记录模式开始"
   },
   "onbStep2Body": {
-    "message": "建议：先让它记录一天并观察。在你关闭试运行前不会点击任何内容。"
+    "message": "全新安装会以仅记录模式开始：扩展会检测并记录将要点击的内容，但在你开启实时点击之前不会点击任何内容。"
   },
-  "onbDryRun": {
-    "message": "开启试运行"
+  "onbLive": {
+    "message": "开启实时点击"
+  },
+  "onbConsent": {
+    "message": "此工具以你的名义批准请求——你仍需对代理的行为负责。"
   },
   "onbStep3Title": {
     "message": "选择一个跟进语"

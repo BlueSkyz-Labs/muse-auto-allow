@@ -420,6 +420,17 @@
   .obstep { font-size: 10.5px; color: var(--muted); margin-left: auto; }
   .obtitle { font-size: 14px; font-weight: 500; margin: 2px 0 4px; }
   .obbody { font-size: 12px; color: var(--muted); margin: 0 0 8px; }
+  /* v1.9.3 — the dry-run step's live state + the one consent line. The state chip reuses the
+     exact shipped dry-band recipe (same colours as .dryband, incl. dark mode), so the wizard
+     and the log banner read as one signal. Both live inside the card: the overlay is
+     `inset:0`, so they cost the popup layout no height at all. */
+  .obstate { align-self: flex-start; box-sizing: border-box; border-radius: 10px; padding: 1px 8px;
+             margin: 0 0 6px; font-size: 10.5px; line-height: 1.4;
+             background: rgba(243,217,180,.35); border: 1px solid rgba(243,217,180,.9); color: #7a5a20; }
+  .obconsent { font-size: 11px; line-height: 1.45; color: var(--muted); margin: 0 0 8px; }
+  @media (prefers-color-scheme: dark) {
+    .obstate { background: rgba(243,217,180,.14); border-color: rgba(243,217,180,.34); color: #e8c98a; }
+  }
   .obactions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
   .obactions .btn { font-size: 12px; padding: 4px 14px; }
   .obfoot { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 8px; flex: none; }
@@ -722,6 +733,12 @@
       <div class="obdots"><span class="obdot" data-s="0"></span><span class="obdot" data-s="1"></span><span class="obdot" data-s="2"></span><span class="obstep" id="obStep"></span></div>
       <h2 class="obtitle" id="obTitle"></h2>
       <p class="obbody" id="obBody"></p>
+      <!-- v1.9.3 — the dry-run step states the fresh-install default plainly: the LIVE
+           logging-only state (the shipped dryRunBanner string, shown while dryRun === true)
+           and the one informed-consent line (onbConsent, all 6 locales). Step 2 only —
+           renderOnboard() owns the visibility. -->
+      <div class="obstate" id="obDryState" hidden><span data-i18n="dryRunBanner">Logging only — nothing will be clicked</span></div>
+      <p class="obconsent" id="obConsent" data-i18n="onbConsent" hidden>This tool grants approvals in your name — you stay responsible for what your agent does.</p>
       <div class="obquick" id="obQuick" hidden>
         <button type="button" class="qbtn" id="obq0" data-i18n="followupQuick1">Keep going</button>
         <button type="button" class="qbtn" id="obq1" data-i18n="followupQuick2">Long-run</button>

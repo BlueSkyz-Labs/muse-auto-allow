@@ -493,8 +493,11 @@ try {
   const pop = await send('Target.createTarget', { url: `chrome-extension://${extId}/popup.html` });
   popSession = (await send('Target.attachToTarget', { targetId: pop.targetId, flatten: true })).sessionId;
   await sleep(1000);
-  // legacy state first: a custom prompt with NO followupChips key
-  await seed({ enabled: true, followupEnabled: true, followupPrompt: PROMPT_LEGACY, followupIdleMs: 400, followupCooldownMs: 1500 });
+  // legacy state first: a custom prompt with NO followupChips key.
+  // v1.9.3: dryRun:false is stated EXPLICITLY — a fresh install now starts in dry-run
+  // (logging-only) via the background migration, and every phase below asserts LIVE clicking
+  // and LIVE follow-up sends, so the state the harness depends on must be written, not assumed.
+  await seed({ enabled: true, followupEnabled: true, followupPrompt: PROMPT_LEGACY, followupIdleMs: 400, followupCooldownMs: 1500, dryRun: false });
   await sleep(700); // let the popup's storage.onChanged refresh land
   const popCheck = JSON.parse(await pEval(`JSON.stringify({
     sect: !!document.getElementById('followupSect'),

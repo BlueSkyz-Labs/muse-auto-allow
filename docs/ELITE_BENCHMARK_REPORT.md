@@ -365,13 +365,27 @@ enabled-by-default (`content.js` `DEFAULT.enabled = true`; the worker's `migrate
 
 | Goal | Measured (ms) | User actions from fresh install | How measured | Verdict |
 |---|---|---|---|---|
-| First **auto-click** on a real approval card (`test/fixture.html`) | **1662.5 ms** from `performance.timeOrigin` (5 full-suite runs swung **1210–2023 ms** — a single cold sample, not a resolvable instrument at N=1) | **0** | `node scripts/bench/experience.mjs --only=ttff` | MET the product's own promise (install → working with zero setup); **no sourced target** for an extension's first auto-click — reported unmeasured-against |
+| First **auto-click** on a real approval card (`test/fixture.html`) | **1662.5 ms** from `performance.timeOrigin` (5 full-suite runs swung **1210–2023 ms** — a single cold sample, not a resolvable instrument at N=1) | **0** | `node scripts/bench/experience.mjs --only=ttff` | MET the product's own promise (install → working with zero setup); **no sourced target** for an extension's first auto-click — reported unmeasured-against. **v1.9.3 caveat (honest):** the metric clears storage first, so the engine's absent-key default (`dryRun:false`) applies — that is *seeing the tool work*. On a REAL fresh install the first action is now a **dry-run log entry** (`allow-dry`, nothing clicked) and the first **LIVE** click needs **1 user action** (the onboarding one-tap "Turn on live clicking" — or the Safety toggle later). The `0 actions` figure therefore applies to seeing the tool work, not to granting live approval authority. |
 | First **follow-up send** | **968 ms** after the toggle (idle→send) | **2** (dismiss the first-run wizard, toggle "Continue when Muse is idle") | `… --only=ttff` | 2 actions; the engine ships follow-up OFF (`content.js` `FOLLOWUP_DEFAULTS.followupEnabled = false`), so it is opt-in by design |
 | First **mission step** | **1063 ms** after selecting a mission | **4** (wizard dismiss → follow-up ON → Missions sheet → select a mission) | `… --only=ttff` | 4 actions; missions ride the follow-up engine and are gated on it (`#missionGate`, `popup.js:1175`) |
 
 Fresh-profile storage after goal 1 = `[clickCount, cryptKeyRaw, digestCounters, log, schemaVersion,
 stats]` — the engine clicked with **no** `enabled`/`onboarded` key written by a user, and
 `onboarded` was absent (`onboarded_absent_fresh: true`).
+
+**v1.9.3 — the first-run default changed; this measurement states its state.** `--only=ttff`
+starts each block with `chrome.storage.local.clear()`, so `dryRun` is absent and the engine's
+documented default (`false`) applies: the numbers above measure the **live** path with the state
+stated explicitly, and they remain reproducible. What a REAL fresh install does now (measured by
+the `test/e2e.mjs` dry-run pre-phase, not by this harness): `background.js` `migrate()` seeds
+`dryRun:true`, so the first action on a muse.ai page is a **dry-run log entry** — the extension
+detects the card and logs `allow-dry` (nothing clicked) — and the first **live** click requires
+**1 user action** (the onboarding wizard's one-tap "Turn on live clicking", or the Safety panel's
+dry-run toggle afterwards). Two figures therefore have to be read together: **0 actions** to
+*see the tool work* (logging-only, zero setup, still true) and **1 action** to grant it live
+approval authority (the informed-consent step, `docs/ENGINE_V18.md` §14). This harness is outside
+the v1.9.3 packet's write set and was left unchanged; its ttff/reach/trust numbers stay as
+measured above.
 
 ### 3.2 Setup friction / discoverability — reachability table (drives the REAL popup)
 

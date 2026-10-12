@@ -399,13 +399,16 @@
     "message": "Bật"
   },
   "onbStep2Title": {
-    "message": "Bắt đầu bằng Chạy thử"
+    "message": "Khởi đầu ở chế độ chỉ ghi log"
   },
   "onbStep2Body": {
-    "message": "Khuyến nghị: để nó ghi log một ngày rồi xem. Sẽ không bấm gì cho đến khi bạn tắt Chạy thử."
+    "message": "Bản cài mới bắt đầu ở chế độ chỉ ghi log: tiện ích nhận diện và ghi lại những gì nó sẽ bấm, nhưng không bấm gì cho đến khi bạn bật bấm trực tiếp."
   },
-  "onbDryRun": {
-    "message": "Bật Chạy thử"
+  "onbLive": {
+    "message": "Bật bấm trực tiếp"
+  },
+  "onbConsent": {
+    "message": "Công cụ này thay bạn chấp thuận — bạn vẫn chịu trách nhiệm về những gì agent của bạn làm."
   },
   "onbStep3Title": {
     "message": "Chọn một câu nhắc"

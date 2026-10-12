@@ -17,7 +17,7 @@ Everything here is exercised against a deterministic fixture in a real Chromium
 | Key | Type / default | Behavior |
 |---|---|---|
 | `pauseUntil` | number epoch-ms, `0` | While `Date.now() < pauseUntil` **all automation is halted**: every click path (A–E) and the follow-up engine, including manual `followup-send-now` (reason `paused`). The toolbar badge shows the pause marker `||`. |
-| `dryRun` | bool, `false` | Detection and logging run exactly as usual; **nothing is clicked** and no follow-up is typed/sent. Log entries get `entry.dryRun=true` and the kind gets a `-dry` suffix (`allow-dry`, `expand-dry`, `open-panel-dry`, `review-bar-dry`); the follow-up logs `followup-dry`. |
+| `dryRun` | bool — engine default `false`; **seeded `true` on a fresh install (v1.9.3)** | Detection and logging run exactly as usual; **nothing is clicked** and no follow-up is typed/sent. Log entries get `entry.dryRun=true` and the kind gets a `-dry` suffix (`allow-dry`, `expand-dry`, `open-panel-dry`, `review-bar-dry`); the follow-up logs `followup-dry`. **v1.9.3 first-run safety default:** `background.js` `migrate()` seeds `dryRun: true` when the key is **ABSENT** (fresh install / pre-v1.8 upgrade) — an explicit stored value is never overwritten (a v1.8+ user with `schemaVersion: 2` never reaches the seed body; a user who chose `dryRun:false` keeps it). See §14. |
 | `allowOnceMode` | bool, `false` | Prefers a one-shot allow option. See §3.5. |
 | `rules.allowTopics` | string[], `[]` (cap 50 × 64) | Non-empty ⇒ auto-click **only** when `extractTopic()` matches (case-insensitive exact). See §3.4. |
 | `rules.blockKeywords` | string[], seed list | Any keyword (case-insensitive substring) in the card text **or** the extracted context ⇒ never click. See §3.3. |
@@ -287,6 +287,7 @@ callback reads `chrome.runtime.lastError` and logs the reason (local console onl
 | digest counters | `test/followup-e2e.mjs` | `v18 digest. counters…` |
 | hygiene (no deny, ever) | `test/followup-e2e.mjs` | `v18 hygiene. pre-reload…` + the existing `z.` checks |
 | connector hard-block (owner-reported) | `test/e2e.mjs` | `FORBIDDEN` now includes `20` (any button inside the connector card) and `lone-connect`; `connectorCheck` asserts the refusal is logged (`blocked` / `connector`) |
+| first-run dry-run default (fresh install) | `test/e2e.mjs` | the `dryPhase` **pre-phase**: `installerSeed.dryRun === true`, the popup's logging-only banner + checked Safety toggle, the onboarding consent step (plain statement + live state + consent line + one-tap live), a real card driven while logging-only (**not clicked**, `allow-dry` logged, no `leak`), then the explicit `dryRun:false` and the unchanged main flow — see §14 |
 | badge / commands / digest / sync / manifest | `test/background-unit.mjs` | `M1–M3, P1–P2, B1–B2, A1–A2, C1–C2, D1–D1b–D4, S1–S8 + **S5b–S5c** (byte-accurate quota, surfaced write failure), L1–L2, G1` (**29 checks**) |
 | v1.7.0 regression (all rails) | `test/e2e.mjs`, `test/followup-e2e.mjs` | every pre-existing check stays green |
 
@@ -700,3 +701,116 @@ node scripts/bench/experience.mjs --only=assert   # exit 0 — 22 passed / 0 fai
 Reverse-mutation: reverting §13.1 and §13.2 in a mutated `extension/` copy (pointed at with
 `MAA_EXT_DIR`) turns the corresponding assertions RED (F4 removal ×2, F5 ×1) — the checks detect
 the defect, they are not vacuous.
+
+## 14. First-run safety default — a fresh install STARTS in dry-run (v1.9.3)
+
+Owner-approved (`OK`): a fresh install starts in **dry-run (logging-only)** so the user sees
+exactly what *would* be clicked before granting live approval authority — the informed-consent
+mitigation for the Muse ToS §7.6 "meaningful human oversight" tension
+(`docs/MUSE_TOS_RESEARCH.md`; the Chain F accepted-risk row in `docs/SECURITY_V19_AUDIT.md`,
+whose R8–R11 residual is unchanged by this packet).
+
+### 14.1 The migration rule (`background.js` `migrate()`)
+
+`migrate()` is the versioned, idempotent installer migration (it already seeded `enabled`/
+`minDelayMs` when absent). It now reads `dryRun` with those keys and seeds it **only when the key
+is ABSENT** (`if (!('dryRun' in raw)) seed.dryRun = true;`):
+
+- **FRESH install** (`schemaVersion` absent ⇒ `from = 0 < SCHEMA_VERSION`) ⇒ `dryRun: true`.
+- **PRE-v1.8 upgrade** (`schemaVersion` 0/1) ⇒ same path: `dryRun: true`, and the onboarding
+  wizard also shows once (pre-v1.8 never stored `onboarded`) — the two behaviours are coherent
+  (the wizard is where the logging-only state and the consent line are explained).
+- **v1.8+/v1.9 user** (`schemaVersion: 2`, stamped by the content script's flush) ⇒ the
+  `from >= SCHEMA_VERSION` guard returns before the seed body, so their current behaviour
+  continues (a live-approval user is never silently switched to logging-only).
+- **Never overwritten:** an explicit stored value is preserved in every path (a user who chose
+  `dryRun:false` keeps it; `false` is a valid choice, exactly like `enabled`).
+- The engine's **absent-key default stays `false`** (`content.js` `v18.dryRun`); the seeded value
+  is what makes a fresh install logging-only. `dryRun` stays in the `chrome.storage.sync` subset
+  (§5.4) — the sync pull still only fills ABSENT local keys, so a restored setting is a choice,
+  not a re-seed.
+
+### 14.2 Harness consequence — every harness states its dry-run state explicitly
+
+The product default changed, so no harness may rely on the absent-key default any more:
+
+- `test/followup-e2e.mjs` — `dryRun: false` added to the initial seed (its whole run asserts LIVE
+  clicking and LIVE follow-up sends).
+- `test/mission-e2e.mjs` — already explicit (`dryRun: false` in its seeds); unchanged.
+- `test/lang-switch-e2e.mjs` — `dryRun: false` pinned before its first probe: its height numbers
+  are the documented reference (default **423**, menu + full log **594**) and must stay
+  comparable; the fresh-install (dry-run ON) state is measured separately (+19 px banner, still
+  ≤600 — `docs/UI_V19.md` §3).
+- `test/e2e.mjs` — NEW **dry-run pre-phase** (§14.3).
+- `scripts/bench/experience.mjs` — **untouched** (outside this packet's write set): its
+  `--only=assert` 22 checks already seed `dryRun:false` where they need live behaviour, and its
+  ttff/reach metrics `storage.local.clear()` first (absent ⇒ engine default `false`), so the
+  numbers stay reproducible; the honest TTFF caveat is recorded in
+  `docs/ELITE_BENCHMARK_REPORT.md` Axis 3.
+
+### 14.3 The new pre-phase in `test/e2e.mjs` (fresh scratch profile, nothing seeded)
+
+Run before the unchanged main flow, on the same fresh profile the extension was just installed
+into (so `migrate()` is the only writer):
+
+1. **The installer migration** — storage reports `dryRun === true` (`installerSeed`).
+2. **The rendered logging-only state** — the popup shows the sticky banner
+   ("Logging only — nothing will be clicked") and the Safety panel's dry-run toggle is checked.
+3. **The onboarding consent step** (step 2 of 3) — the plain statement, the live logging-only
+   state chip, the consent line (`onbConsent`), and the one-tap **"Turn on live clicking"**,
+   which writes the EXPLICIT `dryRun:false`; the wizard stays skippable.
+4. **A real approval card driven while logging-only** — `window.__clicks` stays EMPTY and the log
+   gains a `-dry` entry (`allow-dry`, `entry.dryRun:true`) instead of a click; a real (non-dry)
+   `allow` entry in that window is recorded as `leak` and FAILS the phase.
+5. The main flow then runs unchanged with the explicit `dryRun:false`.
+
+### 14.4 OPEN FINDING — the engine applies `dryRun` AFTER its first sweep (`content.js`, fix pending)
+
+The new pre-phase **fails on the shipped engine**, and the evidence says this is a real fail-open,
+not a harness artifact:
+
+- `node test/e2e.mjs` on a fresh profile: `dryPhase.ok:false`, `contentScriptInjected:true`,
+  `clicksWhileDry:["4"]`, `leak:{kind:'allow',…}` — the engine clicked a real approval card while
+  `chrome.storage.local.dryRun === true`, and only then switched to logging-only (the log's
+  OLDEST entry is a real `allow`; the entries after it are `allow-dry`).
+- **Root cause:** the content script's boot block issues three `chrome.storage.local.get` calls.
+  The FIRST callback (`DEFAULT`) runs `sweep('init')`, while `applyV18Settings()` — which sets
+  `v18.dryRun` — runs in the THIRD callback. Any sweep that wins that race (the init sweep, the
+  background's tab-complete `{type:'sweep'}` nudge, or the observer's first debounce) clicks with
+  `v18.dryRun` still at its in-memory default `false`. It is a **per-page-load** window: with
+  `dryRun:true` stored, every muse.ai page load can leak ONE live click. v1.8/v1.9 shipped the
+  same window for opt-in dry-run (their suites only ever seeded `dryRun` with the page already
+  loaded, so the `storage.onChanged` path hid it); the new default makes it the first-run
+  experience, which is exactly what this packet exists to prevent.
+- **Validated fix (4 lines, `content.js` only — NOT applied here: `content.js` is outside this
+  packet's write set and its hash is pinned by the security audit):**
+  `let v18Ready = false;` in the IIFE scope; `if (!v18Ready) return;` at the top of `sweep()`;
+  drop `sweep('init')` from the `DEFAULT` callback; and in the v18 callback
+  (`applyV18Settings(s); applyMissionSettings(s); publishFlags();`) add
+  `v18Ready = true; sweep('init');`.
+  **Proof:** the same `node test/e2e.mjs` against a scratch copy carrying exactly that patch
+  (`MAA_EXT_DIR`) ⇒ `ok:true`, `dryPhase.ok:true`, `logEntry:{kind:'allow-dry',dryRun:true}`,
+  `clicksWhileDry:[]`, `leak:null`, main flow green.
+- **Falsification of the seed itself (independent of the race):** a mutated copy with the
+  `migrate()` seed removed ⇒ `installerSeed:{schemaVersion:2}` (no `dryRun`), banner /
+  Safety-toggle / live-state all absent, `clicksWhileDry` = all 15 fixture clicks,
+  `leak.kind:'allow'` ⇒ RED, as designed.
+
+### 14.5 Gates on this revision (foreground + unpiped; one Chrome at a time)
+
+```
+node scripts/lint.mjs                             # exit 0 — 24 checks across 18 files
+node scripts/lint.mjs --self-test                 # exit 0 — all 15 cases PASS
+node test/background-unit.mjs                     # exit 0 — 29 checks, 0 failed
+node test/followup-e2e.mjs                        # exit 0 — 119 checks, 0 failed; heights 594/594/594
+node test/lang-switch-e2e.mjs                     # exit 0 — 36 passed / 0 failed; default 423 / menu+full log 594
+node test/mission-e2e.mjs                         # exit 0 — 39 checks, 0 failed
+node test/import-security.mjs                     # exit 0 — 142 checks, 0 failed
+node scripts/bench/experience.mjs --only=assert   # exit 0 — 22 passed / 0 failed
+node test/e2e.mjs                                 # exit 2 — main flow green; RED ONLY on §14.4's pre-phase (leak)
+node test/e2e.mjs  (MAA_EXT_DIR = the §14.4 fix)  # exit 0 — ok:true incl. the pre-phase
+```
+
+A stray Chrome instance from an earlier suite makes the timing-sensitive `rot-falsify` phase of
+`followup-e2e` flake (2 of 3 runs RED while one was running); with the host clean the suite is
+119/0. Run one Chrome at a time — the same discipline the bench harness documents.

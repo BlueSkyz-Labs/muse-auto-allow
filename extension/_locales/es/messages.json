@@ -399,13 +399,16 @@
     "message": "Activar"
   },
   "onbStep2Title": {
-    "message": "Empezar en modo Prueba"
+    "message": "Empiezas en modo solo registro"
   },
   "onbStep2Body": {
-    "message": "Recomendado: déjalo registrar un día y observa. No se hará ningún clic hasta que desactives el modo Prueba."
+    "message": "Una instalación nueva empieza en modo solo registro: la extensión detecta y registra lo que haría clic, pero no hace clic hasta que actives el clic en vivo."
   },
-  "onbDryRun": {
-    "message": "Activar la prueba"
+  "onbLive": {
+    "message": "Activar el clic en vivo"
+  },
+  "onbConsent": {
+    "message": "Esta herramienta concede aprobaciones en tu nombre: tú sigues siendo responsable de lo que haga tu agente."
   },
   "onbStep3Title": {
     "message": "Elige un seguimiento"

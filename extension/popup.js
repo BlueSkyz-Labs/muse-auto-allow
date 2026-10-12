@@ -966,8 +966,12 @@ let obStep = 0;
 const OB_STEPS = [
   { title: ['onbStep1Title', 'Turn on auto-click'], body: ['onbStep1Body', 'Muse asks for approval often. Let the extension click Allow for you — you can pause it any time.'],
     primary: ['onbEnable', 'Turn on'], act: 'enable' },
-  { title: ['onbStep2Title', 'Start in Dry-run'], body: ['onbStep2Body', 'Recommended: let it log for a day and watch. Nothing is clicked until you switch Dry-run off.'],
-    primary: ['onbDryRun', 'Turn on Dry-run'], act: 'dry' },
+  // v1.9.3 — the dry-run step is now the CONSENT step: a fresh install ALREADY starts in
+  // logging-only mode (background.js migrate() seeds dryRun:true when absent), so this step
+  // states that plainly, shows the live logging-only state, and offers the one-tap opt-in to
+  // live clicking. Skipping the wizard keeps logging-only mode (the safe default).
+  { title: ['onbStep2Title', 'You start in logging-only mode'], body: ['onbStep2Body', 'Fresh installs start in logging-only mode: the extension detects and logs what it would click, but nothing is clicked until you turn live clicking on.'],
+    primary: ['onbLive', 'Turn on live clicking'], act: 'live' },
   { title: ['onbStep3Title', 'Pick a follow-up'], body: ['onbStep3Body', 'One tap sets the prompt that keeps Muse working when it goes idle. You can change it later.'],
     primary: ['onbDone', 'Done'], act: 'done' },
 ];
@@ -983,6 +987,11 @@ function renderOnboard() {
   if (ti) ti.textContent = t(step.title[0], step.title[1]);
   if (bo) bo.textContent = t(step.body[0], step.body[1]);
   if (pr) pr.textContent = t(step.primary[0], step.primary[1]);
+  // the dry-run step carries the LIVE state + the consent line (never a colour-only signal:
+  // the chip is text from the shipped dryRunBanner key, and it disappears the moment live
+  // clicking is on — so it can never claim 'nothing will be clicked' while the engine clicks)
+  const st = $('obDryState'); if (st) st.hidden = !(obStep === 1 && v18.dryRun === true);
+  const cs = $('obConsent'); if (cs) cs.hidden = obStep !== 1;
   const q = $('obQuick'); if (q) q.hidden = obStep !== 2;
   const bk = $('obBack'); if (bk) bk.hidden = obStep === 0;
   const sc = $('obStep'); if (sc) sc.textContent = t('onbStepCount', 'Step $1 of $2', [String(obStep + 1), '3']);
@@ -991,7 +1000,13 @@ function renderOnboard() {
 function obPrimary() {
   const step = OB_STEPS[obStep] || OB_STEPS[0];
   if (step.act === 'enable') { try { chrome.storage.local.set({ enabled: true }); } catch { /* ignore */ } obStep = 1; renderOnboard(); return; }
-  if (step.act === 'dry') { try { chrome.storage.local.set({ dryRun: true }); } catch { /* ignore */ } obStep = 2; renderOnboard(); return; }
+  if (step.act === 'live') {
+    // the one-tap opt-in: an EXPLICIT dryRun:false (never a delete — the engine's absent-key
+    // default stays false, but the stored value is the user's recorded choice)
+    v18.dryRun = false;
+    try { chrome.storage.local.set({ dryRun: false }); } catch { /* ignore */ }
+    obStep = 2; renderOnboard(); return;
+  }
   finishOnboard();
 }
 function finishOnboard() {

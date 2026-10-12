@@ -27,10 +27,10 @@ dashboard (no repo value to fill).
 ### Short description (English, ≤132 characters)
 
 ```
-Auto-click Allow on Muse (muse.ai) approval requests so your agent keeps running. Local-only by default; optional settings sync.
+Auto-click Allow on Muse (muse.ai) approvals so your agent keeps running. Starts in logging-only mode; local-only; optional sync.
 ```
 
-> Verified length: 128 characters (limit 132). The listing title stays **Muse
+> Verified length: 129 characters (limit 132). The listing title stays **Muse
 > Auto-Allow** as-is in every locale; the in-browser name is localized separately via
 > `extension/_locales/*/messages.json`. The Chrome Web Store lets you localize the
 > short description per language in the **Store listing → localized** tab — all six
@@ -40,12 +40,12 @@ Auto-click Allow on Muse (muse.ai) approval requests so your agent keeps running
 
 | Locale | Short description | Characters |
 |---|---|---|
-| en | Auto-click Allow on Muse (muse.ai) approval requests so your agent keeps running. Local-only by default; optional settings sync. | 128 |
-| vi | Tự động bấm Allow cho yêu cầu phê duyệt Muse (muse.ai) để agent chạy liên tục, có nhiệm vụ nhiều bước. Lưu cục bộ, tuỳ chọn đồng bộ. | 132 |
-| zh_CN | 自动点击 Muse（muse.ai）批准请求中的“Allow”，让智能体持续运行；内置分步任务并显示进度。默认仅本地保存，可选同步设置。 | 68 |
-| ja | Muse（muse.ai）の承認リクエストで「Allow」を自動クリックし、エージェントを止めずに動かします。ミッションは進捗表示つき。既定はローカル保存のみ、設定の同期は任意。 | 89 |
-| ko | Muse(muse.ai)의 승인 요청에서 'Allow'를 자동으로 클릭해 에이전트가 계속 실행되도록 합니다. 미션은 진행 상황을 표시합니다. 기본은 로컬 저장, 설정 동기화는 선택입니다. | 104 |
-| es | Auto-clic en Allow cuando Muse (muse.ai) pide aprobación y tu agente sigue; misiones. Local por defecto; ajustes sincronizables. | 128 |
+| en | Auto-click Allow on Muse (muse.ai) approvals so your agent keeps running. Starts in logging-only mode; local-only; optional sync. | 129 |
+| vi | Tự động bấm Allow cho yêu cầu phê duyệt Muse (muse.ai) để agent chạy liên tục. Khởi đầu chỉ ghi log; lưu cục bộ, đồng bộ tuỳ chọn. | 130 |
+| zh_CN | 自动点击 Muse（muse.ai）批准请求中的“Allow”，让智能体持续运行；内置分步任务并显示进度。初始为仅记录模式，默认仅本地保存，可选同步。 | 75 |
+| ja | Muse（muse.ai）の承認リクエストで「Allow」を自動クリックし、エージェントを止めずに動かします。ミッションは進捗表示つき。初期は記録のみ、既定はローカル保存、同期は任意。 | 92 |
+| ko | Muse(muse.ai)의 승인 요청에서 'Allow'를 자동 클릭해 에이전트가 계속 실행됩니다. 미션은 진행 상황을 표시합니다. 시작은 기록 전용 모드, 기본은 로컬 저장, 동기화는 선택. | 106 |
+| es | Auto-clic en Allow cuando Muse (muse.ai) pide aprobación y tu agente sigue. Empieza en modo solo registro; local, sync opcional. | 128 |
 
 ---
 
@@ -69,6 +69,13 @@ Auto-click Allow on Muse (muse.ai) approval requests so your agent keeps running
 > (backup-restore import sanitizer, locale guard, hardened zero-network lint gate —
 > `CHANGELOG.md` 1.9.2); no user-visible feature text changed, so all six descriptions
 > below remain the current copy.
+>
+> **v1.9.3 — first-run safety default (listing copy updated):** a fresh install now
+> **starts in dry-run (logging-only)** — the extension logs exactly what it *would* click
+> and clicks nothing until the user turns live clicking on (one tap in the setup wizard).
+> All six short descriptions gained that clause (each ≤132 characters; the exact counts
+> are in the table above) and the dry-run bullet in every detailed description states it
+> plainly. The rest of the copy is unchanged.
 
 ### English (en)
 
@@ -97,7 +104,9 @@ keeps moving.
 - On/off switch in the popup — turn it off at any time.
 - Pause automation (keyboard shortcut Alt+Shift+P, 15 minutes; press again to resume)
   — the popup and toolbar badge show the paused state.
-- Dry-run mode: log exactly what would be clicked without clicking anything.
+- Dry-run mode: log exactly what would be clicked without clicking anything — a fresh
+  install STARTS in this logging-only mode, and one tap in the setup wizard turns live
+  clicking on.
 - Allow-once mode: when Muse offers an "Allow once" option, prefer that one-shot
   approval over a standing "always" grant.
 - Rules: auto-click only the topics you list, and a block-keyword list (delete,
@@ -162,7 +171,8 @@ bị ngắt quãng.
 - Tạm dừng tự động bấm: ba lựa chọn một chạm — 15 phút, 1 giờ hoặc đến hết ngày mai;
   phím tắt Alt+Shift+P tạm dừng 15 phút (bấm lại để tiếp tục). Popup và huy hiệu trên
   thanh công cụ hiển thị trạng thái đang tạm dừng.
-- Chế độ Chạy thử: ghi log đúng những gì sẽ bấm mà không bấm gì cả.
+- Chế độ Chạy thử: ghi log đúng những gì sẽ bấm mà không bấm gì cả — bản cài mới BẮT ĐẦU ở
+  chế độ chỉ ghi log này, và một lần bấm trong trình hướng dẫn là bật bấm trực tiếp.
 - Chế độ ưu tiên "Cho phép một lần": khi Muse đưa ra lựa chọn cấp một lần, tiện ích
   chọn nó thay vì cấp thường trực.
 - Quy tắc: chỉ tự bấm cho những chủ đề bạn liệt kê, và danh sách từ khoá chặn (delete,
@@ -221,7 +231,7 @@ Muse（muse.ai）在执行操作前会暂停并向你请求批准。你一旦离
 **你始终掌控**
 - 弹窗内置开关，随时可关闭。
 - 暂停自动点击：一键选择 15 分钟、1 小时或到明天；快捷键 Alt+Shift+P 暂停 15 分钟（再按一次继续）。弹窗与工具栏徽章会显示暂停状态。
-- 试运行模式：只记录将会点击的内容，不实际点击。
+- 试运行模式：只记录将会点击的内容，不实际点击 —— 全新安装会以此仅记录模式开始，在设置向导中一键即可开启实时点击。
 - “仅允许一次”模式：当 Muse 提供一次性批准选项时，优先选择它，而不是长期授权。
 - 规则：只自动点击你列出的主题，并可用拦截关键词列表（delete、payment、deploy……）——这些卡片绝不会被点击，被拦截的卡片会连同原因记入日志。
 - 可调整点击间隔（毫秒）。
@@ -265,7 +275,7 @@ Muse（muse.ai）は操作の前に承認を求めて一時停止します。席
 **主導権はあなたに**
 - ポップアップのオン／オフスイッチでいつでも停止できます。
 - 自動クリックの一時停止：ワンタップで「15 分」「1 時間」「明日まで」から選べます。ショートカット Alt+Shift+P は 15 分間の一時停止（もう一度押すと再開）。ポップアップとツールバーのバッジに一時停止中と表示されます。
-- ドライラン：クリックされる内容だけを記録し、実際には何もクリックしません。
+- ドライラン：クリックされる内容だけを記録し、実際には何もクリックしません — 新規インストールはこの記録のみモードで始まり、セットアップ ウィザードのワンタップでライブ クリックをオンにできます。
 - 「一度だけ許可」モード：Muse が 1 回限りの許可を提示したときは、常設の許可ではなくそちらを優先します。
 - ルール：指定したトピックだけを自動クリックし、ブロックするキーワード一覧（delete、payment、deploy など）に該当するカードは決してクリックしません — ブロックしたカードは理由付きで記録されます。
 - クリック間隔（ミリ秒）を調整できます。
@@ -313,7 +323,7 @@ Muse(muse.ai)는 작업 전에 승인을 요청하며 잠시 멈춥니다. 자�
 **제어권은 사용자에게**
 - 팝업의 켜기/끄기 스위치로 언제든 중지할 수 있습니다.
 - 자동 클릭 일시정지: 15분, 1시간, 내일까지 중 한 번에 선택할 수 있습니다. 단축키 Alt+Shift+P는 15분 동안 일시정지합니다(다시 누르면 재개). 팝업과 도구 모음 배지에 일시정지 상태가 표시됩니다.
-- 드라이런 모드: 클릭될 내용만 기록하고 실제로는 아무것도 클릭하지 않습니다.
+- 드라이런 모드: 클릭될 내용만 기록하고 실제로는 아무것도 클릭하지 않습니다 — 새로 설치하면 이 기록 전용 모드로 시작하고, 설정 마법사에서 한 번 누르면 실시간 클릭이 켜집니다.
 - "한 번만 허용" 모드: Muse가 일회성 승인 옵션을 제시하면 상시 권한 대신 그것을 우선합니다.
 - 규칙: 지정한 주제만 자동으로 클릭하고, 차단 키워드 목록(delete, payment, deploy 등)에 해당하는 카드는 절대 클릭하지 않습니다 — 차단된 카드는 사유와 함께 기록됩니다.
 - 클릭 간 간격(밀리초)을 조절할 수 있습니다.
@@ -363,7 +373,7 @@ se detenga.
 **Tú tienes el control**
 - Interruptor de encendido/apagado en la ventana emergente: desactívalo cuando quieras.
 - Pausar el clic automático: tres opciones de un toque — 15 minutos, 1 hora o hasta mañana; el atajo Alt+Shift+P pausa 15 minutos (púlsalo otra vez para reanudar). La ventana y el distintivo de la barra muestran el estado de pausa.
-- Modo Prueba: registra exactamente lo que se pulsaría sin pulsar nada.
+- Modo Prueba: registra exactamente lo que se pulsaría sin pulsar nada — una instalación nueva EMPIEZA en este modo de solo registro, y un toque en el asistente de configuración activa el clic en vivo.
 - Modo «Permitir una vez»: cuando Muse ofrece una aprobación de una sola vez, la prefiere frente a un permiso permanente.
 - Reglas: pulsa solo los temas que indiques y una lista de palabras bloqueadas (delete, payment, deploy…) que nunca se pulsa: las tarjetas bloqueadas se registran con el motivo.
 - Retardo ajustable entre clics (milisegundos).

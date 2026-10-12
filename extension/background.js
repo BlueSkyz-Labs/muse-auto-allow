@@ -49,15 +49,27 @@ function ensureAlarm() {
 const SCHEMA_VERSION = 2;
 async function migrate() {
   try {
-    const raw = await chrome.storage.local.get(['schemaVersion', 'enabled', 'minDelayMs']);
+    const raw = await chrome.storage.local.get(['schemaVersion', 'enabled', 'minDelayMs', 'dryRun']);
     const from = Number(raw.schemaVersion) || 0;
     if (from >= SCHEMA_VERSION) return;
     const seed = {};
     if (!('enabled' in raw)) seed.enabled = true;      // absent only — `false` is a valid choice
     if (!('minDelayMs' in raw)) seed.minDelayMs = 300;
+    // v1.9.3 — FIRST-RUN SAFETY DEFAULT (owner-approved): a fresh install starts in DRY-RUN
+    // (logging-only), so the user sees exactly what would be clicked before granting live
+    // approval authority. This is the informed-consent mitigation for the Muse ToS §7.6
+    // 'meaningful human oversight' tension (docs/MUSE_TOS_RESEARCH.md, the Chain F accepted-risk
+    // row in docs/SECURITY_V19_AUDIT.md): the onboarding wizard states it plainly and offers the
+    // one-tap 'Turn on live clicking'. ABSENT only — an explicit stored value is NEVER
+    // overwritten (an upgrading user who chose dryRun:false keeps it). The `from >= SCHEMA_VERSION`
+    // guard above means a v1.8+/v1.9 user (schemaVersion 2, stamped by the content script's flush)
+    // is untouched — their current behaviour continues; a FRESH install and a PRE-v1.8 upgrade
+    // (schemaVersion 0/1) both land here, both get dryRun:true, and both also see the onboarding
+    // wizard once (pre-v1.8 never stored `onboarded`), so the first run is coherent in both cases.
+    if (!('dryRun' in raw)) seed.dryRun = true;
     // v0 -> v2: log/counter/aggregate shapes are read defensively everywhere; there is
     // nothing to transform. Future steps: add one `if (from < N)` block per version.
-    // v1.8.0 keys (pauseUntil/dryRun/rules/followupSmart/followupSchedule/syncSettings) are
+    // v1.8.0 keys (pauseUntil/rules/followupSmart/followupSchedule/syncSettings) are
     // all read with absent=default semantics — no migration step is needed for them.
     seed.schemaVersion = SCHEMA_VERSION;
     await chrome.storage.local.set(seed);

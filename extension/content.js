@@ -173,6 +173,7 @@
   let pendingFast = false; // the pending sweep is the card-bearing (immediate) kind
   let obs = null;
   let heartbeat = null;
+  let v18Ready = false; // v1.9.3 boot gate: the v18 settings read (dryRun/pause/rules) must complete before ANY sweep — a fresh install must never click before the log-only default is applied
 
   // Per-sweep read caches. A sweep is a single synchronous pass over a DOM that does not change
   // until its one click at the very end, so text and visibility reads are stable for the whole
@@ -1489,6 +1490,7 @@
 
   function sweep(reason) {
     if (!alive()) { stopForever(); return; }
+    if (!v18Ready) return; // v1.9.3 boot gate: never sweep before the v18 settings are applied
     if (!state.enabled) return;
     if (paused()) return; // v1.8.0 pause: every click path (A–E) is halted until pauseUntil passes
     const now = Date.now();
@@ -1560,14 +1562,14 @@
       const n = Number(s.minDelayMs);
       state.minDelayMs = Number.isFinite(n) && n >= 0 ? n : 300;
       state.clickCount = Number(s.clickCount) || 0;
-      sweep('init');
+      if (v18Ready) sweep('init'); // v1.9.3 boot gate: the v18 read below owns the first sweep
     });
     // v1.6.0 auto follow-up settings (independent of the approve engine's toggle)
     chrome.storage.local.get(FOLLOWUP_DEFAULTS, (f) => { applyFollowupSettings(f); followupTick(); });
     // v1.8.0 frozen settings (pause / dry-run / rules / smart follow-up / schedule)
     // + v1.9.0 mission settings (missionEnabled / mission{id,step,cycles,startedAt,lastSentAt})
     chrome.storage.local.get({ pauseUntil: 0, dryRun: false, allowOnceMode: false, rules: {}, followupSmart: {}, followupSchedule: {}, missionEnabled: false, mission: null },
-      (s) => { applyV18Settings(s); applyMissionSettings(s); publishFlags(); });
+      (s) => { applyV18Settings(s); applyMissionSettings(s); publishFlags(); v18Ready = true; sweep('init'); });
     chrome.storage.onChanged.addListener((ch) => {
       // A key REMOVED from storage (newValue === undefined) resets to that key's shipped DEFAULT —
       // never a stale in-memory value (fail-closed). Observed live: after storage.local.clear() a

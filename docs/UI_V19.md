@@ -206,3 +206,95 @@ Gates on this revision: all six suites green, foreground + unpiped — `lint` 24
 36 passed / 0 failed (menu-open 423, +full log 594) · `background-unit` 29/29 · `mission-e2e`
 39 checks / 0 failed — plus `experience.mjs --only=assert` 22 passed / 0 failed. Reverse-mutation
 (revert each fix in a copy, `MAA_EXT_DIR`) turns 12 of the 22 assertions RED.
+
+## 12. v1.9.3 — first-run consent: a fresh install STARTS in logging-only mode
+
+Owner-approved (`OK`): a fresh install starts in **dry-run (logging-only)** so the user sees
+exactly what *would* be clicked before granting live approval authority. The engine-side default
+and the migration rule are `docs/ENGINE_V18.md` §14; this section is the popup surface.
+
+### 12.1 The onboarding wizard now carries the consent + the choice
+
+The 3-step wizard is unchanged in structure (one card, dots, `Step n of 3`, primary + Back +
+Skip). **Step 2 is now the consent step**:
+
+- **Copy states the default plainly.** `onbStep2Title` = "You start in logging-only mode";
+  `onbStep2Body` = "Fresh installs start in logging-only mode: the extension detects and logs what
+  it would click, but nothing is clicked until you turn live clicking on." (both updated in all 6
+  locales).
+- **The live state is shown, not implied.** `#obDryState` renders the shipped `dryRunBanner`
+  string ("Logging only — nothing will be clicked") with the exact shipped `.dryband` colour
+  recipe (incl. dark mode). It is visible **only while `dryRun === true`**, so it can never claim
+  "nothing will be clicked" while the engine clicks — flipping the Safety toggle (or the wizard's
+  one-tap) hides it immediately.
+- **The one-tap opt-in.** The step's primary button is `onbLive` = "Turn on live clicking"
+  (replacing the old `onbDryRun` "Turn on Dry-run", which is redundant now that the default IS
+  dry-run). It writes the EXPLICIT `dryRun:false` — a recorded choice, never a key deletion.
+- **The consent line.** ONE new i18n key, `onbConsent` = "This tool grants approvals in your name
+  — you stay responsible for what your agent does." (all 6 locales), shown on step 2 only.
+- **Still skippable.** `Skip` finishes the wizard and **keeps logging-only mode** (the safe
+  default); `Back`/`Escape`-free navigation and the step dots are unchanged. The whole overlay is
+  still `inset:0`, so it costs the popup layout no height.
+
+### 12.2 i18n (parity green — **173 keys × 6 locales**)
+
+`onbStep2Title`, `onbStep2Body` updated; `onbDryRun` → `onbLive`; `onbConsent` added — identical
+key sets in `en/vi/zh_CN/ja/ko/es` (en is the reference). Key count per locale: **en 173, vi 173,
+zh_CN 173, ja 173, ko 173, es 173** (`node test/lang-switch-e2e.mjs` preflight asserts the parity
++ that every literal `t('…')` in `popup.js` resolves; `node scripts/lint.mjs` re-asserts it).
+
+### 12.3 Measured heights (≤600 px everywhere; the reference numbers are unchanged)
+
+| State | body | lowest content edge | How measured |
+|---|---|---|---|
+| popup default (dry-run OFF — the shipped reference) | 429 | **423** | `node test/lang-switch-e2e.mjs` |
+| menu open + full 12-entry log (dry-run OFF) | — | **594** | `node test/lang-switch-e2e.mjs` |
+| follow-up ON, calm, dry-run OFF | 518 | 512 | CDP probe (scratch) |
+| **fresh install, dry-run ON (logging-only banner visible)** | **537** | **531** | CDP probe (scratch) |
+| follow-up ON, calm, dry-run ON + language menu open, 12-entry log | 600 | 594 | CDP probe (scratch) |
+| crowded (advanced group open), dry-run OFF | 600 | **594** | `node test/followup-e2e.mjs` (594/594/594) |
+| onboarding wizard, step 2 (consent step) visible | 537 | 531 | CDP probe: the card's `scrollHeight === clientHeight` (no overflow) |
+
+The dry-run banner lives INSIDE the log's sticky top, so it adds its real **19 px** only in the
+CALM states (the crowded states absorb it in the log's scroll area — 594 stays 594). The
+fresh-install state is therefore 531 (lowest edge) instead of 512 — still far under the 600 cap,
+and the documented reference states (dry-run OFF) are **unchanged** (423 / 594). The wizard's new
+step-2 content is inside the `inset:0` overlay: zero layout cost.
+
+### 12.4 Gates on this revision (foreground + unpiped; one Chrome at a time)
+
+```
+node scripts/lint.mjs                             # exit 0 — 24 checks across 18 files
+node scripts/lint.mjs --self-test                 # exit 0 — all 15 cases PASS
+node test/background-unit.mjs                     # exit 0 — 29 checks, 0 failed
+node test/followup-e2e.mjs                        # exit 0 — 119 checks, 0 failed; heights 594/594/594
+node test/lang-switch-e2e.mjs                     # exit 0 — 36 passed / 0 failed; default 423 / menu+full log 594
+node test/mission-e2e.mjs                         # exit 0 — 39 checks, 0 failed
+node test/import-security.mjs                     # exit 0 — 142 checks, 0 failed
+node scripts/bench/experience.mjs --only=assert   # exit 0 — 22 passed / 0 failed
+node test/e2e.mjs                                 # exit 2 — main flow green; RED ONLY on the new dry-run pre-phase (see 12.5)
+node test/e2e.mjs  (MAA_EXT_DIR = the 12.5 fix)  # exit 0 — ok:true including the pre-phase
+```
+
+### 12.5 OPEN FINDING surfaced by the new pre-phase (engine boot race, fix pending in `content.js`)
+
+`test/e2e.mjs` gained a **dry-run pre-phase** on its fresh scratch profile: it asserts the
+installer seed (`dryRun === true`), the rendered logging-only state (banner + checked Safety
+toggle), the onboarding consent step, and then drives a REAL approval card while logging-only —
+asserting the card is **NOT clicked** and a `-dry` log entry appears instead (`leak` records a
+real `allow` entry as a FAILURE). On the shipped engine the phase is **RED**: the engine clicks
+one card live before `dryRun` is applied (a boot-order race in `content.js` — full analysis, the
+4-line fix and its proof in `docs/ENGINE_V18.md` §14.4). Reverting the `migrate()` seed in a
+mutated copy (`MAA_EXT_DIR`) turns the same phase RED for the intended reason (no `dryRun` in
+storage, all 15 fixture cards clicked live), so the assertions detect both the missing seed and
+the race — neither is vacuous.
+
+### 12.6 Files touched by this revision
+
+`extension/background.js` (migration seed) · `extension/popup.html` (consent-step markup + CSS) ·
+`extension/popup.js` (`OB_STEPS`, `obPrimary`, `renderOnboard`) · `extension/_locales/**` (6
+locales) · `test/e2e.mjs` (pre-phase) · `test/followup-e2e.mjs`, `test/lang-switch-e2e.mjs`
+(explicit `dryRun:false` seeds) · `docs/UI_V19.md`, `docs/ENGINE_V18.md`,
+`docs/SECURITY_V19_AUDIT.md`, `docs/ELITE_BENCHMARK_REPORT.md`, `store/LISTING.md`.
+`extension/content.js`, `extension/stats.js`, `extension/manifest.json`, `store/PRIVACY.md`,
+`store/CWS_SUBMISSION_PACK.md` and `scripts/**` were **not** touched.
