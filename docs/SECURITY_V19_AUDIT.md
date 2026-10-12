@@ -34,6 +34,28 @@
 | Artifact | `dist/muse-auto-allow-v1.9.1.zip` — **180,069 bytes**, sha256 `eec91d1d8f16005e2f34a748145d7a7d32c04b7d85f8ada267255fdb0ac8d1d8` (matches the frozen hash; on-disk `sha256sum` re-run) |
 | Evidence classes | `SOURCE_REVIEWED` · `AGENT_REPORTED` · `INDEPENDENTLY_VERIFIED` · `RUNTIME_VERIFIED` · `NOT_VERIFIED` |
 
+> **Post-audit revision (v1.9.3, 2026-10-12):** this audit was performed at the v1.9.1-era HEAD
+> `9e6b151d` with the §0.1 pins below. Two releases landed since and the engine files changed — the
+> v1.9.3 boot-order fix recorded in Chain F and in `docs/ENGINE_V18.md` §14.4 is the material one.
+> Current revision (tag `v1.9.3`, commit `a13689a`, artifact sha256 `e3dd7703b85fffd9ad5b78a8b353c90929f4b87487f3d9dc932fdb2c5f140326`):
+>
+> ```
+> extension/content.js    48c06be1ee3088e31b7a98aff8449a0e584a75ca4cfaa4322baed24a00667c7d   (changed: the boot-order fix)
+> extension/background.js 3f3c4b28d71abc78dfd8b8f09600a3b118c85b0ac766cc4bd4c3ba9a61b17bf9   (changed: the first-run dry-run seed)
+> extension/popup.js      eeaddd6354cceb585ac31648bacb911d41195fae9a169169aca1a9ea6adc72ad   (changed: onboarding consent step)
+> extension/popup.html    b3b146ac7e0684e9ef4a77282ba59fafde7e2b65fece22057f71fd28f2f8e0d7
+> extension/manifest.json 6b3aed250c53589c168641c3befbc9e53c6a39d50b927f43e28914dd3738f4b7
+> ```
+>
+> Re-verified on this revision (coordinator, frozen tree): the nine gates (lint 0 + self-test 15/15,
+> e2e 0 including the fresh-install pre-phase, background-unit 29/0, import-security 142/0,
+> followup-e2e, lang-switch, mission-e2e, experience assert 22/0), `verify-zip.py` 18/0 and
+> `smoke-zip.mjs` ok:true on the frozen artifact, plus the both-directions falsification of the new
+> fix (pristine exit 0 / a mutant carrying the previous `content.js` exit 2 with a non-null `leak`).
+> The audit conclusions were not re-derived chain-by-chain at this revision: any claim that depends
+> on `content.js` internals carries the revision it was probed at (full inventory:
+> `git diff --stat 9e6b151d..v1.9.3`).
+
 ### 0.1 sha256 of the reviewed files (frozen @HEAD)
 
 ```
@@ -214,15 +236,16 @@ Legend: **SAFE** = the rails hold under the probe; **BOUNDED** = residual accept
   out of scope.**
 - **Residual:** ACCEPTED — unchanged (R8–R11; R11 = this chain). This revision adds informed
   consent; it does **not** change the accepted risk.
-- **Open finding (honest note, 2026-10-12):** the new end-to-end proof (`test/e2e.mjs` dry-run
-  pre-phase) shows the engine applies `dryRun` AFTER its first sweep — with `dryRun:true` stored,
-  a page load can leak ONE live click before the flag lands (boot-order race in
-  `content.js`; v1.8/v1.9 carried the same window for opt-in dry-run). The pre-phase therefore
-  exits RED on the shipped engine, and the packet reports it instead of claiming a mitigation it
-  cannot yet prove. Root cause, the 4-line fix and its validated proof are in
-  `docs/ENGINE_V18.md` §14.4; the fix is **pending** because `content.js` is outside this packet's
-  write set (and its hash is pinned above). Until it lands, treat "a fresh install clicks nothing"
-  as true for every sweep after the first one on each page load, not for the first sweep.
+- **Finding closed at the root — v1.9.3 (2026-10-12):** the new end-to-end proof (`test/e2e.mjs`
+  dry-run pre-phase) caught the engine applying `dryRun` AFTER its first sweep — with `dryRun:true`
+  stored, a page load could leak ONE live click before the flag landed (a boot-order race in
+  `content.js`; v1.8/v1.9 carried the same window for opt-in dry-run). **Fixed in v1.9.3**: the
+  first sweep is deferred to the v1.8 settings read that owns `dryRun`/`pause`/`rules`, and a
+  boot gate refuses every sweep until that read has been applied (fail-closed — no read, no sweep).
+  Verified both directions on the frozen revision: pristine → `e2e.mjs` exit 0, `dryPhase.ok=true`,
+  `leak` null, `clicksWhileDry` empty; a mutant carrying the previous `content.js` → exit 2,
+  `dryPhase.ok=false`, non-null `leak` (a real non-dry `allow` entry for card 4). Root cause + fix
+  history: `docs/ENGINE_V18.md` §14.4; the new revision's pins: §0 post-audit blockquote.
 
 ### Chain G — Send-authority abuse via Mission + follow-up — **SAFE / BOUNDED** (`INDEPENDENTLY_VERIFIED` + `RUNTIME_VERIFIED`)
 - **Objective:** steer **which** prompt is sent, the **timing**, or the **count past the caps** via
