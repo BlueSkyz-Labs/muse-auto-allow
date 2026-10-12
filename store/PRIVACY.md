@@ -1,7 +1,7 @@
 # Privacy Policy — Muse Auto-Allow
 
-**Effective date:** TODO: fill before submit (e.g. 2026-01-01)
-**Last updated:** TODO: fill before submit
+**Effective date:** 2026-10-10
+**Last updated:** 2026-10-12
 **Revision:** v1.8 (2026-10-10) — adds the `notifications` permission disclosure and the optional settings-sync disclosure.
 
 This privacy policy applies to the **Muse Auto-Allow** browser extension for Google
