@@ -86,17 +86,18 @@ Work through all tabs before submitting; an incomplete listing cannot be submitt
   languages: copy verbatim from `store/LISTING.md` §2.
 - **Category:** Productivity.
 - **Language:** English (add the other five as localized listings).
-- **Graphic assets:** upload the 128×128 icon, all four **1280×800** screenshots
+- **Graphic assets:** upload the 128×128 icon, all five **1280×800** screenshots
   (`store/screenshot1.png` — real runtime capture; `store/screenshot2-stats.png` —
   Statistics; `store/screenshot3-popup.png` — popup stage shot; `store/screenshot4-overview.png`
-  — designed overview), the **440×280** promo tile (`store/promo440x280.png`), and
+  — designed overview; `store/screenshot5-safety.png` — the first-run safety step (the
+  logging-only statement, the consent line and the one-tap live clicking)), the **440×280** promo tile (`store/promo440x280.png`), and
   optionally the **1400×560** marquee (`store/marquee1400x560.png`). See `store/LISTING.md`
   §8, `store/SHOWCASE.md` and `docs/BRANDING.md` §5 for the full asset map. All six store
   images are exact-spec (PNG headers verified 2026-10-09); `store/screenshot3-popup.png`
   was recomposed to 1280×800 at v1.5.0. Confirm all assets reflect the shipped 1.9.3
-  behavior before uploading — a fresh install now starts in logging-only, so re-check the
-  captures against the frozen build (the logging-only banner and the onboarding consent
-  step are new first-run states).
+  behavior before uploading — a fresh install now starts in logging-only; `store/screenshot5-safety.png`
+  captures that first-run state (the consent step), while screenshot1/2/3/4 show the state a user
+  reaches after one tap (live clicking). Give the captures one human look before upload.
 - **Additional fields:** homepage/support URL and privacy policy URL — both are filled in
   `store/LISTING.md` §1/§9 (`https://github.com/BlueSkyz-Labs/muse-auto-allow` and
   `https://blueskyz-labs.github.io/muse-auto-allow/privacy.html`, verified live 2026-10-12);
@@ -192,7 +193,8 @@ Work through all tabs before submitting; an incomplete listing cannot be submitt
 - [x] Privacy policy hosted at `https://blueskyz-labs.github.io/muse-auto-allow/privacy.html`
       (verified live 2026-10-12) — paste it into the dashboard's privacy-policy field.
 - [x] Store images present: `store/screenshot1.png`, `store/screenshot2-stats.png`,
-      `store/screenshot3-popup.png`, `store/screenshot4-overview.png` (all 1280×800),
+      `store/screenshot3-popup.png`, `store/screenshot4-overview.png`, `store/screenshot5-safety.png`
+      (all 1280×800; screenshot5 = the first-run safety step, added at the v1.9.3 pass),
       `store/promo440x280.png` (440×280), `store/marquee1400x560.png` (1400×560) — verified
       dimensions; review content before upload. `screenshot3-popup.png` was recomposed to
       1280×800 at v1.5.0 (the v1.4.0 exception is resolved — see

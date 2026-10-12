@@ -11,6 +11,7 @@ files.example.com) — never real projects or personal data.
 | Screenshot 2 — Statistics dashboard (real render — single-hue trend + topic palette, `docs/BRANDING.md` §3.1) | `store/screenshot2-stats.png` | 1280×800 | up to 5 total |
 | Screenshot 3 — popup (real render) | `store/screenshot3-popup.png` | 1280×800 | up to 5 total |
 | Screenshot 4 — designed overview (approval card + layered mini Statistics card) | `store/screenshot4-overview.png` | 1280×800 | up to 5 total |
+| Screenshot 5 — first-run safety step (logging-only statement + consent line + one-tap live clicking) | `store/screenshot5-safety.png` | 1280×800 | up to 5 total |
 | Small promo tile (palette-dot chips) | `store/promo440x280.png` | 440×280 | optional (featured placement) |
 | Marquee promo (layered popup + Statistics cards) | `store/marquee1400x560.png` | 1400×560 | optional (featured placement) |
 | Listing copy (6 locales) | `store/LISTING.md` | — | title / short / full description per locale |
@@ -25,6 +26,7 @@ files.example.com) — never real projects or personal data.
 node scripts/render.mjs        # icons, promo, marquee, overview
 node scripts/stats-shot.mjs    # screenshot2 (stats) + screenshot3 (popup) + dark QA pair
 node scripts/store-shot.mjs    # screenshot1 (real runtime capture)
+node scripts/store-shot.mjs --safety   # screenshot5 (first-run safety step)
 node scripts/build.mjs && python scripts/verify-zip.py
 ```
 

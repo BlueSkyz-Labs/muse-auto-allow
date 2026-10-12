@@ -21,7 +21,8 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const EXT_DIR = path.join(ROOT, 'extension');
-const OUT = path.join(ROOT, 'store', 'screenshot1.png');
+const SAFETY = process.argv.includes('--safety'); // v1.9.3: capture the logging-only first-run state
+const OUT = path.join(ROOT, 'store', SAFETY ? 'screenshot5-safety.png' : 'screenshot1.png');
 const IS_WIN = process.platform === 'win32';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -225,12 +226,20 @@ try {
   // pause/dry-run surfaces must be in their canonical OFF state for the store shot. The
   // Auto follow-up section is seeded ON with a real combo so the shot showcases the feature
   // instead of its collapsed off-state.
-  await send('Runtime.evaluate', { expression: 'chrome.storage.local.set({ enabled: true, onboarded: true, pauseUntil: 0, dryRun: false, followupEnabled: true, followupPrompt: "Approve and continue working", followupChips: [{ id: "continue", text: "Keep going" }, { id: "longrun", text: "Long-run" }] }); "ok"', returnByValue: true }, ppS);
+  await send('Runtime.evaluate', { expression: SAFETY
+    ? 'chrome.storage.local.set({ enabled: true, onboarded: false, dryRun: true, pauseUntil: 0, followupEnabled: false }); "ok"'
+    : 'chrome.storage.local.set({ enabled: true, onboarded: true, pauseUntil: 0, dryRun: false, followupEnabled: true, followupPrompt: "Approve and continue working", followupChips: [{ id: "continue", text: "Keep going" }, { id: "longrun", text: "Long-run" }] }); "ok"', returnByValue: true }, ppS);
   // Nudge the content script with a DOM mutation so a sweep fires immediately
   // (otherwise we'd wait for the 1s heartbeat), then give it time to click the
   // showcase cards — their log entries carry real, meaningful context text.
   await send('Runtime.evaluate', { expression: 'document.body.appendChild(document.createElement("div")); "ok"', returnByValue: true }, fxS);
   await sleep(1600);
+  if (SAFETY) {
+    // step 1 -> step 2: the logging-only statement, the live state chip, the consent line and
+    // the one-tap Turn on live clicking are the safety story this capture exists to show.
+    await send('Runtime.evaluate', { expression: 'document.getElementById("obPrimary").click(); "ok"', returnByValue: true }, ppS);
+    await sleep(500);
+  }
 
   // Crop the scrollable log viewport to its content (screenshot framing only — the real
   // popup keeps its 220px scroll area; this avoids a half-sliced row at the edge).
@@ -273,7 +282,7 @@ try {
     .cap { font-size: 15px; color: #5c6066; letter-spacing: .01em; }
     .cap b { color: #005abf; font-weight: 500; }
     .pop img { display: block; max-width: 440px; max-height: 660px; width: auto; height: auto; border-radius: 16px; box-shadow: 0 18px 60px rgba(17,17,18,.16), 0 0 0 1px rgba(17,17,18,.08); }
-    .card img { display: block; width: 694px; border-radius: 16px; box-shadow: 0 18px 60px rgba(17,17,18,.16), 0 0 0 1px rgba(17,17,18,.08); }
+    .card img { display: block; width: auto; max-width: 694px; max-height: 585px; border-radius: 16px; box-shadow: 0 18px 60px rgba(17,17,18,.16), 0 0 0 1px rgba(17,17,18,.08); }
     .chips { display: flex; gap: 10px; margin-top: 4px; flex-wrap: wrap; }
     .chip { background: rgba(17,17,18,.05); color: #2c2e33; font-size: 13px; font-weight: 500; padding: 7px 13px; border-radius: 999px; }
     .foot { position: absolute; left: 56px; bottom: 34px; right: 56px; display: flex; align-items: center; gap: 12px;
@@ -284,13 +293,13 @@ try {
     <div class="blob b1"></div><div class="blob b2"></div>
     <div class="stage">
       <div class="col pop">
-        <div class="cap"><b>Live popup</b> — real click log, counter, auto follow-up, on/off</div>
+        <div class="cap">${SAFETY ? '<b>First run</b> — logging-only until you turn it on' : '<b>Live popup</b> — real click log, counter, auto follow-up, on/off'}</div>
         <img src="data:image/png;base64,${popupB64}">
       </div>
       <div class="col card">
-        <div class="cap"><b>Approval requests</b> — clicked automatically (Allow only, never Deny)</div>
+        <div class="cap">${SAFETY ? '<b>Approval requests</b> — detected and logged while logging-only' : '<b>Approval requests</b> — clicked automatically (Allow only, never Deny)'}</div>
         <img src="data:image/png;base64,${cardB64}">
-        <div class="chips"><span class="chip">Allow only — never Deny</span><span class="chip">Click log stays on your device</span><span class="chip">6 languages</span></div>
+        <div class="chips">${SAFETY ? '<span class="chip">Logging-only by default</span><span class="chip">You see it before it acts</span><span class="chip">One tap turns live clicking on</span>' : '<span class="chip">Allow only — never Deny</span><span class="chip">Click log stays on your device</span><span class="chip">6 languages</span>'}</div>
       </div>
     </div>
     <div class="foot"><svg class="tile" viewBox="0 0 512 512"><defs><linearGradient id="ft" x1="72" y1="60" x2="452" y2="464" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#0082FB"/><stop offset="0.62" stop-color="#0064E0"/><stop offset="1" stop-color="#0040DC"/></linearGradient></defs><rect x="16" y="16" width="480" height="480" rx="133" fill="url(#ft)"/><path d="M124 284 L214 374 L368 182" fill="none" stroke="#fff" stroke-width="76" stroke-linecap="round" stroke-linejoin="round"/></svg><b>Muse Auto-Allow</b> · auto-clicks Allow on Muse (muse.ai) approvals · runs locally, sends nothing</div>

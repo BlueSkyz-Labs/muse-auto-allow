@@ -402,13 +402,13 @@ Entries carry an ISO `at` timestamp (`content.js:203`); PRIVACY §2 describes "k
 | 1.10 / 7 | Short descriptions ≤132 | programmatic recount of the `store/LISTING.md` §1 table: en 129, vi 130, zh_CN 75, ja 92, ko 106, es 128 — all ≤132 | PASS (re-run) |
 | — | Lint gate | `node scripts/lint.mjs` → exit 0 (24 checks across 18 files); `--self-test` 15/15 | PASS (re-run) |
 | — | i18n parity | key count per locale — all six files = 173 keys (parity enforced by lint, exit 0) | PASS (re-run) |
-| — | Store-image dimensions | PNG-header parse: screenshot1 / 2 / 3 / 4 = 1280×800; promo 440×280; marquee 1400×560 | PASS (re-run) |
+| — | Store-image dimensions | PNG-header parse: screenshot1 / 2 / 3 / 4 / 5 = 1280×800; promo 440×280; marquee 1400×560 | PASS (re-run) |
 
 ### NOT_VERIFIED in this pass (explicit)
 
 - **Chrome / CDP runtime suites** — `test/e2e.mjs` (including its new fresh-install pre-phase), `test/followup-e2e.mjs`, `test/lang-switch-e2e.mjs`, `test/mission-e2e.mjs`, `scripts/smoke-zip.mjs` and `scripts/bench/experience.mjs` were **NOT executed** here; their results are cited from the v1.9.3 freeze evidence (`docs/RELEASE_INTEGRITY.md`, `CHANGELOG.md` 1.9.3) and not independently reproduced. **NOT_VERIFIED.**
 - **Determinism re-proof** — a clean `node scripts/build.mjs` was **NOT** re-run in this docs pass; the artifact bytes are unchanged (same sha256) and `verify-zip.py` still passed. The double-build determinism claim is freeze-recorded, not re-proven here. **NOT_VERIFIED.**
-- **Visual content of the store images** — dimensions were re-parsed in this pass (all exact-spec), but the images were **not** visually reviewed; whether the captures show the current 1.9.3 build pixel-for-pixel — and whether any capture shows the new logging-only first-run state — is **NOT_VERIFIED** here.
+- **Visual content of the store images** — dimensions were re-parsed in this pass (all exact-spec). The new `store/screenshot5-safety.png` (the first-run safety step) was reviewed deterministically: a pixel census shows the approval-card Allow buttons render and the card panel is complete (vision passes disagreed with each other on the same asset and are not a gate — see the benchmark report's methodology note). Whether screenshot1/2/3/4 show the current 1.9.3 build pixel-for-pixel is **NOT_VERIFIED** here.
 - **Chrome Web Store submission state** — no dashboard was opened; nothing was uploaded, reviewed, or published. **NOT_VERIFIED / NOT DONE.**
 - **Items 1.3–1.21, 3.1, 3.3–3.6, 4.1–4.8** (the v1.2.0 per-line checks) — only the subset re-listed in the table above was re-checked; the rest stand as the historical v1.2.0/v1.4.0/v1.5.0/v1.9.0/v1.9.1/v1.9.2 record and are **NOT_VERIFIED** against the v1.9.3 tree in this pass.
 
