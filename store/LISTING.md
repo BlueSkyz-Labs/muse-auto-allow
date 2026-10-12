@@ -1,8 +1,11 @@
 # Muse Auto-Allow — Chrome Web Store Listing Kit
 
 Everything the Chrome Web Store dashboard asks for, ready to paste. Copy fields are
-provided in all six supported languages (en, vi, zh_CN, ja, ko, es). Values marked
-`TODO: fill before submit` must be replaced by the owner before uploading.
+provided in all six supported languages (en, vi, zh_CN, ja, ko, es). The homepage and
+privacy-policy URLs are filled (verified live 2026-10-12); the only remaining
+`TODO: fill before submit` value is the **support email** — the owner must replace it
+before uploading. The developer/publisher name line is an owner confirmation in the
+dashboard (no repo value to fill).
 
 ---
 
@@ -13,12 +16,12 @@ provided in all six supported languages (en, vi, zh_CN, ja, ko, es). Values mark
 | Item name | **Muse Auto-Allow** |
 | Category | **Productivity** |
 | Default language | English (en) |
-| Version | 1.9.1 |
+| Version | 1.9.2 |
 | Manifest version | Manifest V3 |
-| Extension package | `dist/muse-auto-allow-v1.9.1.zip` |
+| Extension package | `dist/muse-auto-allow-v1.9.2.zip` |
 | License | MIT © 2026 BlueSkyz Labs |
-| Homepage / support URL | `TODO: fill before submit` |
-| Privacy policy URL | `TODO: fill before submit` (host `store/PRIVACY.md` and paste the public link) |
+| Homepage / support URL | `https://github.com/BlueSkyz-Labs/muse-auto-allow` |
+| Privacy policy URL | `https://blueskyz-labs.github.io/muse-auto-allow/privacy.html` (GitHub Pages copy of `store/PRIVACY.md`; verified live 2026-10-12) |
 | Support email | `TODO: fill before submit` |
 
 ### Short description (English, ≤132 characters)
@@ -61,6 +64,11 @@ Auto-click Allow on Muse (muse.ai) approval requests so your agent keeps running
 > support). Each localized description uses the same in-product wording as
 > `extension/_locales/*/messages.json` and makes the same claims as the English text,
 > including the identical privacy/permission lines. English is the reference text.
+>
+> **v1.9.2 — no listing-copy change:** the 1.9.2 release is a security-hardening release
+> (backup-restore import sanitizer, locale guard, hardened zero-network lint gate —
+> `CHANGELOG.md` 1.9.2); no user-visible feature text changed, so all six descriptions
+> below remain the current copy.
 
 ### English (en)
 
@@ -452,7 +460,7 @@ Compliance notes for this declaration:
 - Manifest V3, no `content_security_policy` relaxation.
 - No analytics SDK, no CDN, no update endpoint. (The optional settings sync uses
   Chrome's built-in sync service — a browser feature, not an extension network call.)
-- `dist/muse-auto-allow-v1.9.1.zip` contains only static files with `manifest.json` at the
+- `dist/muse-auto-allow-v1.9.2.zip` contains only static files with `manifest.json` at the
   zip root.
 
 ---
@@ -504,11 +512,11 @@ storage (local settings + log; optional settings sync), alarms (once-a-minute ch
 background-tab approvals are handled), notifications (show the locally-composed
 activity digest), host permission muse.ai (detect/click the Allow button). Keyboard
 shortcuts (commands: Alt+Shift+P pause, Alt+Shift+F follow-up) need no extra
-permission. See [PRIVACY POLICY URL — TODO: fill before submit].
+permission. See https://blueskyz-labs.github.io/muse-auto-allow/privacy.html.
 ```
 
-> **TODO: fill before submit** — replace `[PRIVACY POLICY URL …]` with the public URL
-> where `store/PRIVACY.md` is hosted.
+> The privacy-policy URL is filled: `https://blueskyz-labs.github.io/muse-auto-allow/privacy.html`
+> (GitHub Pages; verified live 2026-10-12). `store/PRIVACY.md` remains the source document.
 
 ---
 
@@ -544,13 +552,14 @@ own local storage).
 
 | Field | Value |
 |---|---|
-| Developer / publisher name | BlueSkyz Labs `TODO: fill before submit` (exact legal/display name) |
+| Developer / publisher name | BlueSkyz Labs — owner to confirm the exact legal/display name in the dashboard before publishing (no repo value to fill) |
 | Support email | `TODO: fill before submit` |
-| Support / homepage URL | `TODO: fill before submit` |
-| Privacy policy URL | `TODO: fill before submit` (host `store/PRIVACY.md`) |
+| Support / homepage URL | `https://github.com/BlueSkyz-Labs/muse-auto-allow` |
+| Privacy policy URL | `https://blueskyz-labs.github.io/muse-auto-allow/privacy.html` (hosted from `store/PRIVACY.md`; verified live 2026-10-12) |
 | License | MIT © 2026 BlueSkyz Labs |
 
-Replace every `TODO: fill before submit` marker with the real value before clicking
-**Submit for review**. The Chrome Web Store will not accept a listing without a valid
-privacy policy URL and a working support contact once any data-practices disclosure is
-present.
+Before clicking **Submit for review**, replace the one remaining `TODO: fill before
+submit` marker (the support email) and confirm the publisher display name in the
+dashboard. The homepage and privacy-policy URLs are already filled and verified live.
+The Chrome Web Store will not accept a listing without a valid privacy policy URL and a
+working support contact once any data-practices disclosure is present.

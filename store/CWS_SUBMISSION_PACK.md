@@ -20,10 +20,12 @@ version currently in `extension/manifest.json` and the `dist/` zip built from it
 - **2-Step Verification is required** for the developer account before publishing or
   updating an extension.
   Source: <https://developer.chrome.com/docs/webstore/program-policies/policies> ("2-Step Verification").
-- Replace every `TODO: fill before submit` in `store/LISTING.md` and `store/PRIVACY.md`
-  (support email, homepage/support URL, publisher legal name, policy dates) and
-  **host `store/PRIVACY.md` at a public URL** — the dashboard requires a privacy policy
-  link. Source: <https://developer.chrome.com/docs/webstore/cws-dashboard-privacy#set-privacy-policy>
+- Fill the remaining owner values: the **support email** (the only
+  `TODO: fill before submit` left in `store/LISTING.md`), the publisher legal-name
+  confirmation, and the policy dates + contact in `store/PRIVACY.md`. The homepage and
+  privacy-policy URLs are filled in `store/LISTING.md`, and the privacy policy is
+  **hosted at a public URL** — the dashboard requires a privacy policy link.
+  Source: <https://developer.chrome.com/docs/webstore/cws-dashboard-privacy#set-privacy-policy>
 - Have the `dist/muse-auto-allow-v<VERSION>.zip` that passed
   `scripts/build.mjs` + `scripts/verify-zip.py` (see §5.1).
 
@@ -58,15 +60,15 @@ Sources: <https://developer.chrome.com/docs/webstore/cws-dashboard-privacy#list_
 <https://developer.chrome.com/docs/webstore/program-policies/permissions> ("Use of
 Permissions": request the *narrowest* permissions necessary; no future-proofing).
 
-Verified against `extension/manifest.json` (frozen tree, HEAD `6187606`, 2026-10-11):
+Verified against `extension/manifest.json` (frozen v1.9.2 tree, freeze commit `0632391`, 2026-10-11):
 `permissions: ["storage", "alarms", "notifications"]`; `commands: { toggle-pause
 (Alt+Shift+P), send-followup (Alt+Shift+F) }`; `host_permissions: ["https://muse.ai/*",
 "https://*.muse.ai/*"]`. Nothing else is declared — exactly what the current feature set
 (v1.8 pause, dry-run, rules, smart/scheduled follow-ups, digest, optional settings sync,
 onboarding; v1.9 Mission Orchestrator) requires, and `scripts/lint.mjs` fails on any added
 permission.
-*(`manifest.version` now reads `1.9.1` on the frozen tree — the release freeze has
-happened; the package is `dist/muse-auto-allow-v1.9.1.zip`. This section matches the
+*(`manifest.version` now reads `1.9.2` on the frozen tree — the release freeze has
+happened; the package is `dist/muse-auto-allow-v1.9.2.zip`. This section matches the
 frozen package; it is not yet uploaded to the Chrome Web Store.)*
 
 ### `storage`
@@ -123,8 +125,8 @@ extension needs none of them.
 `storage`/`alarms`/`notifications` allowlist, any host set other than the two muse.ai
 patterns, or a missing explicit `extension_pages` CSP — so the packaged manifest can
 never silently drift from these answers. (Allowlist verified in the working tree,
-HEAD `6187606`, 2026-10-11, lint exit 0 — the allowlist is unchanged since the v1.8
-lane and still matches the frozen v1.9.1 manifest.)
+freeze commit `0632391`, 2026-10-11, lint exit 0 — the allowlist is unchanged since the
+v1.8 lane and still matches the frozen v1.9.2 manifest.)
 
 ---
 
@@ -194,8 +196,10 @@ quotas) · <https://developer.chrome.com/docs/webstore/cws-dashboard-privacy>
 
 ### 3.3 Privacy policy URL
 
-Paste the public URL where `store/PRIVACY.md` is hosted. "The policy should include how
-data is collected, used, and disclosed."
+Paste the public URL where `store/PRIVACY.md` is hosted:
+**`https://blueskyz-labs.github.io/muse-auto-allow/privacy.html`** (GitHub Pages; returns
+HTTP 200 and its content carries the v1.8+ disclosures — verified live 2026-10-12).
+"The policy should include how data is collected, used, and disclosed."
 Source: <https://developer.chrome.com/docs/webstore/cws-dashboard-privacy#set-privacy-policy>
 
 ### 3.4 Reviewer note (where the form offers notes to reviewers)
@@ -213,7 +217,7 @@ storage (local settings + log; optional settings sync), alarms (once-a-minute ch
 background-tab approvals are handled), notifications (show the locally-composed
 activity digest), host permission muse.ai (detect/click the Allow button). Keyboard
 shortcuts (commands: Alt+Shift+P pause, Alt+Shift+F follow-up) need no extra
-permission. See [PRIVACY POLICY URL — TODO: fill before submit].
+permission. See https://blueskyz-labs.github.io/muse-auto-allow/privacy.html.
 ```
 
 > The reviewer-facing equivalent of this pack's §5.2 walkthrough can go in the
@@ -232,7 +236,7 @@ Dashboard reference: <https://developer.chrome.com/docs/webstore/cws-dashboard-l
 | Detailed description | Per locale, from `store/LISTING.md` §2 (en, vi, zh_CN, ja, ko, es). All six carry the current feature set including the v1.9 Mission Orchestrator and the v1.9.1 experience work (missions with live progress and pause, faster reaction, exact refusal/blocked reasons, keyboard/assistive-tech support); the five localized descriptions were refreshed for the v1.9.1 packet and use the same in-product wording as `extension/_locales/*/messages.json`. The localized privacy lines carry the sync disclosure. | No numeric limit is published in the official docs (the dashboard enforces its own bound at entry); keep it accurate, concise, and free of keyword stuffing. | [cws-dashboard-listing](https://developer.chrome.com/docs/webstore/cws-dashboard-listing) · [spam FAQ](https://developer.chrome.com/docs/webstore/program-policies/spam-faq#keyword-spam) |
 | Category | **Productivity** (one primary category; rationale in `LISTING.md` §3) | "The primary category under which your item should be listed." | [cws-dashboard-listing](https://developer.chrome.com/docs/webstore/cws-dashboard-listing) |
 | Language(s) | Default English (en); localized listings for vi, zh_CN, ja, ko, es (copy in `LISTING.md`) | "Your item's language"; localized listings use the extension's `_locales` set. | [cws-dashboard-listing#localize_your_listing](https://developer.chrome.com/docs/webstore/cws-dashboard-listing#localize_your_listing) |
-| Homepage / support URL | `TODO` placeholders in `LISTING.md` §9 — fill before submit | Optional fields; appear on the listing. | [cws-dashboard-listing#additional-fields](https://developer.chrome.com/docs/webstore/cws-dashboard-listing#additional-fields) |
+| Homepage / support URL | `https://github.com/BlueSkyz-Labs/muse-auto-allow` (`LISTING.md` §1/§9) | Optional fields; appear on the listing. | [cws-dashboard-listing#additional-fields](https://developer.chrome.com/docs/webstore/cws-dashboard-listing#additional-fields) |
 | Content rating | Mature content: **No** | "Content ratings help users know whether your extension and its content are mature in nature." | [cws-dashboard-listing#mature-content](https://developer.chrome.com/docs/webstore/cws-dashboard-listing#mature-content) |
 | Distribution | Visibility **Public**; all regions; free | "Public — lists your item … for all users to see and install." | [cws-dashboard-distribution](https://developer.chrome.com/docs/webstore/cws-dashboard-distribution) |
 | Version | From `extension/manifest.json` (release freeze owns the number) | Every new upload must have a larger version number than the previous one. | [prepare](https://developer.chrome.com/docs/webstore/prepare) · [update](https://developer.chrome.com/docs/webstore/update) |
@@ -402,12 +406,12 @@ Source: <https://developer.chrome.com/docs/webstore/review-process#warning>
 
 ## 7. Open owner items (before clicking Submit for review)
 
-- [ ] Replace every `TODO: fill before submit` in `store/LISTING.md` / `store/PRIVACY.md`; host the privacy policy and paste its URL.
-- [ ] Confirm publisher display name ("BlueSkyz Labs") and support email.
-- [ ] Build + verify the zip for the frozen release version; attach it to the GitHub Release (see `docs/GITHUB_PUBLISH_RUNBOOK.md`).
-- [ ] Sanity-check Muse's terms of service for user-side auto-approval before public launch.
-- [ ] Confirm the four screenshots and both promo images reflect the frozen build.
-- [ ] Re-verify §2 (permissions `storage`/`alarms`/`notifications` + `commands`) against the frozen v1.9.1 package — §2 matches the frozen `extension/manifest.json` at HEAD `6187606` (`manifest.version` reads `1.9.1`); the package is `dist/muse-auto-allow-v1.9.1.zip`.
+- [x] **Privacy policy hosted + URL filled** — `store/LISTING.md` §1/§7.4/§9 carry `https://blueskyz-labs.github.io/muse-auto-allow/privacy.html` (GitHub Pages; HTTP 200, content updated to the v1.8+ disclosures — verified live 2026-10-12). Paste it into the dashboard's privacy-policy field and the reviewer note (§3.3/§3.4).
+- [x] **Zip built + verified + attached to the GitHub Release** — the `v1.9.2` Release exists with the zip + `.sha256` sidecar (releases also exist for v1.8.0 / v1.9.0 / v1.9.1). Frozen artifact: `dist/muse-auto-allow-v1.9.2.zip`, 183,081 bytes, 18 entries, sha256 `0d29f0cd8e3d0d4209519d6ce270375feec11fe85273c041f1dc71384900f29c`; `python scripts/verify-zip.py` → 18 matched / 0 mismatched (exit 0) at the freeze.
+- [x] **Screenshots regenerated** — `store/screenshot1.png` (real runtime capture), `screenshot2-stats.png` (Statistics), `screenshot3-popup.png` (popup stage) are the current captures; `screenshot4-overview.png` is the **designed overview** (a rendered composition, not a runtime capture). Verified in this pass: all four screenshots + promo + marquee present and exact-spec by PNG header (1280×800 / 440×280 / 1400×560). **Not verified here:** pixel content was not visually re-reviewed in this pass — do a visual pass against the frozen build before upload.
+- [x] **Muse ToS check done** — `docs/MUSE_TOS_RESEARCH.md` records the reading: **MEDIUM** tension (the Muse ToS oversight clause asks for "meaningful human oversight"; no clause explicitly bans extensions or UI auto-clicking). Findings only, not legal advice — the **owner/legal decision remains** before a public launch.
+- [ ] **Owner items (cannot be done from the repo):** (a) confirm the publisher display name in the dashboard; (b) fill the support email — the only `TODO: fill before submit` left in `store/LISTING.md` (plus the policy dates/contact in `store/PRIVACY.md`); (c) complete CWS developer-account 2-Step Verification (and the one-time registration fee if not yet paid); (d) hash-verify before upload — run `sha256sum -c dist/muse-auto-allow-v1.9.2.zip.sha256` and `python scripts/verify-zip.py` (both exit 0) immediately before uploading the zip to the CWS.
+- [x] **§2 re-verified against the frozen package** — §2 matches the frozen `extension/manifest.json` at freeze commit `0632391` (`manifest.version` reads `1.9.2`; permissions `storage`/`alarms`/`notifications`; muse.ai-only hosts; `commands` `toggle-pause`/`send-followup`); the package is `dist/muse-auto-allow-v1.9.2.zip`.
 
 ---
 

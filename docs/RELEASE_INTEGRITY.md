@@ -60,17 +60,17 @@ of the artifact gets `http://127.0.0.1/*` appended to `content_scripts[0].matche
 fixture origin — the pristine extraction dir and the shipped manifest stay untouched,
 and the artifact's own bytes are what gets loaded everywhere else.
 
-## Freeze procedure (v1.9.1 freeze)
+## Freeze procedure (v1.9.2 freeze)
 
 Run from the repo root during the freeze, tree stable, editing lanes stopped.
 
-1. Confirm the version: `extension/manifest.json` reads `1.9.1` (the freeze owns
+1. Confirm the version: `extension/manifest.json` reads `1.9.2` (the freeze owns
    version bumps — no script edits it).
 2. Rebuild clean:
    `node scripts/build.mjs`
    Expect: `manifest at root: true`, an entry count equal to the number of files in
-   `extension/`, and a fresh `dist/muse-auto-allow-v1.9.1.zip` + `.sha256`.
-3. Record the hash: `sha256sum dist/muse-auto-allow-v1.9.1.zip` (must equal the
+   `extension/`, and a fresh `dist/muse-auto-allow-v1.9.2.zip` + `.sha256`.
+3. Record the hash: `sha256sum dist/muse-auto-allow-v1.9.2.zip` (must equal the
    sidecar; verify with `sha256sum -c` as above).
 4. Determinism proof: build once more; the hash must be **identical**. A differing
    hash means the tree changed between builds — stop and find out what moved.
@@ -78,11 +78,43 @@ Run from the repo root during the freeze, tree stable, editing lanes stopped.
    then `node scripts/smoke-zip.mjs` — exit 0 and `"ok": true` in the JSON summary.
 6. Attach to the GitHub Release: the zip **and** its `.sha256` sidecar, per
    `docs/GITHUB_PUBLISH_RUNBOOK.md` §3 —
-   `gh release create "v1.9.1" "dist/muse-auto-allow-v1.9.1.zip#…" "dist/muse-auto-allow-v1.9.1.zip.sha256#checksum" …`
+   `gh release create "v1.9.2" "dist/muse-auto-allow-v1.9.2.zip#…" "dist/muse-auto-allow-v1.9.2.zip.sha256#checksum" …`
    The attached zip must be the exact bytes that passed steps 2–5; if anything is
    rebuilt after step 5, restart from step 2.
 
-## Recorded evidence (v1.9.1 freeze)
+## Recorded evidence (v1.9.2 freeze)
+
+- Frozen tree: `extension/manifest.json` `"version": "1.9.2"`; git tag `v1.9.2` → `0632391`
+  (the freeze commit; `origin/main` has since advanced to the hosted-privacy-page docs
+  commit `5cb6a47`).
+- Artifact: `dist/muse-auto-allow-v1.9.2.zip` — **183,081 bytes**, **18 entries**,
+  `manifest.json` at the zip root; sha256
+  `0d29f0cd8e3d0d4209519d6ce270375feec11fe85273c041f1dc71384900f29c` (sidecar
+  `dist/muse-auto-allow-v1.9.2.zip.sha256`; `sha256sum -c` clean).
+- Determinism proof: two consecutive `node scripts/build.mjs` runs produced byte-identical
+  zips (same sha256).
+- `python scripts/verify-zip.py`: 18 matched, 0 mismatched, 0 disk-only, 0 zip-only (exit 0).
+- `node scripts/smoke-zip.mjs`: exit 0, `ok: true` (extracts the shipped zip and passes the
+  core e2e in scratch Chrome).
+- Gates on the frozen tree: `lint.mjs` 0 · `lint.mjs --self-test` 15/15 ·
+  `background-unit.mjs` 29/29 · `import-security` 142 checks / 0 failed (property: 0 of 22
+  crafted files clear a stored restriction) · `e2e.mjs` ok · `followup-e2e.mjs` 106 checks
+  0 failed · `lang-switch-e2e.mjs` 36/36 · `mission-e2e.mjs` 39 checks 0 failed ·
+  `scripts/bench/experience.mjs --only=assert` 22 passed / 0 failed.
+- New in 1.9.2: the **backup-restore hardening** — the import sanitizer type-validates every
+  setting against the engine's own readers and merges the composite groups (rules, smart
+  recovery, schedule) at sub-key granularity, so a crafted or partial backup can only tighten
+  or preserve a stored restriction, never clear it (measured on the engine's effective
+  post-restore values: 0 of 22 crafted files clear a stored restriction; the previous
+  behaviour cleared 13 of 16); mirror guards assert the sanitizer's mission table and locale
+  set equal to the shipped corpus/locales in both directions; the zero-network lint gate now
+  models realistic network forms and self-tests 15 cases; the import-security harness grew
+  from 29 to 142 checks (with reverse-mutation falsifications). i18n remains
+  **172 keys × 6 locales**.
+- Not done: the package has **not** been uploaded to the Chrome Web Store; no CWS review, no
+  store publish.
+
+## Recorded evidence (v1.9.1 freeze — history)
 
 - Frozen tree: `extension/manifest.json` `"version": "1.9.1"`; git tag `v1.9.1` → `6187606`
   (remote `main` = `6187606`).
