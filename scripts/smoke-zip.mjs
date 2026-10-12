@@ -230,6 +230,14 @@ async function waitFor(fn, pred, timeoutMs, label) {
 
 // ---------- phase 1: fixture click behavior (mirrors test/e2e.mjs core assertions) ----------
 async function fixturePhase() {
+  // v1.9.3: a fresh install now starts in logging-only mode — this phase tests the LIVE click
+  // path, so the state is stated explicitly (mirrors test/e2e.mjs, test/followup-e2e.mjs and
+  // test/lang-switch-e2e.mjs). Without this seed the phase would be measuring the dry-run
+  // default instead of the click path.
+  const seedT = await send('Target.createTarget', { url: `chrome-extension://${extId}/popup.html` });
+  const { sessionId: seedS } = await send('Target.attachToTarget', { targetId: seedT.targetId, flatten: true });
+  await send('Runtime.evaluate', { expression: `new Promise((res) => chrome.storage.local.set({ dryRun: false }, () => res(true)))`, awaitPromise: true, returnByValue: true }, seedS);
+  await send('Target.closeTarget', { targetId: seedT.targetId });
   const { targetId } = await send('Target.createTarget', { url: fixtureUrl });
   const { sessionId } = await send('Target.attachToTarget', { targetId, flatten: true });
   const clickList = async () => {
