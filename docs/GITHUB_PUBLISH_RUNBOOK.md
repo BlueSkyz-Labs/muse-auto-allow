@@ -162,7 +162,7 @@ green on the exact commit you will tag.
 ## 3. Tag + GitHub Release (attach the store zip)
 
 ```bash
-# <VERSION> = the version in extension/manifest.json (release freeze owns it), e.g. 1.9.2
+# <VERSION> = the version in extension/manifest.json (release freeze owns it), e.g. 1.9.3
 git tag -a "v<VERSION>" -m "Muse Auto-Allow v<VERSION>"
 git push origin "v<VERSION>"
 
@@ -175,7 +175,8 @@ gh release create "v<VERSION>" \
 - The attached zip must be the one that passed `scripts/build.mjs` +
   `scripts/verify-zip.py` (step 0.5) — the same bytes that go to the Chrome Web Store.
 - Attach the `.sha256` sidecar alongside the zip, as done for the existing
-  v1.8.0 / v1.9.0 / v1.9.1 / v1.9.2 Releases (verified 2026-10-12), so a downloader can
+  v1.8.0 / v1.9.0 / v1.9.1 / v1.9.2 Releases and the current v1.9.3 Release (which exists
+  with the zip + `.sha256` sidecar attached), so a downloader can
   verify the exact artifact bytes.
 - `--verify-tag` aborts if the tag does not already exist, so the Release always
   matches a pushed tag.

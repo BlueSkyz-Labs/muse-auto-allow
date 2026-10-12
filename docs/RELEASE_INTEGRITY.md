@@ -60,17 +60,17 @@ of the artifact gets `http://127.0.0.1/*` appended to `content_scripts[0].matche
 fixture origin — the pristine extraction dir and the shipped manifest stay untouched,
 and the artifact's own bytes are what gets loaded everywhere else.
 
-## Freeze procedure (v1.9.2 freeze)
+## Freeze procedure (v1.9.3 freeze)
 
 Run from the repo root during the freeze, tree stable, editing lanes stopped.
 
-1. Confirm the version: `extension/manifest.json` reads `1.9.2` (the freeze owns
+1. Confirm the version: `extension/manifest.json` reads `1.9.3` (the freeze owns
    version bumps — no script edits it).
 2. Rebuild clean:
    `node scripts/build.mjs`
    Expect: `manifest at root: true`, an entry count equal to the number of files in
-   `extension/`, and a fresh `dist/muse-auto-allow-v1.9.2.zip` + `.sha256`.
-3. Record the hash: `sha256sum dist/muse-auto-allow-v1.9.2.zip` (must equal the
+   `extension/`, and a fresh `dist/muse-auto-allow-v1.9.3.zip` + `.sha256`.
+3. Record the hash: `sha256sum dist/muse-auto-allow-v1.9.3.zip` (must equal the
    sidecar; verify with `sha256sum -c` as above).
 4. Determinism proof: build once more; the hash must be **identical**. A differing
    hash means the tree changed between builds — stop and find out what moved.
@@ -78,11 +78,55 @@ Run from the repo root during the freeze, tree stable, editing lanes stopped.
    then `node scripts/smoke-zip.mjs` — exit 0 and `"ok": true` in the JSON summary.
 6. Attach to the GitHub Release: the zip **and** its `.sha256` sidecar, per
    `docs/GITHUB_PUBLISH_RUNBOOK.md` §3 —
-   `gh release create "v1.9.2" "dist/muse-auto-allow-v1.9.2.zip#…" "dist/muse-auto-allow-v1.9.2.zip.sha256#checksum" …`
+   `gh release create "v1.9.3" "dist/muse-auto-allow-v1.9.3.zip#…" "dist/muse-auto-allow-v1.9.3.zip.sha256#checksum" …`
    The attached zip must be the exact bytes that passed steps 2–5; if anything is
    rebuilt after step 5, restart from step 2.
 
-## Recorded evidence (v1.9.2 freeze)
+## Recorded evidence (v1.9.3 freeze)
+
+- Frozen tree: `extension/manifest.json` `"version": "1.9.3"`; git tag `v1.9.3` → `a13689a`
+  (the freeze commit; the GitHub Release v1.9.3 exists with the zip + `.sha256` sidecar
+  attached).
+- Artifact: `dist/muse-auto-allow-v1.9.3.zip` — **185,014 bytes**, **18 entries**,
+  `manifest.json` at the zip root; sha256
+  `e3dd7703b85fffd9ad5b78a8b353c90929f4b87487f3d9dc932fdb2c5f140326` (sidecar
+  `dist/muse-auto-allow-v1.9.3.zip.sha256`; `sha256sum -c` clean).
+- Determinism proof: two consecutive `node scripts/build.mjs` runs produced byte-identical
+  zips (same sha256).
+- `python scripts/verify-zip.py`: 18 matched, 0 mismatched, 0 disk-only, 0 zip-only (exit 0).
+- `node scripts/smoke-zip.mjs`: exit 0, `ok: true`, 20/20 checks (extracts the shipped zip
+  and passes the core e2e in scratch Chrome).
+- Gates on the frozen tree: `lint.mjs` 0 (24 checks across 18 files) · `lint.mjs --self-test`
+  15/15 · `background-unit.mjs` 29/29 · `import-security` 142 checks / 0 failed (property:
+  0 of 22 crafted files clear a stored restriction) · `e2e.mjs` 0 including the new
+  fresh-install pre-phase (`dryPhase.ok: true`, installerSeed `{dryRun: true,
+  schemaVersion: 2}`, popup banner "Logging only — nothing will be clicked", onboarding
+  title "You start in logging-only mode" with the consent line "This tool grants approvals
+  in your name — you stay responsible for what your agent does." and primary "Turn on live
+  clicking", a driven card NOT clicked with a `-dry` log entry, `leak` null,
+  `clicksWhileDry` empty) · `followup-e2e.mjs` 0 · `lang-switch-e2e.mjs` ok (173 keys × 6
+  locales, parity green) · `mission-e2e.mjs` 0 (39 checks) · `scripts/bench/experience.mjs
+  --only=assert` 22 passed / 0 failed.
+- New in 1.9.3: **(a) an owner-approved first-run safety default** — a fresh install starts
+  in dry-run/logging-only (the installer migration seeds `dryRun:true` when the key is
+  ABSENT; an explicit stored choice is never overwritten), with the onboarding consent step
+  in all 6 locales and the consent line *"This tool grants approvals in your name — you stay
+  responsible for what your agent does."*; **(b) a real fail-open found by the new e2e
+  pre-phase and fixed at the root** — the content script used to run its first sweep before
+  the v1.8 settings read applied `dryRun`, so a fresh install could click live while storage
+  said logging-only; the first sweep is now deferred to the v18 read and a boot gate refuses
+  every sweep until that read is applied (fail-closed). Falsification recorded in both
+  directions: a mutant carrying the previous `content.js` → e2e exit 2, `dryPhase.ok =
+  false`, non-null `leak`; pristine tree → exit 0, `dryPhase.ok = true`, `leak` null. i18n
+  is **173 keys × 6 locales** (new key `onbConsent`; `onbDryRun` renamed `onbLive`); popup
+  heights unchanged (calm 518 px, logging-only 537 px).
+- Honest caveat: a fresh install's first action is a **dry-run log entry** — the first LIVE
+  click needs one action (turning live clicking on). The benchmark report's TTFF row
+  (`docs/ELITE_BENCHMARK_REPORT.md`, Axis 3) carries the matching caveat.
+- Not done: the package has **not** been uploaded to the Chrome Web Store; no CWS review, no
+  store publish.
+
+## Recorded evidence (v1.9.2 freeze — history)
 
 - Frozen tree: `extension/manifest.json` `"version": "1.9.2"`; git tag `v1.9.2` → `0632391`
   (the freeze commit; `origin/main` has since advanced to the hosted-privacy-page docs
@@ -165,7 +209,7 @@ Run from the repo root during the freeze, tree stable, editing lanes stopped.
 - Not done: the package has **not** been uploaded to the Chrome Web Store; no CWS review, no
   store publish.
 
-## Recorded evidence (v1.8.0 freeze)
+## Recorded evidence (v1.8.0 freeze — history)
 
 - Frozen tree: `extension/manifest.json` `"version": "1.8.0"`; git tag `v1.8.0` → `91b1726`
   (remote `main` = `91b1726`).
@@ -183,7 +227,7 @@ Run from the repo root during the freeze, tree stable, editing lanes stopped.
 - Not done: the package has **not** been uploaded to the Chrome Web Store; no CWS review, no
   store publish.
 
-## Recorded evidence (lane run, v1.6.0 tree)
+## Recorded evidence (lane run, v1.6.0 tree — history)
 
 - Double-build: `dee10e83…96c2` both builds, byte-identical (`cmp` clean).
 - `SOURCE_DATE_EPOCH=1700000000` double-build: `6857c161…98af6` both builds —

@@ -16,9 +16,9 @@ dashboard (no repo value to fill).
 | Item name | **Muse Auto-Allow** |
 | Category | **Productivity** |
 | Default language | English (en) |
-| Version | 1.9.2 |
+| Version | 1.9.3 |
 | Manifest version | Manifest V3 |
-| Extension package | `dist/muse-auto-allow-v1.9.2.zip` |
+| Extension package | `dist/muse-auto-allow-v1.9.3.zip` |
 | License | MIT © 2026 BlueSkyz Labs |
 | Homepage / support URL | `https://github.com/BlueSkyz-Labs/muse-auto-allow` |
 | Privacy policy URL | `https://blueskyz-labs.github.io/muse-auto-allow/privacy.html` (GitHub Pages copy of `store/PRIVACY.md`; verified live 2026-10-12) |
@@ -30,7 +30,8 @@ dashboard (no repo value to fill).
 Auto-click Allow on Muse (muse.ai) approvals so your agent keeps running. Starts in logging-only mode; local-only; optional sync.
 ```
 
-> Verified length: 129 characters (limit 132). The listing title stays **Muse
+> Verified length: 129 characters (limit 132; all six count cells below were re-verified
+> programmatically at the v1.9.3 freeze, 2026-10-12). The listing title stays **Muse
 > Auto-Allow** as-is in every locale; the in-browser name is localized separately via
 > `extension/_locales/*/messages.json`. The Chrome Web Store lets you localize the
 > short description per language in the **Store listing → localized** tab — all six
@@ -56,26 +57,36 @@ Auto-click Allow on Muse (muse.ai) approvals so your agent keeps running. Starts
 > startup digest, optional settings sync, and onboarding — using the same in-product
 > wording as `extension/_locales/*/messages.json`.
 >
-> **v1.9 / v1.9.1 — localization done:** the English description covers the v1.9 Mission
-> Orchestrator, and all five localized descriptions (vi, zh_CN, ja, ko, es) were brought
-> to the same feature set for the v1.9.1 packet — the Mission Orchestrator plus the
+> **v1.9 / v1.9.1 — localization done (history):** the English description covers the v1.9
+> Mission Orchestrator, and all five localized descriptions (vi, zh_CN, ja, ko, es) were
+> brought to the same feature set for the v1.9.1 packet — the Mission Orchestrator plus the
 > user-visible v1.9.1 experience work (missions with live progress and pause, faster
 > reaction, the exact reason on a refused send or a blocked card, keyboard/assistive-tech
 > support). Each localized description uses the same in-product wording as
 > `extension/_locales/*/messages.json` and makes the same claims as the English text,
 > including the identical privacy/permission lines. English is the reference text.
 >
-> **v1.9.2 — no listing-copy change:** the 1.9.2 release is a security-hardening release
-> (backup-restore import sanitizer, locale guard, hardened zero-network lint gate —
-> `CHANGELOG.md` 1.9.2); no user-visible feature text changed, so all six descriptions
-> below remain the current copy.
+> **v1.9.2 — no listing-copy change (history; superseded by the v1.9.3 copy below):** the
+> 1.9.2 release was a security-hardening release (backup-restore import sanitizer, locale
+> guard, hardened zero-network lint gate — `CHANGELOG.md` 1.9.2); no user-visible feature
+> text changed, so all six descriptions stayed unchanged at that freeze.
 >
-> **v1.9.3 — first-run safety default (listing copy updated):** a fresh install now
-> **starts in dry-run (logging-only)** — the extension logs exactly what it *would* click
-> and clicks nothing until the user turns live clicking on (one tap in the setup wizard).
-> All six short descriptions gained that clause (each ≤132 characters; the exact counts
-> are in the table above) and the dry-run bullet in every detailed description states it
-> plainly. The rest of the copy is unchanged.
+> **v1.9.3 — first-run safety default (CURRENT copy):** a fresh install now **starts in
+> dry-run (logging-only)** — the extension logs exactly what it *would* click and clicks
+> nothing until the user turns live clicking on (one tap in the setup wizard; the consent
+> step carries the consent line in all 6 locales). All six short descriptions gained that
+> clause (all ≤132 characters; recounted 2026-10-12 at the v1.9.3 freeze: en 129, vi 130,
+> zh_CN 75, ja 92, ko 106, es 128). The dry-run bullet in every detailed description was
+> updated to state the new first-run start — en, vi, zh_CN, ja, ko and es each carry the
+> equivalent sentence (a fresh install STARTS in logging-only, one tap turns live clicking
+> on). The rest of the copy is unchanged.
+>
+> **Honest first-click caveat (v1.9.3):** a fresh install's first action is a **dry-run log
+> entry** (`allow-dry`, nothing clicked) — the first **LIVE** click needs **one user
+> action** (the onboarding "Turn on live clicking", or the Safety & Control dry-run toggle
+> later). This matches the benchmark report's TTFF caveat (`docs/ELITE_BENCHMARK_REPORT.md`,
+> Axis 3): 0 actions *to see the tool work* (logging-only, zero setup), 1 action *to grant
+> it live approval authority*.
 
 ### English (en)
 
@@ -470,7 +481,7 @@ Compliance notes for this declaration:
 - Manifest V3, no `content_security_policy` relaxation.
 - No analytics SDK, no CDN, no update endpoint. (The optional settings sync uses
   Chrome's built-in sync service — a browser feature, not an extension network call.)
-- `dist/muse-auto-allow-v1.9.2.zip` contains only static files with `manifest.json` at the
+- `dist/muse-auto-allow-v1.9.3.zip` contains only static files with `manifest.json` at the
   zip root.
 
 ---

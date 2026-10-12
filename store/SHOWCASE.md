@@ -16,7 +16,7 @@ files.example.com) — never real projects or personal data.
 | Listing copy (6 locales) | `store/LISTING.md` | — | title / short / full description per locale |
 | Permission justifications | `store/LISTING.md` §5 | — | required in dashboard |
 | Privacy policy | `store/PRIVACY.md` | — | required (public URL before submit) |
-| Package | `dist/muse-auto-allow-v1.9.2.zip` | 18 files | built by `scripts/build.mjs`, byte-verified by `scripts/verify-zip.py` |
+| Package | `dist/muse-auto-allow-v1.9.3.zip` | 18 files | built by `scripts/build.mjs`, byte-verified by `scripts/verify-zip.py` (185,014 bytes, sha256 `e3dd7703b85fffd9ad5b78a8b353c90929f4b87487f3d9dc932fdb2c5f140326`) |
 | Brand spec | `docs/BRANDING.md` | — | internal reference (tokens, mark, rules) |
 
 ## Regenerate everything
@@ -38,4 +38,5 @@ store images are light-theme (Muse language).
 - [ ] Paste listing copy per locale from `store/LISTING.md`
 - [ ] Paste permission justifications (storage / alarms / notifications / host)
 - [x] Privacy policy hosted: `https://blueskyz-labs.github.io/muse-auto-allow/privacy.html` (verified live 2026-10-12) — paste it into the dashboard
-- [ ] Build + verify the zip (done at the v1.9.2 freeze: `dist/muse-auto-allow-v1.9.2.zip`, verify-zip 18/0); upload it to the CWS
+- [ ] Build + verify the zip (done at the v1.9.3 freeze: `dist/muse-auto-allow-v1.9.3.zip`, 185,014 bytes, sha256 `e3dd7703b85fffd9ad5b78a8b353c90929f4b87487f3d9dc932fdb2c5f140326`, verify-zip 18/0); upload it to the CWS
+- [ ] Review the screenshot captures against the frozen v1.9.3 build before upload — they were not re-captured for v1.9.3, and a fresh install now starts in logging-only (a first-run state the current captures predate)

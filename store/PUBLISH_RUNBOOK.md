@@ -4,7 +4,7 @@ Step-by-step launch and update procedure. Steps marked **[MANUAL/owner]** requir
 with the Google account and payment; everything else can be done from the repo.
 
 **One-line flow:** register developer account → `node scripts/build.mjs` +
-`python scripts/verify-zip.py` → upload `dist/muse-auto-allow-v1.9.2.zip` → fill every
+`python scripts/verify-zip.py` → upload `dist/muse-auto-allow-v1.9.3.zip` → fill every
 dashboard tab → submit → wait for review → publish → for updates: bump version →
 rebuild + verify zip → upload → resubmit.
 
@@ -30,7 +30,7 @@ rebuild + verify zip → upload → resubmit.
 
 ## Step 2 — Build, verify, and upload the package
 
-1. Confirm the version in `extension/manifest.json` is correct (currently `1.9.2`).
+1. Confirm the version in `extension/manifest.json` is correct (currently `1.9.3`).
 2. **Lint gate (mandatory, zero-dependency).** Run from the repo root:
 
    ```bash
@@ -48,7 +48,7 @@ rebuild + verify zip → upload → resubmit.
    node scripts/build.mjs
    ```
 
-   Output: `dist/muse-auto-allow-v1.9.2.zip` with `manifest.json` at the **zip root**
+   Output: `dist/muse-auto-allow-v1.9.3.zip` with `manifest.json` at the **zip root**
    (not nested inside a folder). The build fails closed if the zip does not mirror the
    whole `extension/` tree (exit 3 = file missing from the zip, exit 4 = unexpected file
    in the zip).
@@ -60,11 +60,11 @@ rebuild + verify zip → upload → resubmit.
 
    It checks every zip entry against the on-disk file (sha-identical bytes) and exits
    non-zero on any mismatch, missing file, or extra file. Expected output for this
-   release: `muse-auto-allow-v1.9.2.zip: 18 matched, 0 mismatched, 0 disk-only, 0
+   release: `muse-auto-allow-v1.9.3.zip: 18 matched, 0 mismatched, 0 disk-only, 0
    zip-only` and exit 0. **Do not upload a zip that fails this check.**
 5. In the Developer Dashboard, click **New item** (first release) or open the existing
    item (for updates).
-6. **Upload** `dist/muse-auto-allow-v1.9.2.zip`.
+6. **Upload** `dist/muse-auto-allow-v1.9.3.zip`.
 7. Wait for the dashboard to parse the manifest. It will read the name/description from
    `__MSG_*__` keys resolved against `_locales/en/messages.json`; verify the default
    locale resolves cleanly (no blank name).
@@ -93,8 +93,10 @@ Work through all tabs before submitting; an incomplete listing cannot be submitt
   optionally the **1400×560** marquee (`store/marquee1400x560.png`). See `store/LISTING.md`
   §8, `store/SHOWCASE.md` and `docs/BRANDING.md` §5 for the full asset map. All six store
   images are exact-spec (PNG headers verified 2026-10-09); `store/screenshot3-popup.png`
-  was recomposed to 1280×800 at v1.5.0. Confirm all assets reflect the shipped 1.9.2
-  behavior before uploading.
+  was recomposed to 1280×800 at v1.5.0. Confirm all assets reflect the shipped 1.9.3
+  behavior before uploading — a fresh install now starts in logging-only, so re-check the
+  captures against the frozen build (the logging-only banner and the onboarding consent
+  step are new first-run states).
 - **Additional fields:** homepage/support URL and privacy policy URL — both are filled in
   `store/LISTING.md` §1/§9 (`https://github.com/BlueSkyz-Labs/muse-auto-allow` and
   `https://blueskyz-labs.github.io/muse-auto-allow/privacy.html`, verified live 2026-10-12);
@@ -145,7 +147,7 @@ Work through all tabs before submitting; an incomplete listing cannot be submitt
 ## Step 5 — Post-publish update flow
 
 1. Make the code change in `extension/`.
-2. **Bump the version** in `extension/manifest.json` (e.g. `1.9.2` → `1.9.3`); Chrome
+2. **Bump the version** in `extension/manifest.json` (e.g. `1.9.3` → `1.9.4`); Chrome
    rejects a re-upload with a version number that is not higher than the published one.
 3. Rebuild:
 
@@ -153,7 +155,7 @@ Work through all tabs before submitting; an incomplete listing cannot be submitt
    node scripts/build.mjs
    ```
 
-   Output: `dist/muse-auto-allow-v<new version>.zip` (after a bump from 1.9.2, e.g. `muse-auto-allow-v1.9.3.zip`).
+   Output: `dist/muse-auto-allow-v<new version>.zip` (after a bump from 1.9.3, e.g. `muse-auto-allow-v1.9.4.zip`).
 4. **Verify:** `python scripts/verify-zip.py` — must report 18 matched / 0 mismatched /
    0 disk-only / 0 zip-only (exit 0) before uploading (same mandatory check as Step 2).
 5. In the dashboard, open the item → **Package** → **Upload new package** → select the new
@@ -201,10 +203,14 @@ Work through all tabs before submitting; an incomplete listing cannot be submitt
       bans extensions or UI auto-clicking; findings only, not legal advice). The
       owner/legal decision remains before a public launch.
 - [x] `node scripts/build.mjs` **and** `python scripts/verify-zip.py` both exit 0 at the
-      v1.9.2 freeze (deterministic double-build; verify-zip 18 matched / 0 mismatched).
+      v1.9.3 freeze (deterministic double-build; verify-zip 18 matched / 0 mismatched;
+      artifact `dist/muse-auto-allow-v1.9.3.zip` — 185,014 bytes, sha256
+      `e3dd7703b85fffd9ad5b78a8b353c90929f4b87487f3d9dc932fdb2c5f140326`).
       Re-run both immediately before the CWS upload.
-- [x] `store/LISTING.md` reflects v1.9.2 (version/package references, the localized
-      descriptions and the asset list) — refreshed at the v1.9.2 release freeze; re-check it
+- [x] `store/LISTING.md` reflects v1.9.3 (version/package references, the logging-only
+      first-run clause in all six short descriptions — recounted ≤132 — and the localized
+      descriptions) — refreshed at the v1.9.3 release freeze; re-check it
       still matches if any later edit lands.
 - [ ] Load the unpacked extension and scroll the four detection paths once (see
-      `test/e2e.mjs`) so the shipped build matches the description.
+      `test/e2e.mjs`) so the shipped build matches the description. A fresh install starts
+      in logging-only — turn live clicking on (one action) before checking live clicks.

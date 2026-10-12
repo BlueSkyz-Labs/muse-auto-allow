@@ -60,16 +60,17 @@ Sources: <https://developer.chrome.com/docs/webstore/cws-dashboard-privacy#list_
 <https://developer.chrome.com/docs/webstore/program-policies/permissions> ("Use of
 Permissions": request the *narrowest* permissions necessary; no future-proofing).
 
-Verified against `extension/manifest.json` (frozen v1.9.2 tree, freeze commit `0632391`, 2026-10-11):
+Verified against `extension/manifest.json` (frozen v1.9.3 tree, freeze commit `a13689a`, 2026-10-12):
 `permissions: ["storage", "alarms", "notifications"]`; `commands: { toggle-pause
 (Alt+Shift+P), send-followup (Alt+Shift+F) }`; `host_permissions: ["https://muse.ai/*",
 "https://*.muse.ai/*"]`. Nothing else is declared — exactly what the current feature set
 (v1.8 pause, dry-run, rules, smart/scheduled follow-ups, digest, optional settings sync,
-onboarding; v1.9 Mission Orchestrator) requires, and `scripts/lint.mjs` fails on any added
-permission.
-*(`manifest.version` now reads `1.9.2` on the frozen tree — the release freeze has
-happened; the package is `dist/muse-auto-allow-v1.9.2.zip`. This section matches the
-frozen package; it is not yet uploaded to the Chrome Web Store.)*
+onboarding; v1.9 Mission Orchestrator; v1.9.3 first-run logging-only default) requires, and
+`scripts/lint.mjs` fails on any added permission.
+*(`manifest.version` reads `1.9.3` on the frozen tree — the release freeze has
+happened; the package is `dist/muse-auto-allow-v1.9.3.zip`. This section matches the
+frozen package; it has not been uploaded to the Chrome Web Store — no CWS review, no
+store publish.)*
 
 ### `storage`
 
@@ -125,8 +126,8 @@ extension needs none of them.
 `storage`/`alarms`/`notifications` allowlist, any host set other than the two muse.ai
 patterns, or a missing explicit `extension_pages` CSP — so the packaged manifest can
 never silently drift from these answers. (Allowlist verified in the working tree,
-freeze commit `0632391`, 2026-10-11, lint exit 0 — the allowlist is unchanged since the
-v1.8 lane and still matches the frozen v1.9.2 manifest.)
+freeze commit `a13689a`, 2026-10-12, lint exit 0 — the allowlist is unchanged since the
+v1.8 lane and still matches the frozen v1.9.3 manifest.)
 
 ---
 
@@ -232,8 +233,8 @@ Dashboard reference: <https://developer.chrome.com/docs/webstore/cws-dashboard-l
 | Field | Value (from this repo) | Official limit / requirement | Source |
 |---|---|---|---|
 | Item name | "Muse Auto-Allow" — resolved from manifest `name` = `__MSG_extName__` (`extension/_locales/en/messages.json`); 15 characters | Manifest `name` is "a short, plain text string (maximum of **75 characters**)". Note: older guides still cite a legacy 45-character store limit — this name satisfies both. Keep listing names consistent across locales. | [manifest/name](https://developer.chrome.com/docs/extensions/reference/manifest/name) · [prepare](https://developer.chrome.com/docs/webstore/prepare) |
-| Short description | EN: "Auto-click Allow on Muse (muse.ai) approval requests so your agent keeps running. Local-only by default; optional settings sync." (128 chars; all 6 localized variants in `LISTING.md` §1) | **≤ 132 characters** — "A string of no more than 132 characters"; "Your summary … (132 characters or less)". | [prepare](https://developer.chrome.com/docs/webstore/prepare) · [best-listing](https://developer.chrome.com/docs/webstore/best-listing) |
-| Detailed description | Per locale, from `store/LISTING.md` §2 (en, vi, zh_CN, ja, ko, es). All six carry the current feature set including the v1.9 Mission Orchestrator and the v1.9.1 experience work (missions with live progress and pause, faster reaction, exact refusal/blocked reasons, keyboard/assistive-tech support); the five localized descriptions were refreshed for the v1.9.1 packet and use the same in-product wording as `extension/_locales/*/messages.json`. The localized privacy lines carry the sync disclosure. | No numeric limit is published in the official docs (the dashboard enforces its own bound at entry); keep it accurate, concise, and free of keyword stuffing. | [cws-dashboard-listing](https://developer.chrome.com/docs/webstore/cws-dashboard-listing) · [spam FAQ](https://developer.chrome.com/docs/webstore/program-policies/spam-faq#keyword-spam) |
+| Short description | EN: "Auto-click Allow on Muse (muse.ai) approvals so your agent keeps running. Starts in logging-only mode; local-only; optional sync." (129 chars; all 6 localized variants in `LISTING.md` §1 — recounted 2026-10-12: vi 130, zh_CN 75, ja 92, ko 106, es 128, all ≤132) | **≤ 132 characters** — "A string of no more than 132 characters"; "Your summary … (132 characters or less)". | [prepare](https://developer.chrome.com/docs/webstore/prepare) · [best-listing](https://developer.chrome.com/docs/webstore/best-listing) |
+| Detailed description | Per locale, from `store/LISTING.md` §2 (en, vi, zh_CN, ja, ko, es). All six carry the current feature set including the v1.9 Mission Orchestrator and the v1.9.1 experience work (missions with live progress and pause, faster reaction, exact refusal/blocked reasons, keyboard/assistive-tech support); the five localized descriptions were refreshed for the v1.9.1 packet and use the same in-product wording as `extension/_locales/*/messages.json`. At v1.9.3 all six detailed descriptions state the fresh-install logging-only start in their dry-run bullet, and every short description carries the "Starts in logging-only mode" clause (`LISTING.md` §1). The localized privacy lines carry the sync disclosure. | No numeric limit is published in the official docs (the dashboard enforces its own bound at entry); keep it accurate, concise, and free of keyword stuffing. | [cws-dashboard-listing](https://developer.chrome.com/docs/webstore/cws-dashboard-listing) · [spam FAQ](https://developer.chrome.com/docs/webstore/program-policies/spam-faq#keyword-spam) |
 | Category | **Productivity** (one primary category; rationale in `LISTING.md` §3) | "The primary category under which your item should be listed." | [cws-dashboard-listing](https://developer.chrome.com/docs/webstore/cws-dashboard-listing) |
 | Language(s) | Default English (en); localized listings for vi, zh_CN, ja, ko, es (copy in `LISTING.md`) | "Your item's language"; localized listings use the extension's `_locales` set. | [cws-dashboard-listing#localize_your_listing](https://developer.chrome.com/docs/webstore/cws-dashboard-listing#localize_your_listing) |
 | Homepage / support URL | `https://github.com/BlueSkyz-Labs/muse-auto-allow` (`LISTING.md` §1/§9) | Optional fields; appear on the listing. | [cws-dashboard-listing#additional-fields](https://developer.chrome.com/docs/webstore/cws-dashboard-listing#additional-fields) |
@@ -310,21 +311,26 @@ Verification steps (no extension-specific credentials required):
 1. Load the extension (or install it) in Chrome 116+ in a profile where you can sign
    in to muse.ai.
 2. Sign in to https://muse.ai and open a Muse agent chat that can request approvals.
-3. When Muse asks for approval, an approval card with Allow / Deny buttons appears.
+3. First run: the extension starts in logging-only mode — a fresh install does NOT
+   click yet. The popup banner reads "Logging only — nothing will be clicked" and the
+   setup wizard's consent step states "You start in logging-only mode". Turn on live
+   clicking with the one-tap "Turn on live clicking" (or the dry-run toggle in
+   Safety & Control afterwards) — that is the single action needed before any live click.
+4. When Muse asks for approval, an approval card with Allow / Deny buttons appears.
    The extension clicks Allow automatically (default delay is configurable, ~1s; the
    first click may take a few seconds because detection is event-driven with a 1s
    heartbeat).
-4. Open the extension popup (toolbar icon): the click counter increments and the click
+5. Open the extension popup (toolbar icon): the click counter increments and the click
    log shows the entry (kind "allow", label, context). The Statistics page
    (popup → Statistics) shows the per-day count.
-5. Toggle the extension off in the popup: approval cards are no longer clicked.
-6. Pause / dry-run: press Alt+Shift+P to pause automation for 15 minutes (press again
+6. Toggle the extension off in the popup: approval cards are no longer clicked.
+7. Pause / dry-run: press Alt+Shift+P to pause automation for 15 minutes (press again
    to clear); enable dry-run mode to see log entries with a "-dry" suffix while nothing
    is clicked.
-7. Safety demonstration: the extension never clicks Deny/Reject/Decline and never
+8. Safety demonstration: the extension never clicks Deny/Reject/Decline and never
    clicks lone "Allow" buttons (e.g. browser permission prompts); each button is
    clicked at most once; cards matching the block-keyword list are logged as blocked.
-8. Digest: after a session with clicks, restart Chrome — a desktop notification
+9. Digest: after a session with clicks, restart Chrome — a desktop notification
    summarizes recent activity (composed locally on the device).
 Test data: the extension stores only local settings, a last-50 click log, and compact
 counters (chrome.storage.local). Settings sync is off by default; if enabled, a
@@ -407,11 +413,11 @@ Source: <https://developer.chrome.com/docs/webstore/review-process#warning>
 ## 7. Open owner items (before clicking Submit for review)
 
 - [x] **Privacy policy hosted + URL filled** — `store/LISTING.md` §1/§7.4/§9 carry `https://blueskyz-labs.github.io/muse-auto-allow/privacy.html` (GitHub Pages; HTTP 200, content updated to the v1.8+ disclosures — verified live 2026-10-12). Paste it into the dashboard's privacy-policy field and the reviewer note (§3.3/§3.4).
-- [x] **Zip built + verified + attached to the GitHub Release** — the `v1.9.2` Release exists with the zip + `.sha256` sidecar (releases also exist for v1.8.0 / v1.9.0 / v1.9.1). Frozen artifact: `dist/muse-auto-allow-v1.9.2.zip`, 183,081 bytes, 18 entries, sha256 `0d29f0cd8e3d0d4209519d6ce270375feec11fe85273c041f1dc71384900f29c`; `python scripts/verify-zip.py` → 18 matched / 0 mismatched (exit 0) at the freeze.
+- [x] **Zip built + verified + attached to the GitHub Release** — the `v1.9.3` Release exists with the zip + `.sha256` sidecar (releases also exist for v1.8.0 / v1.9.0 / v1.9.1 / v1.9.2). Frozen artifact: `dist/muse-auto-allow-v1.9.3.zip`, 185,014 bytes, 18 entries, sha256 `e3dd7703b85fffd9ad5b78a8b353c90929f4b87487f3d9dc932fdb2c5f140326`; `python scripts/verify-zip.py` → 18 matched / 0 mismatched (exit 0) at the freeze.
 - [x] **Screenshots regenerated** — `store/screenshot1.png` (real runtime capture), `screenshot2-stats.png` (Statistics), `screenshot3-popup.png` (popup stage) are the current captures; `screenshot4-overview.png` is the **designed overview** (a rendered composition, not a runtime capture). Verified in this pass: all four screenshots + promo + marquee present and exact-spec by PNG header (1280×800 / 440×280 / 1400×560). **Not verified here:** pixel content was not visually re-reviewed in this pass — do a visual pass against the frozen build before upload.
 - [x] **Muse ToS check done** — `docs/MUSE_TOS_RESEARCH.md` records the reading: **MEDIUM** tension (the Muse ToS oversight clause asks for "meaningful human oversight"; no clause explicitly bans extensions or UI auto-clicking). Findings only, not legal advice — the **owner/legal decision remains** before a public launch.
-- [ ] **Owner items (cannot be done from the repo):** (a) confirm the publisher display name in the dashboard; (b) fill the support email — the only `TODO: fill before submit` left in `store/LISTING.md` (plus the policy dates/contact in `store/PRIVACY.md`); (c) complete CWS developer-account 2-Step Verification (and the one-time registration fee if not yet paid); (d) hash-verify before upload — run `sha256sum -c dist/muse-auto-allow-v1.9.2.zip.sha256` and `python scripts/verify-zip.py` (both exit 0) immediately before uploading the zip to the CWS.
-- [x] **§2 re-verified against the frozen package** — §2 matches the frozen `extension/manifest.json` at freeze commit `0632391` (`manifest.version` reads `1.9.2`; permissions `storage`/`alarms`/`notifications`; muse.ai-only hosts; `commands` `toggle-pause`/`send-followup`); the package is `dist/muse-auto-allow-v1.9.2.zip`.
+- [ ] **Owner items (cannot be done from the repo):** (a) confirm the publisher display name in the dashboard; (b) fill the support email — the only `TODO: fill before submit` left in `store/LISTING.md` (plus the policy dates/contact in `store/PRIVACY.md`); (c) complete CWS developer-account 2-Step Verification (and the one-time registration fee if not yet paid); (d) hash-verify before upload — run `sha256sum -c dist/muse-auto-allow-v1.9.3.zip.sha256` and `python scripts/verify-zip.py` (both exit 0) immediately before uploading the zip to the CWS.
+- [x] **§2 re-verified against the frozen package** — §2 matches the frozen `extension/manifest.json` at freeze commit `a13689a` (`manifest.version` reads `1.9.3`; permissions `storage`/`alarms`/`notifications`; muse.ai-only hosts; `commands` `toggle-pause`/`send-followup`); the package is `dist/muse-auto-allow-v1.9.3.zip`.
 
 ---
 
