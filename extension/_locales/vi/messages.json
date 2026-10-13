@@ -293,6 +293,18 @@
   "dryRunChip": {
     "message": "Chạy thử"
   },
+  "yoloTitle": {
+    "message": "YOLO — duyệt tất cả"
+  },
+  "yoloNote": {
+    "message": "Bỏ qua chặn từ khóa, click cả quyền vĩnh viễn, tốc độ nhanh nhất. Không bao giờ click Deny; connector vẫn thủ công."
+  },
+  "yoloConfirm": {
+    "message": "Bật YOLO? Card bị chặn bởi từ khóa hoặc chỉ có quyền vĩnh viễn sẽ được click tự động. Gạt lại công tắc lần nữa để xác nhận."
+  },
+  "yoloChip": {
+    "message": "YOLO"
+  },
   "allowOnceTitle": {
     "message": "Ưu tiên \"Cho phép một lần\""
   },

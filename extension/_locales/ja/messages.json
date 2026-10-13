@@ -293,6 +293,18 @@
   "dryRunChip": {
     "message": "ドライラン"
   },
+  "yoloTitle": {
+    "message": "YOLO — すべて承認"
+  },
+  "yoloNote": {
+    "message": "キーワードブロックを無視し、常時許可もクリック、最速ペース。Deny は絶対にクリックしません。コネクタは手動のまま。"
+  },
+  "yoloConfirm": {
+    "message": "YOLO をオンにしますか？キーワードでブロックされたカードや常時許可のみのカードも自動でクリックされます。もう一度スイッチを切り替えて確認してください。"
+  },
+  "yoloChip": {
+    "message": "YOLO"
+  },
   "allowOnceTitle": {
     "message": "「一度だけ許可」を優先"
   },

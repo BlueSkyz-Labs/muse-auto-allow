@@ -18,6 +18,7 @@ Everything here is exercised against a deterministic fixture in a real Chromium
 |---|---|---|
 | `pauseUntil` | number epoch-ms, `0` | While `Date.now() < pauseUntil` **all automation is halted**: every click path (A–E) and the follow-up engine, including manual `followup-send-now` (reason `paused`). The toolbar badge shows the pause marker `||`. |
 | `dryRun` | bool — engine default `false`; **seeded `true` on a fresh install (v1.9.3)** | Detection and logging run exactly as usual; **nothing is clicked** and no follow-up is typed/sent. Log entries get `entry.dryRun=true` and the kind gets a `-dry` suffix (`allow-dry`, `expand-dry`, `open-panel-dry`, `review-bar-dry`); the follow-up logs `followup-dry`. **v1.9.3 first-run safety default:** `background.js` `migrate()` seeds `dryRun: true` when the key is **ABSENT** (fresh install / pre-v1.8 upgrade) — an explicit stored value is never overwritten (a v1.8+ user with `schemaVersion: 2` never reaches the seed body; a user who chose `dryRun:false` keeps it). See §14. |
+| `yoloMode` | bool — default `false`; **seeded `false` on a fresh install (v1.9.4, absent-only)** | Explicit opt-in "approve everything": `blockKeywords`/`allowTopics` are bypassed, standing-grant labels ("Always allow" / "Allow for this site/task") become clickable, and pacing is capped at 100 ms (`YOLO_MIN_DELAY_MS`). Never-Deny, the connector hard-block and the consent filters stay in force; dedup + rate caps unchanged. The popup writes it behind a two-step confirm; enabling it also writes an explicit `dryRun:false`. Observability: `data-muse-yolo` on `<html>`, echoed by the `followup-status` ping and `window.__museAutoAllow.v18`. |
 | `allowOnceMode` | bool, `false` | Prefers a one-shot allow option. See §3.5. |
 | `rules.allowTopics` | string[], `[]` (cap 50 × 64) | Non-empty ⇒ auto-click **only** when `extractTopic()` matches (case-insensitive exact). See §3.4. |
 | `rules.blockKeywords` | string[], seed list | Any keyword (case-insensitive substring) in the card text **or** the extracted context ⇒ never click. See §3.3. |
@@ -238,7 +239,7 @@ mirrors the subset below to `chrome.storage.sync` on every **local** change
 (`storage.onChanged`; sync-area echoes are ignored so the mirror can never loop):
 
 ```
-enabled, minDelayMs, dryRun, allowOnceMode, rules,
+enabled, minDelayMs, dryRun, yoloMode, allowOnceMode, rules,
 followupEnabled, followupPrompt, followupPrompts, followupChips,
 followupSmart, followupSchedule
 ```
@@ -662,7 +663,7 @@ with `reason:'schedule'`.
 
 Now: `newValue === undefined` means "removed", and the key is reset to its shipped default —
 captured once in `v18Defaults` (from the `v18` object literal, before any storage read) and applied
-by `resetV18Key(k)`. Covered keys: `pauseUntil`, `dryRun`, `allowOnceMode`, `rules`,
+by `resetV18Key(k)`. Covered keys: `pauseUntil`, `dryRun`, `yoloMode`, `allowOnceMode`, `rules`,
 `followupSmart`, `followupSchedule`, plus the follow-up keys (`followupEnabled`, `followupPrompt`,
 `followupPrompts`, `followupRotateIdx`, `followupIdleMs`, `followupCooldownMs`), `enabled`
 (default **true** — a removal must not silently disable the engine), `minDelayMs` (default 300) and

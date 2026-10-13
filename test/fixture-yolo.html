@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Muse approvals fixture — YOLO mode</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: #0b0b0c; color: #eee; padding: 24px; }
+  .card { border: 1px solid #333; border-radius: 12px; padding: 16px; margin: 12px 0; background: #151517; }
+  button { padding: 8px 18px; border-radius: 999px; border: 0; margin-right: 8px; font-size: 14px; cursor: pointer; }
+  .allow { background: #2f6df6; color: #fff; }
+  .deny { background: #333; color: #ddd; }
+</style>
+</head>
+<body>
+<h2>Needs review</h2>
+
+<!-- v1.9.4 YOLO case 1 (y1): the card text carries a SEED BLOCK KEYWORD ('delete').
+     Default: blocked — logged 'keyword:delete', never clicked.
+     YOLO on: the block is bypassed and the card IS clicked. -->
+<div class="card" id="cardY1">
+  <p>Allow Muse to delete the stale branches in the repository?</p>
+  <div class="row">
+    <button type="button" class="allow" id="allowY1">Allow</button>
+    <button type="button" class="deny" id="denyY1">Deny</button>
+  </div>
+</div>
+
+<!-- v1.9.4 YOLO case 2 (y2): a standing-grant-only pair ("Allow for this site" + Deny).
+     Default: the standing label is NOT recognized — the card is left to the user (silent).
+     YOLO on: the standing grant becomes a clickable positive option. -->
+<div class="card" id="cardY2">
+  <p>Persistent access request for this workspace</p>
+  <div class="row">
+    <button type="button" class="allow" id="allowY2">Allow for this site</button>
+    <button type="button" class="deny" id="denyY2">Deny</button>
+  </div>
+</div>
+
+<script>
+window.__clicks = [];
+window.__errors = [];
+window.addEventListener('error', (e) => window.__errors.push(String(e.message)));
+function rec(n, extra) { window.__clicks.push(Object.assign({ n: n, t: Date.now() }, extra || {})); }
+document.getElementById('allowY1').addEventListener('click', function () { rec('y1', { allow: true }); });
+document.getElementById('denyY1').addEventListener('click', function () { rec('y1', { deny: true }); });
+document.getElementById('allowY2').addEventListener('click', function () { rec('y2', { allow: true }); });
+document.getElementById('denyY2').addEventListener('click', function () { rec('y2', { deny: true }); });
+</script>
+</body>
+</html>

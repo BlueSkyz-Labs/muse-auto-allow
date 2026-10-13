@@ -27,6 +27,10 @@
  *     within it) and the lone Connect twin
  *  7. muse.ai (logged out): content script injects (documentElement attribute) — WARN-only
  *  8. v1.8.0 connector guard: the refusal is logged ('blocked' with blockedReason 'connector')
+ *  9. v1.9.4 YOLO mode (opt-in): default => a keyword-blocked card is NOT clicked (logged
+ *     'keyword:delete') and a standing-grant-only pair stays untouched; with yoloMode true
+ *     both cards ARE clicked (never Deny). Falsification: a MAA_EXT_DIR mutant without the
+ *     bypass -> RED; restore -> GREEN.
  */
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -463,6 +467,91 @@ try {
     Object.assign(connectorCheck, { blockedConnector: j6.blockedConnector, blockedAny: j6.blockedAny, ok: (j6.blockedConnector || 0) >= 1 });
   } catch (e) { connectorCheck.error = e.message; }
 
+  // ---- v1.9.4 YOLO mode (explicit opt-in): keyword blocks bypassed + standing grants clicked ----
+  // A dedicated fixture (test/fixture-yolo.html) carries the two shapes:
+  //   y1 — a card whose text contains a SEED BLOCK KEYWORD ('delete'): default => blocked
+  //        (logged 'keyword:delete'), never clicked; YOLO on => clicked.
+  //   y2 — a standing-grant-only pair ("Allow for this site" + Deny): default => the label is
+  //        not recognized (silent, left to the user); YOLO on => clicked.
+  // Falsification: remove the yoloMode bypass in a mutated copy (MAA_EXT_DIR) -> this phase
+  // goes RED; restore -> GREEN.
+  const yoloCheck = { ok: false };
+  try {
+    const ty = await send('Target.createTarget', { url: `chrome-extension://${extId}/popup.html` });
+    const { sessionId: sy } = await send('Target.attachToTarget', { targetId: ty.targetId, flatten: true });
+    const yeval = async (expression, awaitPromise) => {
+      const r = await send('Runtime.evaluate', { expression, returnByValue: true, ...(awaitPromise ? { awaitPromise: true } : {}) }, sy);
+      return r?.result?.value;
+    };
+    const yoloUrl = fixtureUrl.replace(/fixture\.html$/, 'fixture-yolo.html');
+    const ylog = async () => JSON.parse(await yeval(`new Promise((res) => chrome.storage.local.get(['log'], (s) => res(JSON.stringify(s.log || []))))`, true) || '[]');
+    const countDeleteBlocks = (log) => log.filter((e) => e && e.kind === 'blocked' && e.blockedReason === 'keyword:delete').length;
+
+    // (A) default: yoloMode OFF — the delete card is blocked (logged) and nothing is clicked
+    await yeval(`new Promise((res) => chrome.storage.local.set({ dryRun: false, yoloMode: false }, () => res('ok')))`, true);
+    let yA = null, yAs = null, aClicks = [], blockedA = 0;
+    const blockedBefore = countDeleteBlocks(await ylog());
+    for (let attempt = 0; attempt < 2 && !aClicks.length && blockedA <= blockedBefore; attempt++) {
+      if (yA) { try { await send('Target.closeTarget', { targetId: yA }); } catch { /* non-critical */ } }
+      const t = await send('Target.createTarget', { url: yoloUrl });
+      yA = t.targetId;
+      yAs = (await send('Target.attachToTarget', { targetId: yA, flatten: true })).sessionId;
+      const injDeadline = Date.now() + 12000;
+      let injected = false;
+      while (Date.now() < injDeadline) {
+        try {
+          const ra = await send('Runtime.evaluate', { expression: "document.documentElement.getAttribute('data-muse-auto-allow')", returnByValue: true }, yAs);
+          if (ra?.result?.value === '1') { injected = true; break; }
+        } catch { /* target may still be booting */ }
+        await sleep(250);
+      }
+      if (!injected) continue; // known CDP injection flake — reload once and retry
+      const dl = Date.now() + 10000;
+      while (Date.now() < dl) {
+        blockedA = countDeleteBlocks(await ylog());
+        try {
+          const rc = await send('Runtime.evaluate', { expression: 'JSON.stringify(window.__clicks || [])', returnByValue: true }, yAs);
+          aClicks = JSON.parse(rc?.result?.value || '[]');
+        } catch { /* target may still be booting */ }
+        if (blockedA > blockedBefore || aClicks.length) break;
+        await sleep(400);
+      }
+    }
+    if (yA) { try { await send('Target.closeTarget', { targetId: yA }); } catch { /* non-critical */ } }
+
+    // (B) YOLO ON: both cards are clicked (a fresh page reads the setting at boot)
+    await yeval(`new Promise((res) => chrome.storage.local.set({ yoloMode: true }, () => res('ok')))`, true);
+    const tB = await send('Target.createTarget', { url: yoloUrl });
+    const yBs = (await send('Target.attachToTarget', { targetId: tB.targetId, flatten: true })).sessionId;
+    let bClicks = [];
+    const bDeadline = Date.now() + 14000;
+    while (Date.now() < bDeadline) {
+      try {
+        const rc = await send('Runtime.evaluate', { expression: 'JSON.stringify(window.__clicks || [])', returnByValue: true }, yBs);
+        bClicks = JSON.parse(rc?.result?.value || '[]');
+      } catch { /* target may still be booting */ }
+      if (bClicks.some((c) => String(c.n) === 'y1') && bClicks.some((c) => String(c.n) === 'y2')) break;
+      await sleep(400);
+    }
+    const blockedB = countDeleteBlocks(await ylog());
+    try { await send('Target.closeTarget', { targetId: tB.targetId }); } catch { /* non-critical */ }
+
+    // restore the default so nothing downstream sees YOLO on
+    await yeval(`new Promise((res) => chrome.storage.local.set({ yoloMode: false }, () => res('ok')))`, true);
+    try { await send('Target.closeTarget', { targetId: ty.targetId }); } catch { /* non-critical */ }
+
+    const aGot = aClicks.map((c) => String(c.n));
+    const bGot = bClicks.map((c) => String(c.n));
+    Object.assign(yoloCheck, {
+      aClicks: aGot, bClicks: bGot, blockedBefore, blockedA, blockedB,
+      aDeny: aClicks.filter((c) => c.deny).length, bDeny: bClicks.filter((c) => c.deny).length,
+      ok: aGot.length === 0 && blockedA > blockedBefore &&
+          bGot.includes('y1') && bGot.includes('y2') && blockedB === blockedA &&
+          bClicks.filter((c) => c.deny).length === 0,
+    });
+  } catch (e) { yoloCheck.error = e.message; }
+  console.log('yolo-mode phase:', JSON.stringify(yoloCheck));
+
   // ---- stats.html renders (v1.3): KPI + bars + topics with the recorded data ----
   const statsPage = { ok: false };
   try {
@@ -510,7 +599,7 @@ try {
 
   const pass = missing.length === 0 && extra.length === 0 && dupes.length === 0 && denyCount === 0 && orderOk && dedupSepOk
     && forbiddenHit.length === 0 && n7count === 1 && n11count === 1 && !surface2Hit && statsCheck.ok && statsPage.ok
-    && encCheck.ok && connectorCheck.ok && locksProbe === true && dryPhase.ok === true;
+    && encCheck.ok && connectorCheck.ok && yoloCheck.ok === true && locksProbe === true && dryPhase.ok === true;
   Object.assign(results, {
     ok: pass,
     extId,
@@ -533,6 +622,7 @@ try {
     statsCheck,
     encCheck,
     connectorCheck,
+    yoloCheck,
     statsPage,
     locksProbe,
     timeline: timeline.slice(-45),

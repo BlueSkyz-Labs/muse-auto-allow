@@ -673,7 +673,7 @@ function refresh() {
   chrome.storage.local.get({ enabled: true, minDelayMs: 300, clickCount: 0, log: [], stats: null,
     followupEnabled: false, followupPrompt: PRESETS[0], followupIdleMs: 60000, followupCooldownMs: 600000,
     followupChips: null, followupPrompts: [], followupRotateIdx: 0, followupAdvancedOpen: false,
-    pauseUntil: 0, dryRun: false, allowOnceMode: false, rules: null, followupSmart: null, followupSchedule: null,
+    pauseUntil: 0, dryRun: false, yoloMode: false, allowOnceMode: false, rules: null, followupSmart: null, followupSchedule: null,
     syncSettings: false, onboarded: false, digestCounters: null, lastDigestAt: 0,
     missionEnabled: false, mission: null }, (s) => {
     $('enabled').checked = s.enabled !== false;
@@ -737,7 +737,7 @@ const clampHour = (v, d) => {
 };
 const hhmm = (ms) => { const d = new Date(Number(ms) || 0); return pad2(d.getHours()) + ':' + pad2(d.getMinutes()); };
 
-const v18 = { pauseUntil: 0, dryRun: false, allowOnce: false, syncSettings: false, onboarded: false, lastDigestAt: 0,
+const v18 = { pauseUntil: 0, dryRun: false, yoloMode: false, allowOnce: false, syncSettings: false, onboarded: false, lastDigestAt: 0,
               smart: { stuckMin: 10, errorRecovery: false },
               schedule: { enabled: false, start: 8, end: 18, onlyActiveTab: false },
               counters: {}, rules: { topics: [], keywords: [], keywordsSeeded: true } };
@@ -931,8 +931,10 @@ function renderDry() {
   if (db) db.hidden = v18.dryRun !== true;
   const chip = $('safetyChip');
   if (chip) {
-    chip.hidden = v18.dryRun !== true;
-    if (v18.dryRun === true) chip.textContent = t('dryRunChip', 'Dry-run');
+    const yolo = v18.yoloMode === true;
+    chip.hidden = !yolo && v18.dryRun !== true;
+    if (yolo) chip.textContent = t('yoloChip', 'YOLO');
+    else if (v18.dryRun === true) chip.textContent = t('dryRunChip', 'Dry-run');
   }
   renderLogTop();
 }
@@ -953,10 +955,12 @@ function setSafety(open) {
   if (safetyOpen) {
     renderRules(); renderSchedule(); renderSmart(); renderSync();
     const dr = $('dryRun'); if (dr) dr.checked = v18.dryRun === true;
+    const ym = $('yoloMode'); if (ym) ym.checked = v18.yoloMode === true;
     const ao = $('allowOnce'); if (ao) ao.checked = v18.allowOnce === true;
     const c = $('safetyClose'); if (c) c.focus();
   } else {
     kwResetDisarm();
+    yoloDisarm();
   }
   syncModalInert();
 }
@@ -1020,6 +1024,7 @@ function finishOnboard() {
 function applyV18UI(s) {
   v18.pauseUntil = Number(s.pauseUntil) || 0;
   v18.dryRun = s.dryRun === true;
+  v18.yoloMode = s.yoloMode === true;
   v18.allowOnce = s.allowOnceMode === true;
   v18.syncSettings = s.syncSettings === true;
   v18.onboarded = s.onboarded === true;
@@ -1546,6 +1551,40 @@ $('kwList').addEventListener('click', (e) => { const b = e.target.closest('[data
 $('topicInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addRule('topic'); } });
 $('kwInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addRule('kw'); } });
 $('dryRun').addEventListener('change', () => { try { chrome.storage.local.set({ dryRun: $('dryRun').checked }); } catch { /* ignore */ } });
+// v1.9.4 YOLO mode — two-step inline confirm (native dialogs are unreliable in a
+// browser-action popup; same pattern as the rotation/starter replaces). Enabling also turns
+// live clicking on (an explicit dryRun:false — the user just confirmed autonomous approvals;
+// the stored value is their recorded choice, never a delete).
+let yoloArmed = false;
+let yoloTimer = null;
+function yoloDisarm() {
+  if (yoloTimer) { clearTimeout(yoloTimer); yoloTimer = null; }
+  if (!yoloArmed) return;
+  yoloArmed = false;
+  const n = $('yoloNote');
+  if (n) n.textContent = t('yoloNote', 'Skips keyword blocks, clicks standing grants, fastest pace. Deny is never clicked; connectors stay manual.');
+}
+$('yoloMode').addEventListener('change', () => {
+  const cb = $('yoloMode');
+  if (cb.checked && !yoloArmed) {
+    cb.checked = false; // the switch flips only on the SECOND tap
+    yoloArmed = true;
+    const n = $('yoloNote');
+    if (n) n.textContent = t('yoloConfirm', 'Turn on YOLO? Cards blocked by keywords or offering only standing grants will now be clicked. Tap the switch again to confirm.');
+    if (yoloTimer) clearTimeout(yoloTimer);
+    yoloTimer = setTimeout(() => { yoloTimer = null; yoloDisarm(); }, 5000);
+    return;
+  }
+  yoloDisarm();
+  v18.yoloMode = cb.checked;
+  const patch = { yoloMode: cb.checked };
+  if (cb.checked) {
+    patch.dryRun = false;
+    v18.dryRun = false;
+    const dr = $('dryRun'); if (dr) dr.checked = false;
+  }
+  try { chrome.storage.local.set(patch); } catch { /* ignore */ }
+});
 $('allowOnce').addEventListener('change', () => { try { chrome.storage.local.set({ allowOnceMode: $('allowOnce').checked }); } catch { /* ignore */ } });
 $('syncSet').addEventListener('change', () => { try { chrome.storage.local.set({ syncSettings: $('syncSet').checked }); } catch { /* ignore */ } });
 $('schEnabled').addEventListener('change', writeSchedule);

@@ -26,7 +26,7 @@ const DIGEST_NOTIFICATION_ID = 'maa-digest';
 const DIGEST_ICON = 'icons/icon128.png';
 // The mirrored settings subset (frozen contract): syncSettings itself is deliberately NOT
 // mirrored — it is a per-device opt-in. followupRotateIdx is device-local too.
-const SYNC_SUBSET = ['enabled', 'minDelayMs', 'dryRun', 'allowOnceMode', 'rules',
+const SYNC_SUBSET = ['enabled', 'minDelayMs', 'dryRun', 'yoloMode', 'allowOnceMode', 'rules',
   'followupEnabled', 'followupPrompt', 'followupPrompts', 'followupChips', 'followupSmart', 'followupSchedule'];
 const SYNC_ITEM_MAX_BYTES = 8192; // chrome.storage.sync QUOTA_BYTES_PER_ITEM — BYTES (UTF-8), not code units
 
@@ -49,7 +49,7 @@ function ensureAlarm() {
 const SCHEMA_VERSION = 2;
 async function migrate() {
   try {
-    const raw = await chrome.storage.local.get(['schemaVersion', 'enabled', 'minDelayMs', 'dryRun']);
+    const raw = await chrome.storage.local.get(['schemaVersion', 'enabled', 'minDelayMs', 'dryRun', 'yoloMode']);
     const from = Number(raw.schemaVersion) || 0;
     if (from >= SCHEMA_VERSION) return;
     const seed = {};
@@ -67,6 +67,10 @@ async function migrate() {
     // (schemaVersion 0/1) both land here, both get dryRun:true, and both also see the onboarding
     // wizard once (pre-v1.8 never stored `onboarded`), so the first run is coherent in both cases.
     if (!('dryRun' in raw)) seed.dryRun = true;
+    // v1.9.4 — YOLO mode: ABSENT only — the shipped default is false (safe), and an explicit
+    // stored choice is never overwritten. A fresh install records the explicit false so the
+    // popup toggle and the engine agree from the first run.
+    if (!('yoloMode' in raw)) seed.yoloMode = false;
     // v0 -> v2: log/counter/aggregate shapes are read defensively everywhere; there is
     // nothing to transform. Future steps: add one `if (from < N)` block per version.
     // v1.8.0 keys (pauseUntil/rules/followupSmart/followupSchedule/syncSettings) are

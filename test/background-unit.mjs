@@ -8,7 +8,7 @@
  *
  * Checks:
  *   M1-M3  manifest: notifications permission, the two commands (Alt+Shift+P / Alt+Shift+F),
- *          version 1.8.0 (release freeze) + MV3 + __MSG_ indirection
+ *          version matches the CHANGELOG top section (release freeze) + MV3 + __MSG_ indirection
  *   P1-P2  toggle-pause command: arms pauseUntil ~15 min; clears an active pause
  *   B1-B2  badge: paused => '||' (grey); otherwise today's count ('' when zero)
  *   A1-A2  one-shot pause-expiry alarm armed at pauseUntil, cleared when not paused
@@ -51,9 +51,19 @@ check('M2 manifest. commands: toggle-pause (Alt+Shift+P) + send-followup (Alt+Sh
   !!(cmds['toggle-pause'] && cmds['toggle-pause'].suggested_key && cmds['toggle-pause'].suggested_key.default === 'Alt+Shift+P' &&
      cmds['send-followup'] && cmds['send-followup'].suggested_key && cmds['send-followup'].suggested_key.default === 'Alt+Shift+F'),
   { commands: cmds });
-check('M3 manifest. version 1.9.2 (release freeze) + MV3 + __MSG_ name',
-  man.version === '1.9.2' && man.manifest_version === 3 && man.name === '__MSG_extName__',
-  { version: man.version, mv: man.manifest_version });
+// v1.9.4: the freeze check compares against the CHANGELOG's top section instead of a hardcoded
+// string — the previous literal ('1.9.2') silently went stale through the v1.9.3 bump, and a
+// release whose manifest and CHANGELOG disagree should never read as green.
+const changelogTop = (() => {
+  try {
+    const md = fs.readFileSync(path.join(ROOT, 'CHANGELOG.md'), 'utf8');
+    const m = md.match(/^##\s+(\d+\.\d+\.\d+)/m);
+    return m ? m[1] : null;
+  } catch { return null; }
+})();
+check('M3 manifest. version matches the CHANGELOG top section (release freeze) + MV3 + __MSG_ name',
+  /^\d+\.\d+\.\d+$/.test(man.version) && man.version === changelogTop && man.manifest_version === 3 && man.name === '__MSG_extName__',
+  { version: man.version, changelogTop, mv: man.manifest_version });
 
 // ---------- sandbox: chrome stubs around the REAL background.js ----------
 function makeEnv() {
@@ -287,13 +297,13 @@ async function main() {
   state.changeListeners.forEach((fn) => fn({ enabled: { oldValue: false, newValue: true } }, 'local'));
   await tick();
   check('S3 sync mirror. syncSettings=false => no write-through', Object.keys(state.syncStore).length === 0, { syncStore: { ...state.syncStore } });
-  resetStore({ syncSettings: true, enabled: true, minDelayMs: 500, rules: { allowTopics: ['x'], blockKeywords: [] }, followupEnabled: true, followupRotateIdx: 3, log: [1, 2], clickCount: 9, schemaVersion: 2 });
+  resetStore({ syncSettings: true, enabled: true, minDelayMs: 500, yoloMode: true, rules: { allowTopics: ['x'], blockKeywords: [] }, followupEnabled: true, followupRotateIdx: 3, log: [1, 2], clickCount: 9, schemaVersion: 2 });
   resetSync({});
   state.changeListeners.forEach((fn) => fn({ syncSettings: { oldValue: false, newValue: true } }, 'local'));
   await tick();
   const snap = { ...state.syncStore };
   check('S4 sync mirror. enabling syncSettings pushes a snapshot of PRESENT subset keys only (no rotateIdx/log/clickCount/schemaVersion)',
-    snap.enabled === true && snap.minDelayMs === 500 && JSON.stringify(snap.rules) === JSON.stringify({ allowTopics: ['x'], blockKeywords: [] }) && snap.followupEnabled === true &&
+    snap.enabled === true && snap.minDelayMs === 500 && snap.yoloMode === true && JSON.stringify(snap.rules) === JSON.stringify({ allowTopics: ['x'], blockKeywords: [] }) && snap.followupEnabled === true &&
     !('followupRotateIdx' in snap) && !('log' in snap) && !('clickCount' in snap) && !('schemaVersion' in snap) && !('syncSettings' in snap),
     { snap });
   // 8KB per-item quota: an oversized item is skipped (warned), the rest still syncs
@@ -373,7 +383,13 @@ async function main() {
   resetStore({ enabled: false });
   await T.migrate();
   check('G1 migrate. seeds schemaVersion without touching explicit values',
-    state.store.schemaVersion === 2 && state.store.enabled === false && state.store.minDelayMs === 300,
+    state.store.schemaVersion === 2 && state.store.enabled === false && state.store.minDelayMs === 300 && state.store.yoloMode === false,
+    { store: { ...state.store } });
+  // v1.9.4: the yoloMode seed is ABSENT-only — an explicit true is never overwritten
+  resetStore({ yoloMode: true });
+  await T.migrate();
+  check('G1b migrate. an explicit yoloMode:true survives the seed (absent-only rule)',
+    state.store.yoloMode === true && state.store.dryRun === true && state.store.schemaVersion === 2,
     { store: { ...state.store } });
 
   // ---------- report ----------

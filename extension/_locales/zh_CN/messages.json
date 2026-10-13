@@ -293,6 +293,18 @@
   "dryRunChip": {
     "message": "试运行"
   },
+  "yoloTitle": {
+    "message": "YOLO — 全部批准"
+  },
+  "yoloNote": {
+    "message": "跳过关键词拦截，点击长期授权，速度最快。绝不点击 Deny；连接器保持手动。"
+  },
+  "yoloConfirm": {
+    "message": "开启 YOLO？被关键词拦截或仅提供长期授权的卡片将被自动点击。再次拨动开关以确认。"
+  },
+  "yoloChip": {
+    "message": "YOLO"
+  },
   "allowOnceTitle": {
     "message": "优先“仅允许一次”"
   },

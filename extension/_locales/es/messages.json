@@ -293,6 +293,18 @@
   "dryRunChip": {
     "message": "Prueba"
   },
+  "yoloTitle": {
+    "message": "YOLO — aprobar todo"
+  },
+  "yoloNote": {
+    "message": "Omite el bloqueo por palabras clave, pulsa concesiones permanentes, ritmo máximo. Nunca pulsa Deny; los conectores siguen siendo manuales."
+  },
+  "yoloConfirm": {
+    "message": "¿Activar YOLO? Las tarjetas bloqueadas por palabras clave o con solo concesión permanente se pulsarán automáticamente. Toca el interruptor otra vez para confirmar."
+  },
+  "yoloChip": {
+    "message": "YOLO"
+  },
   "allowOnceTitle": {
     "message": "Preferir «Permitir una vez»"
   },

@@ -293,6 +293,18 @@
   "dryRunChip": {
     "message": "Dry-run"
   },
+  "yoloTitle": {
+    "message": "YOLO — approve everything"
+  },
+  "yoloNote": {
+    "message": "Skips keyword blocks, clicks standing grants, fastest pace. Deny is never clicked; connectors stay manual."
+  },
+  "yoloConfirm": {
+    "message": "Turn on YOLO? Cards blocked by keywords or offering only standing grants will now be clicked. Tap the switch again to confirm."
+  },
+  "yoloChip": {
+    "message": "YOLO"
+  },
   "allowOnceTitle": {
     "message": "Prefer \"Allow once\""
   },

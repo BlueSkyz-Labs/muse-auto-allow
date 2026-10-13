@@ -86,7 +86,8 @@ timestamp (last 50) — and shown in the popup.
   newsletter/subscribe/marketing prompts are skipped; approval wording can never override the
   consent filter.
 - **No silent scope escalation** — standing grants ("Always allow", "Allow for this site/task")
-  are deliberately not auto-clicked.
+  are deliberately not auto-clicked (the opt-in YOLO mode below is the one explicit exception;
+  it ships off).
 - **One click per element** (WeakSet), a 5-second re-render dedup, and per-text cooldowns — no
   pathological loops.
 - **Hard rate caps** — at most 30 Allow clicks per minute; expand / open-panel clicks are capped
@@ -94,6 +95,9 @@ timestamp (last 50) — and shown in the popup.
 - **Fail closed** — unknown or ambiguous state means do nothing.
 - **muse.ai only** — a hard hostname guard backs the manifest's muse.ai-only matches; the
   extension never runs anywhere else.
+- **YOLO mode — explicit opt-in, off by default** — for power users: bypasses the keyword
+  block-list, clicks standing grants, caps pacing at 100 ms. Deny is still never clicked,
+  connector surfaces stay hard-blocked, and the consent filters stay in force.
 
 ### Auto follow-up — keep Muse working (opt-in, default off)
 

@@ -68,6 +68,10 @@
 //  - allowOnceMode: recognizes 'Allow once only' and prefers one-shot options ('Allow once' /
 //    'Allow once only' / 'Allow this time') over plain and standing-grant ('Allow always')
 //    options in the same pair; a pair with a single recognized option clicks as before.
+//  - yoloMode (v1.9.4, explicit opt-in): blockKeywords/allowTopics are bypassed, standing-grant
+//    labels ("Always allow" / "Allow for this site/task") become clickable, and pacing is capped
+//    at 100 ms. Never-Deny, the connector hard-block and the consent filters stay in force.
+//    Default false; the popup writes it behind a two-step confirm.
 //  - followupSmart.stuckMin: status 'working' with NO DOM mutation for stuckMin minutes =>
 //    the stuck-recovery prompt is sent (0 = off; default 10).
 //  - followupSmart.errorRecovery: a visible error surface => the recovery prompt is sent
@@ -94,7 +98,11 @@
   // v1.8.0 allow-once variant: exact 'Allow once' / 'Allow once only' (decoration tolerated).
   // 'Allow once' already matches ALLOW_RE; 'Allow once only' is recognized only while
   // allowOnceMode is on — the mode is what asks for the narrowest one-shot option.
-  const isAllowText = (t) => ALLOW_RE.test(stripDecor(t)) || (v18.allowOnceMode && /^\s*allow once only\s*$/i.test(stripDecor(t)));
+  // v1.9.4 YOLO: standing-grant labels become clickable positive options — an explicit opt-in
+  // ("Always allow" / "Allow for this site/task"). Default behaviour is unchanged: without
+  // yoloMode these labels are never recognized, so the granted scope can never silently escalate.
+  const STANDING_RE = /^\s*(always\s+(allow|approve)|(allow|approve)\s+for\s+this\s+(site|task))\s*$/i;
+  const isAllowText = (t) => ALLOW_RE.test(stripDecor(t)) || (v18.allowOnceMode && /^\s*allow once only\s*$/i.test(stripDecor(t))) || (v18.yoloMode && STANDING_RE.test(stripDecor(t)));
   const DENY_RE = /^\s*(deny|reject|decline)(\s+(once|this time))?\s*$/i;
   const CARD_SEL = '[data-testid="hatch-inline-approval-card"]';
   const SURFACE_SEL = '[data-testid="hatch-inline-approval-card"][data-hatch-background-approval-surface="true"]';
@@ -131,6 +139,7 @@
   // coalesces them into one sweep.
   const OBSERVER_CARD_MS = 0;
   const OBSERVER_GENERIC_MS = 120;
+  const YOLO_MIN_DELAY_MS = 100; // v1.9.4 YOLO: pacing capped at 100 ms (never slower than the user's setting)
   const ALLOW_RATE_MAX = 30;
   const AUX_RATE_MAX = 30;
   const AUX_RATE_WINDOW_MS = 60000;
@@ -154,6 +163,7 @@
   const v18 = {
     pauseUntil: 0,          // epoch ms; now < pauseUntil => everything halted
     dryRun: false,          // detect + log, never click/send
+    yoloMode: false,        // v1.9.4: auto-approve everything — bypass block rules, click standing grants, fastest pace
     allowOnceMode: false,   // prefer one-shot allow options over standing grants
     allowTopics: [],        // non-empty => click only when extractTopic() matches
     blockKeywords: BLOCK_SEED.map((k) => k.toLowerCase()),
@@ -168,7 +178,7 @@
   const allowDoneCards = new WeakSet();
   const blockedFps = new Map();    // blocked fingerprint -> ts (log-spam guard)
   let lastDomActivityAt = Date.now(); // stuck detection: timestamp of the last DOM mutation
-  let lastFlagPause = null, lastFlagDry = null; // publishFlags dedup (never re-set unchanged)
+  let lastFlagPause = null, lastFlagDry = null, lastFlagYolo = null; // publishFlags dedup (never re-set unchanged)
   let pendingTimer = null;
   let pendingFast = false; // the pending sweep is the card-bearing (immediate) kind
   let obs = null;
@@ -353,6 +363,7 @@
   // card text OR the extracted context; 'topic' when a non-empty allowTopics list does not
   // exactly (case-insensitively) match extractTopic(). null => no rule blocks the click.
   function blockReasonFor(cardText, ctx) {
+    if (v18.yoloMode) return null; // v1.9.4 YOLO: block rules are bypassed by explicit opt-in
     const kw = keywordIn(String(cardText || '') + ' ' + String(ctx || ''));
     if (kw) return 'keyword:' + kw;
     if (v18.allowTopics.length) {
@@ -394,6 +405,7 @@
     if (!s || typeof s !== 'object') return;
     if ('pauseUntil' in s) { const n = Number(s.pauseUntil); v18.pauseUntil = Number.isFinite(n) && n > 0 ? n : 0; }
     if ('dryRun' in s) v18.dryRun = s.dryRun === true;
+    if ('yoloMode' in s) v18.yoloMode = s.yoloMode === true;
     if ('allowOnceMode' in s) v18.allowOnceMode = s.allowOnceMode === true;
     if ('rules' in s) {
       const rules = asObj(s.rules);
@@ -424,7 +436,7 @@
   // fail-closed to the default, never to a stale in-memory value. Observed live: after a
   // storage.local.clear() the engine kept a closed schedule and refused every send.
   const v18Defaults = {
-    pauseUntil: v18.pauseUntil, dryRun: v18.dryRun, allowOnceMode: v18.allowOnceMode,
+    pauseUntil: v18.pauseUntil, dryRun: v18.dryRun, yoloMode: v18.yoloMode, allowOnceMode: v18.allowOnceMode,
     allowTopics: v18.allowTopics.slice(), blockKeywords: v18.blockKeywords.slice(),
     smart: Object.assign({}, v18.smart), schedule: Object.assign({}, v18.schedule),
   };
@@ -432,6 +444,7 @@
     if (k === 'pauseUntil') v18.pauseUntil = v18Defaults.pauseUntil;
     else if (k === 'dryRun') v18.dryRun = v18Defaults.dryRun;
     else if (k === 'allowOnceMode') v18.allowOnceMode = v18Defaults.allowOnceMode;
+    else if (k === 'yoloMode') v18.yoloMode = v18Defaults.yoloMode;
     else if (k === 'rules') { v18.allowTopics = v18Defaults.allowTopics.slice(); v18.blockKeywords = v18Defaults.blockKeywords.slice(); }
     else if (k === 'followupSmart') v18.smart = Object.assign({}, v18Defaults.smart);
     else if (k === 'followupSchedule') v18.schedule = Object.assign({}, v18Defaults.schedule);
@@ -443,9 +456,11 @@
     try {
       const p = paused() ? '1' : '0';
       const d = v18.dryRun ? '1' : '0';
+      const y = v18.yoloMode ? '1' : '0';
       const el = document.documentElement;
       if (p !== lastFlagPause) { lastFlagPause = p; el.setAttribute('data-muse-pause', p); }
       if (d !== lastFlagDry) { lastFlagDry = d; el.setAttribute('data-muse-dryrun', d); }
+      if (y !== lastFlagYolo) { lastFlagYolo = y; el.setAttribute('data-muse-yolo', y); }
     } catch { /* ignore */ }
   }
   // Digest counters (chrome.storage.local.digestCounters) — the background service worker
@@ -1451,7 +1466,7 @@
           sendResponse({ state: followup.state, lastSentAt: followup.lastSentAt || null, enabled: followup.enabled,
                          rotateIdx: rn ? followup.rotateIdx % rn : 0, rotateCount: rn,
                          // v1.8.0 engine state (observability for the popup/tests)
-                         paused: paused(), dryRun: v18.dryRun, allowOnceMode: v18.allowOnceMode,
+                         paused: paused(), dryRun: v18.dryRun, yoloMode: v18.yoloMode, allowOnceMode: v18.allowOnceMode,
                          scheduleAllowed: scheduleAllows(), stuckMin: v18.smart.stuckMin,
                          errorRecovery: v18.smart.errorRecovery, domIdleMs: Date.now() - lastDomActivityAt,
                          // applied-config echoes (what the engine has actually taken in)
@@ -1494,11 +1509,12 @@
     if (!state.enabled) return;
     if (paused()) return; // v1.8.0 pause: every click path (A–E) is halted until pauseUntil passes
     const now = Date.now();
-    if (now - state.lastClickAt < state.minDelayMs) {
+    const minDelay = v18.yoloMode ? Math.min(state.minDelayMs, YOLO_MIN_DELAY_MS) : state.minDelayMs;
+    if (now - state.lastClickAt < minDelay) {
       // Keep the queue moving at the configured pace instead of waiting for the next
       // 1s heartbeat (observed: observer debounce fires once, is blocked by minDelay,
       // and the queue crawls at 1 click/s — diagnosed 2026-10-08).
-      scheduleSweep('delay', state.minDelayMs - (now - state.lastClickAt) + 25);
+      scheduleSweep('delay', minDelay - (now - state.lastClickAt) + 25);
       return;
     }
 
@@ -1568,7 +1584,7 @@
     chrome.storage.local.get(FOLLOWUP_DEFAULTS, (f) => { applyFollowupSettings(f); followupTick(); });
     // v1.8.0 frozen settings (pause / dry-run / rules / smart follow-up / schedule)
     // + v1.9.0 mission settings (missionEnabled / mission{id,step,cycles,startedAt,lastSentAt})
-    chrome.storage.local.get({ pauseUntil: 0, dryRun: false, allowOnceMode: false, rules: {}, followupSmart: {}, followupSchedule: {}, missionEnabled: false, mission: null },
+    chrome.storage.local.get({ pauseUntil: 0, dryRun: false, yoloMode: false, allowOnceMode: false, rules: {}, followupSmart: {}, followupSchedule: {}, missionEnabled: false, mission: null },
       (s) => { applyV18Settings(s); applyMissionSettings(s); publishFlags(); v18Ready = true; sweep('init'); });
     chrome.storage.onChanged.addListener((ch) => {
       // A key REMOVED from storage (newValue === undefined) resets to that key's shipped DEFAULT —
@@ -1602,7 +1618,7 @@
       }
       const vpatch = {};
       let vch = false;
-      for (const k of ['pauseUntil', 'dryRun', 'allowOnceMode', 'rules', 'followupSmart', 'followupSchedule']) {
+      for (const k of ['pauseUntil', 'dryRun', 'yoloMode', 'allowOnceMode', 'rules', 'followupSmart', 'followupSchedule']) {
         if (!ch[k]) continue;
         vch = true;
         if (removed(ch[k])) resetV18Key(k); // a deleted key falls back to that key's default, never stale
@@ -1663,7 +1679,7 @@
   window.__museAutoAllow = {
     get state() { return { ...state }; },
     get v18() {
-      return { paused: paused(), dryRun: v18.dryRun, allowOnceMode: v18.allowOnceMode, allowTopics: [...v18.allowTopics],
+      return { paused: paused(), dryRun: v18.dryRun, yoloMode: v18.yoloMode, allowOnceMode: v18.allowOnceMode, allowTopics: [...v18.allowTopics],
                blockKeywords: [...v18.blockKeywords], scheduleAllowed: scheduleAllows(), schedule: { ...v18.schedule },
                smart: { ...v18.smart }, domIdleMs: Date.now() - lastDomActivityAt };
     },
