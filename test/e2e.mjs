@@ -221,6 +221,26 @@ try {
     };
     const readLog = async () => JSON.parse(await peval(`new Promise((res) => chrome.storage.local.get(['log'], (s) => res(JSON.stringify(s.log || []))))`, true) || '[]');
 
+    // Extensions.loadUnpacked can resolve before Chrome has completed initialization of
+    // the new extension document. Do not interpret an uninitialized page context as an
+    // engine/permission failure. Wait for the actual extension API WITHOUT disabling the
+    // first-install dry-run assertion or writing any storage keys here.
+    dryStage = 'popup extension API ready';
+    const apiDeadline = Date.now() + 15000;
+    let apiReady = false;
+    while (Date.now() < apiDeadline) {
+      try {
+        const probe = await send('Runtime.evaluate', {
+          expression: "Boolean(globalThis.chrome?.storage?.local && typeof chrome.storage.local.get === 'function')",
+          returnByValue: true,
+        }, sp);
+        if (probe?.result?.value === true) { apiReady = true; break; }
+      } catch { /* target may be navigating, retry within bounded deadline */ }
+      await sleep(200);
+    }
+    dryPhase.extensionApiReady = apiReady;
+    if (!apiReady) throw new Error('Extension popup API was not ready within 15s');
+
     // (1) the installer migration + the rendered logging-only state
     let seeded = {};
     const seedDeadline = Date.now() + 10000;
