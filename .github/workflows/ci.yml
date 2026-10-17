@@ -4,7 +4,7 @@
 #        JS syntax, JSON validity, i18n key parity (6 locales), no remote-code /
 #        network primitives, manifest hygiene. Runs on ubuntu-latest: the gate is
 #        OS-independent (Node stdlib only) and ubuntu is the fastest image.
-# e2e  : real-Chrome runtime verification — test/e2e.mjs + test/followup-e2e.mjs.
+# e2e  : real-Chrome approval/follow-up, six-locale popup rendering and experience assertions.
 #
 # Why e2e runs on windows-latest (verified against test/e2e.mjs, 2026-10-09):
 #   Both harnesses launch Chrome through PowerShell `Start-Process`
@@ -79,6 +79,10 @@ jobs:
         run: node scripts/lint.mjs
       - name: YOLO / Dry-run trust-state unit gate
         run: node test/yolo-ux-unit.mjs
+      - name: Pause, digest and settings sync contract
+        run: node test/background-unit.mjs
+      - name: Backup import and privacy/safety contract
+        run: node test/import-security.mjs
 
   e2e:
     name: e2e
@@ -110,6 +114,10 @@ jobs:
         run: node test/e2e.mjs
       - name: e2e — follow-up engine (real Chrome)
         run: node test/followup-e2e.mjs
+      - name: e2e — language switching and rendered popup geometry (six locales)
+        run: node test/lang-switch-e2e.mjs
+      - name: e2e — experience safety, modal accessibility and error honesty
+        run: node scripts/bench/experience.mjs --only=assert
 
 # -------------------------------------------------------------------------------------
 # ubuntu recipe — enable (replace the `e2e` job above) once the harness has a POSIX
