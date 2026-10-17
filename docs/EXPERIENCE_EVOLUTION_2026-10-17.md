@@ -51,4 +51,6 @@ Targets: 10 God-tier + 10 Tier S+. At this baseline only **5 God-tier and 6 Tier
 - E4: end-to-end first-run Dry-run, explicit live consent, YOLO double-confirm, back to Dry-run, restoration of saved rules, import/sync and failure recovery.
 - E5: deployed Chrome Web Store version and exact artifact SHA; NOT VERIFIED without matching evidence.
 
-**Rollback:** revert focused PR. No migration is required. The main CI failure is pre-existing; merge/release are blocked until relevant required checks pass and receive independent review.
+**CI remediation update (2026-10-17):** [PR #4](https://github.com/BlueSkyz-Labs/muse-auto-allow/pull/4) merged to `main@30d60c4cf31ab9b9e849f570b4db22aeb42fd46d`, changing **only the test harness** to await the extension API on cold Chrome startup. Its [CI run 38993677452](https://github.com/BlueSkyz-Labs/muse-auto-allow/actions/runs/38993677452) PASS: lint, Chrome approval E2E (dry-run, YOLO, 13 approvals, 0 deny/forbidden), and follow-up E2E. This does **not** validate this UX PR's rendered changes yet; new PR-HEAD tests are required. Issue #2 may close once the merged main checks are re-confirmed.
+
+**Rollback:** revert focused UX PR. No data migration is required. UX PR must pass its own CI and independent rendered UX review before merge/release claims.
