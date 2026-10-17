@@ -684,7 +684,7 @@
       </div>
       <div class="rgroup">
         <label class="sw"><input type="checkbox" id="yoloMode"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="yoloTitle">YOLO — approve everything</span></label>
-        <div class="rnote" id="yoloNote" data-i18n="yoloNote">Skips keyword blocks, clicks standing grants, fastest pace. Deny is never clicked; connectors stay manual.</div>
+        <div class="rnote" id="yoloNote" role="status" aria-live="polite" data-i18n="yoloNote">Skips keyword blocks, clicks standing grants, fastest pace. Deny is never clicked; connectors stay manual.</div>
       </div>
       <div class="rgroup">
         <label class="sw"><input type="checkbox" id="allowOnce"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="allowOnceTitle">Prefer "Allow once"</span></label>
@@ -692,14 +692,14 @@
       </div>
       <div class="rgroup">
         <div class="rlabel" data-i18n="topicsLabel">Allowed topics</div>
-        <div class="rnote" data-i18n="topicsNote">When set, only cards whose topic matches exactly are clicked. Leave empty to allow every topic.</div>
+        <div class="rnote" id="topicsNote" data-i18n="topicsNote">When set, only cards whose topic matches exactly are clicked. Leave empty to allow every topic.</div>
         <div class="rlist" id="topicsList"></div>
         <div class="radd"><input class="rin" id="topicInput" maxlength="64" placeholder="Add a topic…" data-i18n-ph="topicsPlaceholder">
           <button type="button" class="rbtn" id="topicAdd" data-i18n="rulesAdd">Add</button></div>
       </div>
       <div class="rgroup">
         <div class="rlabel" data-i18n="keywordsLabel">Block keywords</div>
-        <div class="rnote" data-i18n="keywordsNote">A card containing any of these words is never clicked — it is logged as blocked instead.</div>
+        <div class="rnote" id="keywordsNote" data-i18n="keywordsNote">A card containing any of these words is never clicked — it is logged as blocked instead.</div>
         <div class="rlist" id="kwList"></div>
         <div class="radd"><input class="rin" id="kwInput" maxlength="64" placeholder="Add a keyword…" data-i18n-ph="keywordsPlaceholder">
           <button type="button" class="rbtn" id="kwAdd" data-i18n="rulesAdd">Add</button>
