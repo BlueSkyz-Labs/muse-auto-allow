@@ -305,6 +305,12 @@
   "yoloChip": {
     "message": "YOLO"
   },
+  "rulesIgnoredYolo": {
+    "message": "YOLO đang bật — các quy tắc chủ đề và từ khóa vẫn được lưu nhưng không có hiệu lực. Tắt YOLO để áp dụng lại."
+  },
+  "yoloDormant": {
+    "message": "Đã cấu hình YOLO nhưng đang bật Chạy thử: không tự động bấm chấp thuận. Tắt Chạy thử để YOLO hoạt động thực tế."
+  },
   "allowOnceTitle": {
     "message": "Ưu tiên \"Cho phép một lần\""
   },
