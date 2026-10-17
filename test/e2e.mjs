@@ -209,11 +209,14 @@ try {
   // Falsification: revert the migrate() seed in a mutated copy (MAA_EXT_DIR) -> these
   // assertions go RED (no dryRun:true in storage and the card is clicked live); restore -> GREEN.
   const dryPhase = { ok: false };
+  let dryStage = 'start';
   try {
     const tp = await send('Target.createTarget', { url: `chrome-extension://${extId}/popup.html` });
     const { sessionId: sp } = await send('Target.attachToTarget', { targetId: tp.targetId, flatten: true });
     const peval = async (expression, awaitPromise) => {
       const r = await send('Runtime.evaluate', { expression, returnByValue: true, ...(awaitPromise ? { awaitPromise: true } : {}) }, sp);
+      // Diagnostic-only: do not silently coerce a CDP exception into a success-shaped value.
+      if (r?.exceptionDetails) throw new Error('CDP exception: ' + String(r.exceptionDetails.text || 'unknown'));
       return r?.result?.value;
     };
     const readLog = async () => JSON.parse(await peval(`new Promise((res) => chrome.storage.local.get(['log'], (s) => res(JSON.stringify(s.log || []))))`, true) || '[]');
@@ -222,12 +225,16 @@ try {
     let seeded = {};
     const seedDeadline = Date.now() + 10000;
     while (Date.now() < seedDeadline) {
+      dryStage = 'seed storage read';
       const raw = await peval(`new Promise((res) => chrome.storage.local.get(['dryRun', 'schemaVersion'], (s) => res(JSON.stringify(s))))`, true);
+      dryPhase.seedValueType = typeof raw;
+      dryPhase.seedPreview = typeof raw === 'string' ? raw.slice(0,160) : raw === null ? 'null' : Array.isArray(raw) ? 'array' : typeof raw === 'object' ? Object.keys(raw).slice(0,8) : String(raw).slice(0,160);
       seeded = JSON.parse(raw || '{}');
       if (seeded.dryRun === true) break;
       await sleep(250);
     }
     dryPhase.installerSeed = seeded; // fresh install => { dryRun: true, schemaVersion: 2 }
+    dryStage = 'popup safety snapshot';
     dryPhase.popup = JSON.parse(await peval(`(() => {
       const band = document.getElementById('dryBand');
       document.getElementById('safetyBtn').click();
@@ -238,6 +245,7 @@ try {
     // (2) the onboarding consent step (step 2 of 3)
     await peval(`document.getElementById('obPrimary').click()`); // step 1 -> step 2 (dry-run/consent)
     await sleep(250);
+    dryStage = 'onboarding consent snapshot';
     dryPhase.onboarding = JSON.parse(await peval(`(() => JSON.stringify({
       onboardShown: !document.getElementById('onboard').hidden,
       title: document.getElementById('obTitle').textContent,
@@ -249,6 +257,7 @@ try {
       primary: document.getElementById('obPrimary').textContent,
     }))()`) || '{}');
 
+    dryStage = 'dry-run real fixture';
     // (3) drive a real approval card WHILE still logging-only
     let dryTid = null;
     let drySid = null;
@@ -297,6 +306,7 @@ try {
     // (4) the one-tap 'Turn on live clicking' — an EXPLICIT stored choice
     await peval(`document.getElementById('obPrimary').click()`);
     await sleep(400);
+    dryStage = 'post-consent storage read';
     const afterTap = JSON.parse(await peval(`new Promise((res) => chrome.storage.local.get(['dryRun'], (s) => res(JSON.stringify({ dryRun: s.dryRun, step: document.getElementById('obStep').textContent }))))`, true) || '{}');
     dryPhase.afterOneTap = afterTap;
     await peval(`document.getElementById('obSkip').click()`); // the wizard stays skippable
@@ -309,7 +319,7 @@ try {
       dryPhase.onboarding.consentVisible === true && dryPhase.onboarding.onboardShown === true &&
       injected === true && !!dryEntry && dryEntry.dryRun === true && dryClicks.length === 0 && leak === null &&
       afterTap.dryRun === false;
-  } catch (e) { dryPhase.error = e.message; }
+  } catch (e) { dryPhase.errorStage = dryStage; dryPhase.error = e.message; }
   console.log('dry-run pre-phase:', JSON.stringify(dryPhase));
   if (!dryPhase.ok && (dryPhase.leak || (dryPhase.clicksWhileDry || []).length)) {
     console.error('dry-run pre-phase FAILED: a LIVE click leaked while dryRun was stored true. ' +
