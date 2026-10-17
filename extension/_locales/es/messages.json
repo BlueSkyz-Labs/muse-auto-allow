@@ -305,6 +305,12 @@
   "yoloChip": {
     "message": "YOLO"
   },
+  "rulesIgnoredYolo": {
+    "message": "Con YOLO activado, las reglas de temas y palabras clave se guardan, pero no se aplican. Desactiva YOLO para aplicarlas."
+  },
+  "yoloDormant": {
+    "message": "YOLO está configurado, pero la prueba está activada: no se pulsa ninguna aprobación. Desactiva la prueba para reanudar aprobaciones reales."
+  },
   "allowOnceTitle": {
     "message": "Preferir «Permitir una vez»"
   },
