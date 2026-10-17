@@ -742,6 +742,9 @@ const v18 = { pauseUntil: 0, dryRun: false, yoloMode: false, allowOnce: false, s
               schedule: { enabled: false, start: 8, end: 18, onlyActiveTab: false },
               counters: {}, rules: { topics: [], keywords: [], keywordsSeeded: true } };
 let safetyOpen = false;
+// Keep the confirmation visible through unrelated storage refreshes.
+let yoloArmed = false;
+let yoloTimer = null;
 const pausedNow = () => Date.now() < (Number(v18.pauseUntil) || 0);
 
 // ---- v1.9.1 — modal background isolation ---------------------------------------------
@@ -809,6 +812,13 @@ function ruleChip(s, kind, i) {
     esc(t('rulesRemove', 'Remove') + ': ' + s) + '">&#10005;</button></span>';
 }
 function renderRules() {
+  // An active YOLO bypasses BOTH allowTopics and blockKeywords. Never show their
+  // normal "only / never" guarantees while the engine ignores those restrictions.
+  const ignored = v18.yoloMode === true;
+  const ignoredCopy = t('rulesIgnoredYolo', 'YOLO is on — saved topic and keyword rules are not enforced. Turn off YOLO to apply these rules.');
+  const tn = $('topicsNote'), kn = $('keywordsNote');
+  if (tn) tn.textContent = ignored ? ignoredCopy : t('topicsNote', 'When set, only cards whose topic matches exactly are clicked. Leave empty to allow every topic.');
+  if (kn) kn.textContent = ignored ? ignoredCopy : t('keywordsNote', 'A card containing any of these words is never clicked — it is logged as blocked instead.');
   const tl = $('topicsList');
   if (tl) {
     tl.innerHTML = v18.rules.topics.length
@@ -926,6 +936,13 @@ function renderDigest() {
   }
   renderLogTop();
 }
+function renderYoloNote() {
+  const note = $('yoloNote');
+  if (!note || yoloArmed) return; // never hide an armed two-step confirmation
+  note.textContent = v18.yoloMode && v18.dryRun
+    ? t('yoloDormant', 'YOLO is configured but Dry-run is on: no approvals are clicked. Turn off Dry-run to resume live YOLO approvals.')
+    : t('yoloNote', 'Skips keyword blocks, clicks standing grants, fastest pace. Deny is never clicked; connectors stay manual.');
+}
 function renderDry() {
   const db = $('dryBand');
   if (db) db.hidden = v18.dryRun !== true;
@@ -933,9 +950,11 @@ function renderDry() {
   if (chip) {
     const yolo = v18.yoloMode === true;
     chip.hidden = !yolo && v18.dryRun !== true;
-    if (yolo) chip.textContent = t('yoloChip', 'YOLO');
-    else if (v18.dryRun === true) chip.textContent = t('dryRunChip', 'Dry-run');
+    // Dry-run is the effective no-click state even when YOLO remains configured.
+    if (v18.dryRun === true) chip.textContent = t('dryRunChip', 'Dry-run');
+    else if (yolo) chip.textContent = t('yoloChip', 'YOLO');
   }
+  renderYoloNote();
   renderLogTop();
 }
 function renderLogTop() {
@@ -1048,7 +1067,14 @@ function applyV18UI(s) {
   renderSmart();
   renderSync();
   renderOnboard();
-  if (safetyOpen) renderRules();
+  if (safetyOpen) {
+    // Sync/import/another popup can change settings while this sheet is open.
+    // Render the persisted truth instead of leaving stale controls on-screen.
+    const dr = $('dryRun'); if (dr) dr.checked = v18.dryRun;
+    const ym = $('yoloMode'); if (ym && !yoloArmed) ym.checked = v18.yoloMode;
+    const ao = $('allowOnce'); if (ao) ao.checked = v18.allowOnce;
+    renderRules();
+  }
 }
 
 // ======================================================================
@@ -1555,14 +1581,11 @@ $('dryRun').addEventListener('change', () => { try { chrome.storage.local.set({ 
 // browser-action popup; same pattern as the rotation/starter replaces). Enabling also turns
 // live clicking on (an explicit dryRun:false — the user just confirmed autonomous approvals;
 // the stored value is their recorded choice, never a delete).
-let yoloArmed = false;
-let yoloTimer = null;
 function yoloDisarm() {
   if (yoloTimer) { clearTimeout(yoloTimer); yoloTimer = null; }
   if (!yoloArmed) return;
   yoloArmed = false;
-  const n = $('yoloNote');
-  if (n) n.textContent = t('yoloNote', 'Skips keyword blocks, clicks standing grants, fastest pace. Deny is never clicked; connectors stay manual.');
+  renderYoloNote();
 }
 $('yoloMode').addEventListener('change', () => {
   const cb = $('yoloMode');
