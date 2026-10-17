@@ -77,6 +77,8 @@ jobs:
           # (no package.json, no lockfile), so there is nothing to cache.
       - name: Zero-dependency lint gate
         run: node scripts/lint.mjs
+      - name: YOLO / Dry-run trust-state unit gate
+        run: node test/yolo-ux-unit.mjs
 
   e2e:
     name: e2e
