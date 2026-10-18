@@ -17,13 +17,14 @@ files.example.com) — never real projects or personal data.
 | Listing copy (6 locales) | `store/LISTING.md` | — | title / short / full description per locale |
 | Permission justifications | `store/LISTING.md` §5 | — | required in dashboard |
 | Privacy policy | `store/PRIVACY.md` | — | required (public URL before submit) |
-| Package | `dist/muse-auto-allow-v1.11.0.zip` | 19 files | built by `scripts/build.mjs`, byte-verified by `scripts/verify-zip.py` (206,845 bytes, sha256 `c09819c6e49baa5b7c70d5df0fa819f6d1065f74349b35d6a4785278f469cb0f`) |
+| Package | `dist/muse-auto-allow-v1.12.0.zip` | 19 files | built by `scripts/build.mjs`, byte-verified by `scripts/verify-zip.py` (208,315 bytes, sha256 `d46006bfbbb4e288d9ac0a1ade27b50b6c3116119ad350fa12d70432733c10bb`) |
 | Brand spec | `docs/BRANDING.md` | — | internal reference (tokens, mark, rules) |
 
-> Screenshots 1, 2, 3 and 5 were regenerated 2026-10-18 at the v1.11.0 tree — the popup
-> captures now include the effective-state line (G01) and the blocked-row deep-link
-> chevron (G07); the popup stage capture shows the codex-allow and blocked log rows; the
-> stats capture carries the locale-aware ticks + the topics scope caption (v1.10.1). All
+> Screenshots 1, 2, 3 and 5 were regenerated 2026-10-18 at the v1.12.0 tree — the popup
+> captures include the effective-state line (G01), the reason-aware blocked-row chevron
+> (G07/C3-3) and the standing-grant mark (C3-4); the popup stage capture shows the
+> codex-allow and blocked log rows; the stats capture carries the locale-aware ticks +
+> the topics scope caption (v1.10.1). All
 > five assets verified 1280×800 by PNG header (`store-shot.mjs` + `stats-shot.mjs`; the
 > v1.10.1 pass also caught and fixed a seed race in `stats-shot.mjs`, disclosed in
 > `docs/RELEASE_INTEGRITY.md`). Screenshot 4 and the promo/marquee/hero assets are

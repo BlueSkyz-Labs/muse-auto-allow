@@ -402,6 +402,34 @@ async function main() {
   check('G11 junk: non-boolean standing values are dropped (entries still import)',
     s11junkLog.length === 3 && s11junkLog.every((e) => !('standing' in e)), { log: s11junkLog });
 
+  // ============ G12 (v1.12.0) — authority opt-ins + blockedReason round-trip ============
+  const s12 = T.sanitizeBackup({ yoloMode: true, codexEnabled: true }) || {};
+  check('G12 authority: yoloMode / codexEnabled booleans round-trip (a user\'s own backup keeps them)',
+    s12.yoloMode === true && s12.codexEnabled === true, { s12 });
+  const s12off = T.sanitizeBackup({ yoloMode: false, codexEnabled: false }) || {};
+  check('G12 authority: explicit false round-trips too (a restore can turn them off)',
+    s12off.yoloMode === false && s12off.codexEnabled === false, { s12off });
+  const s12junk = T.sanitizeBackup({ yoloMode: 'yes', codexEnabled: 1 }) || {};
+  check('G12 authority junk: non-boolean values are dropped (import path stays typed)',
+    !('yoloMode' in s12junk) && !('codexEnabled' in s12junk), { s12junk });
+  const longBr = 'q'.repeat(200);
+  const s12br = T.sanitizeBackup({ log: [
+    { at: iso, kind: 'blocked', label: 'Allow', blockedReason: 'keyword:deploy' },
+    { at: iso, kind: 'blocked', label: 'Allow', blockedReason: 'topic' },
+    { at: iso, kind: 'blocked', label: 'Allow', blockedReason: longBr },
+  ] }) || {};
+  const s12brLog = Array.isArray(s12br.log) ? s12br.log : [];
+  check('G12 blockedReason: reasons survive a restore, bounded to 96 chars',
+    s12brLog.length === 3 && s12brLog[0].blockedReason === 'keyword:deploy' && s12brLog[1].blockedReason === 'topic' && s12brLog[2].blockedReason.length === 96,
+    { log: s12brLog.map((e) => ({ br: e.blockedReason && e.blockedReason.length })) });
+  const s12brJunk = T.sanitizeBackup({ log: [
+    { at: iso, kind: 'blocked', label: 'x', blockedReason: 42 },
+    { at: iso, kind: 'blocked', label: 'y', blockedReason: {} },
+  ] }) || {};
+  const s12brJunkLog = Array.isArray(s12brJunk.log) ? s12brJunk.log : [];
+  check('G12 blockedReason junk: non-string reasons are dropped (entries still import)',
+    s12brJunkLog.length === 2 && s12brJunkLog.every((e) => !('blockedReason' in e)), { log: s12brJunkLog });
+
   resetStore({ cryptKeyRaw: K1, enabled: false });
   state.setBehavior = () => new Error('QUOTA_BYTES quota exceeded');
   const aQ = await importFile(backup({ enabled: true }));

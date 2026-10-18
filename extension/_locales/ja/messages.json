@@ -68,6 +68,12 @@
   "logOpenRules": {
     "message": "キーワードルールを開く"
   },
+  "logOpenTopics": {
+    "message": "許可トピックを開く"
+  },
+  "logStanding": {
+    "message": "継続アクセスを許可済み"
+  },
   "onbDemoClick": {
     "message": "Muse が明確な承認ペアを表示したとき Allow をクリック"
   },
@@ -127,6 +133,9 @@
   },
   "importBad": {
     "message": "Muse Auto-Allow のバックアップファイルではありません。"
+  },
+  "importAuthorityWarn": {
+    "message": "このバックアップは $1 を有効にします — 続行しますか？"
   },
   "importQuota": {
     "message": "バックアップを復元できませんでした：ブラウザーのストレージが満杯です。"

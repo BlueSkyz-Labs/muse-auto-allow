@@ -23,7 +23,9 @@
 >
 > **v1.10.1 addendum (history):** the packet shipped as **v1.10.1** (`dist/muse-auto-allow-v1.10.1.zip`, 203,784 bytes, 19 entries, sha256 `52038092…2ecb`) — the v1.10.1 addendum was the verification of record for that packet; superseded by the v1.11.0 addendum below.
 >
-> **v1.11.0 addendum (current verification):** the packet ships as **v1.11.0** (`dist/muse-auto-allow-v1.11.0.zip`, 206,845 bytes, 19 entries, sha256 `c09819c6…cb0f`) — the v1.11.0 addendum at the end of this document is the **current verification** for this packet; it carries the v1.10.x substance forward, adds the effective-state line (G01), the standing-grant boolean (G11), the blocked-entry deep link (G07) and the onboarding static list (G03), and notes that the v1.10.x open items (localized copies, captures) remain closed. Everything above is the frozen historical record; the **v1.6.0 / v1.7.0 / v1.8.0 gap** in this file is a known stale item.
+> **v1.11.0 addendum (history):** the packet shipped as **v1.11.0** (`dist/muse-auto-allow-v1.11.0.zip`, 206,845 bytes, 19 entries, sha256 `c09819c6…cb0f`) — the v1.11.0 addendum at the end of this document was the verification of record for that packet; it carries the v1.10.x substance forward, adds the effective-state line (G01), the standing-grant boolean (G11), the blocked-entry deep link (G07) and the onboarding static list (G03), and notes that the v1.10.x open items (localized copies, captures) remain closed. Superseded by the v1.12.0 addendum below. Everything above is the frozen historical record; the **v1.6.0 / v1.7.0 / v1.8.0 gap** in this file is a known stale item.
+>
+> **v1.12.0 addendum (current verification):** the packet ships as **v1.12.0** (`dist/muse-auto-allow-v1.12.0.zip`, 208,315 bytes, 19 entries, sha256 `d46006bf…10bb`) — the v1.12.0 addendum at the end of this document is the **current verification**; it carries the v1.11.0 substance forward with the restore/authority fixes (C3-1), the off/paused precedence fix (C3-2), the reason-aware deep link (C3-3) and the standing-grant mark (C3-4). Everything above is the frozen historical record; the **v1.6.0 / v1.7.0 / v1.8.0 gap** in this file is a known stale item.
 
 ## Verdict
 
@@ -479,4 +481,18 @@ Entries carry an ISO `at` timestamp (`content.js:203`); PRIVACY §2 describes "k
 | — | Import surface | the sanitizer round-trips the new boolean-only `standing` field; `import-security` 145/0 at this freeze | PASS |
 | — | Artifact integrity | verify-zip 19/0/0/0; smoke 20/20 `ok: true`; deterministic double-build byte-identical; frozen values in `docs/RELEASE_INTEGRITY.md` (v1.11.0 evidence) | PASS |
 
-**Bottom line (v1.11.0):** the v1.10.x verification stands; this addendum carries it forward with the wave-2 surfaces recorded, the new deterministic coverage (145 import-security checks; 199-key parity; the state line's zero-height discipline verified by the held popup baselines), and every artifact reference moved to `dist/muse-auto-allow-v1.11.0.zip`. The package has not been uploaded to the Chrome Web Store.
+**Bottom line (v1.11.0):** the v1.10.x verification stands; this addendum carries it forward with the wave-2 surfaces recorded, the new deterministic coverage (145 import-security checks; 199-key parity; the state line's zero-height discipline verified by the held popup baselines), and every artifact reference moved to `dist/muse-auto-allow-v1.11.0.zip`. The package has not been uploaded to the Chrome Web Store. *(Superseded by the v1.12.0 addendum appended below.)*
+
+## v1.12.0 Addendum (2026-10-18) — current verification
+
+**Method note (honest):** same repository-maintainer pass pattern (maker = verifier, disclosed), executed at the v1.12.0 release freeze; the cycle-3 diff also received a bounded subagent red-team review (4/4 PASS on file+line evidence; the child's final summary line was lost to a harness artifact and the review was re-verified in-session — disclosed in `docs/RELEASE_INTEGRITY.md`).
+
+| # | Item | v1.12.0 re-check | Status |
+|---|---|---|---|
+| 1.2 / 4.6 | Version consistency | `extension/manifest.json` `"version"` `1.12.0` = `store/LISTING.md` §1 `Version 1.12.0` = `dist/muse-auto-allow-v1.12.0.zip` (all three read in this pass) | PASS |
+| — | Store captures at this tree | `screenshot1/3` show the reason-aware blocked chevron and the standing-grant mark; all five assets 1280×800 by PNG header | PASS |
+| 3.9 | "collects nothing / transmits nothing" | unchanged — the wave adds local UI + one import confirm; no new data flow, permission or remote code | PASS |
+| — | Import surface | `yoloMode`/`codexEnabled` now round-trip typed; the authority-flip confirm gates every import write path (single `storage.local.set`); `blockedReason` round-trips bounded; `import-security` 150/0 at this freeze | PASS |
+| — | Artifact integrity | verify-zip 19/0/0/0; smoke 20/20 `ok: true`; deterministic double-build byte-identical; sidecar `sha256sum -c` clean; frozen values in `docs/RELEASE_INTEGRITY.md` (v1.12.0 evidence) | PASS |
+
+**Bottom line (v1.12.0):** the v1.11.0 verification stands; this addendum carries it forward with the cycle-3 fixes and surfaces recorded (authority-safe restore, off/paused precedence, reason-aware deep links, standing mark), the grown deterministic coverage (150 import-security checks; 202-key parity), and every artifact reference moved to `dist/muse-auto-allow-v1.12.0.zip`. The package has not been uploaded to the Chrome Web Store.

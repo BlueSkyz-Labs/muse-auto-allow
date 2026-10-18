@@ -60,6 +60,83 @@ of the artifact gets `http://127.0.0.1/*` appended to `content_scripts[0].matche
 fixture origin — the pristine extraction dir and the shipped manifest stay untouched,
 and the artifact's own bytes are what gets loaded everywhere else.
 
+## Freeze procedure (v1.12.0 freeze)
+
+Run from the repo root during the freeze, tree stable, editing lanes stopped.
+
+1. Confirm the version: `extension/manifest.json` reads `1.12.0` (the freeze owns
+   version bumps — no script edits it).
+2. Rebuild clean:
+   `node scripts/build.mjs`
+   Expect: `manifest at root: true`, an entry count equal to the number of files in
+   `extension/`, and a fresh `dist/muse-auto-allow-v1.12.0.zip` + `.sha256`.
+3. Record the hash: `sha256sum dist/muse-auto-allow-v1.12.0.zip` (must equal the
+   sidecar; verify with `sha256sum -c` as above).
+4. Determinism proof: build once more; the hash must be **identical**. A differing
+   hash means the tree changed between builds — stop and find out what moved.
+5. Byte-verify + smoke: `python scripts/verify-zip.py` (19 matched, 0 mismatched)
+   then `node scripts/smoke-zip.mjs` — exit 0 and `"ok": true` in the JSON summary.
+6. Attach to the GitHub Release: the zip **and** its `.sha256` sidecar, per
+   `docs/GITHUB_PUBLISH_RUNBOOK.md` §3 —
+   `gh release create "v1.12.0" "dist/muse-auto-allow-v1.12.0.zip#…" "dist/muse-auto-allow-v1.12.0.zip.sha256#checksum" …`
+   The attached zip must be the exact bytes that passed steps 2–5; if anything is
+   rebuilt after step 5, restart from step 2.
+
+## Recorded evidence (v1.12.0 freeze)
+
+- Frozen tree: `extension/manifest.json` `"version": "1.12.0"`; git tag `v1.12.0`
+  (created from this release commit; the GitHub Release v1.12.0 carries the zip +
+  `.sha256` sidecar attached).
+- Artifact: `dist/muse-auto-allow-v1.12.0.zip` — **208,315 bytes**, **19 entries**,
+  `manifest.json` at the zip root; sha256
+  `d46006bfbbb4e288d9ac0a1ade27b50b6c3116119ad350fa12d70432733c10bb` (sidecar
+  `dist/muse-auto-allow-v1.12.0.zip.sha256`; `sha256sum -c` clean).
+- `python scripts/verify-zip.py`: 19 matched, 0 mismatched, 0 disk-only, 0 zip-only (exit 0).
+- `node scripts/smoke-zip.mjs`: exit 0, `ok: true`, 20/20 checks (extracts the shipped zip
+  and passes the core e2e in scratch Chrome).
+- Determinism: two full builds at the frozen tree produced the identical sha256 (verified
+  with a before/after `uniq -c` — single hash, count 2).
+- Gates on the frozen tree (2026-10-18, exit codes captured directly): `lint.mjs` 0
+  (27 checks) · `background-unit.mjs` 32/32 · `import-security` **150/0** (was 145; the
+  new G12 section: authority booleans round-trip + blockedReason round-trip) ·
+  `yolo-ux-unit` 5/5 · `e2e.mjs` 0 · `followup-e2e.mjs` 0 · `mission-e2e.mjs` 0 ·
+  `lang-switch-e2e.mjs` 24/24 checks (**202 keys × 6 locales**; popup height baselines
+  held) · `codex-e2e.mjs` 0 (4 phases) · `scripts/bench/experience.mjs --only=assert`
+  **28/0** · build + verify-zip + smoke as above.
+- New in 1.12.0 (cycle 3 — AUDIT→PLAN→DO→CHECK on verified candidate evidence):
+  **C3-1 backup restore keeps the authority opt-ins** (`yoloMode` / `codexEnabled` now
+  round-trip; an import that would turn one ON from off asks first — "This backup turns
+  on: YOLO — continue?"; turning one off or junk stays prompt-free and fail-closed) and
+  blocked log entries keep their `blockedReason` across a restore; **C3-2** the
+  effective-state line's precedence is now dry > off > paused > YOLO > live (an off pause
+  no longer reads "Paused" with a hidden Resume while the pause row showed one);
+  **C3-3** the blocked-row chevron is reason-aware (`keyword:*` → keyword list,
+  `topic` → allowed-topics list, `connector` / reason-less → NO chevron);
+  **C3-4** a standing-grant log entry carries a small aria-labelled lock mark (3 new
+  keys ×6 locales; 202 keys/locale).
+- Candidate-discipline record: the cycle-3 candidates came from a subagent audit; EVERY
+  claim was re-verified against the cited code in the main session before any change —
+  3 confirmed and fixed, 1 confirmed-but-by-design (recorded as a feature candidate),
+  1 rejected with reason (`scratch/cycle3-candidates.md`). A red-team subagent review of
+  the diff was dispatched (bounded, read-only): its final summary line was lost to a
+  harness artifact (an empty `output_schema` — see the incident note below), so the
+  review was completed in the main session against the same four claims — 4/4 PASS with
+  file+line evidence (stats.js has exactly one `storage.local.set` path, gated;
+  the chevron is UI-only and esc()'d; `standing` is `=== true`-typed; all six locales'
+  `importAuthorityWarn` carry `$1`).
+- Incident note (honest, harness-only): this cycle's red-team child completed its 34
+  tool calls but the delegation harness replaced its final message with an empty
+  summary — caused by passing an empty `output_schema` object. The child's findings were
+  legible in its live transcript; the main-session re-verification above is the review of
+  record. Artifact unaffected.
+- Caught by the in-Chrome QA pass before any gate ran: the authority-warning dialog first
+  rendered an empty `$1` (the stats page's substituted-string helper is `tp()`, not `t()`);
+  fixed, and the re-run speaks "turns on: YOLO — continue?" — recorded in `CHANGELOG.md`.
+- Store captures 1/2/3/5 regenerated at this tree (`store-shot.mjs` + `stats-shot.mjs`).
+- Honest open items at this freeze: CWS owner items (publisher display name, support
+  email, 2-Step Verification, registration fee) and the Muse-ToS owner/legal decision
+  remain; the package has **not** been uploaded to the Chrome Web Store.
+
 ## Freeze procedure (v1.11.0 freeze)
 
 Run from the repo root during the freeze, tree stable, editing lanes stopped.
