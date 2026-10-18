@@ -595,13 +595,24 @@ async function renderLog(log) {
         // widen the chip past the frozen layout.
         const kAria = kTitle ? ' aria-label="' + esc(kLbl + ' — ' + kTitle) + '"' : '';
         const kVis = kTitle ? '<span class="kreason" aria-hidden="true"> · ' + esc(kTitle) + '</span>' : '';
-        // v1.11.0 (G07): a blocked entry carries a one-tap deep link into the Safety
-        // keyword rules (deep link only — never a suggested exception).
-        const kOpen = kCls === 'blocked'
-          ? '<button type="button" class="kopen" aria-label="' + esc(t('logOpenRules', 'Open the keyword rules')) + '" title="' + esc(t('logOpenRules', 'Open the keyword rules')) + '"><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
+        // v1.11.0 (G07) / v1.12.0 (C3-3): a blocked entry carries a one-tap deep link into
+        // the Safety rules that can actually resolve its block — `keyword:<kw>` -> the
+        // keyword list, `topic` -> the allowed-topics list. A connector block (hard consent
+        // boundary) and any reason-less entry get NO chevron: a dead-end link is worse
+        // than none (deep link only — never a suggested exception).
+        const kTgt = kTitle === 'topic' ? 'topics' : /^keyword/.test(kTitle) ? 'keywords' : '';
+        const kOpenLbl = kTgt === 'topics' ? t('logOpenTopics', 'Open the allowed topics')
+          : t('logOpenRules', 'Open the keyword rules');
+        const kOpen = kCls === 'blocked' && kTgt
+          ? '<button type="button" class="kopen" data-open="' + kTgt + '" aria-label="' + esc(kOpenLbl) + '" title="' + esc(kOpenLbl) + '"><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
+          : '';
+        // v1.12.0 (C3-4): a standing-grant entry (lasting authority, YOLO-only) carries a
+        // small lock mark — quiet, aria-labelled, zero height (inline in .top).
+        const sMark = e.standing === true
+          ? '<span class="smark" role="img" aria-label="' + esc(t('logStanding', 'Granted standing access')) + '" title="' + esc(t('logStanding', 'Granted standing access')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke-width="2.6" stroke-linecap="round"/><rect x="6" y="10" width="12" height="9" rx="2" fill="none" stroke-width="2.6"/></svg></span>'
           : '';
         return '<div class="item"><span class="t" title="' + esc(localFull(e.at)) + '">' + esc(localTime(e.at)) + '</span>' +
-          '<div class="top"><span class="k k-' + esc(kCls) + '"' + (kTitle ? ' title="' + esc(kTitle) + '"' : '') + kAria + '>' + esc(kLbl) + kVis + '</span>' + mTitle + kOpen + '</div>' +
+          '<div class="top"><span class="k k-' + esc(kCls) + '"' + (kTitle ? ' title="' + esc(kTitle) + '"' : '') + kAria + '>' + esc(kLbl) + kVis + '</span>' + sMark + mTitle + kOpen + '</div>' +
           '<div class="c" title="' + esc(cTitle) + '">' + esc(ctxS) + '</div></div>';
       }).join('')
     : '<div class="empty">' + esc(t('noClicks', 'No clicks yet')) + '</div>';
@@ -998,8 +1009,10 @@ function renderDry() {
 }
 // v1.11.0 (G01): one always-visible effective-state line, rendered inside the sticky
 // #logTop band — it costs the popup no height (the band lives inside the log's scroll
-// area). Precedence: dry (the existing #dryBand banner carries it) > paused > off >
-// YOLO > live. Watched surfaces append asynchronously (tab counts, shipped strings).
+// area). Precedence: dry (the existing #dryBand banner carries it) > off > paused >
+// YOLO > live. (v1.12.0: off outranks paused — with the toggle off, nothing clicks and
+// the pause Resume would contradict; off is the effective truth.) Watched surfaces
+// append asynchronously (tab counts, shipped strings).
 function offNow() {
   // the popup's canonical on/off is the main toggle checkbox (v18 never carried `enabled`)
   const el = $('enabled');
@@ -1015,9 +1028,8 @@ function renderStateLine() {
   const off = offNow();
   const token = $('stateToken');
   if (token) {
-    token.textContent = paused
-      ? t('pauseStateUntil', 'Paused until $1', [hhmm(v18.pauseUntil)])
-      : off ? t('stateOff', 'Off — nothing is clicked')
+    token.textContent = off ? t('stateOff', 'Off — nothing is clicked')
+      : paused ? t('pauseStateUntil', 'Paused until $1', [hhmm(v18.pauseUntil)])
       : v18.yoloMode === true ? t('stateYolo', 'YOLO — skips keyword blocks')
       : t('stateLive', 'Live — clicks Allow only');
   }
@@ -1669,18 +1681,23 @@ $('p60').addEventListener('click', () => setPause(Date.now() + PAUSE_1H));
 $('ptom').addEventListener('click', () => setPause(pauseUntilTomorrow()));
 $('presume').addEventListener('click', () => setPause(0));
 $('safetyBtn').addEventListener('click', () => setSafety(!safetyOpen));
-// v1.11.0 (G07): a blocked entry's chevron opens the Safety keyword section directly.
-function openSafetyKeywords() {
+// v1.11.0 (G07) / v1.12.0 (C3-3): a blocked entry's chevron opens the Safety rules that
+// can resolve its block — the keyword list (`keyword:*` blocks) or the allowed-topics
+// list (`topic` blocks); the target rides on the button's data-open attribute.
+function openSafetyGroup(groupId, inputId) {
   setSafety(true);
-  const g = $('kwGroup');
+  const g = $(groupId);
   if (g) requestAnimationFrame(() => {
     try { g.scrollIntoView({ block: 'nearest' }); } catch { /* ignore */ }
-    const inp = $('kwInput'); if (inp) inp.focus({ preventScroll: true });
+    const inp = $(inputId); if (inp) inp.focus({ preventScroll: true });
   });
 }
 $('logList').addEventListener('click', (e) => {
   const b = e.target && e.target.closest ? e.target.closest('.kopen') : null;
-  if (b) openSafetyKeywords();
+  if (b) {
+    const topics = b.dataset.open === 'topics';
+    openSafetyGroup(topics ? 'topicsGroup' : 'kwGroup', topics ? 'topicInput' : 'kwInput');
+  }
 });
 // v1.11.0 (G01): the state line's corrective action — Resume directly from the line.
 {

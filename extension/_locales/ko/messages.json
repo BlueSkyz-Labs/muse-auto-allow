@@ -68,6 +68,12 @@
   "logOpenRules": {
     "message": "키워드 규칙 열기"
   },
+  "logOpenTopics": {
+    "message": "허용된 주제 열기"
+  },
+  "logStanding": {
+    "message": "지속 권한 부여됨"
+  },
   "onbDemoClick": {
     "message": "Muse가 명확한 승인 쌍을 표시하면 Allow를 클릭합니다"
   },
@@ -127,6 +133,9 @@
   },
   "importBad": {
     "message": "Muse Auto-Allow 백업 파일이 아닙니다."
+  },
+  "importAuthorityWarn": {
+    "message": "이 백업은 $1을(를) 켭니다 — 계속할까요?"
   },
   "importQuota": {
     "message": "백업을 복원할 수 없습니다: 브라우저 저장 공간이 가득 찼습니다."

@@ -68,6 +68,12 @@
   "logOpenRules": {
     "message": "打开关键词规则"
   },
+  "logOpenTopics": {
+    "message": "打开允许的主题"
+  },
+  "logStanding": {
+    "message": "已授予持续访问权限"
+  },
   "onbDemoClick": {
     "message": "当 Muse 显示明确的批准配对时点击 Allow"
   },
@@ -127,6 +133,9 @@
   },
   "importBad": {
     "message": "不是 Muse Auto-Allow 的备份文件。"
+  },
+  "importAuthorityWarn": {
+    "message": "此备份将启用：$1——继续？"
   },
   "importQuota": {
     "message": "无法恢复备份：浏览器存储空间已满。"

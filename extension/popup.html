@@ -304,6 +304,10 @@
     padding: 0 0 0 4px; cursor: pointer; color: var(--muted); }
   .item .kopen:hover { color: var(--ink); }
   .item .kopen:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+  /* v1.12.0 (C3-4): the standing-grant mark — quiet lock glyph after the kind chip (inline, zero height) */
+  .item .smark { display: inline-flex; align-items: center; width: 11px; height: 11px; flex: none;
+    margin-left: 3px; color: var(--muted); opacity: .85; }
+  .item .smark svg { width: 100%; height: 100%; stroke: currentColor; }
   /* v1.11.0 (G03): the first-run "what it would do" static list (step 2, non-interactive) */
   .obdemo { margin: 8px 0 2px; padding-left: 18px; font-size: 12px; line-height: 1.5; color: var(--muted); }
   .obdemo li { margin: 2px 0; }
@@ -722,7 +726,7 @@
         <label class="sw"><input type="checkbox" id="allowOnce"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="allowOnceTitle">Prefer "Allow once"</span></label>
         <div class="rnote" data-i18n="allowOnceNote">One-time approvals instead of standing access — the narrower grant is safer.</div>
       </div>
-      <div class="rgroup">
+      <div class="rgroup" id="topicsGroup">
         <div class="rlabel" data-i18n="topicsLabel">Allowed topics</div>
         <div class="rnote" id="topicsNote" data-i18n="topicsNote">When set, only cards whose topic matches exactly are clicked. Leave empty to allow every topic.</div>
         <div class="rlist" id="topicsList"></div>

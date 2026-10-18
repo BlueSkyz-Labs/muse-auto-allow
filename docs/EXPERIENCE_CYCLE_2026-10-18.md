@@ -120,3 +120,35 @@ VALIDATE until an owner decision.
   `delegation.child_timeout_seconds`).
 - **Honest caveat:** no independent subagent review of wave 2 completed. The main session's QA
   pass + the deterministic suites are the wave-2 verification of record.
+
+## Wave 3 — executed (v1.12.0)
+
+- **AUDIT (subagent-assisted, every claim re-verified in-session):** a bounded read-only audit
+  subagent produced 5 candidates from the v1.11.0 tree; the main session re-checked each against
+  the cited code — **3 confirmed defects, 1 by-design (recorded as a feature), 1 rejected with
+  reason** (`scratch/cycle3-candidates.md`).
+- **C3-1 backup restore keeps authority opt-ins:** `yoloMode`/`codexEnabled` now round-trip
+  through export/import (were silently dropped); an import that would turn one ON from off asks
+  first ("This backup turns on: YOLO — continue?") — no silent authority grants; turning off /
+  junk stays prompt-free and fail-closed. Blocked entries keep `blockedReason` across a restore.
+  `import-security` 145 → **150 checks** (G12).
+- **C3-2 state-line precedence:** dry > off > paused > YOLO > live — with the toggle off during a
+  live pause the line no longer reads "Paused" (with a hidden Resume) while the pause row showed
+  one; off is the effective truth.
+- **C3-3 reason-aware blocked deep link:** `keyword:<kw>` → keyword list, `topic` →
+  allowed-topics list, `connector` (consent boundary) / reason-less → **no chevron** (a dead-end
+  link is worse than none).
+- **C3-4 standing-grant mark:** standing rows carry a quiet aria-labelled lock — "what permanent
+  access did this tool grant?" is now answerable from the popup.
+- **i18n:** 202 keys × 6 locales (`logOpenTopics`, `logStanding`, `importAuthorityWarn`).
+- **Red-team:** a bounded subagent reviewed the diff for bypasses (4 claims); its final summary
+  line was lost to a harness artifact (an empty `output_schema`), so the findings were recovered
+  from its transcript and re-verified in-session — **4/4 PASS** on file+line evidence (single
+  gated `storage.local.set` in stats.js; chevron UI-only + esc()'d; standing `=== true`-typed;
+  `$1` present in all six locales). Recorded: `docs/RELEASE_INTEGRITY.md` (v1.12.0 evidence).
+- **Caught by in-Chrome QA before any gate:** the authority dialog initially showed an empty
+  `$1` (stats page helper is `tp()`, not `t()`) — fixed; QA re-run speaks the full sentence.
+- **Gates:** lint 0 (27) · bgu 32/32 · ims 150/0 · yolo 5/5 · e2e 0 · followup 0 · mission 0 ·
+  lang-switch 24/24 @202 keys · codex 0 (4 phases) · assert 28/0 · verify-zip 19/0/0/0 ·
+  determinism 2× identical · smoke 20/20. Artifact: `dist/muse-auto-allow-v1.12.0.zip` —
+  208,315 bytes, 19 entries, sha256 `d46006bf…10bb`.

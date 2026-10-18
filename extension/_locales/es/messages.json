@@ -68,6 +68,12 @@
   "logOpenRules": {
     "message": "Abrir las reglas de palabras clave"
   },
+  "logOpenTopics": {
+    "message": "Abrir los temas permitidos"
+  },
+  "logStanding": {
+    "message": "Acceso permanente concedido"
+  },
   "onbDemoClick": {
     "message": "Pulsa Allow cuando Muse muestra un par de aprobación claro"
   },
@@ -127,6 +133,9 @@
   },
   "importBad": {
     "message": "No es un archivo de copia de seguridad de Muse Auto-Allow."
+  },
+  "importAuthorityWarn": {
+    "message": "Esta copia activa: $1 — ¿continuar?"
   },
   "importQuota": {
     "message": "No se pudo restaurar la copia de seguridad: el almacenamiento del navegador está lleno."

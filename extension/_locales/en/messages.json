@@ -68,6 +68,12 @@
   "logOpenRules": {
     "message": "Open the keyword rules"
   },
+  "logOpenTopics": {
+    "message": "Open the allowed topics"
+  },
+  "logStanding": {
+    "message": "Granted standing access"
+  },
   "onbDemoClick": {
     "message": "Clicks Allow when Muse shows a clear approval pair"
   },
@@ -127,6 +133,9 @@
   },
   "importBad": {
     "message": "Not a Muse Auto-Allow backup file."
+  },
+  "importAuthorityWarn": {
+    "message": "This backup turns on: $1 — continue?"
   },
   "importQuota": {
     "message": "Could not restore the backup: browser storage is full."

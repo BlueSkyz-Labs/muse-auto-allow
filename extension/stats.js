@@ -292,6 +292,7 @@ const sanitizeBackup = (d) => {
           && /^[A-Za-z0-9+/=]{8,64}$/.test(e.ctx.iv) && /^[A-Za-z0-9+/=]{8,4096}$/.test(e.ctx.ct)) o.ctx = { iv: e.ctx.iv, ct: e.ctx.ct };
       else if (typeof e.context === 'string') o.context = e.context.slice(0, 500);
       if (e.standing === true) o.standing = true; // v1.11.0 standing-grant flag: boolean-only, junk dropped
+      if (typeof e.blockedReason === 'string' && e.blockedReason) o.blockedReason = e.blockedReason.slice(0, 96); // v1.12.0 (C3-1): blocked rows keep their reason across a restore (the chevron/chip need it)
       return o;
     });
     seen++;
@@ -332,6 +333,12 @@ const sanitizeBackup = (d) => {
   if (typeof d.pauseUntil === 'number' && isFinite(d.pauseUntil)) { out.pauseUntil = Math.max(0, d.pauseUntil); seen++; }
   if (typeof d.dryRun === 'boolean') { out.dryRun = d.dryRun; seen++; }
   if (typeof d.allowOnceMode === 'boolean') { out.allowOnceMode = d.allowOnceMode; seen++; }
+  // v1.12.0 (C3-1): the two AUTHORITY opt-ins round-trip too — a user's OWN backup must not
+  // silently lose them. The sanitizer only carries booleans (junk dropped); turning one ON
+  // from OFF is surfaced by the import confirm, so a crafted file can never enable
+  // YOLO / the Codex engine silently (fail-closed import path stays intact).
+  if (typeof d.yoloMode === 'boolean') { out.yoloMode = d.yoloMode; seen++; }
+  if (typeof d.codexEnabled === 'boolean') { out.codexEnabled = d.codexEnabled; seen++; }
   if (typeof d.syncSettings === 'boolean') { out.syncSettings = d.syncSettings; seen++; }
   if (typeof d.missionEnabled === 'boolean') { out.missionEnabled = d.missionEnabled; seen++; }
   if (typeof d.onboarded === 'boolean') { out.onboarded = d.onboarded; seen++; }
@@ -458,6 +465,14 @@ $('importFile').addEventListener('change', async (ev) => {
       if (!clean) {
         alert(t('importBad', 'Not a Muse Auto-Allow backup file.'));
       } else {
+        // v1.12.0 (C3-1): an import that would TURN ON an authority opt-in asks first — a
+        // crafted file can never enable YOLO / Codex silently. Turning one OFF (or junk
+        // values) is fail-closed and applies without a prompt.
+        const nowA = await chrome.storage.local.get({ yoloMode: false, codexEnabled: false });
+        const flips = [];
+        if (clean.yoloMode === true && nowA.yoloMode !== true) flips.push('YOLO');
+        if (clean.codexEnabled === true && nowA.codexEnabled !== true) flips.push('Codex');
+        if (flips.length && !confirm(tp('importAuthorityWarn', [flips.join(', ')], 'This backup turns on: $1 — continue?'))) { ev.target.value = ''; return; }
         // SA-1: a supplied key is adopted only after decrypt proof against a ctx-bearing
         // entry; with none present the rotation is refused and the current key is kept.
         const cur = await chrome.storage.local.get({ cryptKeyRaw: null, rules: null, followupSmart: null, followupSchedule: null });
