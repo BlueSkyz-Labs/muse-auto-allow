@@ -54,6 +54,8 @@ function makeEnv() {
       addEventListener(type, fn) { (listeners[id][type] = listeners[id][type] || []).push(fn); },
       setAttribute() {}, removeAttribute() {}, getAttribute() { return null; },
       classList: { toggle() {}, add() {}, remove() {} },
+      closest() { return null; }, // parentless fakes: the real DOM method exists, so the sandbox must too (stats.js setK walks to .kpi)
+      querySelector() { return null; }, querySelectorAll() { return []; },
     };
   };
   const chromeStub = {

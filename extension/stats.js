@@ -164,10 +164,11 @@ function renderTopics() {
   }
   wrap.innerHTML = entries.map(([name, v], i) => {
     const c = PALETTE[i % PALETTE.length];
+    const pct = Math.min(100, Math.round(v / total * 100)); // v1.16.0 (R5): the share is printed, not only drawn
     return '<div class="topic"><span class="dot t-' + c + '"></span>' +
       '<span class="name" title="' + name.replace(/"/g, '&quot;') + '">' + name.replace(/[<>&]/g, '') + '</span>' +
-      '<span class="bar"><i class="t-' + c + '" style="width:' + Math.min(100, Math.max(4, Math.round(v / total * 100))) + '%"></i></span>' +
-      '<span class="n">' + v + '</span></div>';
+      '<span class="bar"><i class="t-' + c + '" style="width:' + Math.min(100, Math.max(4, pct)) + '%"></i></span>' +
+      '<span class="n">' + v + '<i class="pct">' + pct + '%</i></span></div>';
   }).join('');
 }
 
@@ -180,10 +181,12 @@ function renderKpis() {
     const d = new Date(ws.getFullYear(), ws.getMonth(), ws.getDate() + k);
     week += num(STATS.byDay[dayKeyOf(d)]);
   }
-  $('kTotal').textContent = num(TOTAL);
-  $('kToday').textContent = today;
-  $('kWeek').textContent = week;
-  $('kMonth').textContent = num(STATS.byMonth[monthKeyOf(now)]);
+  // v1.16.0 (R4): a zero-value card calms its own icon tint — attention lands on the live metric.
+  const setK = (id, v) => { const el = $(id); if (!el) return; el.textContent = v; const card = el.closest('.kpi'); if (card) card.classList.toggle('zero', num(v) === 0); };
+  setK('kTotal', num(TOTAL));
+  setK('kToday', today);
+  setK('kWeek', week);
+  setK('kMonth', num(STATS.byMonth[monthKeyOf(now)]));
 }
 
 function renderAll() {

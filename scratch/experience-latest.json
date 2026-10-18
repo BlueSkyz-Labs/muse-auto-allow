@@ -214,6 +214,17 @@
         ],
         "viEff": "vi"
       }
+    },
+    {
+      "name": "K. beauty-blind fixes: topics print % and zero KPI cards carry the calm class",
+      "ok": true,
+      "detail": {
+        "pct": [
+          "100%"
+        ],
+        "zeros": 3,
+        "total": "8"
+      }
     }
   ],
   "failed": 0

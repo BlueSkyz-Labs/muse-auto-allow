@@ -246,6 +246,16 @@ try {
   check('J. locale data format: tick labels differ across locales (Intl follows the effective locale)',
     en && vi && Array.isArray(en.ticks) && Array.isArray(vi.ticks) && en.ticks.length > 0 && vi.ticks.length > 0 && JSON.stringify(en.ticks) !== JSON.stringify(vi.ticks),
     { en: en && en.ticks, enEff: en && en.eff, vi: vi && vi.ticks, viEff: vi && vi.eff });
+
+  // K. beauty-blind fixes land (v1.16.0): topic percentages printed + zero cards calmed
+  const k = await evOn(sids['stats.html'])(`(() => {
+    const pct = Array.from(document.querySelectorAll('.topic .n .pct')).map((e) => (e.textContent || '').trim());
+    const zeros = document.querySelectorAll('.kpi.zero').length;
+    const total = document.getElementById('kTotal') ? (document.getElementById('kTotal').textContent || '').trim() : '';
+    return { pct, zeros, total };
+  })()`);
+  check('K. beauty-blind fixes: topics print % and zero KPI cards carry the calm class',
+    k && Array.isArray(k.pct) && k.pct.length > 0 && /%$/.test(k.pct[0]) && k.zeros >= 1 && k.total === '8', k);
 } catch (e) {
   check('X. harness completed without exception', false, String(e && e.message || e));
 } finally {

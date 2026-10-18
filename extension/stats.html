@@ -83,6 +83,9 @@
   .kpi .kv { position: relative; display: flex; flex-direction: column; min-width: 0; }
   .kpi .v { font-size: 30px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.1; color: var(--ink); font-variant-numeric: tabular-nums; }
   .kpi .l { font-size: 10.5px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+  /* v1.16.0 (R4, beauty-blind review): zero cards step back — the live metric owns the eye */
+  .kpi.zero .ic { opacity: .55; filter: saturate(55%); }
+  .kpi.zero .v { color: var(--muted); }
   .k-blue   { --kc: var(--c-blue);   --kc-g: var(--c-blue-g); }
   .k-rose   { --kc: var(--c-rose);   --kc-g: var(--c-rose-g); }
   .k-teal   { --kc: var(--c-teal);   --kc-g: var(--c-teal-g); }
@@ -127,7 +130,8 @@
   .topic .bar i { display: block; height: 100%; width: 0; border-radius: 999px;
                   background: var(--tc, var(--c-blue));
                   transition: width .35s var(--ease-io); }
-  .topic .n { width: 56px; text-align: right; color: var(--ink); font-weight: 600; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .topic .n { width: 78px; text-align: right; color: var(--ink); font-weight: 600; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .topic .n .pct { font-style: normal; font-weight: 500; color: var(--muted); margin-left: 6px; font-size: 12px; } /* v1.16.0 (R5) */
   .empty { color: var(--muted); padding: 10px 0; }
 
   /* ---- footer ---- */
