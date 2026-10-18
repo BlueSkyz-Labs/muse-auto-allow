@@ -17,8 +17,17 @@ files.example.com) — never real projects or personal data.
 | Listing copy (6 locales) | `store/LISTING.md` | — | title / short / full description per locale |
 | Permission justifications | `store/LISTING.md` §5 | — | required in dashboard |
 | Privacy policy | `store/PRIVACY.md` | — | required (public URL before submit) |
-| Package | `dist/muse-auto-allow-v1.9.3.zip` | 18 files | built by `scripts/build.mjs`, byte-verified by `scripts/verify-zip.py` (185,014 bytes, sha256 `e3dd7703b85fffd9ad5b78a8b353c90929f4b87487f3d9dc932fdb2c5f140326`) |
+| Package | `dist/muse-auto-allow-v1.10.1.zip` | 19 files | built by `scripts/build.mjs`, byte-verified by `scripts/verify-zip.py` (203,784 bytes, sha256 `52038092ab0b472ef98e6a149a63c9e6589381bec5cdc88bcbc2329c5f082ecb`) |
 | Brand spec | `docs/BRANDING.md` | — | internal reference (tokens, mark, rules) |
+
+> Screenshots 1, 2, 3 and 5 were regenerated 2026-10-18 at the v1.10.x tree (Codex switch
+> chip on the Safety row; the popup stage capture shows the codex-allow and blocked log
+> rows; the final stats capture carries the locale-aware ticks + the topics scope caption;
+> `store-shot.mjs` + `stats-shot.mjs`, all five assets verified 1280×800 by PNG header).
+> The regeneration also caught and fixed a seed race in `stats-shot.mjs` (disclosed in
+> `docs/RELEASE_INTEGRITY.md`, v1.10.1 evidence). Screenshot 4 and the promo/marquee/hero
+> assets are designed compositions (unchanged — they carry no popup build state beyond the
+> brand system).
 
 ## Regenerate everything
 

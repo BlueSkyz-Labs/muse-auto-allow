@@ -3,7 +3,22 @@ const $ = (id) => document.getElementById(id);
 const t = (key, fallback) => {
   try { return chrome.i18n.getMessage(key) || fallback; } catch { return fallback; }
 };
+// same as t() but with $1/$2 substitutions (chrome.i18n positional placeholders)
+const tp = (key, subs, fallback) => {
+  try { return chrome.i18n.getMessage(key, subs) || fallback; } catch { return fallback; }
+};
 const pad2 = (n) => String(n).padStart(2, '0');
+// cycle 2026-10-18 (A2): chart tick labels follow the UI locale via Intl (the popup's mini
+// chart has always done this) — a fixed DD/MM reads as month/day for en/zh/ja/ko readers.
+// Falls back to the old numeric form only if Intl rejects the locale string (never throws).
+// Recorded limit (red-team note): this page follows the BROWSER UI locale; the popup's manual
+// language switcher does not reach the stats surface (same class as TS-04).
+const UI_LOCALE = (() => { try { return chrome.i18n.getUILanguage() || 'en'; } catch { return 'en'; } })();
+const i18nFmt = (opts) => { try { return new Intl.DateTimeFormat(UI_LOCALE, opts); } catch { return null; } };
+const fmtDayTick = i18nFmt({ day: '2-digit', month: '2-digit' });
+const fmtMonthTick = i18nFmt({ month: '2-digit', year: '2-digit' });
+const tickDay = (d) => (fmtDayTick ? fmtDayTick.format(d) : pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1));
+const tickMonth = (d) => (fmtMonthTick ? fmtMonthTick.format(d) : pad2(d.getMonth() + 1) + '/' + String(d.getFullYear()).slice(2));
 const dayKeyOf = (d) => d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
 const monthKeyOf = (d) => d.getFullYear() + '-' + pad2(d.getMonth() + 1);
 const num = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
@@ -36,7 +51,7 @@ function series() {
   if (RANGE === 'day') {
     for (let i = 13; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
-      out.push({ label: pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1), v: num(STATS.byDay[dayKeyOf(d)]) });
+      out.push({ label: tickDay(d), v: num(STATS.byDay[dayKeyOf(d)]) });
     }
   } else if (RANGE === 'week') {
     for (let i = 11; i >= 0; i--) {
@@ -46,12 +61,12 @@ function series() {
         const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + k);
         v += num(STATS.byDay[dayKeyOf(d)]);
       }
-      out.push({ label: pad2(start.getDate()) + '/' + pad2(start.getMonth() + 1), v });
+      out.push({ label: tickDay(start), v });
     }
   } else if (RANGE === 'month') {
     for (let i = 11; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      out.push({ label: pad2(d.getMonth() + 1) + '/' + String(d.getFullYear()).slice(2), v: num(STATS.byMonth[monthKeyOf(d)]) });
+      out.push({ label: tickMonth(d), v: num(STATS.byMonth[monthKeyOf(d)]) });
     }
   } else {
     const years = Object.keys(STATS.byYear).filter((y) => /^\d{4}$/.test(y)).sort();
@@ -112,18 +127,36 @@ function renderTopics() {
   const wrap = $('topics');
   const all = Object.entries(STATS.byTopic).map(([k, v]) => [String(k), num(v)]).sort((a, b) => b[1] - a[1]);
   const entries = all.slice(0, 12);
-  if (!entries.length) {
+  if (!entries.length && !num(TOTAL)) {
     wrap.innerHTML = '<div class="empty">' + t('noData', 'No data yet') + '</div>';
     return;
   }
   // share-of-total bars (every recorded topic counts): 231 of 489 reads as a true 47 % track,
-  // never a misleading "100 %"
-  const sum = all.reduce((s, e) => s + e[1], 0) || 1;
+  // never a misleading "100 %". cycle 2026-10-18 (A3, red-team refined): the denominator is the
+  // all-time Total KPI (falling back to the topic sum) and the column states its own scope —
+  // "share of the N-click total" plus the top-12 window when there are more topics — instead of
+  // an "other" row (recordClick gives every counted click a topic; the only remainders are
+  // pruned-at-100 / legacy data).
+  const sum = all.reduce((s, e) => s + e[1], 0);
+  const total = Math.max(num(TOTAL), sum, 1);
+  const scopeNote = $('topicsScope');
+  if (scopeNote) {
+    if (!entries.length || !num(TOTAL)) {
+      scopeNote.textContent = '';
+      scopeNote.hidden = true;
+    } else {
+      const txt = all.length > 12
+        ? tp('statsBarScopeTop', [String(all.length), String(total)], 'Top 12 of ' + all.length + ' topics · bars: share of the ' + total + '-click total')
+        : tp('statsBarScope', [String(total)], 'Bars: share of the ' + total + '-click total');
+      scopeNote.textContent = txt;
+      scopeNote.hidden = false;
+    }
+  }
   wrap.innerHTML = entries.map(([name, v], i) => {
     const c = PALETTE[i % PALETTE.length];
     return '<div class="topic"><span class="dot t-' + c + '"></span>' +
       '<span class="name" title="' + name.replace(/"/g, '&quot;') + '">' + name.replace(/[<>&]/g, '') + '</span>' +
-      '<span class="bar"><i class="t-' + c + '" style="width:' + Math.max(4, Math.round(v / sum * 100)) + '%"></i></span>' +
+      '<span class="bar"><i class="t-' + c + '" style="width:' + Math.max(4, Math.round(v / total * 100)) + '%"></i></span>' +
       '<span class="n">' + v + '</span></div>';
   }).join('');
 }

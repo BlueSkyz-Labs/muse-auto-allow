@@ -52,9 +52,14 @@ const stats = {
 
 // realistic click log for the popup shot (fictional only; short-form contexts so each
 // entry renders fully — the popup's 78-char clamp does not cut them mid-thought)
+// v1.10.0: the log also shows one Codex entry (codex-allow) and one blocked entry, so the
+// shot tells the shipped story: muse clicks, the keyword rail holds a deny-adjacent case,
+// and the separate Codex engine is covered too.
 const isoMinus = (mins) => new Date(Date.now() - mins * 60000).toISOString();
 const log = [
+  { at: isoMinus(1), kind: 'codex-allow', label: 'Yes, proceed', context: 'Run the tests in the sandbox workspace' },
   { at: isoMinus(2), kind: 'allow', label: 'Allow', context: 'Allow Muse to perform this action on your GitHub account? Pull request read' },
+  { at: isoMinus(4), kind: 'blocked', label: 'Allow', reason: 'keyword:deploy', context: 'Allow Muse to perform this action on your GitHub account? Deploy the preview' },
   { at: isoMinus(6), kind: 'allow', label: 'Allow', context: 'Allow Muse to perform this action on your GitHub account? Create branch' },
 ];
 
@@ -155,12 +160,36 @@ try {
   // ON state (ungated panel, live controls), not the collapsed off-state.
   // v1.8: onboarded:true keeps the onboarding wizard from covering the popup shot; pause/
   // dry-run are pinned to their canonical OFF state.
-  const seedExpr = `new Promise((r) => chrome.storage.local.set(${JSON.stringify({ stats, clickCount: total, log, followupEnabled: true, onboarded: true, pauseUntil: 0, dryRun: false })}, r))`;
+  // v1.10.1 (seed race fix, disclosed in docs/RELEASE_INTEGRITY.md): a seed evaluate sent a
+  // few ms after createTarget could land before chrome.storage existed on the target — the
+  // exception was dropped silently and the capture then rendered EMPTY demo data (caught by
+  // inspecting the regenerated store capture). Seeds now wait for the page, then READ BACK;
+  // a write that did not land is re-asserted once, and a seed that still does not land fails
+  // LOUDLY (same verify-and-reassert pattern as scripts/smoke-zip.mjs).
+  const seedPayload = { stats, clickCount: total, log, followupEnabled: true, onboarded: true, pauseUntil: 0, dryRun: false, codexEnabled: true };
+  const seedSession = async (sid) => {
+    const deadline = Date.now() + 8000;
+    let ready = false;
+    while (Date.now() < deadline) {
+      try {
+        const rs = await send('Runtime.evaluate', { expression: 'document.readyState', returnByValue: true }, sid);
+        const api = await send('Runtime.evaluate', { expression: 'typeof chrome !== "undefined" && !!(chrome.storage && chrome.storage.local)', returnByValue: true }, sid);
+        if (rs && rs.result && rs.result.value === 'complete' && api && api.result && api.result.value === true) { ready = true; break; }
+      } catch { /* keep waiting */ }
+      await sleep(120);
+    }
+    const probe = `new Promise((resolve) => { try { chrome.storage.local.set(${JSON.stringify(seedPayload)}, () => chrome.storage.local.get('clickCount', (s) => resolve(Number(s && s.clickCount) || 0))); } catch (e) { resolve('ERR:' + (e && e.message)); } })`;
+    let v = await send('Runtime.evaluate', { expression: probe, awaitPromise: true, returnByValue: true }, sid).then((r) => (r && r.result ? r.result.value : null));
+    if (v !== total) v = await send('Runtime.evaluate', { expression: probe, awaitPromise: true, returnByValue: true }, sid).then((r) => (r && r.result ? r.result.value : null));
+    return { ready, seededAs: v };
+  };
 
   // ---- stats page ----
   const t1 = await send('Target.createTarget', { url: `chrome-extension://${extId}/stats.html` });
   const { sessionId: s1 } = await send('Target.attachToTarget', { targetId: t1.targetId, flatten: true });
-  await send('Runtime.evaluate', { expression: seedExpr, awaitPromise: true, returnByValue: true }, s1);
+  const statsSeed = await seedSession(s1);
+  out.seedStats = statsSeed;
+  if (statsSeed.seededAs !== total) throw new Error('stats seed did not land: ' + JSON.stringify(statsSeed));
   // store captures are LIGHT (Muse language); dark is captured separately for QA
   await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'light' }] }, s1);
   await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false }, s1);
@@ -181,7 +210,9 @@ try {
   const { sessionId: s2 } = await send('Target.attachToTarget', { targetId: t2.targetId, flatten: true });
   await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'light' }] }, s2);
   await send('Emulation.setDeviceMetricsOverride', { width: 340, height: 1500, deviceScaleFactor: 2, mobile: false }, s2);
-  await send('Runtime.evaluate', { expression: seedExpr, awaitPromise: true, returnByValue: true }, s2);
+  const popupSeed = await seedSession(s2);
+  out.seedPopup = popupSeed;
+  if (popupSeed.seededAs !== total) throw new Error('popup seed did not land: ' + JSON.stringify(popupSeed));
   await send('Page.reload', {}, s2);
   await sleep(1200);
   // Screenshot framing only: lift the popup's 600px scroll cap and expand the log viewport to

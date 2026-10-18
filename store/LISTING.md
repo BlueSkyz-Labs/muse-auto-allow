@@ -16,9 +16,9 @@ dashboard (no repo value to fill).
 | Item name | **Muse Auto-Allow** |
 | Category | **Productivity** |
 | Default language | English (en) |
-| Version | 1.10.0 |
+| Version | 1.10.1 |
 | Manifest version | Manifest V3 |
-| Extension package | `dist/muse-auto-allow-v1.10.0.zip` |
+| Extension package | `dist/muse-auto-allow-v1.10.1.zip` |
 | License | MIT © 2026 BlueSkyz Labs |
 | Homepage / support URL | `https://github.com/BlueSkyz-Labs/muse-auto-allow` |
 | Privacy policy URL | `https://blueskyz-labs.github.io/muse-auto-allow/privacy.html` (GitHub Pages copy of `store/PRIVACY.md`; verified live 2026-10-12) |
@@ -93,10 +93,10 @@ Auto-click Allow on Muse (muse.ai) and Codex (chatgpt.com) approvals. Starts in 
 > default) — bullets under *What it does* and *You stay in control*, plus the corrected
 > closing scope line — and all six short descriptions name both scopes (counted
 > 2026-10-18: en 110, vi 116, zh_CN 69, ja 75, ko 85, es 118 — all ≤132). The five
-> localized detailed descriptions keep their Muse feature set; **their feature bodies do
-> not yet describe the Codex switch** — refresh before CWS submission (honest TODO,
-> mirrored in `store/CWS_SUBMISSION_PACK.md`). The closing scope line of each localized
-> description now names both scopes (a one-line factual fix, not a full pass).
+> localized detailed descriptions were then refreshed on 2026-10-18 to carry the same two
+> Codex bullets under their *What it does* and control sections, with the closing scope
+> lines already naming both scopes — the earlier "localized bodies do not yet describe the
+> Codex switch" TODO is closed (mirrored in `store/CWS_SUBMISSION_PACK.md`).
 
 ### English (en)
 
@@ -192,6 +192,11 @@ bị ngắt quãng.
   mới duyệt), và dải thông báo nền “N tasks need your approval” (tiện ích mở bảng phê
   duyệt để các thẻ đang chờ hiện ra).
 - Duyệt được cả ở tab chạy nền, kiểm tra mỗi phút một lần.
+- Với công tắc **Codex (ChatGPT)** riêng ở trạng thái bật (tuỳ chọn riêng, mặc định tắt), sự
+  cẩn trọng tương tự cũng áp dụng trên chatgpt.com: tiện ích bấm lựa chọn khẳng định trên
+  yêu cầu phê duyệt của Codex (“Yes, proceed”, “Allow”, “Approve” — ưu tiên dạng cấp một
+  lần) chỉ khi có nút phủ định bấm được nằm trong cùng khối nút, mở trước các thẻ thu gọn
+  “Allow Codex to …”, và mở thanh duyệt “A task needs your approval” để bảng phê duyệt hiện ra.
 
 **Tiện ích tuyệt đối không làm**
 - Không bao giờ bấm **Deny**, **Reject** hay **Decline**.
@@ -228,6 +233,11 @@ bị ngắt quãng.
 - Tuỳ chọn đồng bộ cài đặt: mang cài đặt sang các hồ sơ Chrome khác qua tính năng đồng
   bộ sẵn có của Chrome — mặc định tắt, chỉ cài đặt (nhật ký và thống kê không bao giờ
   đồng bộ).
+- Công tắc Codex (ChatGPT): tuỳ chọn riêng cho chatgpt.com — mặc định tắt, nằm trong bảng
+  **An toàn & Kiểm soát** của popup, cạnh YOLO. Không bao giờ bấm Deny, không bao giờ bấm
+  một lựa chọn khẳng định đứng một mình, không bao giờ chạm vào các bề mặt đăng nhập/kết nối
+  (Connect, Authorize, liên kết tài khoản, API key/token), và giữ các cấp thường trực
+  (“Always allow”, “don't ask again”) ở chế độ thủ công trừ khi bật YOLO.
 - Trình hướng dẫn thiết lập 3 bước cho lần dùng đầu tiên.
 - Trang Thống kê tích hợp: số lượt bấm theo ngày / tuần / tháng / năm và theo chủ đề
   (repo / dự án) — biểu đồ nhẹ, hiển thị tức thì.
@@ -255,6 +265,7 @@ Muse（muse.ai）在执行操作前会暂停并向你请求批准。你一旦离
   折叠的“Allow Muse to perform this action…”卡片（会先展开再批准），以及后台的
   “N tasks need your approval”横幅（打开批准面板，让待处理卡片显示出来）。
 - 后台标签页同样处理，每分钟检查一次。
+- 开启自带的 **Codex（ChatGPT）** 开关后（单独的选用项，默认关闭），同样的谨慎也适用于 chatgpt.com：仅在可点击的否定按钮位于同一按钮容器内时，才点击 Codex 批准请求中的肯定选项（“Yes, proceed”“Allow”“Approve”——优先一次性形式）；会先展开折叠的“Allow Codex to …”卡片，并打开“A task needs your approval”审核栏，让批准面板呈现。
 
 **它绝不会做**
 - 绝不点击 **Deny**、**Reject** 或 **Decline**。
@@ -275,6 +286,7 @@ Muse（muse.ai）在执行操作前会暂停并向你请求批准。你一旦离
 - 更快、更易用：批准处理更快；发送被拒绝或卡片被拦截时总会显示确切原因；常用操作都有快捷键；对话框打开时，背景会对辅助技术隐藏。
 - 启动摘要：桌面通知汇总近期活动（点击、跟进、被拦截项）——在你的设备上生成。
 - 可选设置同步：通过 Chrome 内置同步把设置带到其他 Chrome 配置文件——默认关闭，仅同步设置（日志与统计绝不同步）。
+- Codex（ChatGPT）开关：面向 chatgpt.com 的独立选用项——默认关闭，位于弹窗的 **安全与控制** 面板中、YOLO 旁边。绝不点击 Deny，绝不点击孤立的肯定选项，绝不触碰认证/连接界面（Connect、Authorize、关联账户、API key/token）；除非开启 YOLO，长期授权（“Always allow”“don't ask again”）保持手动。
 - 首次使用时提供三步设置向导。
 - 内置统计页：按日 / 周 / 月 / 年以及按主题（仓库 / 项目）的点击次数，轻量图表即时呈现。
 
@@ -299,6 +311,12 @@ Muse（muse.ai）は操作の前に承認を求めて一時停止します。席
   カード（まず展開してから承認）、そしてバックグラウンドの
   「N tasks need your approval」バナー（承認パネルを開いて保留カードを表示）。
 - バックグラウンドのタブでも処理し、1 分ごとに確認します。
+- 付属の **Codex（ChatGPT）** スイッチをオンにした場合（別個のオプトイン、既定はオフ）、
+  同じ慎重さで chatgpt.com にも対応します。クリック可能な否定側ボタンが同じボタン
+  コンテナ内にあるときだけ、Codex の承認リクエストの肯定オプション（「Yes, proceed」
+  「Allow」「Approve」— ワンショット形式を優先）をクリックします。折りたたまれた
+  「Allow Codex to …」カードは先に展開し、「A task needs your approval」レビューバーを
+  開いて承認パネルを表示させます。
 
 **決してしないこと**
 - **Deny**、**Reject**、**Decline** は絶対にクリックしません。
@@ -320,6 +338,11 @@ Muse（muse.ai）は操作の前に承認を求めて一時停止します。席
 - すばやく、使いやすく：承認の処理が速くなり、送信が拒否されたときやカードがブロックされたときは必ず正確な理由が表示されます。よく使う操作はキーボードショートカットに対応し、ダイアログを開いている間は背景が支援技術から切り離されます。
 - 起動時のダイジェスト：最近の動き（クリック、フォロー、ブロック）をまとめたデスクトップ通知 — 端末上で作成されます。
 - 設定の同期（任意）：Chrome 標準の同期で設定を他の Chrome プロファイルへ引き継ぎます — 既定でオフ、同期するのは設定のみ（ログと統計は決して同期しません）。
+- Codex（ChatGPT）スイッチ：chatgpt.com 用の別個のオプトイン — 既定はオフ、ポップアップの
+  **安全と制御** パネルで YOLO の隣にあります。Deny は決してクリックせず、単独の肯定
+  オプションも決してクリックせず、認証・接続の画面（Connect、Authorize、アカウント連携、
+  API key/token）には決して触れません。常設の許可（「Always allow」「don't ask again」）は
+  YOLO をオンにしない限り手動のままです。
 - 初回起動時の 3 ステップ設定ウィザード。
 - 内蔵の統計ページ：日 / 週 / 月 / 年別、トピック別（リポジトリ / プロジェクト）のクリック数を軽量チャートですぐ表示。
 
@@ -347,6 +370,11 @@ Muse(muse.ai)는 작업 전에 승인을 요청하며 잠시 멈춥니다. 자�
   그리고 백그라운드의 “N tasks need your approval” 배너(승인 패널을 열어 대기 중인
   카드가 표시되게 함)입니다.
 - 백그라운드 탭에서도 처리하며 1분마다 확인합니다.
+- 자체 **Codex(ChatGPT)** 스위치를 켠 경우(별도의 옵트인, 기본 꺼짐), 동일한 주의 원칙이
+  chatgpt.com에도 적용됩니다. 클릭 가능한 부정 버튼이 같은 버튼 컨테이너 안에 있을 때만
+  Codex 승인 요청의 긍정 옵션(“Yes, proceed”, “Allow”, “Approve” — 일회성 형식 우선)을
+  클릭하고, 접힌 “Allow Codex to …” 카드를 먼저 펼치며, “A task needs your approval”
+  검토 바를 열어 승인 패널이 렌더링되게 합니다.
 
 **절대 하지 않는 일**
 - **Deny**, **Reject**, **Decline** 은 절대 클릭하지 않습니다.
@@ -368,6 +396,11 @@ Muse(muse.ai)는 작업 전에 승인을 요청하며 잠시 멈춥니다. 자�
 - 빠르고 접근성 좋게: 승인 처리가 더 빨라졌고, 전송이 거부되거나 카드가 차단되면 정확한 사유를 항상 표시합니다. 자주 쓰는 동작은 키보드 단축키로 처리하며, 대화상자가 열려 있는 동안 배경은 보조 기술에서 분리됩니다.
 - 시작 시 요약: 최근 활동(클릭, 팔로우, 차단 항목)을 정리한 데스크톱 알림 — 기기에서 생성됩니다.
 - 설정 동기화(선택): Chrome 기본 동기화로 설정을 다른 Chrome 프로필로 가져갑니다 — 기본 꺼짐, 설정만 동기화되며 로그와 통계는 절대 동기화되지 않습니다.
+- Codex(ChatGPT) 스위치: chatgpt.com용 별도 옵트인 — 기본 꺼짐, 팝업의 **안전 및 제어**
+  패널에서 YOLO 옆에 있습니다. Deny는 절대 클릭하지 않고, 단독 긍정 옵션도 절대 클릭하지
+  않으며, 인증/연결 화면(Connect, Authorize, 계정 연결, API key/token)은 절대 건드리지
+  않습니다. 상시 권한(“Always allow”, “don't ask again”)은 YOLO를 켜지 않는 한 수동으로
+  유지됩니다.
 - 첫 실행 시 3단계 설정 마법사.
 - 내장 통계 페이지: 일 / 주 / 월 / 년 및 주제별(저장소 / 프로젝트) 클릭 수를 가벼운 차트로 즉시 표시.
 
@@ -398,6 +431,12 @@ se detenga.
   “N tasks need your approval” (abre el panel de aprobaciones para que se muestren las
   tarjetas pendientes).
 - También atiende las pestañas en segundo plano, revisando una vez por minuto.
+- Con su propio interruptor **Codex (ChatGPT)** activado (una opción aparte, desactivada por
+  defecto), el mismo cuidado se aplica en chatgpt.com: pulsa la opción afirmativa en las
+  solicitudes de aprobación de Codex (“Yes, proceed”, “Allow”, “Approve” — se prefieren las
+  formas de una sola vez) solo cuando hay un botón negativo pulsable en el mismo contenedor
+  de botones, expande primero las tarjetas contraídas “Allow Codex to …” y abre la barra
+  “A task needs your approval” para que se muestre el panel de aprobaciones.
 
 **Lo que nunca hará**
 - Nunca pulsa **Deny**, **Reject** ni **Decline**.
@@ -419,6 +458,11 @@ se detenga.
 - Ágil y accesible: las aprobaciones se gestionan más rápido, un envío rechazado o una tarjeta bloqueada siempre muestra el motivo exacto, los atajos de teclado cubren las acciones habituales y, mientras un cuadro de diálogo está abierto, el fondo queda fuera del alcance de las tecnologías de asistencia.
 - Resumen al arrancar: una notificación de escritorio que resume la actividad reciente (clics, seguimientos, bloqueos), compuesta en tu dispositivo.
 - Sincronización de ajustes opcional: lleva tus ajustes a otros perfiles de Chrome mediante la sincronización propia de Chrome — desactivada por defecto, solo ajustes (los registros y las estadísticas nunca se sincronizan).
+- Interruptor Codex (ChatGPT): una opción aparte para chatgpt.com — desactivada por defecto,
+  dentro del panel **Seguridad y control** de la ventana emergente, junto a YOLO. Nunca pulsa
+  Deny, nunca pulsa una opción afirmativa aislada, nunca toca las pantallas de autenticación o
+  conexión (Connect, Authorize, vincular cuenta, API key/token) y mantiene los permisos
+  permanentes (“Always allow”, “don't ask again”) en manual salvo con YOLO activado.
 - Un asistente de configuración de 3 pasos en el primer uso.
 - Página de estadísticas integrada: clics por día / semana / mes / año y por tema (repositorio / proyecto), con gráficos ligeros.
 
@@ -514,7 +558,7 @@ Compliance notes for this declaration:
 - Manifest V3, no `content_security_policy` relaxation.
 - No analytics SDK, no CDN, no update endpoint. (The optional settings sync uses
   Chrome's built-in sync service — a browser feature, not an extension network call.)
-- `dist/muse-auto-allow-v1.10.0.zip` contains only static files with `manifest.json` at the
+- `dist/muse-auto-allow-v1.10.1.zip` contains only static files with `manifest.json` at the
   zip root.
 
 ---

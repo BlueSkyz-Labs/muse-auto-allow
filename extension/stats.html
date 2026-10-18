@@ -117,6 +117,7 @@
   /* ---- topics ---- */
   .topics { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px 20px; box-shadow: var(--sh-2); }
   .topics .cap { font-size: 10.5px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+  .topics .scopenote { font-size: 11px; color: var(--muted); margin: -6px 0 6px; }
   .topic { display: flex; align-items: center; gap: 11px; padding: 5px 0; }
   .topic + .topic { border-top: 1px solid var(--divide); }
   .topic .dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--tc, var(--muted));
@@ -198,6 +199,7 @@
 
   <div class="topics">
     <div class="cap" data-i18n="topicsTitle">By topic (repo / project)</div>
+    <div class="scopenote" id="topicsScope" hidden></div>
     <div id="topics"></div>
   </div>
 
