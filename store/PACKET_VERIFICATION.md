@@ -21,7 +21,9 @@
 >
 > **v1.10.0 addendum (history):** the packet shipped as **v1.10.0** (`dist/muse-auto-allow-v1.10.0.zip`) — the v1.10.0 addendum was the verification of record for that packet; superseded by the v1.10.1 addendum below.
 >
-> **v1.10.1 addendum (current verification):** the packet ships as **v1.10.1** (`dist/muse-auto-allow-v1.10.1.zip`, 203,784 bytes, 19 entries, sha256 `52038092…2ecb`) — the v1.10.1 addendum at the end of this document is the **current verification** for this packet; it carries the v1.10.0 substance forward, **closes both v1.10.0 open items** (localized detailed copies + regenerated popup-bearing captures), and adds the statistics locale/caption polish plus the F6 dark-scheme gate. Everything above (the v1.2.0 record and the v1.4.0 / v1.5.0 / v1.9.0 / v1.9.1 / v1.9.2 / v1.9.3 / v1.10.0 addenda) is the frozen historical record; the **v1.6.0 / v1.7.0 / v1.8.0 gap** in this file is a known stale item.
+> **v1.10.1 addendum (history):** the packet shipped as **v1.10.1** (`dist/muse-auto-allow-v1.10.1.zip`, 203,784 bytes, 19 entries, sha256 `52038092…2ecb`) — the v1.10.1 addendum was the verification of record for that packet; superseded by the v1.11.0 addendum below.
+>
+> **v1.11.0 addendum (current verification):** the packet ships as **v1.11.0** (`dist/muse-auto-allow-v1.11.0.zip`, 206,845 bytes, 19 entries, sha256 `c09819c6…cb0f`) — the v1.11.0 addendum at the end of this document is the **current verification** for this packet; it carries the v1.10.x substance forward, adds the effective-state line (G01), the standing-grant boolean (G11), the blocked-entry deep link (G07) and the onboarding static list (G03), and notes that the v1.10.x open items (localized copies, captures) remain closed. Everything above is the frozen historical record; the **v1.6.0 / v1.7.0 / v1.8.0 gap** in this file is a known stale item.
 
 ## Verdict
 
@@ -463,4 +465,18 @@ Entries carry an ISO `at` timestamp (`content.js:203`); PRIVACY §2 describes "k
 | 3.9 | "collects nothing / transmits nothing / no analytics / no advertising" | unchanged — this pass adds static UI copy only; no new data flow, no permission, no remote code | PASS |
 | — | Artifact integrity | `verify-zip.py` 19/0/0/0 (exit 0); `smoke-zip.mjs` 20/20 `ok: true`; deterministic rebuild byte-identical; checksum sidecar verified; frozen values in `docs/RELEASE_INTEGRITY.md` (v1.10.1 evidence) | PASS |
 
-**Bottom line (v1.10.1):** the v1.10.0 substantive verification stands; this addendum closes both v1.10.0 open items (screenshots, localized copy), records the stats polish and the F6 dark-scheme gate, and moves every artifact reference to `dist/muse-auto-allow-v1.10.1.zip`. The package has not been uploaded to the Chrome Web Store.
+**Bottom line (v1.10.1):** the v1.10.0 substantive verification stands; this addendum closes both v1.10.0 open items (screenshots, localized copy), records the stats polish and the F6 dark-scheme gate, and moves every artifact reference to `dist/muse-auto-allow-v1.10.1.zip`. The package has not been uploaded to the Chrome Web Store. *(Superseded by the v1.11.0 addendum appended below.)*
+
+## v1.11.0 Addendum (2026-10-18) — current verification
+
+**Method note (honest):** same repository-maintainer pass pattern (maker = verifier, disclosed), executed at the v1.11.0 release freeze.
+
+| # | Item | v1.11.0 re-check | Status |
+|---|---|---|---|
+| 1.2 / 4.6 | Version consistency | `extension/manifest.json` `"version"` `1.11.0` = `store/LISTING.md` §1 `Version 1.11.0` = `dist/muse-auto-allow-v1.11.0.zip` (all three read in this pass) | PASS |
+| — | Store captures at this tree | `screenshot1/3` now show the effective-state line and the blocked-row chevron; all five assets 1280×800 by PNG header | PASS |
+| 3.9 | "collects nothing / transmits nothing" | unchanged — the wave adds local UI only (a state line, a boolean on log entries, UI deep links); no new data flow, permission or remote code | PASS |
+| — | Import surface | the sanitizer round-trips the new boolean-only `standing` field; `import-security` 145/0 at this freeze | PASS |
+| — | Artifact integrity | verify-zip 19/0/0/0; smoke 20/20 `ok: true`; deterministic double-build byte-identical; frozen values in `docs/RELEASE_INTEGRITY.md` (v1.11.0 evidence) | PASS |
+
+**Bottom line (v1.11.0):** the v1.10.x verification stands; this addendum carries it forward with the wave-2 surfaces recorded, the new deterministic coverage (145 import-security checks; 199-key parity; the state line's zero-height discipline verified by the held popup baselines), and every artifact reference moved to `dist/muse-auto-allow-v1.11.0.zip`. The package has not been uploaded to the Chrome Web Store.

@@ -291,6 +291,7 @@ const sanitizeBackup = (d) => {
       if (e.ctx && typeof e.ctx === 'object' && typeof e.ctx.iv === 'string' && typeof e.ctx.ct === 'string'
           && /^[A-Za-z0-9+/=]{8,64}$/.test(e.ctx.iv) && /^[A-Za-z0-9+/=]{8,4096}$/.test(e.ctx.ct)) o.ctx = { iv: e.ctx.iv, ct: e.ctx.ct };
       else if (typeof e.context === 'string') o.context = e.context.slice(0, 500);
+      if (e.standing === true) o.standing = true; // v1.11.0 standing-grant flag: boolean-only, junk dropped
       return o;
     });
     seen++;

@@ -381,6 +381,27 @@ async function main() {
   check('SA-3 bounds: 300k-char / >64-char / non-ISO `at` entries dropped', s3log.length === 2 && s3log.every((e) => e.at.length <= 64), { logLen: s3log.length, ats: s3log.map((e) => String(e.at).slice(0, 40)) });
   check('SA-3 bounds: negative clickCount floors to 0', T.sanitizeBackup({ clickCount: -3 }).clickCount === 0);
 
+  // ============ G11 (v1.11.0) — the standing-grant flag round-trips ============
+  const s11 = T.sanitizeBackup({
+    log: [
+      { at: iso, kind: 'allow', label: 'Always allow', standing: true },
+      { at: iso, kind: 'allow', label: 'Allow' },
+    ],
+  }) || {};
+  const s11log = Array.isArray(s11.log) ? s11.log : [];
+  check('G11 round-trip: a standing:true flag survives the import sanitizer (boolean)', s11log.length === 2 && !!s11log[0] && s11log[0].standing === true, { log: s11log });
+  check('G11 round-trip: an entry without the flag stays without it', !!s11log[1] && !('standing' in s11log[1]), { second: s11log[1] });
+  const s11junk = T.sanitizeBackup({
+    log: [
+      { at: iso, kind: 'allow', label: 'x', standing: 'yes' },
+      { at: iso, kind: 'allow', label: 'y', standing: 1 },
+      { at: iso, kind: 'allow', label: 'z', standing: {} },
+    ],
+  }) || {};
+  const s11junkLog = Array.isArray(s11junk.log) ? s11junk.log : [];
+  check('G11 junk: non-boolean standing values are dropped (entries still import)',
+    s11junkLog.length === 3 && s11junkLog.every((e) => !('standing' in e)), { log: s11junkLog });
+
   resetStore({ cryptKeyRaw: K1, enabled: false });
   state.setBehavior = () => new Error('QUOTA_BYTES quota exceeded');
   const aQ = await importFile(backup({ enabled: true }));

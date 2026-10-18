@@ -439,6 +439,10 @@
     const isDry = v18.dryRun === true;
     if (isDry) dryNodes.add(btn); else clickedNodes.add(btn);
     const label = txt(btn);
+    // v1.11.0 (G11): the standing-grant class is recorded structurally (boolean only) —
+    // Codex standing grants ("Yes, and don't ask again …") are clickable only under the
+    // explicit YOLO opt-in; later surfaces can then tell them from one-shot approvals.
+    const standing = kind === 'codex-allow' && STANDING_RE.test(stripDecor(label));
     const context = (scope ? contextText(scope) : label).slice(0, 240);
     state.lastClickAt = Date.now();
     if (kind === 'codex-expand') state.lastExpandAt = state.lastClickAt;
@@ -456,6 +460,7 @@
     const entryKind = isDry ? kind + '-dry' : kind;
     state.lastResult = { at: new Date().toISOString(), kind: entryKind, label, context };
     if (isDry) state.lastResult.dryRun = true;
+    if (standing) state.lastResult.standing = true;
     recordClick(state.lastResult, context, !isDry);
     console.log('[codex-auto-allow] ' + entryKind + ' "' + label.slice(0, 60) + '" | ' + context.slice(0, 90));
     if (isDry) return;

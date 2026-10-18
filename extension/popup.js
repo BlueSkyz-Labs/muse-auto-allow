@@ -595,8 +595,13 @@ async function renderLog(log) {
         // widen the chip past the frozen layout.
         const kAria = kTitle ? ' aria-label="' + esc(kLbl + ' — ' + kTitle) + '"' : '';
         const kVis = kTitle ? '<span class="kreason" aria-hidden="true"> · ' + esc(kTitle) + '</span>' : '';
+        // v1.11.0 (G07): a blocked entry carries a one-tap deep link into the Safety
+        // keyword rules (deep link only — never a suggested exception).
+        const kOpen = kCls === 'blocked'
+          ? '<button type="button" class="kopen" aria-label="' + esc(t('logOpenRules', 'Open the keyword rules')) + '" title="' + esc(t('logOpenRules', 'Open the keyword rules')) + '"><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
+          : '';
         return '<div class="item"><span class="t" title="' + esc(localFull(e.at)) + '">' + esc(localTime(e.at)) + '</span>' +
-          '<div class="top"><span class="k k-' + esc(kCls) + '"' + (kTitle ? ' title="' + esc(kTitle) + '"' : '') + kAria + '>' + esc(kLbl) + kVis + '</span>' + mTitle + '</div>' +
+          '<div class="top"><span class="k k-' + esc(kCls) + '"' + (kTitle ? ' title="' + esc(kTitle) + '"' : '') + kAria + '>' + esc(kLbl) + kVis + '</span>' + mTitle + kOpen + '</div>' +
           '<div class="c" title="' + esc(cTitle) + '">' + esc(ctxS) + '</div></div>';
       }).join('')
     : '<div class="empty">' + esc(t('noClicks', 'No clicks yet')) + '</div>';
@@ -828,6 +833,7 @@ function renderPause() {
     const ms = Math.max(0, (Number(v18.pauseUntil) || 0) - Date.now()) + 250;
     pauseTimer = setTimeout(() => { pauseTimer = null; renderPause(); }, Math.min(ms, 2147483000));
   }
+  renderStateLine(); // v1.11.0 (G01): keep the state line's pause token in lockstep
 }
 function setPause(until) { try { chrome.storage.local.set({ pauseUntil: until }); } catch { /* ignore */ } }
 function pauseUntilTomorrow() {
@@ -990,11 +996,67 @@ function renderDry() {
   renderYoloNote();
   renderLogTop();
 }
+// v1.11.0 (G01): one always-visible effective-state line, rendered inside the sticky
+// #logTop band — it costs the popup no height (the band lives inside the log's scroll
+// area). Precedence: dry (the existing #dryBand banner carries it) > paused > off >
+// YOLO > live. Watched surfaces append asynchronously (tab counts, shipped strings).
+function offNow() {
+  // the popup's canonical on/off is the main toggle checkbox (v18 never carried `enabled`)
+  const el = $('enabled');
+  return !!el && el.checked === false;
+}
+function renderStateLine() {
+  const line = $('stateLine');
+  if (!line) return;
+  const dry = v18.dryRun === true;
+  line.hidden = dry; // dry-run keeps its existing full banner — the line yields to it
+  if (dry) return;
+  const paused = pausedNow();
+  const off = offNow();
+  const token = $('stateToken');
+  if (token) {
+    token.textContent = paused
+      ? t('pauseStateUntil', 'Paused until $1', [hhmm(v18.pauseUntil)])
+      : off ? t('stateOff', 'Off — nothing is clicked')
+      : v18.yoloMode === true ? t('stateYolo', 'YOLO — skips keyword blocks')
+      : t('stateLive', 'Live — clicks Allow only');
+  }
+  const act = $('stateAction');
+  if (act) {
+    const canResume = paused && !off;
+    act.hidden = !canResume;
+    if (canResume) { act.dataset.act = 'resume'; act.textContent = t('pauseResume', 'Resume'); }
+  }
+  refreshStateSurf();
+}
+function refreshStateSurf() {
+  const surf = $('stateSurf');
+  if (!surf) return;
+  if (v18.dryRun === true || offNow()) { surf.textContent = ''; return; }
+  const muse = (n) => (n === 1 ? t('museTabsFoundOne', '1 muse.ai tab open')
+    : n > 1 ? t('museTabsFound', '$1 muse.ai tabs open', [String(n)])
+    : t('museTabsNone', 'No muse.ai tab found'));
+  const codex = (n) => (n === 1 ? t('codexTabsFoundOne', '1 chatgpt.com tab open')
+    : n > 1 ? t('codexTabsFound', '$1 chatgpt.com tabs open', [String(n)])
+    : t('codexTabsNone', 'No chatgpt.com tab found'));
+  try {
+    chrome.tabs.query({ url: ['https://muse.ai/*', 'https://*.muse.ai/*'] }, (tabs) => {
+      const m = Array.isArray(tabs) ? tabs.length : 0;
+      if (v18.codexEnabled !== true) { surf.textContent = muse(m); return; }
+      chrome.tabs.query({ url: ['https://chatgpt.com/*', 'https://*.chatgpt.com/*'] }, (ct) => {
+        const c = Array.isArray(ct) ? ct.length : 0;
+        surf.textContent = muse(m) + ' · ' + codex(c);
+      });
+    });
+  } catch { /* tabs API unavailable — the state token still stands on its own */ }
+}
 function renderLogTop() {
   const top = $('logTop');
   if (!top) return;
   const dg = $('digest');
-  top.hidden = !(v18.dryRun === true || (dg && !dg.hidden));
+  renderStateLine();
+  const sl = $('stateLine');
+  top.hidden = !(v18.dryRun === true || (dg && !dg.hidden) || (sl && !sl.hidden));
 }
 
 // ---- Safety & Control panel (full-popup overlay) -------------------------------------
@@ -1050,6 +1112,7 @@ function renderOnboard() {
   // clicking is on — so it can never claim 'nothing will be clicked' while the engine clicks)
   const st = $('obDryState'); if (st) st.hidden = !(obStep === 1 && v18.dryRun === true);
   const cs = $('obConsent'); if (cs) cs.hidden = obStep !== 1;
+  const dm = $('obDemo'); if (dm) dm.hidden = obStep !== 1; // v1.11.0 (G03): the static "what it would do" list
   const q = $('obQuick'); if (q) q.hidden = obStep !== 2;
   const bk = $('obBack'); if (bk) bk.hidden = obStep === 0;
   const sc = $('obStep'); if (sc) sc.textContent = t('onbStepCount', 'Step $1 of $2', [String(obStep + 1), '3']);
@@ -1369,7 +1432,7 @@ boot();
 $('openstats').addEventListener('click', () => {
   try { chrome.tabs.create({ url: chrome.runtime.getURL('stats.html') }); } catch { /* ignore */ }
 });
-$('enabled').addEventListener('change', () => chrome.storage.local.set({ enabled: $('enabled').checked }));
+$('enabled').addEventListener('change', () => { chrome.storage.local.set({ enabled: $('enabled').checked }); renderLogTop(); });
 // v1.10.0 — the Codex (ChatGPT) feature switch: its own key (default false, opt-in). The
 // codex.js content script self-gates ALL of its behaviour on it — with the switch off,
 // chatgpt.com tabs are read-only for the extension.
@@ -1606,6 +1669,24 @@ $('p60').addEventListener('click', () => setPause(Date.now() + PAUSE_1H));
 $('ptom').addEventListener('click', () => setPause(pauseUntilTomorrow()));
 $('presume').addEventListener('click', () => setPause(0));
 $('safetyBtn').addEventListener('click', () => setSafety(!safetyOpen));
+// v1.11.0 (G07): a blocked entry's chevron opens the Safety keyword section directly.
+function openSafetyKeywords() {
+  setSafety(true);
+  const g = $('kwGroup');
+  if (g) requestAnimationFrame(() => {
+    try { g.scrollIntoView({ block: 'nearest' }); } catch { /* ignore */ }
+    const inp = $('kwInput'); if (inp) inp.focus({ preventScroll: true });
+  });
+}
+$('logList').addEventListener('click', (e) => {
+  const b = e.target && e.target.closest ? e.target.closest('.kopen') : null;
+  if (b) openSafetyKeywords();
+});
+// v1.11.0 (G01): the state line's corrective action — Resume directly from the line.
+{
+  const sa = $('stateAction');
+  if (sa) sa.addEventListener('click', () => { if (sa.dataset.act === 'resume') setPause(0); });
+}
 $('safetyClose').addEventListener('click', () => setSafety(false));
 $('topicAdd').addEventListener('click', () => addRule('topic'));
 $('kwAdd').addEventListener('click', () => addRule('kw'));

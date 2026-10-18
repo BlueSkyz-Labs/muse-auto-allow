@@ -291,6 +291,22 @@
      clamped context lines hang under the message column instead of the page margin */
   .item { position: relative; padding: 5px 4px 5px 52px; border-bottom: 1px solid var(--divide); animation: fadein 160ms var(--ease-out); }
   .item:last-child { border-bottom: 0; }
+  /* v1.11.0 (G01): the effective-state line — sticky inside the log's scroll area, so it
+     costs the popup no height; the log absorbs it (the shipped ≤600px discipline). */
+  .stateline { display: flex; align-items: center; gap: 4px; padding: 5px 8px 4px; font-size: 11px;
+    line-height: 1.35; color: var(--muted); border-bottom: 1px solid var(--divide); }
+  .stateline .stok { color: var(--ink); font-weight: 600; flex: none; }
+  .stateline .stsurf { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .stateline .stact { font: inherit; color: var(--accent); background: none; border: 0; padding: 0 2px;
+    cursor: pointer; text-decoration: underline; flex: none; }
+  /* v1.11.0 (G07): the blocked-entry deep link into the Safety keyword rules */
+  .item .kopen { margin-left: auto; display: inline-flex; align-items: center; background: none; border: 0;
+    padding: 0 0 0 4px; cursor: pointer; color: var(--muted); }
+  .item .kopen:hover { color: var(--ink); }
+  .item .kopen:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+  /* v1.11.0 (G03): the first-run "what it would do" static list (step 2, non-interactive) */
+  .obdemo { margin: 8px 0 2px; padding-left: 18px; font-size: 12px; line-height: 1.5; color: var(--muted); }
+  .obdemo li { margin: 2px 0; }
   @keyframes fadein { from { opacity: 0; transform: translateY(-2px); } to { opacity: 1; transform: none; } }
   .item .top { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
   .item .t { position: absolute; left: 0; top: 5px; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
@@ -634,6 +650,7 @@
     <!-- v1.8.0 — state bands live INSIDE the log's scroll area (sticky top): they cost the
          layout no height, so they can never push the popup past its 600px cap -->
     <div class="logtop" id="logTop" hidden>
+      <div class="stateline" id="stateLine" role="status"><span class="stok" id="stateToken"></span><span class="stsurf" id="stateSurf"></span><button type="button" class="stact" id="stateAction" hidden></button></div>
       <div class="dryband" id="dryBand" hidden><span data-i18n="dryRunBanner">Logging only — nothing will be clicked</span></div>
       <div class="digest" id="digest" hidden>
         <div class="dhead"><span data-i18n="digestTitle">While you were away</span><span id="dSince"></span></div>
@@ -712,7 +729,7 @@
         <div class="radd"><input class="rin" id="topicInput" maxlength="64" placeholder="Add a topic…" data-i18n-ph="topicsPlaceholder">
           <button type="button" class="rbtn" id="topicAdd" data-i18n="rulesAdd">Add</button></div>
       </div>
-      <div class="rgroup">
+      <div class="rgroup" id="kwGroup">
         <div class="rlabel" data-i18n="keywordsLabel">Block keywords</div>
         <div class="rnote" id="keywordsNote" data-i18n="keywordsNote">A card containing any of these words is never clicked — it is logged as blocked instead.</div>
         <div class="rlist" id="kwList"></div>
@@ -758,6 +775,11 @@
            renderOnboard() owns the visibility. -->
       <div class="obstate" id="obDryState" hidden><span data-i18n="dryRunBanner">Logging only — nothing will be clicked</span></div>
       <p class="obconsent" id="obConsent" data-i18n="onbConsent" hidden>This tool grants approvals in your name — you stay responsible for what your agent does.</p>
+      <ul class="obdemo" id="obDemo" hidden>
+        <li data-i18n="onbDemoClick">Clicks Allow when Muse shows a clear approval pair</li>
+        <li data-i18n="onbDemoBlock">Skips anything matching your keyword block-list (delete, deploy, …)</li>
+        <li data-i18n="onbDemoStanding">Leaves standing grants ("Always allow") to you</li>
+      </ul>
       <div class="obquick" id="obQuick" hidden>
         <button type="button" class="qbtn" id="obq0" data-i18n="followupQuick1">Keep going</button>
         <button type="button" class="qbtn" id="obq1" data-i18n="followupQuick2">Long-run</button>

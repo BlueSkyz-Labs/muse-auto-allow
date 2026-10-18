@@ -92,3 +92,31 @@ VALIDATE until an owner decision.
   reach it (recorded in `stats.js`, TS-04 class).
 - v1.10.0's own release notes carry the historical record; artifact values for v1.10.1 live in
   `CHANGELOG.md` and `docs/RELEASE_INTEGRITY.md` (freeze battery, 2026-10-18).
+
+## Wave 2 — executed (v1.11.0)
+
+- **G01** effective-state line: one always-visible line inside the log's sticky `#logTop` band
+  showing Off / Paused (with a one-tap Resume on the line) / Log-only (the existing banner) /
+  Live / YOLO + watched-surface tab counts. Lives inside the log's scroll area, so it costs the
+  popup zero height. 3 new state-word keys ×6 locales (`stateOff`/`stateLive`/`stateYolo`) —
+  no honest shipped string existed for those states. An in-Chrome QA pass caught that the first
+  build read a storage field the popup never carried (`v18.enabled`); fixed to read the canonical
+  toggle checkbox before any gate ran.
+- **G11** standing-grant class recorded structurally: boolean `standing: true` on the log entry
+  at both engines' single log sites (`content.js` `doClick` 'allow' branch under YOLO;
+  `codex.js` `doClick` 'codex-allow'). Never a new kind string. The export/import sanitizer
+  round-trips it (boolean-only, junk dropped); the import-security suite grew 142 → 145 checks.
+- **G07** blocked-entry deep link: a chevron on blocked log rows opens Safety & Control at the
+  `#kwGroup` keyword group and focuses `#kwInput`. Deep link only.
+- **G03** onboarding step 2 static list: 3 non-interactive lines (click / keyword-block-skip /
+  standing-grant-left-to-you), keys `onbDemoClick`/`onbDemoBlock`/`onbDemoStanding` ×6 locales.
+- **i18n** parity: 199 keys ×6 locales.
+- **Multi-agent note:** this wave used the delegation pipeline on a free `step-5-preview` model
+  for bounded tasks — a probe task succeeded (24.6s, verified answers) and a repo edit task
+  applied one correct sanitizer line before stalling; three long multi-step tasks were
+  interrupted at ~16 min (provider/model stalls on long generations), so the carry-over work
+  (locale values, the test additions, the independent review) was completed and verified in the
+  main session instead. Delegation now runs with a 600s child timeout guard (config
+  `delegation.child_timeout_seconds`).
+- **Honest caveat:** no independent subagent review of wave 2 completed. The main session's QA
+  pass + the deterministic suites are the wave-2 verification of record.

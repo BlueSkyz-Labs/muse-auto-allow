@@ -60,17 +60,17 @@ of the artifact gets `http://127.0.0.1/*` appended to `content_scripts[0].matche
 fixture origin — the pristine extraction dir and the shipped manifest stay untouched,
 and the artifact's own bytes are what gets loaded everywhere else.
 
-## Freeze procedure (v1.10.1 freeze)
+## Freeze procedure (v1.11.0 freeze)
 
 Run from the repo root during the freeze, tree stable, editing lanes stopped.
 
-1. Confirm the version: `extension/manifest.json` reads `1.10.1` (the freeze owns
+1. Confirm the version: `extension/manifest.json` reads `1.11.0` (the freeze owns
    version bumps — no script edits it).
 2. Rebuild clean:
    `node scripts/build.mjs`
    Expect: `manifest at root: true`, an entry count equal to the number of files in
-   `extension/`, and a fresh `dist/muse-auto-allow-v1.10.1.zip` + `.sha256`.
-3. Record the hash: `sha256sum dist/muse-auto-allow-v1.10.1.zip` (must equal the
+   `extension/`, and a fresh `dist/muse-auto-allow-v1.11.0.zip` + `.sha256`.
+3. Record the hash: `sha256sum dist/muse-auto-allow-v1.11.0.zip` (must equal the
    sidecar; verify with `sha256sum -c` as above).
 4. Determinism proof: build once more; the hash must be **identical**. A differing
    hash means the tree changed between builds — stop and find out what moved.
@@ -78,9 +78,52 @@ Run from the repo root during the freeze, tree stable, editing lanes stopped.
    then `node scripts/smoke-zip.mjs` — exit 0 and `"ok": true` in the JSON summary.
 6. Attach to the GitHub Release: the zip **and** its `.sha256` sidecar, per
    `docs/GITHUB_PUBLISH_RUNBOOK.md` §3 —
-   `gh release create "v1.10.1" "dist/muse-auto-allow-v1.10.1.zip#…" "dist/muse-auto-allow-v1.10.1.zip.sha256#checksum" …`
+   `gh release create "v1.11.0" "dist/muse-auto-allow-v1.11.0.zip#…" "dist/muse-auto-allow-v1.11.0.zip.sha256#checksum" …`
    The attached zip must be the exact bytes that passed steps 2–5; if anything is
    rebuilt after step 5, restart from step 2.
+
+## Recorded evidence (v1.11.0 freeze)
+
+- Frozen tree: `extension/manifest.json` `"version": "1.11.0"`; git tag `v1.11.0`
+  (created from this release commit; the GitHub Release v1.11.0 carries the zip +
+  `.sha256` sidecar attached).
+- Artifact: `dist/muse-auto-allow-v1.11.0.zip` — **206,845 bytes**, **19 entries**,
+  `manifest.json` at the zip root; sha256
+  `c09819c6e49baa5b7c70d5df0fa819f6d1065f74349b35d6a4785278f469cb0f` (sidecar
+  `dist/muse-auto-allow-v1.11.0.zip.sha256`; `sha256sum -c` clean).
+- `python scripts/verify-zip.py`: 19 matched, 0 mismatched, 0 disk-only, 0 zip-only (exit 0).
+- `node scripts/smoke-zip.mjs`: exit 0, `ok: true`, 20/20 checks (extracts the shipped zip
+  and passes the core e2e in scratch Chrome).
+- Gates on the frozen tree (2026-10-18, exit codes captured directly): `lint.mjs` 0
+  (27 checks) · `background-unit.mjs` 32/32 · `import-security` **145/0** (was 142; the
+  three new G11 checks) · `yolo-ux-unit` 5/5 · `e2e.mjs` 0 · `followup-e2e.mjs` 0 ·
+  `mission-e2e.mjs` 0 · `lang-switch-e2e.mjs` 24/24 checks (199 keys × 6 locales; the
+  popup height baselines held with the new state line) · `codex-e2e.mjs` 0 (4 phases) ·
+  `scripts/bench/experience.mjs --only=assert` **28/0** (first battery pass hit a
+  transient `Target.createTarget` CDP timeout — infra, zero failed checks; the clean
+  re-run on an idle machine is the recorded gate).
+- New in 1.11.0 (cycle wave 2): the **effective-state line** (G01 — one always-visible
+  line in the log's sticky band: Off / Paused with a one-tap Resume / Log-only / Live /
+  YOLO + watched-surface tab counts; costs zero popup height; 3 new state-word keys ×6);
+  the **standing-grant boolean** on log entries at both engines' log sites (G11 — never a
+  new kind; the import sanitizer round-trips it boolean-only); the **blocked-entry deep
+  link** into Safety's keyword group (G07); the **onboarding step-2 static list** naming
+  click / keyword-skip / standing-left-to-you (G03). i18n **199 keys × 6 locales**.
+  An in-Chrome QA pass during the cycle caught one real defect before any gate ran (the
+  first G01 build read a storage field the popup never carried — fixed to read the
+  canonical toggle checkbox); recorded in `CHANGELOG.md`.
+- Multi-agent note (honest): this wave exercised the delegation pipeline on a free
+  `step-5-preview` model — a probe task succeeded (24.6 s, verified answers) and one
+  bounded repo edit applied correctly before stalling, but three long multi-step child
+  tasks were interrupted at ~16 min (provider/model stall on long generations). The
+  carry-over work (locale values, the test additions, the independent review pass) was
+  completed and verified in the main session; no independent subagent review of this
+  wave completed — the main-session QA pass plus the deterministic suites above are the
+  verification of record. `delegation.child_timeout_seconds` is now set to 600 as a
+  stall guard.
+- Honest open items at this freeze: CWS owner items (publisher display name, support
+  email, 2-Step Verification, registration fee) and the Muse-ToS owner/legal decision
+  remain; the package has **not** been uploaded to the Chrome Web Store.
 
 ## Recorded evidence (v1.10.1 freeze)
 
