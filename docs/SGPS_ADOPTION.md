@@ -12,7 +12,7 @@
 | Field | Value |
 |---|---|
 | Project / repo | `BlueSkyz-Labs/muse-auto-allow` (Chrome MV3 extension) |
-| Measured project base | v1.13.0 `63d2470` → this record lands with **v1.14.0** (merge revision recorded at PR closure) |
+| Measured project base | v1.13.0 `63d2470` → this record landed with **v1.14.0** (merge `9449390`, PR #10; reconciliation `f1b7129`) |
 | Pinned SGPS release | **v1.13.0** (`release_tag=v1.13.0`, `tagged_commit=7d651179d21a`; immutable) |
 | SGPS source read from | local clone `C:\Users\thinh\dev\sgps-core` (HEAD `425c045`, 747 commits past v1.13.0 = post-release overlays) |
 | Declared upstream version | SGPS 1.14.0 (`decisions_through: SGPS-DEC-2026-037`, signed tag pending upstream) — **not** adopted as our pin (pin upgrades are Owner decisions) |
