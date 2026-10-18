@@ -56,6 +56,27 @@
   "statsBarScopeTop": {
     "message": "Top 12 de $1 temas · barras: proporción sobre $2 clics totales"
   },
+  "stateOff": {
+    "message": "Apagado — no se pulsa nada"
+  },
+  "stateLive": {
+    "message": "Activo — solo pulsa Allow"
+  },
+  "stateYolo": {
+    "message": "YOLO — omite las palabras bloqueadas"
+  },
+  "logOpenRules": {
+    "message": "Abrir las reglas de palabras clave"
+  },
+  "onbDemoClick": {
+    "message": "Pulsa Allow cuando Muse muestra un par de aprobación claro"
+  },
+  "onbDemoBlock": {
+    "message": "Omite lo que coincida con tu lista de palabras bloqueadas (delete, deploy…)"
+  },
+  "onbDemoStanding": {
+    "message": "Deja los permisos permanentes (\"Always allow\") en tus manos"
+  },
   "rangeDay": {
     "message": "Día"
   },

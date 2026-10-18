@@ -56,6 +56,27 @@
   "statsBarScopeTop": {
     "message": "주제 $1개 중 상위 12 · 막대는 총 $2회 클릭 대비 비율"
   },
+  "stateOff": {
+    "message": "꺼짐 — 아무것도 클릭하지 않습니다"
+  },
+  "stateLive": {
+    "message": "실행 중 — Allow만 클릭"
+  },
+  "stateYolo": {
+    "message": "YOLO — 키워드 차단 건너뜀"
+  },
+  "logOpenRules": {
+    "message": "키워드 규칙 열기"
+  },
+  "onbDemoClick": {
+    "message": "Muse가 명확한 승인 쌍을 표시하면 Allow를 클릭합니다"
+  },
+  "onbDemoBlock": {
+    "message": "차단 키워드 목록(delete, deploy 등)과 일치하는 항목은 건너뜁니다"
+  },
+  "onbDemoStanding": {
+    "message": "상시 허용(\"Always allow\")은 사용자가 결정하도록 남겨둡니다"
+  },
   "rangeDay": {
     "message": "일"
   },

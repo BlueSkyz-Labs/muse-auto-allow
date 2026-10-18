@@ -56,6 +56,27 @@
   "statsBarScopeTop": {
     "message": "トピック $1 件中トップ 12 · バーは全 $2 クリックに対する割合"
   },
+  "stateOff": {
+    "message": "オフ — 何もクリックしません"
+  },
+  "stateLive": {
+    "message": "稼働中 — Allow のみクリック"
+  },
+  "stateYolo": {
+    "message": "YOLO — キーワードブロックをスキップ"
+  },
+  "logOpenRules": {
+    "message": "キーワードルールを開く"
+  },
+  "onbDemoClick": {
+    "message": "Muse が明確な承認ペアを表示したとき Allow をクリック"
+  },
+  "onbDemoBlock": {
+    "message": "ブロックキーワード一覧（delete、deploy など）に一致するものはスキップ"
+  },
+  "onbDemoStanding": {
+    "message": "常時許可（「Always allow」）はあなたの判断に委ねます"
+  },
   "rangeDay": {
     "message": "日"
   },

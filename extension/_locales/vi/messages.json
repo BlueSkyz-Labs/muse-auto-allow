@@ -56,6 +56,27 @@
   "statsBarScopeTop": {
     "message": "Top 12 trong $1 chủ đề · cột: tỷ lệ trên tổng $2 lượt bấm"
   },
+  "stateOff": {
+    "message": "Đang tắt — không bấm gì"
+  },
+  "stateLive": {
+    "message": "Đang chạy — chỉ bấm Allow"
+  },
+  "stateYolo": {
+    "message": "YOLO — bỏ qua danh sách từ khoá"
+  },
+  "logOpenRules": {
+    "message": "Mở quy tắc từ khoá"
+  },
+  "onbDemoClick": {
+    "message": "Bấm Allow khi Muse hiện cặp phê duyệt rõ ràng"
+  },
+  "onbDemoBlock": {
+    "message": "Bỏ qua mọi thứ khớp danh sách từ khoá chặn (delete, deploy, …)"
+  },
+  "onbDemoStanding": {
+    "message": "Để bạn tự quyết các cấp thường trực (“Always allow”)"
+  },
   "rangeDay": {
     "message": "Ngày"
   },

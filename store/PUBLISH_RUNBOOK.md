@@ -4,7 +4,7 @@ Step-by-step launch and update procedure. Steps marked **[MANUAL/owner]** requir
 with the Google account and payment; everything else can be done from the repo.
 
 **One-line flow:** register developer account → `node scripts/build.mjs` +
-`python scripts/verify-zip.py` → upload `dist/muse-auto-allow-v1.10.1.zip` → fill every
+`python scripts/verify-zip.py` → upload `dist/muse-auto-allow-v1.11.0.zip` → fill every
 dashboard tab → submit → wait for review → publish → for updates: bump version →
 rebuild + verify zip → upload → resubmit.
 
@@ -30,7 +30,7 @@ rebuild + verify zip → upload → resubmit.
 
 ## Step 2 — Build, verify, and upload the package
 
-1. Confirm the version in `extension/manifest.json` is correct (currently `1.10.1`).
+1. Confirm the version in `extension/manifest.json` is correct (currently `1.11.0`).
 2. **Lint gate (mandatory, zero-dependency).** Run from the repo root:
 
    ```bash
@@ -49,7 +49,7 @@ rebuild + verify zip → upload → resubmit.
    node scripts/build.mjs
    ```
 
-   Output: `dist/muse-auto-allow-v1.10.1.zip` with `manifest.json` at the **zip root**
+   Output: `dist/muse-auto-allow-v1.11.0.zip` with `manifest.json` at the **zip root**
    (not nested inside a folder). The build fails closed if the zip does not mirror the
    whole `extension/` tree (exit 3 = file missing from the zip, exit 4 = unexpected file
    in the zip).
@@ -61,11 +61,11 @@ rebuild + verify zip → upload → resubmit.
 
    It checks every zip entry against the on-disk file (sha-identical bytes) and exits
    non-zero on any mismatch, missing file, or extra file. Expected output for this
-   release: `muse-auto-allow-v1.10.1.zip: 19 matched, 0 mismatched, 0 disk-only, 0
+   release: `muse-auto-allow-v1.11.0.zip: 19 matched, 0 mismatched, 0 disk-only, 0
    zip-only` and exit 0. **Do not upload a zip that fails this check.**
 5. In the Developer Dashboard, click **New item** (first release) or open the existing
    item (for updates).
-6. **Upload** `dist/muse-auto-allow-v1.10.1.zip`.
+6. **Upload** `dist/muse-auto-allow-v1.11.0.zip`.
 7. Wait for the dashboard to parse the manifest. It will read the name/description from
    `__MSG_*__` keys resolved against `_locales/en/messages.json`; verify the default
    locale resolves cleanly (no blank name).
@@ -149,7 +149,7 @@ Work through all tabs before submitting; an incomplete listing cannot be submitt
 ## Step 5 — Post-publish update flow
 
 1. Make the code change in `extension/`.
-2. **Bump the version** in `extension/manifest.json` (e.g. `1.10.0` → `1.10.1`); Chrome
+2. **Bump the version** in `extension/manifest.json` (e.g. `1.10.1` → `1.11.0`); Chrome
    rejects a re-upload with a version number that is not higher than the published one.
 3. Rebuild:
 
@@ -157,7 +157,7 @@ Work through all tabs before submitting; an incomplete listing cannot be submitt
    node scripts/build.mjs
    ```
 
-   Output: `dist/muse-auto-allow-v<new version>.zip` (after a bump from 1.10.0, e.g. `muse-auto-allow-v1.10.1.zip`).
+   Output: `dist/muse-auto-allow-v<new version>.zip` (after a bump from 1.10.1, e.g. `muse-auto-allow-v1.11.0.zip`).
 4. **Verify:** `python scripts/verify-zip.py` — must report 19 matched / 0 mismatched /
    0 disk-only / 0 zip-only (exit 0) before uploading (same mandatory check as Step 2).
 5. In the dashboard, open the item → **Package** → **Upload new package** → select the new
@@ -219,6 +219,12 @@ Work through all tabs before submitting; an incomplete listing cannot be submitt
       v1.10.1 freeze (verify-zip **19 matched / 0 mismatched / 0 disk-only / 0 zip-only**;
       artifact `dist/muse-auto-allow-v1.10.1.zip` — **203,784 bytes, 19 entries**, sha256
       `52038092ab0b472ef98e6a149a63c9e6589381bec5cdc88bcbc2329c5f082ecb`; deterministic
+      rebuild byte-identical; `smoke-zip.mjs` 20/20 — `ok: true`). Re-run both immediately
+      before the CWS upload.
+- [x] `node scripts/build.mjs` **and** `python scripts/verify-zip.py` both exit 0 at the
+      v1.11.0 freeze (verify-zip **19 matched / 0 mismatched / 0 disk-only / 0 zip-only**;
+      artifact `dist/muse-auto-allow-v1.11.0.zip` — **206,845 bytes, 19 entries**, sha256
+      `c09819c6e49baa5b7c70d5df0fa819f6d1065f74349b35d6a4785278f469cb0f`; deterministic
       rebuild byte-identical; `smoke-zip.mjs` 20/20 — `ok: true`). Re-run both immediately
       before the CWS upload.
 - [x] `store/LISTING.md` reflects v1.10.1 (version/package references, all six short

@@ -766,6 +766,10 @@
     const isDry = v18.dryRun === true;
     if (isDry) dryNodes.add(btn); else clickedNodes.add(btn);
     const label = txt(btn);
+    // v1.11.0 (G11): the standing-grant class is recorded structurally (boolean only) — a
+    // click that grants lasting authority (reachable only under the explicit YOLO opt-in)
+    // becomes distinguishable from a one-shot approval for later surfaces. No new kind.
+    const standing = kind === 'allow' && v18.yoloMode === true && STANDING_RE.test(stripDecor(label));
     const context = (card ? contextText(card) : label).slice(0, 240);
     state.lastClickAt = Date.now();
     if (kind === 'expand') { state.lastExpandAt = state.lastClickAt; markAux(); }
@@ -783,6 +787,7 @@
     const entryKind = isDry ? kind + '-dry' : kind;
     state.lastResult = { at: new Date().toISOString(), kind: entryKind, label, context };
     if (isDry) state.lastResult.dryRun = true;
+    if (standing) state.lastResult.standing = true;
     recordClick(state.lastResult, context, !isDry);
     console.log('[muse-auto-allow] ' + entryKind + ' "' + label.slice(0, 60) + '" | ' + context.slice(0, 90));
     if (isDry) return; // detection + log only — nothing is clicked

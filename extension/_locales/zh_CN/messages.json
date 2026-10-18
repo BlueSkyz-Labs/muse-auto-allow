@@ -56,6 +56,27 @@
   "statsBarScopeTop": {
     "message": "共 $1 个主题，显示前 12 · 条形为 $2 次点击总量中的占比"
   },
+  "stateOff": {
+    "message": "已关闭 —— 不会点击任何内容"
+  },
+  "stateLive": {
+    "message": "运行中 —— 仅点击 Allow"
+  },
+  "stateYolo": {
+    "message": "YOLO —— 跳过关键词拦截"
+  },
+  "logOpenRules": {
+    "message": "打开关键词规则"
+  },
+  "onbDemoClick": {
+    "message": "当 Muse 显示明确的批准配对时点击 Allow"
+  },
+  "onbDemoBlock": {
+    "message": "跳过匹配拦截关键词列表的内容（delete、deploy……）"
+  },
+  "onbDemoStanding": {
+    "message": "长期授权（“Always allow”）留给你决定"
+  },
   "rangeDay": {
     "message": "日"
   },

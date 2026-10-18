@@ -56,6 +56,27 @@
   "statsBarScopeTop": {
     "message": "Top 12 of $1 topics · bars: share of the $2-click total"
   },
+  "stateOff": {
+    "message": "Off — nothing is clicked"
+  },
+  "stateLive": {
+    "message": "Live — clicks Allow only"
+  },
+  "stateYolo": {
+    "message": "YOLO — skips keyword blocks"
+  },
+  "logOpenRules": {
+    "message": "Open the keyword rules"
+  },
+  "onbDemoClick": {
+    "message": "Clicks Allow when Muse shows a clear approval pair"
+  },
+  "onbDemoBlock": {
+    "message": "Skips anything matching your keyword block-list (delete, deploy, …)"
+  },
+  "onbDemoStanding": {
+    "message": "Leaves standing grants (\"Always allow\") to you"
+  },
   "rangeDay": {
     "message": "Day"
   },
