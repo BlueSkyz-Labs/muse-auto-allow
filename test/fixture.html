@@ -55,6 +55,46 @@
   <button type="button" id="surfaceBtn">Review</button>
 </div>
 
+<!-- v1.14.0 (F1-F3) negatives, all live-reproduced by the independent audit and now FORBIDDEN:
+     postfix standing grant (must not be clicked without YOLO), off-screen / near-invisible
+     buttons, reworded consent surfaces (authorize / bearer wording). -->
+<div class="card" id="cardF1">
+  <p>Approve repository push?</p>
+  <div class="row">
+    <button type="button" class="allow" id="f1-standing">Allow always</button>
+    <button type="button" class="deny" id="f1-deny">Deny</button>
+  </div>
+</div>
+<div class="card" id="cardF2a">
+  <p>Off-screen probe</p>
+  <div class="row">
+    <button type="button" class="allow" id="f2-offscreen" style="position:fixed;left:-9999px;top:0">Allow</button>
+    <button type="button" class="deny" id="f2-deny">Deny</button>
+  </div>
+</div>
+<div class="card" id="cardF2b">
+  <p>Near-invisible probe</p>
+  <div class="row">
+    <button type="button" class="allow" id="f2-faint" style="opacity:0.05">Allow</button>
+    <button type="button" class="deny" id="f2b-deny">Deny</button>
+  </div>
+</div>
+<div class="card" id="cardF3a">
+  <p>Authorize app to read your repos</p>
+  <div class="row">
+    <button type="button" class="allow" id="f3-authorize">Authorize app</button>
+    <button type="button" class="allow" id="f3-allow">Allow</button>
+    <button type="button" class="deny" id="f3-deny">Deny</button>
+  </div>
+</div>
+<div class="card" id="cardF3b">
+  <p>Bearer key</p>
+  <div class="row">
+    <button type="button" class="allow" id="f3b-allow">Allow</button>
+    <button type="button" class="deny" id="f3b-deny">Deny</button>
+  </div>
+</div>
+
 <!-- redteam case: dedup probe — clicking Allow replaces the card with an IDENTICAL one (re-render race) -->
 <div class="card" id="card7">
   <p>Dedup probe request</p>

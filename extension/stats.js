@@ -1,10 +1,16 @@
 // Muse Auto-Allow — statistics dashboard (no libraries; inline SVG; renders instantly).
 const $ = (id) => document.getElementById(id);
+let manualMsgs = null; // v5.0 (C5-2, TS-04): when the popup's manual language switcher is on, this page follows it too
+let manualLocale = 'auto';
+const msgOf = (key) => { try { const m = manualMsgs && manualMsgs[key]; return m && typeof m.message === 'string' ? m.message : null; } catch { return null; } };
 const t = (key, fallback) => {
+  const m = msgOf(key); if (m != null) return m;
   try { return chrome.i18n.getMessage(key) || fallback; } catch { return fallback; }
 };
 // same as t() but with $1/$2 substitutions (chrome.i18n positional placeholders)
 const tp = (key, subs, fallback) => {
+  const m = msgOf(key);
+  if (m != null) return m.replace(/\$(\d)/g, (x, i) => (subs && subs[Number(i) - 1] != null) ? String(subs[Number(i) - 1]) : x);
   try { return chrome.i18n.getMessage(key, subs) || fallback; } catch { return fallback; }
 };
 const pad2 = (n) => String(n).padStart(2, '0');
@@ -28,7 +34,7 @@ function applyI18n() {
     const msg = t(el.dataset.i18n, el.textContent);
     if (msg) el.textContent = msg;
   });
-  try { document.documentElement.lang = chrome.i18n.getUILanguage() || 'en'; } catch { /* keep */ }
+  try { document.documentElement.lang = manualMsgs ? manualLocale : (chrome.i18n.getUILanguage() || 'en'); } catch { /* keep */ }
 }
 
 let STATS = { byDay: {}, byMonth: {}, byYear: {}, byTopic: {} };
@@ -200,7 +206,21 @@ chrome.storage.local.get({ stats: null, clickCount: 0 }, (s) => {
   TOTAL = Number(s.clickCount) || 0;
   renderAll();
 });
+// v5.0 (C5-2, TS-04): follow the popup's manual language switcher (userLocale) when not 'auto'.
+const readAsset = globalThis.fetch.bind(globalThis); // the lint-approved alias (same-package URL only)
+function applyUserLocale(loc) {
+  manualLocale = (typeof loc === 'string' && /^[A-Za-z_]{2,5}$/.test(loc) && loc !== 'auto') ? loc : 'auto';
+  if (manualLocale === 'auto') { manualMsgs = null; applyI18n(); renderAll(); return; }
+  try {
+    readAsset(chrome.runtime.getURL('_locales/' + manualLocale + '/messages.json'))
+      .then((r) => r.json())
+      .then((j) => { if (j && typeof j === 'object') { manualMsgs = j; applyI18n(); renderAll(); } })
+      .catch(() => { manualMsgs = null; });
+  } catch { manualMsgs = null; }
+}
+try { chrome.storage.local.get({ userLocale: 'auto' }, (u) => applyUserLocale(u && u.userLocale)); } catch { /* keep browser locale */ }
 chrome.storage.onChanged.addListener((ch) => {
+  if (ch.userLocale) { try { applyUserLocale(ch.userLocale.newValue); } catch { /* ignore */ } } // v5.0 (C5-2): live-follow the popup switcher
   if (ch.stats) {
     const nv = (ch.stats.newValue && typeof ch.stats.newValue === 'object') ? ch.stats.newValue : {};
     STATS = {
@@ -465,6 +485,12 @@ $('importFile').addEventListener('change', async (ev) => {
     const j = JSON.parse(await f.text());
     if (!j || j.app !== 'muse-auto-allow' || !j.data || typeof j.data !== 'object') {
       alert(t('importBad', 'Not a Muse Auto-Allow backup file.'));
+    } else if (j.schemaVersion != null && !Number.isFinite(Number(j.schemaVersion))) {
+      // v1.14.0 (F5-codex): a PRESENT but non-numeric schemaVersion is garbage, not a legacy file — refuse it.
+      alert(t('importBad', 'Not a Muse Auto-Allow backup file.'));
+    } else if (Number(j.schemaVersion) > 2) {
+      // v5.0 (C5-3): a newer-schema backup would silently lose its newer keys in the sanitizer — refuse it honestly.
+      alert(t('importNewer', 'This backup was made by a newer version of Muse Auto-Allow — update the extension first.'));
     } else {
       const clean = sanitizeBackup(j.data);
       if (!clean) {
@@ -473,10 +499,17 @@ $('importFile').addEventListener('change', async (ev) => {
         // v1.12.0 (C3-1): an import that would TURN ON an authority opt-in asks first — a
         // crafted file can never enable YOLO / Codex silently. Turning one OFF (or junk
         // values) is fail-closed and applies without a prompt.
-        const nowA = await chrome.storage.local.get({ yoloMode: false, codexEnabled: false });
+        const nowA = await chrome.storage.local.get({ yoloMode: false, codexEnabled: false, dryRun: true, followupEnabled: false, missionEnabled: false, pauseUntil: 0 });
         const flips = [];
         if (clean.yoloMode === true && nowA.yoloMode !== true) flips.push('YOLO');
         if (clean.codexEnabled === true && nowA.codexEnabled !== true) flips.push('Codex');
+        // v1.14.0 (F4): the remaining autonomy switches flip too — the audit showed a crafted
+        // backup could turn on live clicking / follow-up / mission or clear an active pause
+        // behind only the generic restore dialog.
+        if (clean.dryRun === false && nowA.dryRun !== false) flips.push('live clicking');
+        if (clean.followupEnabled === true && nowA.followupEnabled !== true) flips.push('auto follow-up');
+        if (clean.missionEnabled === true && nowA.missionEnabled !== true) flips.push('auto mission');
+        if (Number(clean.pauseUntil) === 0 && Number(nowA.pauseUntil) > Date.now()) flips.push('clearing the active pause');
         if (flips.length && !confirm(tp('importAuthorityWarn', [flips.join(', ')], 'This backup turns on: $1 — continue?'))) { ev.target.value = ''; return; }
         // SA-1: a supplied key is adopted only after decrypt proof against a ctx-bearing
         // entry; with none present the rotation is refused and the current key is kept.

@@ -1,0 +1,96 @@
+{
+  "schema_version": "1.0.0",
+  "project_id": "muse-auto-allow",
+  "repository": "BlueSkyz-Labs/muse-auto-allow",
+  "canonical": {
+    "decision_id": "SGPS-DEC-2026-004",
+    "standard": "sgps.standard.portfolio-experience",
+    "source_kind": "release-tag",
+    "source_revision": "v1.13.0"
+  },
+  "project": {
+    "measured_base_revision": "63d2470643b0d5193ebbc0963385f5bd422f1e0b",
+    "adoption_revision": null,
+    "pull_request": 10,
+    "record_path": "docs/SGPS_ADOPTION.json",
+    "last_reconciled": "2026-10-18"
+  },
+  "impact_classification": "MANDATORY",
+  "disposition": "ADOPT",
+  "state": "IMPLEMENTING",
+  "local_mapping": [
+    {
+      "canonical_rule": "BPXS §5 Experience Constitution / §7 Quiet Excellence / §8 Digital Hospitality — attention integrity, no decoration-only surfaces, honest status information",
+      "current_state": "Dark+light themes, restrained motion, honest status line and scope captions shipped v1.11.0–v1.13.0; every block has a logged reason",
+      "gap": "No formal per-surface experience pass recorded against the standard",
+      "adaptation": "docs/SGPS_EXPERIENCE_CHECKLIST.md drives the audit of popup/stats/onboarding/in-page indicator on the frozen tree",
+      "verification": "docs/EXPERIENCE_CYCLE_2026-10-18.md (running record) + in-Chrome QA scripts"
+    },
+    {
+      "canonical_rule": "BPXS §15 Vietnamese-rooted, multilingual-by-construction + GUX §15.2 design-time locale testing",
+      "current_state": "6 locales at enforced full key parity (204 keys × en/vi/zh_CN/ja/ko/es); popup language switcher; stats follows the switcher since v1.14.0",
+      "gap": "Long-string/layout QA evidence per locale not yet recorded",
+      "adaptation": "lint parity check + lang-switch-e2e + QA v1.14.0 locale-follow checks",
+      "verification": "scripts/lint.mjs; test/lang-switch-e2e.mjs; QA v1.14.0 (8/8)"
+    },
+    {
+      "canonical_rule": "BPXS §29.1 Respectful Agency / §29.2 Attention Integrity + SGPS-DEC-2026-041 CC-1..CC-3",
+      "current_state": "Safety rails: never deny-clicks, never lone affirmatives, standing grants manual unless YOLO, consent surfaces hard-blocked; honest restore and explicit degradation messages",
+      "gap": "Postfix standing-grant hole and reworded-consent hole found by the independent audit",
+      "adaptation": "Closed in v1.14.0 (ALLOW_RE/STANDING_RE split; connector keyword parity; visibility bounds; import authority flips) with FORBIDDEN/G15 regression checks",
+      "verification": "test/e2e.mjs FORBIDDEN f1-standing/f2-offscreen/f2-faint/f3-authorize/f3-allow/f3b-allow; test/import-security.mjs G15"
+    },
+    {
+      "canonical_rule": "GAPS §10 — adapt canonical intent, never copy the Golden document into always-on context",
+      "current_state": "Project keeps a compact mapping + pointer structure; SGPS source read from the pinned local clone",
+      "gap": "None material",
+      "adaptation": "docs/SGPS_ADOPTION.md (this record's human companion) + AGENTS.md governance section",
+      "verification": "AGENTS.md §2 discoverable path; this file"
+    }
+  ],
+  "evidence": [
+    {
+      "kind": "static-conformance",
+      "status": "PASS",
+      "ref": "scripts/lint.mjs — 27 checks across 19 files",
+      "scope": "syntax, JSON validity, i18n parity (204 keys × 6), no remote code, minimal permissions"
+    },
+    {
+      "kind": "behavioural-suites",
+      "status": "PASS",
+      "ref": "docs/RELEASE_INTEGRITY.md — v1.14.0 section (exits captured without pipes)",
+      "scope": "background-unit, import-security (G14/G15/G16), yolo-ux-unit, e2e, followup-e2e, mission-e2e, lang-switch-e2e, codex-e2e, bench assert"
+    },
+    {
+      "kind": "runtime-in-chrome",
+      "status": "PASS",
+      "ref": "QA v1.14.0 — 8/8 in scratch Chrome against the loaded extension",
+      "scope": "stats locale follow (reload + live switch), traversal rejection, import schema guard end-to-end"
+    },
+    {
+      "kind": "experience-pass",
+      "status": "PASS",
+      "ref": "qa-experience v2 — 11/11 (scratch/experience-v2.json); instrument docs/SGPS_EXPERIENCE_CHECKLIST.md",
+      "scope": "machine-checkable subset: WCAG contrast both themes (popup+stats), reduced-motion, focus-visible coverage, vi long-string layout, state-as-text. Residual manual-class evidence (screen reader, beauty-blind review) pending — next experience cycle."
+    },
+    {
+      "kind": "paid-go-live",
+      "status": "NOT APPLICABLE",
+      "ref": "docs/GOLIVE_PAID_READINESS.md",
+      "scope": "SGPS-DEC-2026-016 15-dimension matrix — tracked separately; Owner gates; no Paid GO"
+    }
+  ],
+  "residual_gates": [
+    "Central registry registration of this adoption record is an Owner/portfolio gate (agent never self-declares ADOPTED in central state).",
+    "Upstream SGPS v1.14.0 signed tag pending; the project pins v1.13.0 plus explicit overlays only.",
+    "SGPS:Experience checklist execution: evidence pending (NOT VERIFIED) on the frozen tree.",
+    "Pull request / merge revision and adoption_revision are recorded at closure (reconciliation commit)."
+  ],
+  "propagation_runtime": {
+    "mode": "GITHUB_NATIVE",
+    "symphony": {
+      "status": "NOT_DEPLOYED",
+      "required": false
+    }
+  }
+}

@@ -137,6 +137,9 @@
   "importAuthorityWarn": {
     "message": "このバックアップは $1 を有効にします — 続行しますか？"
   },
+  "importNewer": {
+    "message": "このバックアップは新しいバージョンの Muse Auto-Allow で作成されています — 先に拡張機能を更新してください。"
+  },
   "importQuota": {
     "message": "バックアップを復元できませんでした：ブラウザーのストレージが満杯です。"
   },

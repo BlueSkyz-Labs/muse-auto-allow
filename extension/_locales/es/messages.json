@@ -137,6 +137,9 @@
   "importAuthorityWarn": {
     "message": "Esta copia activa: $1 — ¿continuar?"
   },
+  "importNewer": {
+    "message": "Esta copia se creó con una versión más reciente de Muse Auto-Allow — actualiza la extensión primero."
+  },
   "importQuota": {
     "message": "No se pudo restaurar la copia de seguridad: el almacenamiento del navegador está lleno."
   },

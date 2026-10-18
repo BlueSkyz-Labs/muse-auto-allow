@@ -137,6 +137,9 @@
   "importAuthorityWarn": {
     "message": "This backup turns on: $1 — continue?"
   },
+  "importNewer": {
+    "message": "This backup was made by a newer version of Muse Auto-Allow — update the extension first."
+  },
   "importQuota": {
     "message": "Could not restore the backup: browser storage is full."
   },

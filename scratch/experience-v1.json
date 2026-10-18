@@ -1,0 +1,100 @@
+{
+  "built": "qa-experience",
+  "checks": [
+    {
+      "name": "A. contrast dark popup.html: all visible text ≥ WCAG AA",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "A. contrast dark stats.html: all visible text ≥ WCAG AA",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "A. contrast light popup.html: all visible text ≥ WCAG AA",
+      "ok": false,
+      "detail": [
+        {
+          "el": "span",
+          "text": "Missions",
+          "ratio": 2.19,
+          "need": 4.5
+        },
+        {
+          "el": "#obPrimary",
+          "text": "Turn on",
+          "ratio": 1.19,
+          "need": 4.5
+        }
+      ]
+    },
+    {
+      "name": "A. contrast light stats.html: all visible text ≥ WCAG AA",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "B. reduced-motion popup.html: no element animates/transitions (worst=0s)",
+      "ok": true,
+      "detail": {
+        "worst": 0,
+        "tag": null
+      }
+    },
+    {
+      "name": "B. reduced-motion stats.html: no element animates/transitions (worst=0s)",
+      "ok": true,
+      "detail": {
+        "worst": 0,
+        "tag": null
+      }
+    },
+    {
+      "name": "C. focus popup.html: :focus-visible rules exist (4) and no bald outline:none",
+      "ok": false,
+      "detail": {
+        "fv": 4,
+        "outlineNone": 1
+      }
+    },
+    {
+      "name": "C. focus stats.html: :focus-visible rules exist (1) and no bald outline:none",
+      "ok": true,
+      "detail": {
+        "fv": 1,
+        "outlineNone": 0
+      }
+    },
+    {
+      "name": "D. vi layout popup.html: no horizontal overflow",
+      "ok": true,
+      "detail": {
+        "bodySW": 320,
+        "bodyCW": 320,
+        "deSW": 1166,
+        "deCW": 1166,
+        "lang": "vi"
+      }
+    },
+    {
+      "name": "D. vi layout stats.html: no horizontal overflow",
+      "ok": true,
+      "detail": {
+        "bodySW": 1156,
+        "bodyCW": 1156,
+        "deSW": 1156,
+        "deCW": 1156,
+        "lang": "vi"
+      }
+    },
+    {
+      "name": "E. state line carries text (not color-only)",
+      "ok": false,
+      "detail": {
+        "found": false
+      }
+    }
+  ],
+  "failed": 3
+}

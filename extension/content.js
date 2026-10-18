@@ -87,7 +87,7 @@
   const ON_MUSE = /(^|\.)muse\.ai$/.test(location.hostname) || location.hostname === '127.0.0.1' || location.hostname === 'localhost';
   if (!ON_MUSE) return;
 
-  const ALLOW_RE = /^\s*(allow|approve)(\s+(once|always|this time))?\s*$/i;
+  const ALLOW_RE = /^\s*(allow|approve)(\s+(once|this\s+time))?\s*$/i; // v1.14.0 (F1): 'always' postfix removed — 'Allow always' used to slip through here and got clicked as a one-shot while silently granting standing scope
   // The positive option can carry a trailing chevron/decoration (an options-menu control,
   // observed live as an "allow options" affordance). Trailing DECORATION is tolerated;
   // the WORDING is deliberately not widened: standing-grant labels ("Always allow",
@@ -98,10 +98,13 @@
   // v1.8.0 allow-once variant: exact 'Allow once' / 'Allow once only' (decoration tolerated).
   // 'Allow once' already matches ALLOW_RE; 'Allow once only' is recognized only while
   // allowOnceMode is on — the mode is what asks for the narrowest one-shot option.
-  // v1.9.4 YOLO: standing-grant labels become clickable positive options — an explicit opt-in
-  // ("Always allow" / "Allow for this site/task"). Default behaviour is unchanged: without
-  // yoloMode these labels are never recognized, so the granted scope can never silently escalate.
-  const STANDING_RE = /^\s*(always\s+(allow|approve)|(allow|approve)\s+for\s+this\s+(site|task))\s*$/i;
+  // v1.9.4 YOLO: standing-grant labels become clickable positive options — an explicit opt-in.
+  // v1.14.0 (F1): the POSTFIX forms ('Allow always' / 'Approve always') are standing grants too:
+  // they previously fell through ALLOW_RE's one-shot alternation and were clicked with no
+  // standing flag (found live by the independent audit). Default behaviour is unchanged:
+  // without yoloMode NO standing wording is recognized, so the granted scope can never
+  // silently escalate.
+  const STANDING_RE = /^\s*(always\s+(allow|approve)|(allow|approve)\s+(always|for\s+this\s+(site|task)))\s*$/i;
   const isAllowText = (t) => ALLOW_RE.test(stripDecor(t)) || (v18.allowOnceMode && /^\s*allow once only\s*$/i.test(stripDecor(t))) || (v18.yoloMode && STANDING_RE.test(stripDecor(t)));
   const DENY_RE = /^\s*(deny|reject|decline)(\s+(once|this time))?\s*$/i;
   const CARD_SEL = '[data-testid="hatch-inline-approval-card"]';
@@ -125,9 +128,13 @@
   // "Connector", a full-width "Connect" button). The extension must NEVER interact with
   // them: the whole container is hard-blocked — even when an Allow/Deny-like pair renders
   // inside it — and the refusal is logged (blockedReason 'connector'). Consent boundary.
-  const CONNECTOR_WORD_RE = /\bconnectors?\b/i;
-  const CONNECT_BTN_RE = /^(connect\b|set\s+up\b|add\s+account\b)/i;
-  const TOKEN_WORDING_RE = /\b(api\s+token|access\s+token|personal\s+access\s+token|paste\s+(the\s+|your\s+)?token|api\s+key)\b/i;
+  // v1.14.0 (F3): keyword sets widened to the codex.js parity lists — the audit clicked live
+  // through reworded consent surfaces ('Authorize app', 'Bearer key') while the old allowlist
+  // only knew 'Connector'/'Connect'/'api key'. Fail closed: auth/consent surfaces are never
+  // interacted with.
+  const CONNECTOR_WORD_RE = /\b(connectors?|authorize|authorization|sign\s+in|log\s+in|oauth|link\s+(your\s+)?account|grant\s+access|api\s+key|access\s+token|personal\s+access\s+token|bearer\s+(key|token))\b/i;
+  const CONNECT_BTN_RE = /^(connect\b|authorize\b|sign\s+in\b|log\s+in\b|link\b|set\s+up\b|add\s+account\b)/i;
+  const TOKEN_WORDING_RE = /\b(api\s+token|access\s+token|personal\s+access\s+token|bearer\s+(key|token)|paste\s+(the\s+|your\s+)?token|api\s+key)\b/i;
   const EXPAND_THROTTLE_MS = 800;
   const SURFACE_THROTTLE_MS = 10000;
   const REVIEW_BAR_THROTTLE_MS = 1000; // chat-level bar: snappy (the panel only renders after this click)
@@ -183,6 +190,7 @@
   let pendingFast = false; // the pending sweep is the card-bearing (immediate) kind
   let obs = null;
   let heartbeat = null;
+  let ftick = 0; // v5.0 (C5-5): follow-up state detection runs at ~3s cadence while follow-up is disabled
   let v18Ready = false; // v1.9.3 boot gate: the v18 settings read (dryRun/pause/rules) must complete before ANY sweep — a fresh install must never click before the log-only default is applied
   let enabledReady = false; // v1.13.0 (C4-B): the kill-switch (enabled) read must ALSO land before the first sweep
 
@@ -210,9 +218,20 @@
   const rawVisible = (el) => {
     const r = el.getBoundingClientRect();
     if (!(r.width > 2 && r.height > 2)) return false;
+    // v1.14.0 (F2): a PARKED button (fixed off the canvas at negative/large coordinates) or an
+    // effectively invisible one was clicked live by the independent audit. Below-the-fold
+    // content stays clickable (a real chat card often sits below the fold): the bounds test is
+    // against the DOCUMENT's scrollable area, not the viewport. Plus ancestor visibility and
+    // real opacity.
     try {
+      const de = document.documentElement;
+      const w = Math.max(window.innerWidth || 0, de ? de.scrollWidth : 0);
+      const h = Math.max(window.innerHeight || 0, de ? de.scrollHeight : 0);
+      if (w > 0 && (r.right <= 0 || r.left >= w)) return false;
+      if (h > 0 && (r.bottom <= 0 || r.top >= h)) return false;
+      if (typeof el.checkVisibility === 'function' && !el.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true })) return false;
       const cs = getComputedStyle(el);
-      return cs.visibility !== 'hidden' && cs.display !== 'none' && cs.pointerEvents !== 'none' && Number(cs.opacity) > 0;
+      return cs.visibility !== 'hidden' && cs.display !== 'none' && cs.pointerEvents !== 'none' && Number(cs.opacity) > 0.1;
     } catch { return true; }
   };
   const isVisible = (el) => {
@@ -1175,13 +1194,16 @@
         if (card.matches(SURFACE_SEL) || !isVisible(card)) continue;
         if (allowDoneCards.has(card)) continue;
         if (!denyBtnsIn(card).some(clickable)) continue;
-        if (allowBtnsIn(card).some((b) => clickable(b) && !handledNode(b))) return true;
+        if (allowBtnsIn(card).some((b) => clickable(b) && !handledNode(b) && !unsafeTarget(b))) return true; // v5.0 (C5-1): parity with path A — a button path A would never click (link/form target) must not block sends forever
       }
       for (const b of buttonsIn(document)) {
         if (!clickable(b)) continue;
         const t = txt(b);
         if (isAllowText(t)) return true;                                      // any clickable allow button
-        if (PENDING_CARD_RE.test(t) && !DONE_STATUS_RE.test(t)) return true;  // collapsed pending card
+        // v1.13.0/5.0: the collapsed-pending branch counts on PENDING alone — a pending card whose
+        // history line also says "denied ·" must not be skipped (the old DONE guard under-matched);
+        // over-counting here only blocks sends, which is the fail-safe direction.
+        if (PENDING_CARD_RE.test(t)) return true;                              // collapsed pending card
       }
       for (const s of document.querySelectorAll(SURFACE_SEL)) {
         if (isVisible(s) && NEED_APPROVAL_RE.test(txt(s))) return true;       // "N tasks need your approval"
@@ -1712,7 +1734,7 @@
   } catch {}
 
   // Fallback heartbeat (safe under background-tab throttling).
-  heartbeat = setInterval(() => { sweep('interval'); try { followupTick(); } catch { /* ignore */ } publishFlags(); }, 1000);
+  heartbeat = setInterval(() => { sweep('interval'); try { if (followup.enabled || (++ftick % 3) === 0) followupTick(); } catch { /* ignore */ } publishFlags(); }, 1000); // v5.0 (C5-5): skip the state-detection scans on 2 of 3 ticks while follow-up is off (measurable CPU on long chats); cadence unchanged when enabled
 
   window.__museAutoAllow = {
     get state() { return { ...state }; },
