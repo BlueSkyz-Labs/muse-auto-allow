@@ -50,6 +50,12 @@
   "noData": {
     "message": "データはまだありません"
   },
+  "statsBarScope": {
+    "message": "バーは全 $1 クリックに対する割合"
+  },
+  "statsBarScopeTop": {
+    "message": "トピック $1 件中トップ 12 · バーは全 $2 クリックに対する割合"
+  },
   "rangeDay": {
     "message": "日"
   },
@@ -501,7 +507,7 @@
     "message": "Codex のリクエストを自動承認"
   },
   "codexHint": {
-    "message": "chatgpt.com のみ。Deny はクリックしません。常時許可は手動のままです。"
+    "message": "chatgpt.com のみ。Deny は決してクリックしません。常時許可は手動のままです。"
   },
   "codexChip": {
     "message": "Codex"

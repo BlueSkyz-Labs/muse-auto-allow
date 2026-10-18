@@ -50,6 +50,12 @@
   "noData": {
     "message": "暂无数据"
   },
+  "statsBarScope": {
+    "message": "条形为 $1 次点击总量中的占比"
+  },
+  "statsBarScopeTop": {
+    "message": "共 $1 个主题，显示前 12 · 条形为 $2 次点击总量中的占比"
+  },
   "rangeDay": {
     "message": "日"
   },

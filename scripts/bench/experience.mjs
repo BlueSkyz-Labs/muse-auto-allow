@@ -1076,6 +1076,62 @@ async function measureAssertions(extId) {
     await closeTarget(boot.targetId);
   }
 
+  // ===== F6 — dark scheme actually renders: declared dark tokens, no height drift, AA contrast =
+  // (vision scores are not a gate; this asserts the frozen dark palette deterministically —
+  // the expected values are parsed from the shipped stylesheet, so a lost media query or a
+  // drifting token fails here instead of shipping)
+  {
+    const popupHtmlSrc = fs.readFileSync(path.join(EXT_DIR, 'popup.html'), 'utf8'); // tokens live here, not popup.js
+    const firstRoot = (popupHtmlSrc.match(/:root\s*\{([\s\S]*?)\}/) || [])[1] || '';
+    const darkRoot = (popupHtmlSrc.match(/prefers-color-scheme:\s*dark\)\s*\{\s*:root\s*\{([\s\S]*?)\}/) || [])[1] || '';
+    const tok = (src, name) => { const m = src.match(new RegExp('--' + name + ':\\s*(#[0-9a-fA-F]{3,8})')); return m ? m[1].toLowerCase() : null; };
+    const lightTok = { bg: tok(firstRoot, 'bg'), ink: tok(firstRoot, 'ink') };
+    const darkTok = { bg: tok(darkRoot, 'bg'), ink: tok(darkRoot, 'ink'), surface: tok(darkRoot, 'surface'), muted: tok(darkRoot, 'muted') };
+    add('F6. the dark media block declares the frozen palette tokens (bg/ink/surface/muted)',
+      !!(darkTok.bg && darkTok.ink && darkTok.surface && darkTok.muted), darkTok);
+
+    const sampleExpr = `(() => {
+      const cs = getComputedStyle(document.documentElement);
+      const lum = (c) => { const m = String(c).match(/rgba?\\((\\d+),\\s*(\\d+),\\s*(\\d+)/); if (!m) return null;
+        const v = [m[1], m[2], m[3]].map(Number).map((n) => { n /= 255; return n <= 0.03928 ? n / 12.92 : Math.pow((n + 0.055) / 1.055, 2.4); });
+        return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
+      const ratio = (fg, bgc) => { const a = lum(fg), b = lum(bgc); if (a == null || b == null) return null;
+        const hi = Math.max(a, b), lo = Math.min(a, b); return Math.round(((hi + 0.05) / (lo + 0.05)) * 100) / 100; };
+      const body = getComputedStyle(document.body);
+      const h1 = document.querySelector('h1');
+      return JSON.stringify({ tok_bg: cs.getPropertyValue('--bg').trim(), tok_ink: cs.getPropertyValue('--ink').trim(),
+        body_ratio: ratio(body.color, body.backgroundColor),
+        h1_ratio: h1 ? ratio(getComputedStyle(h1).color, body.backgroundColor) : null,
+        h: Math.round(document.body.getBoundingClientRect().height) });
+    })()`;
+
+    const p = await openPopup(extId, 500);
+    await clearStorage(p.sessionId, { onboarded: true, followupEnabled: false, log: [], rules: {} });
+    await reloadPopup(p.sessionId);
+    await sleep(400);
+    await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'light' }] }, p.sessionId);
+    await sleep(250);
+    const sL = JSON.parse(await evalIn(p.sessionId, sampleExpr));
+    await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'dark' }] }, p.sessionId);
+    await sleep(250);
+    const sD = JSON.parse(await evalIn(p.sessionId, sampleExpr));
+    add('F6. light scheme renders the declared light token (and differs from dark)',
+      !lightTok.bg || (sL.tok_bg === lightTok.bg && sL.tok_bg !== sD.tok_bg),
+      { declared: lightTok, light_bg: sL.tok_bg, dark_bg: sD.tok_bg });
+    add('F6. dark scheme renders the declared dark tokens (bg + ink)',
+      sD.tok_bg === darkTok.bg && sD.tok_ink === darkTok.ink,
+      { declared: darkTok, sampled_bg: sD.tok_bg, sampled_ink: sD.tok_ink });
+    add('F6. popup height is stable across schemes and inside the 600px cap',
+      Math.abs(sL.h - sD.h) <= 1 && Math.max(sL.h, sD.h) <= 600, { light_h: sL.h, dark_h: sD.h });
+    add('F6. body text contrast >= 4.5:1 in BOTH schemes',
+      sL.body_ratio != null && sL.body_ratio >= 4.5 && sD.body_ratio != null && sD.body_ratio >= 4.5,
+      { light: sL.body_ratio, dark: sD.body_ratio });
+    add('F6. title (h1) contrast >= 4.5:1 in BOTH schemes',
+      sL.h1_ratio != null && sL.h1_ratio >= 4.5 && sD.h1_ratio != null && sD.h1_ratio >= 4.5,
+      { light: sL.h1_ratio, dark: sD.h1_ratio });
+    await closeTarget(p.targetId);
+  }
+
   return rec;
 }
 

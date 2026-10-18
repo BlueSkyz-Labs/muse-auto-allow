@@ -50,6 +50,12 @@
   "noData": {
     "message": "아직 데이터 없음"
   },
+  "statsBarScope": {
+    "message": "막대는 총 $1회 클릭 대비 비율"
+  },
+  "statsBarScopeTop": {
+    "message": "주제 $1개 중 상위 12 · 막대는 총 $2회 클릭 대비 비율"
+  },
   "rangeDay": {
     "message": "일"
   },

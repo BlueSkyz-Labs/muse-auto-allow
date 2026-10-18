@@ -259,3 +259,18 @@ combo / 组合 / コンボ / 조합 / combo), not the rotation list itself.
    note (208×30 px inside the 292 px row, popup 564 ≤ 600 in the real popup surface); the
    rotation-row labels wrap by design (`flex-wrap` on `.frot`) and were not re-measured
    per locale — no layout gate covers them.
+
+## Addendum — v1.10.0 Codex (ChatGPT) strings (2026-10-18)
+
+Status: **complete** · Revision reviewed: v1.10.0 tree (`f4cf2ec`) ·
+Scope: the 11 `codex*`/`kindCodex*` keys in all six locales (values only).
+
+- All six locales reviewed against the English source ("Codex" kept untranslated as the
+  product noun; chatgpt.com kept as the host; the safety claim — Deny never clicked,
+  standing grants manual — must survive translation).
+- **One change:** ja `codexHint` — "Deny はクリックしません" → **"Deny は決してクリックしません"**
+  (the English "never" had softened to a plain statement; the strengthened form matches the
+  safety voice used by the YOLO hint). All other values kept.
+- Non-native review caveat as §5: ko/vi/ja/zh/es chosen from each locale's existing reviewed
+  family; each is a single-value change if a native reviewer disagrees.
+- Parity: 190 keys × 6 locales, `scripts/lint.mjs` green after the change.

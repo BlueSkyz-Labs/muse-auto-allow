@@ -50,6 +50,12 @@
   "noData": {
     "message": "Chưa có dữ liệu"
   },
+  "statsBarScope": {
+    "message": "Cột: tỷ lệ trên tổng $1 lượt bấm"
+  },
+  "statsBarScopeTop": {
+    "message": "Top 12 trong $1 chủ đề · cột: tỷ lệ trên tổng $2 lượt bấm"
+  },
   "rangeDay": {
     "message": "Ngày"
   },

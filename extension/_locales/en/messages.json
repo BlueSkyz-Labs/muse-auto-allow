@@ -50,6 +50,12 @@
   "noData": {
     "message": "No data yet"
   },
+  "statsBarScope": {
+    "message": "Bars: share of the $1-click total"
+  },
+  "statsBarScopeTop": {
+    "message": "Top 12 of $1 topics · bars: share of the $2-click total"
+  },
   "rangeDay": {
     "message": "Day"
   },

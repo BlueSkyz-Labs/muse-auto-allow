@@ -10,7 +10,7 @@ in a real Chrome). Tooling: `scripts/build.mjs`, `scripts/verify-zip.py`,
 
 | Path | What |
 |---|---|
-| `dist/muse-auto-allow-v<version>.zip` | store package, `manifest.json` at the zip ROOT, 18 entries |
+| `dist/muse-auto-allow-v<version>.zip` | store package, `manifest.json` at the zip ROOT, one entry per file in `extension/` (19 entries at v1.10.1) |
 | `dist/muse-auto-allow-v<version>.zip.sha256` | sibling checksum sidecar (`sha256sum` format: `<hex>  <basename>`) |
 
 `<version>` is always read from `extension/manifest.json` — no script hardcodes it.
@@ -60,17 +60,17 @@ of the artifact gets `http://127.0.0.1/*` appended to `content_scripts[0].matche
 fixture origin — the pristine extraction dir and the shipped manifest stay untouched,
 and the artifact's own bytes are what gets loaded everywhere else.
 
-## Freeze procedure (v1.10.0 freeze)
+## Freeze procedure (v1.10.1 freeze)
 
 Run from the repo root during the freeze, tree stable, editing lanes stopped.
 
-1. Confirm the version: `extension/manifest.json` reads `1.10.0` (the freeze owns
+1. Confirm the version: `extension/manifest.json` reads `1.10.1` (the freeze owns
    version bumps — no script edits it).
 2. Rebuild clean:
    `node scripts/build.mjs`
    Expect: `manifest at root: true`, an entry count equal to the number of files in
-   `extension/`, and a fresh `dist/muse-auto-allow-v1.10.0.zip` + `.sha256`.
-3. Record the hash: `sha256sum dist/muse-auto-allow-v1.10.0.zip` (must equal the
+   `extension/`, and a fresh `dist/muse-auto-allow-v1.10.1.zip` + `.sha256`.
+3. Record the hash: `sha256sum dist/muse-auto-allow-v1.10.1.zip` (must equal the
    sidecar; verify with `sha256sum -c` as above).
 4. Determinism proof: build once more; the hash must be **identical**. A differing
    hash means the tree changed between builds — stop and find out what moved.
@@ -78,9 +78,54 @@ Run from the repo root during the freeze, tree stable, editing lanes stopped.
    then `node scripts/smoke-zip.mjs` — exit 0 and `"ok": true` in the JSON summary.
 6. Attach to the GitHub Release: the zip **and** its `.sha256` sidecar, per
    `docs/GITHUB_PUBLISH_RUNBOOK.md` §3 —
-   `gh release create "v1.10.0" "dist/muse-auto-allow-v1.10.0.zip#…" "dist/muse-auto-allow-v1.10.0.zip.sha256#checksum" …`
+   `gh release create "v1.10.1" "dist/muse-auto-allow-v1.10.1.zip#…" "dist/muse-auto-allow-v1.10.1.zip.sha256#checksum" …`
    The attached zip must be the exact bytes that passed steps 2–5; if anything is
    rebuilt after step 5, restart from step 2.
+
+## Recorded evidence (v1.10.1 freeze)
+
+- Frozen tree: `extension/manifest.json` `"version": "1.10.1"`; git tag `v1.10.1`
+  (created from this release commit; the GitHub Release v1.10.1 carries the zip +
+  `.sha256` sidecar attached).
+- Artifact: `dist/muse-auto-allow-v1.10.1.zip` — **203,784 bytes**, **19 entries**,
+  `manifest.json` at the zip root; sha256
+  `52038092ab0b472ef98e6a149a63c9e6589381bec5cdc88bcbc2329c5f082ecb` (sidecar
+  `dist/muse-auto-allow-v1.10.1.zip.sha256`; `sha256sum -c` clean).
+- `python scripts/verify-zip.py`: 19 matched, 0 mismatched, 0 disk-only, 0 zip-only (exit 0).
+- `node scripts/smoke-zip.mjs`: exit 0, `ok: true`, 20/20 checks (extracts the shipped zip
+  and passes the core e2e in scratch Chrome; the popup i18n-substitution probe green
+  against the 192-key locale set).
+- Gates on the frozen tree (2026-10-18, exit codes captured directly): `lint.mjs` 0
+  (27 checks) · `background-unit.mjs` 32/32 — after one **caught-and-fixed** red, disclosed:
+  the release-lockstep check (M3) fired because the manifest version was bumped before
+  the CHANGELOG carried its `## 1.10.1` section; the gate worked as designed, the section
+  was added and a standalone re-run came back green · `import-security` 142/0 ·
+  `yolo-ux-unit` 5/5 · `e2e.mjs` 0 · `followup-e2e.mjs` 0 · `mission-e2e.mjs` 0 ·
+  `lang-switch-e2e.mjs` 24/24 checks (192 keys × 6 locales) — after one **transient CDP
+  timeout** with zero failed checks (`Runtime.evaluate timed out`), disclosed; the clean
+  re-run is the recorded gate · `codex-e2e.mjs` 0 (4 phases) · `scripts/bench/experience.mjs
+  --only=assert` **28 passed / 0 failed** (now including the F6 dark-scheme checks).
+- New in 1.10.1: statistics locale-aware tick labels (`Intl.DateTimeFormat`, browser UI
+  locale) + the topics scope caption (bar denominator + top-12 window — the A3/S07′ shape
+  the round-2 red-team refined); the deterministic **dark-scheme gate F6** (expected
+  palette tokens parsed from the shipped stylesheet, no height drift across schemes
+  — 429 = 429, cap 600 honoured — and ≥4.5:1 body/title contrast in both schemes,
+  measured 16.86 / 15.44); store kit refresh (the five localized detailed descriptions
+  now carry the Codex bullets — v1.10.0's TO-DO closed; `screenshot1/2/3/5` regenerated
+  at the fused tree, all 1280×800); ja `codexHint` strengthened ("Deny は決して
+  クリックしません"). i18n **192 keys × 6 locales** (parity gate green). The experience
+  cycle record lives in `docs/EXPERIENCE_CYCLE_2026-10-18.md`.
+- Harness hardening found by this freeze (disclosed): `scripts/stats-shot.mjs`'s seed could
+  land before `chrome.storage` existed on a freshly created target (the evaluate's exception
+  was dropped silently) and the stats capture then rendered EMPTY demo data — caught by
+  inspecting the regenerated store capture. Seeds now wait for the page, then READ BACK and
+  re-assert once; a seed that still does not land fails LOUDLY (same verify-and-reassert
+  pattern as `smoke-zip.mjs`). The v1.10.0-era committed captures were checked and contain
+  demo data (the race is timing-dependent); the artifact itself was unaffected.
+- Honest open items at this freeze: CWS owner items (publisher display name, support
+  email, 2-Step Verification, registration fee) and the Muse-ToS owner/legal decision
+  remain; the package has **not** been uploaded to the Chrome Web Store (`store/PUBLISH_RUNBOOK.md`
+  carries the upload path; issue #3 tracks the owner sign-off trail).
 
 ## Recorded evidence (v1.10.0 freeze)
 

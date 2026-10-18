@@ -228,7 +228,7 @@ try {
   // instead of its collapsed off-state.
   await send('Runtime.evaluate', { expression: SAFETY
     ? 'chrome.storage.local.set({ enabled: true, onboarded: false, dryRun: true, pauseUntil: 0, followupEnabled: false }); "ok"'
-    : 'chrome.storage.local.set({ enabled: true, onboarded: true, pauseUntil: 0, dryRun: false, followupEnabled: true, followupPrompt: "Approve and continue working", followupChips: [{ id: "continue", text: "Keep going" }, { id: "longrun", text: "Long-run" }] }); "ok"', returnByValue: true }, ppS);
+    : 'chrome.storage.local.set({ enabled: true, onboarded: true, pauseUntil: 0, dryRun: false, followupEnabled: true, followupPrompt: "Approve and continue working", followupChips: [{ id: "continue", text: "Keep going" }, { id: "longrun", text: "Long-run" }], codexEnabled: true }); "ok"', returnByValue: true }, ppS);
   // Nudge the content script with a DOM mutation so a sweep fires immediately
   // (otherwise we'd wait for the 1s heartbeat), then give it time to click the
   // showcase cards — their log entries carry real, meaningful context text.
