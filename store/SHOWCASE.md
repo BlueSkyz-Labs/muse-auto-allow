@@ -17,10 +17,10 @@ files.example.com) — never real projects or personal data.
 | Listing copy (6 locales) | `store/LISTING.md` | — | title / short / full description per locale |
 | Permission justifications | `store/LISTING.md` §5 | — | required in dashboard |
 | Privacy policy | `store/PRIVACY.md` | — | required (public URL before submit) |
-| Package | `dist/muse-auto-allow-v1.12.0.zip` | 19 files | built by `scripts/build.mjs`, byte-verified by `scripts/verify-zip.py` (208,315 bytes, sha256 `d46006bfbbb4e288d9ac0a1ade27b50b6c3116119ad350fa12d70432733c10bb`) |
+| Package | `dist/muse-auto-allow-v1.13.0.zip` | 19 files | built by `scripts/build.mjs`, byte-verified by `scripts/verify-zip.py` (210,496 bytes, sha256 `aaaa3fd2ef899d28d1220637e0d1fc9674058d4b723171ca1a9c473f83b63ad2`) |
 | Brand spec | `docs/BRANDING.md` | — | internal reference (tokens, mark, rules) |
 
-> Screenshots 1, 2, 3 and 5 were regenerated 2026-10-18 at the v1.12.0 tree — the popup
+> Screenshots 1, 2, 3 and 5 were regenerated 2026-10-18 at the v1.13.0 tree — the popup
 > captures include the effective-state line (G01), the reason-aware blocked-row chevron
 > (G07/C3-3) and the standing-grant mark (C3-4); the popup stage capture shows the
 > codex-allow and blocked log rows; the stats capture carries the locale-aware ticks +

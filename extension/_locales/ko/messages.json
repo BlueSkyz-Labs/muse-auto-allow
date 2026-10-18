@@ -129,7 +129,7 @@
     "message": "데이터 가져오기"
   },
   "importConfirm": {
-    "message": "이 백업을 복원할까요? 현재 설정, 로그, 통계가 대체됩니다."
+    "message": "이 백업을 복원할까요? 기록과 통계는 백업의 내용으로 대체되고, 파일에 없는 설정은 현재 값이 유지됩니다."
   },
   "importBad": {
     "message": "Muse Auto-Allow 백업 파일이 아닙니다."
@@ -289,6 +289,9 @@
   },
   "followupSendBlockedDead": {
     "message": "보낼 수 없음 — Muse 탭이 응답하지 않습니다"
+  },
+  "followupSendBlockedSubmit": {
+    "message": "보낼 수 없음 — Muse가 메시지를 받지 않았습니다"
   },
   "followupRotateStarterConfirm": {
     "message": "저장된 조합 $1개를 교체할까요? 다시 탭하세요"

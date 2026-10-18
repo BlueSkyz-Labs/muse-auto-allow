@@ -129,7 +129,7 @@
     "message": "导入数据"
   },
   "importConfirm": {
-    "message": "恢复此备份？当前的设置、日志和统计数据将被替换。"
+    "message": "恢复此备份？历史记录和统计数据将由备份内容替换；文件中没有的设置将保持当前值。"
   },
   "importBad": {
     "message": "不是 Muse Auto-Allow 的备份文件。"
@@ -289,6 +289,9 @@
   },
   "followupSendBlockedDead": {
     "message": "无法发送 — Muse 标签页无响应"
+  },
+  "followupSendBlockedSubmit": {
+    "message": "无法发送——Muse 未接受该消息"
   },
   "followupRotateStarterConfirm": {
     "message": "替换已保存的 $1 个组合？再次点按"

@@ -60,6 +60,85 @@ of the artifact gets `http://127.0.0.1/*` appended to `content_scripts[0].matche
 fixture origin — the pristine extraction dir and the shipped manifest stay untouched,
 and the artifact's own bytes are what gets loaded everywhere else.
 
+## Freeze procedure (v1.13.0 freeze)
+
+Run from the repo root during the freeze, tree stable, editing lanes stopped.
+
+1. Confirm the version: `extension/manifest.json` reads `1.13.0` (the freeze owns
+   version bumps — no script edits it).
+2. Rebuild clean:
+   `node scripts/build.mjs`
+   Expect: `manifest at root: true`, an entry count equal to the number of files in
+   `extension/`, and a fresh `dist/muse-auto-allow-v1.13.0.zip` + `.sha256`.
+3. Record the hash: `sha256sum dist/muse-auto-allow-v1.13.0.zip` (must equal the
+   sidecar; verify with `sha256sum -c` as above).
+4. Determinism proof: build once more; the hash must be **identical**. A differing
+   hash means the tree changed between builds — stop and find out what moved.
+5. Byte-verify + smoke: `python scripts/verify-zip.py` (19 matched, 0 mismatched)
+   then `node scripts/smoke-zip.mjs` — exit 0 and `"ok": true` in the JSON summary.
+6. Attach to the GitHub Release: the zip **and** its `.sha256` sidecar, per
+   `docs/GITHUB_PUBLISH_RUNBOOK.md` §3 —
+   `gh release create "v1.13.0" "dist/muse-auto-allow-v1.13.0.zip#…" "dist/muse-auto-allow-v1.13.0.zip.sha256#checksum" …`
+   The attached zip must be the exact bytes that passed steps 2–5; if anything is
+   rebuilt after step 5, restart from step 2.
+
+## Recorded evidence (v1.13.0 freeze)
+
+- Frozen tree: `extension/manifest.json` `"version": "1.13.0"`; git tag `v1.13.0`
+  (created from this release commit; the GitHub Release v1.13.0 carries the zip +
+  `.sha256` sidecar attached).
+- Artifact: `dist/muse-auto-allow-v1.13.0.zip` — **210,496 bytes**, **19 entries**,
+  `manifest.json` at the zip root; sha256
+  `aaaa3fd2ef899d28d1220637e0d1fc9674058d4b723171ca1a9c473f83b63ad2` (sidecar
+  `dist/muse-auto-allow-v1.13.0.zip.sha256`; `sha256sum -c` clean).
+- `python scripts/verify-zip.py`: 19 matched, 0 mismatched, 0 disk-only, 0 zip-only (exit 0).
+- `node scripts/smoke-zip.mjs`: exit 0, `ok: true`, 20/20 checks (extracts the shipped zip
+  and passes the core e2e in scratch Chrome).
+- Determinism: two full builds at the frozen tree produced the identical sha256.
+- Gates on the frozen tree (2026-10-18, exit codes captured directly): `lint.mjs` 0
+  (27 checks) · `background-unit.mjs` **35/35** (new G2a/b/c: pull-before-migrate ordering —
+  synced values beat fresh-install seeds; explicit locals still beat sync; empty sync keeps
+  the seeds) · `import-security` **154/0** (new G13: honest data restart + no-key notice) ·
+  `yolo-ux-unit` 5/5 · `e2e.mjs` 0 · `followup-e2e.mjs` 0 · `mission-e2e.mjs` 0 ·
+  `lang-switch-e2e.mjs` 24/24 checks at **203 keys × 6** · `codex-e2e.mjs` 0 (4 phases) · `experience.mjs --only=assert` **28/0** (the F2 reason-coverage check caught the one un-mapped reason the red-team fixes introduced — `submit-failed` — and the +1 key closed it). Several hardening edits landed across the battery window (sweep gate, import order swap, topics empty-state, the pull-callback try, and the two red-team fixes); each was re-verified immediately (syntax + lint + the full import-security suite + the in-Chrome QA pass). The FINAL artifact below was rebuilt after the LAST edit and re-verified end-to-end: determinism 2× identical, verify-zip 19/0/0/0, smoke 20/20, sidecar `-c` clean — the values in this section are the post-rebuild ones.
+- New in 1.13.0 (cycle 4 — FINAL round; candidates from two bounded read-only audit subagents,
+  every claim re-verified against the cited code before any change; 8 confirmed fixes, 2
+  rejected with reason — `scratch/cycle4-candidates.md`):
+  **C4-A** onInstalled chains pull→migrate (install defaults can no longer shadow a synced
+  kill-switch, nor be pushed back over the bucket); **C4-B** sweeps wait for BOTH the v18 read
+  and the enabled read — the gate lives inside `sweep()` so observer-driven sweeps are covered
+  too; **C4-C** the connector hard-block climbs 2 levels on path A like path B; **C4-D**
+  restore is honest for data (log/stats/clickCount absent from a file are removed — set first,
+  remove second, so a quota-failed set cannot lose data; restrictions keep fail-closed merge;
+  confirm copy updated ×6; a ctx-bearing file with no key gets the kept-key notice);
+  **C4-E** `approvalPresent()` applies the click paths' own resolved vocabulary (a lingering
+  allowed card no longer blocks every send); **C4-F** a composer that disappears after a
+  submit counts as delivered (missions/rotation advance; documented trade: a mid-window
+  navigation counts as delivered); **C4-G** the chart has an accessible name
+  (`aria-labelledby="ccap"`, WCAG 1.1.1); **C4-H** the topics caption denominator follows the
+  Total KPI (caption/KPI can never disagree) with bars clamped ≤100%.
+  Rejected with reason: broadening Muse's review-bar wording to Codex's set (adds click
+  surface without live evidence); cooldown-eviction order + codex digest declaration order
+  (unreachable / chatty-page-only, recorded as known-minor).
+- QA v1.13.0 (in-Chrome, before the battery): chart labelledby + caption text; caption
+  "Bars: share of the 5-click total" with bars clamped at 100% on synthetic legacy data;
+  import data-restart (old encrypted log removed with the new copy shown); the no-key notice
+  dialog; the v1.12.0 authority-flip confirm regression (YOLO warn fires, import proceeds).
+- Red-team: a bounded subagent review of the five v1.13.0 hardening claims (schema-corrected
+  after the cycle-3 harness incident; 13m47s) returned **2 PASS with caveats, 1 FAIL, 2 PASS with
+  nuances** — ALL addressed: the pullFromSync async-callback throw that could leave `fin` unfired
+  was fixed (callback-local try); the FAIL on `approvalPresent()` (an unanchored status regex over
+  whole card text could miss a genuinely pending card while 'Approved ·'/'Cancelled ·' resolved
+  cards still blocked) was re-implemented with the **structural actionable-pair predicate** = path
+  A's ground truth minus pacing (can only over-count → fail-safe); the claim-4 caveat (a failed
+  first submit still armed the verify window) was fixed — the window arms only when a submit
+  actually fired, and a both-fail attempt records unverified immediately as `submit-failed`.
+  Verdicts and residual nuances: `scratch/cycle4-candidates.md`.
+- Store captures 1/2/3/5 regenerated at this tree (`store-shot.mjs` + `stats-shot.mjs`).
+- Honest open items at this freeze: CWS owner items (publisher display name, support email,
+  2-Step Verification, registration fee) and the Muse-ToS owner/legal decision remain; the
+  package has **not** been uploaded to the Chrome Web Store.
+
 ## Freeze procedure (v1.12.0 freeze)
 
 Run from the repo root during the freeze, tree stable, editing lanes stopped.

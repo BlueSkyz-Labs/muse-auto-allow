@@ -184,6 +184,7 @@
   let obs = null;
   let heartbeat = null;
   let v18Ready = false; // v1.9.3 boot gate: the v18 settings read (dryRun/pause/rules) must complete before ANY sweep — a fresh install must never click before the log-only default is applied
+  let enabledReady = false; // v1.13.0 (C4-B): the kill-switch (enabled) read must ALSO land before the first sweep
 
   // Per-sweep read caches. A sweep is a single synchronous pass over a DOM that does not change
   // until its one click at the very end, so text and visibility reads are stable for the whole
@@ -494,7 +495,9 @@
     for (const card of (cards || document.querySelectorAll(CARD_SEL))) {
       if (card.matches(SURFACE_SEL) || !isVisible(card)) continue;
       // connector hard-block: never interact with the container, even with a pair inside
-      if (connectorNear(card, 1)) { noteBlocked('Connect', 'connector', txt(card), 'connector:' + txt(card).slice(0, 160)); continue; }
+      // v1.13.0 (C4-C): depth 2, like path B — the card can carry its Connect/token wording
+      // one level up (wrapper), which the old depth-1 check here missed.
+      if (connectorNear(card, 2)) { noteBlocked('Connect', 'connector', txt(card), 'connector:' + txt(card).slice(0, 160)); continue; }
       if (allowDoneCards.has(card)) continue; // already approved once — never walk to a broader option
       if (!denyBtnsIn(card).some(clickable)) continue;
       const cardText = txt(card);
@@ -1164,7 +1167,16 @@
   // Reuses the click paths' selectors/rules (A–E) and fails closed on any error.
   function approvalPresent() {
     try {
-      for (const card of document.querySelectorAll(CARD_SEL)) if (isVisible(card)) return true;
+      // v1.13.0 (C4-E, red-team claim-3 hardened): an approval is "present" when a card holds an
+      // ACTIONABLE allow/deny pair the click paths would act on — the same ground truth as path A
+      // (minus pacing/cooldowns, so we can only over-count, which blocks more = fail-safe).
+      // Resolved cards stop counting structurally (done marks / handled nodes); no text heuristics.
+      for (const card of document.querySelectorAll(CARD_SEL)) {
+        if (card.matches(SURFACE_SEL) || !isVisible(card)) continue;
+        if (allowDoneCards.has(card)) continue;
+        if (!denyBtnsIn(card).some(clickable)) continue;
+        if (allowBtnsIn(card).some((b) => clickable(b) && !handledNode(b))) return true;
+      }
       for (const b of buttonsIn(document)) {
         if (!clickable(b)) continue;
         const t = txt(b);
@@ -1394,10 +1406,25 @@
     if (!manual) followup.attempts.push(now); // manual sends are user-explicit; only auto sends count toward the cap
     followup.sending = true;
     const first = findSendButton(composer) ? 'button' : 'enter';
-    submitComposer(composer, first);
-    verifyFollowupSend(text, [first], { advanceRotation: !override, source, mission: (opts && opts.mission) || null });
-    followup.lastResult = { at: new Date().toISOString(), kind: 'followup', via: first, text: text.slice(0, 120), verified: null, source };
-    return { ok: true, reason: 'attempted', via: first };
+    // v1.13.0 (C4-F caveat, red-team claim-4): arm the verify window ONLY when a submit actually
+    // fired — a failed first strategy falls back to the other exactly once, and if BOTH fail the
+    // attempt is recorded unverified immediately (so a composer-gone later can never count as a
+    // delivered send that was never submitted).
+    let via = first;
+    let armed = submitComposer(composer, first) === true;
+    if (!armed) {
+      const second = first === 'button' ? 'enter' : 'button';
+      if (submitComposer(composer, second)) { via = second; armed = true; }
+    }
+    if (!armed) {
+      followup.sending = false;
+      followup.lastResult = { at: new Date().toISOString(), kind: 'followup', via: null, text: text.slice(0, 120), verified: false, source };
+      console.warn('[muse-auto-allow] follow-up not submitted — no submit path fired');
+      return { ok: false, reason: 'submit-failed' };
+    }
+    verifyFollowupSend(text, [via], { advanceRotation: !override, source, mission: (opts && opts.mission) || null });
+    followup.lastResult = { at: new Date().toISOString(), kind: 'followup', via, text: text.slice(0, 120), verified: null, source };
+    return { ok: true, reason: 'attempted', via };
   }
   // Success is only counted when the composer verifiably emptied or changed (the app
   // accepted the send). Otherwise the other submit strategy is tried once, then the
@@ -1410,7 +1437,11 @@
       if (!alive()) { followup.sending = false; return; }
       const c = findComposer();
       const v = c ? composerValue(c) : null;
-      if (c && v !== text) { // emptied (v === '') or changed => delivered
+      // v1.13.0 (C4-F): delivered when the composer emptied/changed OR disappeared entirely — a
+      // post-submit SPA swap unmounts the composer with our text inside it; treating that as
+      // unverified stalled the mission/rotation forever. Documented trade: a mid-window
+      // navigation counts as delivered (docs/RELEASE_INTEGRITY.md, v1.13.0 evidence).
+      if (!c || v !== text) { // emptied (v === '') / changed / composer gone => delivered
         followup.sending = false;
         followup.lastSentAt = Date.now();
         if (followup.lastResult) followup.lastResult.verified = true;
@@ -1511,6 +1542,7 @@
   function sweep(reason) {
     if (!alive()) { stopForever(); return; }
     if (!v18Ready) return; // v1.9.3 boot gate: never sweep before the v18 settings are applied
+    if (!enabledReady) return; // v1.13.0 (C4-B): nor before the kill-switch read lands — an observer-driven sweep must not outrun a stored OFF either
     if (!state.enabled) return;
     if (paused()) return; // v1.8.0 pause: every click path (A–E) is halted until pauseUntil passes
     const now = Date.now();
@@ -1583,6 +1615,7 @@
       const n = Number(s.minDelayMs);
       state.minDelayMs = Number.isFinite(n) && n >= 0 ? n : 300;
       state.clickCount = Number(s.clickCount) || 0;
+      enabledReady = true; // v1.13.0 (C4-B): the kill-switch read landed
       if (v18Ready) sweep('init'); // v1.9.3 boot gate: the v18 read below owns the first sweep
     });
     // v1.6.0 auto follow-up settings (independent of the approve engine's toggle)
@@ -1590,7 +1623,7 @@
     // v1.8.0 frozen settings (pause / dry-run / rules / smart follow-up / schedule)
     // + v1.9.0 mission settings (missionEnabled / mission{id,step,cycles,startedAt,lastSentAt})
     chrome.storage.local.get({ pauseUntil: 0, dryRun: false, yoloMode: false, allowOnceMode: false, rules: {}, followupSmart: {}, followupSchedule: {}, missionEnabled: false, mission: null },
-      (s) => { applyV18Settings(s); applyMissionSettings(s); publishFlags(); v18Ready = true; sweep('init'); });
+      (s) => { applyV18Settings(s); applyMissionSettings(s); publishFlags(); v18Ready = true; if (enabledReady) sweep('init'); }); // v1.13.0 (C4-B): sweep only once BOTH reads landed — the hardcoded enabled:true default must never outrun a stored kill-switch
     chrome.storage.onChanged.addListener((ch) => {
       // A key REMOVED from storage (newValue === undefined) resets to that key's shipped DEFAULT —
       // never a stale in-memory value (fail-closed). Observed live: after storage.local.clear() a

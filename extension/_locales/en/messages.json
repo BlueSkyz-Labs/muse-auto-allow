@@ -129,7 +129,7 @@
     "message": "Import data"
   },
   "importConfirm": {
-    "message": "Restore this backup? Current settings, log and statistics will be replaced."
+    "message": "Restore this backup? History and statistics are replaced by the backup's; settings not in the file keep their current values."
   },
   "importBad": {
     "message": "Not a Muse Auto-Allow backup file."
@@ -289,6 +289,9 @@
   },
   "followupSendBlockedDead": {
     "message": "Couldn't send — the Muse tab is not responding"
+  },
+  "followupSendBlockedSubmit": {
+    "message": "Couldn't send — Muse didn't accept the message"
   },
   "followupRotateStarterConfirm": {
     "message": "Replace your $1 saved combos? Tap again"

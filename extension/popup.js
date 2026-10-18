@@ -1625,6 +1625,7 @@ const SEND_BLOCKED_KEY = {
   'paused': ['followupSendBlockedPaused', "Couldn't send — automation is paused"],
   'schedule': ['followupSendBlockedSchedule', "Couldn't send — outside the follow-up hours"],
   'dead': ['followupSendBlockedDead', "Couldn't send — the Muse tab is not responding"],
+  'submit-failed': ['followupSendBlockedSubmit', "Couldn't send — Muse didn't accept the message"], // v1.13.0 (C4-F): both submit strategies failed after typing
 };
 let fSendNoteTimer = null;
 function fSendNote(text) {

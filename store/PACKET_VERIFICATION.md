@@ -25,7 +25,9 @@
 >
 > **v1.11.0 addendum (history):** the packet shipped as **v1.11.0** (`dist/muse-auto-allow-v1.11.0.zip`, 206,845 bytes, 19 entries, sha256 `c09819c6…cb0f`) — the v1.11.0 addendum at the end of this document was the verification of record for that packet; it carries the v1.10.x substance forward, adds the effective-state line (G01), the standing-grant boolean (G11), the blocked-entry deep link (G07) and the onboarding static list (G03), and notes that the v1.10.x open items (localized copies, captures) remain closed. Superseded by the v1.12.0 addendum below. Everything above is the frozen historical record; the **v1.6.0 / v1.7.0 / v1.8.0 gap** in this file is a known stale item.
 >
-> **v1.12.0 addendum (current verification):** the packet ships as **v1.12.0** (`dist/muse-auto-allow-v1.12.0.zip`, 208,315 bytes, 19 entries, sha256 `d46006bf…10bb`) — the v1.12.0 addendum at the end of this document is the **current verification**; it carries the v1.11.0 substance forward with the restore/authority fixes (C3-1), the off/paused precedence fix (C3-2), the reason-aware deep link (C3-3) and the standing-grant mark (C3-4). Everything above is the frozen historical record; the **v1.6.0 / v1.7.0 / v1.8.0 gap** in this file is a known stale item.
+> **v1.12.0 addendum (history):** the packet shipped as **v1.12.0** (`dist/muse-auto-allow-v1.12.0.zip`, 208,315 bytes, 19 entries, sha256 `d46006bf…10bb`) — the v1.12.0 addendum at the end of this document was the verification of record for that packet; it carries the v1.11.0 substance forward with the restore/authority fixes (C3-1), the off/paused precedence fix (C3-2), the reason-aware deep link (C3-3) and the standing-grant mark (C3-4). Superseded by the v1.13.0 addendum below. Everything above is the frozen historical record; the **v1.6.0 / v1.7.0 / v1.8.0 gap** in this file is a known stale item.
+>
+> **v1.13.0 addendum (current verification):** the packet ships as **v1.13.0** (`dist/muse-auto-allow-v1.13.0.zip`, 210,496 bytes, 19 entries, sha256 `aaaa3fd2…3ad2`) — the v1.13.0 addendum at the end of this document is the **current verification**; it carries the v1.12.0 substance forward with the sync/boot/connector hardening (C4-A/B/C), the honest data restore (C4-D), the follow-up stall fixes (C4-E/F) and the stats accessibility/denominator fixes (C4-G/H). Everything above is the frozen historical record; the **v1.6.0 / v1.7.0 / v1.8.0 gap** in this file is a known stale item.
 
 ## Verdict
 
@@ -495,4 +497,19 @@ Entries carry an ISO `at` timestamp (`content.js:203`); PRIVACY §2 describes "k
 | — | Import surface | `yoloMode`/`codexEnabled` now round-trip typed; the authority-flip confirm gates every import write path (single `storage.local.set`); `blockedReason` round-trips bounded; `import-security` 150/0 at this freeze | PASS |
 | — | Artifact integrity | verify-zip 19/0/0/0; smoke 20/20 `ok: true`; deterministic double-build byte-identical; sidecar `sha256sum -c` clean; frozen values in `docs/RELEASE_INTEGRITY.md` (v1.12.0 evidence) | PASS |
 
-**Bottom line (v1.12.0):** the v1.11.0 verification stands; this addendum carries it forward with the cycle-3 fixes and surfaces recorded (authority-safe restore, off/paused precedence, reason-aware deep links, standing mark), the grown deterministic coverage (150 import-security checks; 202-key parity), and every artifact reference moved to `dist/muse-auto-allow-v1.12.0.zip`. The package has not been uploaded to the Chrome Web Store.
+**Bottom line (v1.12.0):** the v1.11.0 verification stands; this addendum carries it forward with the cycle-3 fixes and surfaces recorded (authority-safe restore, off/paused precedence, reason-aware deep links, standing mark), the grown deterministic coverage (150 import-security checks; 202-key parity), and every artifact reference moved to `dist/muse-auto-allow-v1.12.0.zip`. The package has not been uploaded to the Chrome Web Store. *(Superseded by the v1.13.0 addendum appended below.)*
+
+## v1.13.0 Addendum (2026-10-18) — current verification
+
+**Method note (honest):** same repository-maintainer pass pattern (maker = verifier, disclosed), executed at the v1.13.0 release freeze; the cycle-4 diff also received a bounded subagent red-team review (schema-corrected after the cycle-3 harness incident; outcome recorded in the release PR and `scratch/cycle4-candidates.md`).
+
+| # | Item | v1.13.0 re-check | Status |
+|---|---|---|---|
+| 1.2 / 4.6 | Version consistency | `extension/manifest.json` `"version"` `1.13.0` = `store/LISTING.md` §1 `Version 1.13.0` = `dist/muse-auto-allow-v1.13.0.zip` (all three read in this pass) | PASS |
+| — | Store captures at this tree | all five assets 1280×800 by PNG header; captures regenerated at the v1.13.0 tree | PASS |
+| 3.9 | "collects nothing / transmits nothing" | unchanged — the wave hardens local state ordering + UI honesty; no new data flow, permission or remote code | PASS |
+| — | Import surface | data keys absent from a file are removed (set-first/remove-second), restrictions keep fail-closed merge, no-key ctx files surface the kept-key notice; `import-security` 154/0 at this freeze | PASS |
+| — | Sync/install ordering | bgu G2a/b/c prove synced values beat fresh-install seeds and explicit locals beat sync; `background-unit` 35/35 at this freeze | PASS |
+| — | Artifact integrity | verify-zip 19/0/0/0; smoke 20/20 `ok: true`; deterministic double-build byte-identical; sidecar `sha256sum -c` clean; frozen values in `docs/RELEASE_INTEGRITY.md` (v1.13.0 evidence) | PASS |
+
+**Bottom line (v1.13.0):** the v1.12.0 verification stands; this addendum carries it forward with the cycle-4 hardening recorded (sync/boot/connector ordering, honest restore, follow-up stall fixes, stats accessibility/denominator), the grown deterministic coverage (35 background-unit checks; 154 import-security checks; 203-key parity; the F2 reason-coverage assert now covers the new `submit-failed` status), and every artifact reference moved to `dist/muse-auto-allow-v1.13.0.zip`. The package has not been uploaded to the Chrome Web Store.

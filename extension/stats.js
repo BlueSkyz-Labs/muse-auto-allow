@@ -127,8 +127,10 @@ function renderTopics() {
   const wrap = $('topics');
   const all = Object.entries(STATS.byTopic).map(([k, v]) => [String(k), num(v)]).sort((a, b) => b[1] - a[1]);
   const entries = all.slice(0, 12);
-  if (!entries.length && !num(TOTAL)) {
+  if (!entries.length) { // v1.13.0: no topic entries = nothing to chart — say so (Total>0 with an
+    // empty byTopic is reachable after a data-restart import or legacy pruning)
     wrap.innerHTML = '<div class="empty">' + t('noData', 'No data yet') + '</div>';
+    const sc0 = $('topicsScope'); if (sc0) { sc0.textContent = ''; sc0.hidden = true; }
     return;
   }
   // share-of-total bars (every recorded topic counts): 231 of 489 reads as a true 47 % track,
@@ -138,7 +140,10 @@ function renderTopics() {
   // an "other" row (recordClick gives every counted click a topic; the only remainders are
   // pruned-at-100 / legacy data).
   const sum = all.reduce((s, e) => s + e[1], 0);
-  const total = Math.max(num(TOTAL), sum, 1);
+  // v1.13.0 (C4-H): the denominator follows the Total KPI whenever it exists (the caption and
+  // the KPI card must never disagree); the topic sum is only a fallback for legacy stores with
+  // no Total. Bars are clamped at 100% below, so a legacy sum > TOTAL cannot overflow the track.
+  const total = num(TOTAL) > 0 ? num(TOTAL) : Math.max(sum, 1);
   const scopeNote = $('topicsScope');
   if (scopeNote) {
     if (!entries.length || !num(TOTAL)) {
@@ -156,7 +161,7 @@ function renderTopics() {
     const c = PALETTE[i % PALETTE.length];
     return '<div class="topic"><span class="dot t-' + c + '"></span>' +
       '<span class="name" title="' + name.replace(/"/g, '&quot;') + '">' + name.replace(/[<>&]/g, '') + '</span>' +
-      '<span class="bar"><i class="t-' + c + '" style="width:' + Math.max(4, Math.round(v / total * 100)) + '%"></i></span>' +
+      '<span class="bar"><i class="t-' + c + '" style="width:' + Math.min(100, Math.max(4, Math.round(v / total * 100))) + '%"></i></span>' +
       '<span class="n">' + v + '</span></div>';
   }).join('');
 }
@@ -479,16 +484,30 @@ $('importFile').addEventListener('change', async (ev) => {
         const kr = await resolveImportedKey(clean, typeof cur.cryptKeyRaw === 'string' ? cur.cryptKeyRaw : null);
         if (!kr.ok) {
           alert(t('importBad', 'Not a Muse Auto-Allow backup file.'));
-        } else if (confirm(t('importConfirm', 'Restore this backup? Current settings, log and statistics will be replaced.'))) {
+        } else if (confirm(t('importConfirm', "Restore this backup? History and statistics are replaced by the backup's; settings not in the file keep their current values."))) {
           if (kr.adopt === null) delete clean.cryptKeyRaw; else clean.cryptKeyRaw = kr.adopt;
           // F-V19-5: merge the three composite containers at SUB-KEY granularity with what is stored
           // BEFORE the replace-write, so a crafted/partial file cannot reset a sibling sub-key the
           // user had set (an absent sub-key is a reset-to-default for the engine).
           mergeStoredContainers(clean, cur);
+          // v1.13.0 (C4-D): "restore" is honest for DATA — log/stats/clickCount absent from the
+          // file are REMOVED (start clean), so a partial backup never leaves the old encrypted
+          // log or counters behind. Settings/restriction keys keep merge semantics: an absent
+          // restriction is never cleared by a file (fail-closed symmetry preserved).
+          const staleData = ['log', 'stats', 'clickCount'].filter((k) => !(k in clean));
           try {
             await chrome.storage.local.set(clean);
+            // v1.13.0 (C4-D), order matters: SET first, then REMOVE the stale data keys — a quota
+            // rejection on the set must never leave the old log already wiped (data loss); with
+            // this order the worst case is the old data surviving (merge semantics).
+            if (staleData.length) { try { await chrome.storage.local.remove(staleData); } catch { /* local.remove unavailable — merge semantics remain */ } }
             renderAll();
             if (kr.kept) alert(t('importKeyKept', "Imported. The backup's encryption key could not be verified, so it was not restored (the existing key was kept)."));
+            else if (!clean.cryptKeyRaw && (clean.log || []).some((e) => e && e.ctx && e.ctx.iv && e.ctx.ct)) {
+              // v1.13.0 (C4-D): the file carries encrypted entries but no key was supplied —
+              // every restored entry would render "(unable to decrypt)" forever with no notice.
+              alert(t('importKeyKept', "Imported. The backup's encryption key could not be verified, so it was not restored (the existing key was kept)."));
+            }
           } catch (err) {
             // SA-3: a quota rejection gets its own message (was: "not a backup file")
             if (/quota/i.test(String((err && err.message) || err))) alert(t('importQuota', 'Could not restore the backup: browser storage is full.'));

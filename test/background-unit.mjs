@@ -428,6 +428,27 @@ async function main() {
     state.store.codexEnabled === true && state.store.schemaVersion === 2,
     { store: { ...state.store } });
 
+  // ---------- G2: v1.13.0 (C4-A) — pull-before-migrate ordering ----------
+  // The onInstalled handler chains pullFromSync -> migrate. Under test: synced values fill
+  // ABSENT keys first, so install defaults can never shadow a synced kill-switch.
+  resetStore({});
+  resetSync({ enabled: false, minDelayMs: 900, dryRun: false });
+  await new Promise((res) => { T.pullFromSync(() => { T.migrate().then(res); }); });
+  check('G2a ordering. synced values win over fresh-install seeds (enabled:false / dryRun:false survive; seeds only cover the rest)',
+    state.store.enabled === false && state.store.dryRun === false && state.store.minDelayMs === 900
+    && state.store.yoloMode === false && state.store.codexEnabled === false && state.store.schemaVersion === 2,
+    { store: { ...state.store } });
+  resetStore({ enabled: true });
+  resetSync({ enabled: false, dryRun: true });
+  await new Promise((res) => { T.pullFromSync(() => { T.migrate().then(res); }); });
+  check('G2b ordering. an explicit LOCAL choice still beats the sync bucket (enabled:true stays, absent dryRun pulled)',
+    state.store.enabled === true && state.store.dryRun === true, { store: { ...state.store } });
+  resetStore({});
+  resetSync({});
+  await new Promise((res) => { T.pullFromSync(() => { T.migrate().then(res); }); });
+  check('G2c ordering. with an empty sync bucket the fresh-install seeds still apply (dryRun:true default kept)',
+    state.store.enabled === true && state.store.dryRun === true && state.store.schemaVersion === 2, { store: { ...state.store } });
+
   // ---------- report ----------
   for (const c of checks) {
     console.log((c.ok ? 'PASS  ' : 'FAIL  ') + c.name + (c.ok || c.detail === undefined ? '' : '  ' + JSON.stringify(c.detail)));

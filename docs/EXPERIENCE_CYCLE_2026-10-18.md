@@ -152,3 +152,39 @@ VALIDATE until an owner decision.
   lang-switch 24/24 @202 keys · codex 0 (4 phases) · assert 28/0 · verify-zip 19/0/0/0 ·
   determinism 2× identical · smoke 20/20. Artifact: `dist/muse-auto-allow-v1.12.0.zip` —
   208,315 bytes, 19 entries, sha256 `d46006bf…10bb`.
+
+## Wave 4 — executed (v1.13.0) — FINAL round
+
+- **AUDIT:** two bounded read-only subagents (engines; background/stats/popup) produced 10
+  candidates; the main session re-verified every claim against the cited code — **8 confirmed
+  fixes, 2 rejected with reason** (`scratch/cycle4-candidates.md`). Task 2 executed the real
+  function bodies to prove its findings.
+- **C4-A** `onInstalled` chains pull→migrate: synced values fill absent keys BEFORE the
+  fresh-install seeds, so a synced kill-switch/live choice can never be shadowed by defaults —
+  nor pushed back over the sync bucket. bgu 32→35 (G2a/b/c).
+- **C4-B** sweeps wait for BOTH the v18 read and the enabled read; the gate lives inside
+  `sweep()` so observer-driven sweeps are covered too (self-review caught that the caller-side
+  gate alone left the observer path open).
+- **C4-C** connector hard-block depth aligned — path A climbs 2 levels like path B.
+- **C4-D** honest restore: log/stats/clickCount absent from a file are removed (set-first,
+  remove-second: a quota-failed set can't lose data — self-review reordered this); restrictions
+  keep fail-closed merge; confirm copy rewritten ×6; a ctx-bearing file with no key gets the
+  kept-key notice. ims 150→154 (G13).
+- **C4-E** `approvalPresent()` applies the click paths' own resolved vocabulary — a lingering
+  allowed card no longer blocks every follow-up/mission send.
+- **C4-F** a composer that disappears after a submit counts as delivered — missions/rotation
+  advance (documented trade: a mid-window navigation counts as delivered).
+- **C4-G** chart accessible name (`aria-labelledby="ccap"`); **C4-H** topics caption follows the
+  Total KPI with bars clamped ≤100%.
+- **Rejected with reason:** Muse review-bar wording broadening; cooldown-eviction order + codex
+  digest declaration order (known-minor / unreachable).
+- **Checks:** lint 0 (27) · bgu **35/35** · ims **154/0** · yolo 5/5 · e2e 0 · followup 0 ·
+  mission 0 · lang 24/24 @202 keys · codex 0 (4 phases) · assert 28/0 · verify-zip 19/0/0/0 ·
+  determinism 2× identical · smoke 20/20. QA v1.13.0 (pre-battery): aria + caption "share of the
+  5-click total" (bars capped on synthetic legacy data) + data-restart + no-key + flip-confirm
+  all correct. Artifact: `dist/muse-auto-allow-v1.13.0.zip` — 210,496 bytes, 19 entries,
+  sha256 `aaaa3fd2…3ad2`. Red-team (bounded subagent, schema-corrected): 2 PASS+caveats (both
+  FIXED — pullFromSync async-callback try; submit-arming only on a real submit), 1 FAIL FIXED
+  (approvalPresent re-implemented with the structural actionable-pair predicate), 2 PASS+nuances;
+  verdicts in `scratch/cycle4-candidates.md`. +1 i18n key (`followupSendBlockedSubmit`, flagged
+  by the F2 reason-coverage assert) → 203 keys × 6.

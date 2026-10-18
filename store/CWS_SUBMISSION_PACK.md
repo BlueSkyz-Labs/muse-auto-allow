@@ -10,7 +10,7 @@ version currently in `extension/manifest.json` and the `dist/` zip built from it
 > **[OWNER]** marks steps that need the owner's Google account, payment, or a human
 > decision. Everything else is prepared here.
 
-> **Current freeze: v1.12.0 (2026-10-18).** The v1.10.x passes updated the copy where
+> **Current freeze: v1.13.0 (2026-10-18).** The v1.10.x passes updated the copy where
 > that feature set changed it: §1 single purpose + supporting sentence (both scopes),
 > §2 host justifications (muse.ai + the opt-in chatgpt.com scope, per engine), §3.4
 > reviewer note (same rewrite as `store/LISTING.md` §7.4), §5 listing table note,
@@ -18,9 +18,12 @@ version currently in `extension/manifest.json` and the `dist/` zip built from it
 > regenerated store screenshots. The **v1.11.0** and **v1.12.0** passes add no dashboard-copy
 > changes — the v1.11.0 pass shipped the effective-state line (G01), the standing-grant flag
 > (G11), the blocked-entry deep link (G07) and the onboarding static list (G03); the
-> v1.12.0 pass ships the restore/authority fixes (C3-1), the off/paused precedence fix
-> (C3-2), the reason-aware deep link (C3-3) and the standing-grant mark (C3-4), and
-> moves every artifact reference to `dist/muse-auto-allow-v1.12.0.zip`.
+> v1.12.0 pass shipped the restore/authority fixes (C3-1), the off/paused precedence fix
+> (C3-2), the reason-aware deep link (C3-3) and the standing-grant mark (C3-4); the
+> v1.13.0 pass ships the sync/boot/connector hardening (C4-A/B/C), the honest data
+> restore (C4-D), the follow-up stall fixes (C4-E/F) and the stats
+> accessibility/denominator fixes (C4-G/H), and moves every artifact reference to
+> `dist/muse-auto-allow-v1.13.0.zip`.
 > Freeze records that still read older versions are historical addenda kept for
 > traceability; the effectives are the current items below.
 
@@ -76,7 +79,7 @@ Sources: <https://developer.chrome.com/docs/webstore/cws-dashboard-privacy#list_
 <https://developer.chrome.com/docs/webstore/program-policies/permissions> ("Use of
 Permissions": request the *narrowest* permissions necessary; no future-proofing).
 
-Verified against `extension/manifest.json` (working tree as of the **v1.12.0 freeze**):
+Verified against `extension/manifest.json` (working tree as of the **v1.13.0 freeze**):
 `permissions: ["storage", "alarms", "notifications"]`; `commands: { toggle-pause
 (Alt+Shift+P), send-followup (Alt+Shift+F) }`; `host_permissions: ["https://muse.ai/*",
 "https://*.muse.ai/*", "https://chatgpt.com/*", "https://*.chatgpt.com/*"]`. Nothing else
@@ -85,8 +88,8 @@ is declared — exactly what the current feature set
 onboarding; v1.9 Mission Orchestrator; v1.9.3 first-run logging-only default; v1.10.0
 Codex (ChatGPT) engine, opt-in, off by default) requires, and
 `scripts/lint.mjs` fails on any added permission.
-*(`manifest.version` reads `1.12.0` on the working tree — frozen 2026-10-18; the package is
-`dist/muse-auto-allow-v1.12.0.zip`. This section matches the
+*(`manifest.version` reads `1.13.0` on the working tree — frozen 2026-10-18; the package is
+`dist/muse-auto-allow-v1.13.0.zip`. This section matches the
 frozen package; it has not been uploaded to the Chrome Web Store — no CWS review, no
 store publish.)*
 
@@ -451,7 +454,7 @@ Source: <https://developer.chrome.com/docs/webstore/review-process#warning>
 - [x] **Zip built + verified + attached to the GitHub Release** — the `v1.9.3` Release exists with the zip + `.sha256` sidecar (releases also exist for v1.8.0 / v1.9.0 / v1.9.1 / v1.9.2). Frozen artifact: `dist/muse-auto-allow-v1.9.3.zip`, 185,014 bytes, 18 entries, sha256 `e3dd7703b85fffd9ad5b78a8b353c90929f4b87487f3d9dc932fdb2c5f140326`; `python scripts/verify-zip.py` → 18 matched / 0 mismatched (exit 0) at the freeze.
 - [x] **Screenshots regenerated** — `store/screenshot1.png` (real runtime capture), `screenshot2-stats.png` (Statistics), `screenshot3-popup.png` (popup stage) are the current captures; `screenshot4-overview.png` is the **designed overview** (a rendered composition, not a runtime capture). Verified in this pass: all five screenshots + promo + marquee present and exact-spec by PNG header (1280×800 / 440×280 / 1400×560); `store/screenshot5-safety.png` (the first-run safety step, captured with `node scripts/store-shot.mjs --safety`) was additionally reviewed deterministically — a pixel census confirms the approval-card Allow buttons render and the card panel is complete (vision passes disagreed with each other on the same asset and are not a gate; see the benchmark report's methodology note). **Not verified here:** whether screenshot1/2/3/4 show the current build pixel-for-pixel — give them one human look against the frozen build before upload.
 - [x] **Muse ToS check done** — `docs/MUSE_TOS_RESEARCH.md` records the reading: **MEDIUM** tension (the Muse ToS oversight clause asks for "meaningful human oversight"; no clause explicitly bans extensions or UI auto-clicking). Findings only, not legal advice — the **owner/legal decision remains** before a public launch.
-- [ ] **Owner items (cannot be done from the repo):** (a) confirm the publisher display name in the dashboard; (b) fill the support email — the only `TODO: fill before submit` left in `store/LISTING.md` (plus the policy dates/contact in `store/PRIVACY.md`); (c) complete CWS developer-account 2-Step Verification (and the one-time registration fee if not yet paid); (d) hash-verify before upload — run `sha256sum -c dist/muse-auto-allow-v1.12.0.zip.sha256` and `python scripts/verify-zip.py` (both exit 0) immediately before uploading the zip to the CWS.
+- [ ] **Owner items (cannot be done from the repo):** (a) confirm the publisher display name in the dashboard; (b) fill the support email — the only `TODO: fill before submit` left in `store/LISTING.md` (plus the policy dates/contact in `store/PRIVACY.md`); (c) complete CWS developer-account 2-Step Verification (and the one-time registration fee if not yet paid); (d) hash-verify before upload — run `sha256sum -c dist/muse-auto-allow-v1.13.0.zip.sha256` and `python scripts/verify-zip.py` (both exit 0) immediately before uploading the zip to the CWS.
 - [ ] **v1.10.0 freeze items (2026-10-18):** (a) build + verify the v1.10.0 artifact — `node scripts/build.mjs` + `python scripts/verify-zip.py` (expect 19 matched / 0 mismatched), then attach it to the `v1.10.0` GitHub Release with its `.sha256` sidecar; (b) ~~refresh the five localized detailed descriptions in `store/LISTING.md` §2~~ **done 2026-10-18** — all five now carry the Codex bullets; (c) ~~regenerate the popup-bearing store screenshots (`screenshot1` real runtime, `screenshot3-popup` stage) at the v1.10.0 layout~~ **done 2026-10-18** — `store-shot.mjs` + `stats-shot.mjs` re-run at the fused tree (Codex chip + codex/blocked log rows visible; all five assets 1280×800; `screenshot1`, `screenshot3`, `screenshot5` and `screenshot2-stats` regenerated); (d) run through §1's paste blocks once more before Submit — the single-purpose/reviewer-note/justification copy was rewritten this freeze.
 - [x] **§2 re-verified against the frozen package** — §2 matches the frozen `extension/manifest.json` at freeze commit `a13689a` (`manifest.version` reads `1.9.3`; permissions `storage`/`alarms`/`notifications`; muse.ai-only hosts; `commands` `toggle-pause`/`send-followup`); the package is `dist/muse-auto-allow-v1.9.3.zip`. *(Historical — superseded by the v1.10.0 freeze items §7 above: the v1.10.0 §2 re-verification is the updated "Verified against `extension/manifest.json` (working tree as of the v1.10.0 freeze)" block in §2 itself.)*
 
