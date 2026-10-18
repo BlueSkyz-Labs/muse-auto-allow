@@ -4,7 +4,7 @@
 #        JS syntax, JSON validity, i18n key parity (6 locales), no remote-code /
 #        network primitives, manifest hygiene. Runs on ubuntu-latest: the gate is
 #        OS-independent (Node stdlib only) and ubuntu is the fastest image.
-# e2e  : real-Chrome approval/follow-up, six-locale popup rendering and experience assertions.
+# e2e  : real-Chrome approval/Codex/follow-up, six-locale popup rendering and experience assertions.
 #
 # Why e2e runs on windows-latest (verified against test/e2e.mjs, 2026-10-09):
 #   Both harnesses launch Chrome through PowerShell `Start-Process`
@@ -30,6 +30,7 @@
 #   running as its own process tree; teardown reaps it by scratch-profile path via
 #   Get-CimInstance. Flags passed:
 #     --user-data-dir=<scratch dir under os.tmpdir()>  --remote-debugging-port=<9400-9899>
+#       (test/codex-e2e.mjs uses the same flags; its port range is <9900-10299>)
 #     --enable-unsafe-extension-debugging  --no-first-run  --no-default-browser-check
 #     --disable-features=Translate,MediaRouter,CalculateNativeWinOcclusion,OptimizationHints
 #     --disable-background-networking  --disable-background-timer-throttling
@@ -112,6 +113,8 @@ jobs:
           Write-Host "Chrome $pv at $chrome"
       - name: e2e — approval paths + safety invariants (real Chrome)
         run: node test/e2e.mjs
+      - name: e2e — Codex (ChatGPT) engine + feature switch (real Chrome)
+        run: node test/codex-e2e.mjs
       - name: e2e — follow-up engine (real Chrome)
         run: node test/followup-e2e.mjs
       - name: e2e — language switching and rendered popup geometry (six locales)

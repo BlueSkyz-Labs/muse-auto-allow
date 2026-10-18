@@ -31,7 +31,8 @@ It reuses the `test/e2e.mjs` launcher: the **installed** Chrome (installed Chrom
 `--load-extension`; `--enable-unsafe-extension-debugging` is required) is started detached via
 PowerShell with a **scratch profile**, and the extension is loaded from a **temp copy** whose
 manifest additionally matches `http://127.0.0.1/*` so the local fixture pages get the content
-script (the shipped manifest stays muse.ai-only). A tiny static server serves the repo root.
+script (the shipped manifest stays pinned to its real host set — muse.ai + chatgpt.com; no
+localhost entry ships). A tiny static server serves the repo root.
 
 Content-script internals are reached by evaluating in the content script's **isolated world**
 (the CDP execution context whose `auxData.isDefault === false` and where

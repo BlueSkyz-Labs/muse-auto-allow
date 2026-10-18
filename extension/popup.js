@@ -87,13 +87,20 @@ const KIND_KEY = { allow: 'kindAllow', expand: 'kindExpand', 'open-panel': 'kind
   blocked: 'kindBlocked', followup: 'kindFollowup', 'allow-dry': 'kindAllowDry', 'expand-dry': 'kindExpandDry',
   'open-panel-dry': 'kindOpenPanelDry', 'review-bar-dry': 'kindOpenPanelDry', 'followup-dry': 'kindFollowupDry',
   // v1.9.0 mission kinds: a verified mission send ('mission') + its dry-run twin
-  mission: 'kindMission', 'mission-dry': 'kindMissionDry' };
+  mission: 'kindMission', 'mission-dry': 'kindMissionDry',
+  // v1.10.0 Codex (chatgpt.com) kinds + their dry-run twin (one shared '(dry)' label)
+  'codex-allow': 'kindCodexAllow', 'codex-expand': 'kindCodexExpand', 'codex-open-panel': 'kindCodexOpenPanel',
+  'codex-allow-dry': 'kindCodexDry', 'codex-expand-dry': 'kindCodexDry', 'codex-open-panel-dry': 'kindCodexDry' };
 const kindLabel = (k) => t(KIND_KEY[k] || '', k);
 // v1.8.0: chip class per kind — the dry variants share one quiet tint, 'blocked' keeps its
 // own, a follow-up entry reads like an allow entry (the label already says 'follow-up')
 function kindClass(k) {
   if (k === 'review-bar') return 'open-panel';
   if (k === 'review-bar-dry') return 'open-panel-dry';
+  // v1.10.0: Codex entries read as their Muse twin does (the label says 'codex …')
+  if (k === 'codex-allow') return 'allow';
+  if (k === 'codex-expand') return 'expand';
+  if (k === 'codex-open-panel') return 'open-panel';
   if (String(k).endsWith('-dry')) return 'dry';
   if (k === 'followup') return 'allow';
   return k;
@@ -665,6 +672,29 @@ function refreshMuseStat() {
   } catch { /* ignore */ }
 }
 
+// ---- v1.10.0 — Codex (ChatGPT): the feature switch + the chatgpt.com tab status ------
+// The switch itself lives in the Safety & Control panel (zero main-popup height; next to
+// YOLO — the same home as the other explicit opt-ins); the panel is rendered by setSafety().
+// The ENGINE ships in codex.js and self-gates on `codexEnabled` (default false); this
+// surface only writes that key, mirrors the checkbox, reports the chatgpt.com tab count
+// live, and lights the 'Codex' chip on the Safety entry while the switch is on.
+function applyCodexUI(s) {
+  const cb = $('codexEnabled');
+  if (cb) cb.checked = s.codexEnabled === true;
+}
+function refreshCodexStat() {
+  try {
+    chrome.tabs.query({ url: ['https://chatgpt.com/*', 'https://*.chatgpt.com/*'] }, (tabs) => {
+      const tx = $('codexStatText');
+      if (!tx) return;
+      const n = tabs ? tabs.length : 0;
+      tx.textContent = n > 0
+        ? (n === 1 ? t('codexTabsFoundOne', '1 chatgpt.com tab open') : t('codexTabsFound', '$1 chatgpt.com tabs open', [String(n)]))
+        : t('codexTabsNone', 'No chatgpt.com tab found');
+    });
+  } catch { /* ignore */ }
+}
+
 function refresh() {
   // NOTE: the object form of storage.get returns ONLY the listed keys — followupChips must
   // be listed (null default keeps 'absent' distinguishable from an explicit empty array).
@@ -675,7 +705,7 @@ function refresh() {
     followupChips: null, followupPrompts: [], followupRotateIdx: 0, followupAdvancedOpen: false,
     pauseUntil: 0, dryRun: false, yoloMode: false, allowOnceMode: false, rules: null, followupSmart: null, followupSchedule: null,
     syncSettings: false, onboarded: false, digestCounters: null, lastDigestAt: 0,
-    missionEnabled: false, mission: null }, (s) => {
+    missionEnabled: false, mission: null, codexEnabled: false }, (s) => {
     $('enabled').checked = s.enabled !== false;
     $('delay').value = s.minDelayMs ?? 300;
     const c = $('count');
@@ -696,6 +726,7 @@ function refresh() {
     applyV18UI(s); // v1.8.0: pause / dry-run / rules / schedule / sync / digest / onboarding
     applyFollowupUI(s);
     applyMissionUI(s); // v1.9.0: missionEnabled + the stored mission object
+    applyCodexUI(s);   // v1.10.0: the Codex (ChatGPT) feature switch
     renderLog(Array.isArray(s.log) ? s.log : []);
   });
 }
@@ -737,7 +768,7 @@ const clampHour = (v, d) => {
 };
 const hhmm = (ms) => { const d = new Date(Number(ms) || 0); return pad2(d.getHours()) + ':' + pad2(d.getMinutes()); };
 
-const v18 = { pauseUntil: 0, dryRun: false, yoloMode: false, allowOnce: false, syncSettings: false, onboarded: false, lastDigestAt: 0,
+const v18 = { pauseUntil: 0, dryRun: false, yoloMode: false, allowOnce: false, codexEnabled: false, syncSettings: false, onboarded: false, lastDigestAt: 0,
               smart: { stuckMin: 10, errorRecovery: false },
               schedule: { enabled: false, start: 8, end: 18, onlyActiveTab: false },
               counters: {}, rules: { topics: [], keywords: [], keywordsSeeded: true } };
@@ -949,10 +980,12 @@ function renderDry() {
   const chip = $('safetyChip');
   if (chip) {
     const yolo = v18.yoloMode === true;
-    chip.hidden = !yolo && v18.dryRun !== true;
-    // Dry-run is the effective no-click state even when YOLO remains configured.
+    const codexOn = v18.codexEnabled === true;
+    chip.hidden = !yolo && !codexOn && v18.dryRun !== true;
+    // Dry-run is the effective no-click state even when YOLO / Codex remain configured.
     if (v18.dryRun === true) chip.textContent = t('dryRunChip', 'Dry-run');
     else if (yolo) chip.textContent = t('yoloChip', 'YOLO');
+    else if (codexOn) chip.textContent = t('codexChip', 'Codex');
   }
   renderYoloNote();
   renderLogTop();
@@ -976,6 +1009,8 @@ function setSafety(open) {
     const dr = $('dryRun'); if (dr) dr.checked = v18.dryRun === true;
     const ym = $('yoloMode'); if (ym) ym.checked = v18.yoloMode === true;
     const ao = $('allowOnce'); if (ao) ao.checked = v18.allowOnce === true;
+    const cx = $('codexEnabled'); if (cx) cx.checked = v18.codexEnabled === true; // v1.10.0
+    refreshCodexStat(); // v1.10.0: live chatgpt.com tab status inside the panel
     const c = $('safetyClose'); if (c) c.focus();
   } else {
     kwResetDisarm();
@@ -1045,6 +1080,7 @@ function applyV18UI(s) {
   v18.dryRun = s.dryRun === true;
   v18.yoloMode = s.yoloMode === true;
   v18.allowOnce = s.allowOnceMode === true;
+  v18.codexEnabled = s.codexEnabled === true;
   v18.syncSettings = s.syncSettings === true;
   v18.onboarded = s.onboarded === true;
   v18.counters = asObj(s.digestCounters);
@@ -1157,6 +1193,7 @@ async function applyLocale(lang) {
   applyI18n();
   refresh();
   refreshMuseStat();
+  refreshCodexStat();
   closeLangMenu(true); // focus returns to the button
 }
 
@@ -1325,6 +1362,7 @@ async function boot() {
   applyI18n();
   refresh();
   refreshMuseStat();
+  refreshCodexStat();
 }
 boot();
 
@@ -1332,6 +1370,10 @@ $('openstats').addEventListener('click', () => {
   try { chrome.tabs.create({ url: chrome.runtime.getURL('stats.html') }); } catch { /* ignore */ }
 });
 $('enabled').addEventListener('change', () => chrome.storage.local.set({ enabled: $('enabled').checked }));
+// v1.10.0 — the Codex (ChatGPT) feature switch: its own key (default false, opt-in). The
+// codex.js content script self-gates ALL of its behaviour on it — with the switch off,
+// chatgpt.com tabs are read-only for the extension.
+$('codexEnabled').addEventListener('change', () => { try { chrome.storage.local.set({ codexEnabled: $('codexEnabled').checked }); } catch { /* ignore */ } });
 $('delay').addEventListener('change', () => {
   const v = Math.max(0, Math.min(10000, Number($('delay').value) || 0));
   $('delay').value = v;

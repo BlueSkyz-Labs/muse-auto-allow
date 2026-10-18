@@ -234,9 +234,25 @@ async function fixturePhase() {
   // path, so the state is stated explicitly (mirrors test/e2e.mjs, test/followup-e2e.mjs and
   // test/lang-switch-e2e.mjs). Without this seed the phase would be measuring the dry-run
   // default instead of the click path.
+  // v1.10.0 hardening: on a fresh profile this seed runs immediately after extension load and
+  // can race the installer migration (`background.js migrate()`: get -> set). If the write
+  // lands inside that window, migrate's set carries `dryRun:true` and clobbers it — the phase
+  // then silently measures the dry-run default instead of failing loudly (observed once the
+  // machine was busy: fixture clicks none, log kinds only `*-dry`). Seed until VERIFIED:
+  // require `dryRun === false` with the schema stamp present, re-asserting if the migration
+  // wins a lap. This asserts the phase's precondition; it weakens no check.
   const seedT = await send('Target.createTarget', { url: `chrome-extension://${extId}/popup.html` });
   const { sessionId: seedS } = await send('Target.attachToTarget', { targetId: seedT.targetId, flatten: true });
-  await send('Runtime.evaluate', { expression: `new Promise((res) => chrome.storage.local.set({ dryRun: false }, () => res(true)))`, awaitPromise: true, returnByValue: true }, seedS);
+  let seedOk = false;
+  for (let i = 0; i < 25 && !seedOk; i++) {
+    const r = await send('Runtime.evaluate', { expression: `new Promise((res) => chrome.storage.local.get(['dryRun', 'schemaVersion'], (s) => res(JSON.stringify(s))))`, awaitPromise: true, returnByValue: true }, seedS);
+    let v = {};
+    try { v = JSON.parse(r?.result?.value || '{}'); } catch { /* re-seed */ }
+    if (v.dryRun === false && Number(v.schemaVersion) >= 2) { seedOk = true; break; }
+    await send('Runtime.evaluate', { expression: `new Promise((res) => chrome.storage.local.set({ dryRun: false }, () => res(true)))`, awaitPromise: true, returnByValue: true }, seedS);
+    await sleep(120);
+  }
+  if (!seedOk) console.log('  (seed warning: dryRun=false + schemaVersion not verified within ~3s — the fixture checks below will show it)');
   await send('Target.closeTarget', { targetId: seedT.targetId });
   const { targetId } = await send('Target.createTarget', { url: fixtureUrl });
   const { sessionId } = await send('Target.attachToTarget', { targetId, flatten: true });

@@ -3,7 +3,7 @@
     "message": "Muse 自动批准"
   },
   "extDesc": {
-    "message": "自动点击 Muse（muse.ai）批准请求中的“Allow”。支持开关与点击日志，数据仅保存在本地。"
+    "message": "自动点击 Muse（muse.ai）和 Codex（chatgpt.com）批准请求中的“Allow”。支持开关与点击日志，数据仅保存在本地。"
   },
   "toggleLabel": {
     "message": "自动点击 Allow"
@@ -69,7 +69,7 @@
     "message": "未发现 muse.ai 标签页"
   },
   "onlyMuse": {
-    "message": "仅在 muse.ai 上运行"
+    "message": "在 muse.ai 和 chatgpt.com 上运行"
   },
   "last7": {
     "message": "最近 7 天"
@@ -493,5 +493,38 @@
   "missionFix": { "message": "修复问题" },
   "missionFixDesc": { "message": "端到端修复未解决的问题，证明修复后再核对。" },
   "missionRelease": { "message": "发布准备" },
-  "missionReleaseDesc": { "message": "冻结范围、验证产物、组装发布包并决定 GO。" }
+  "missionReleaseDesc": { "message": "冻结范围、验证产物、组装发布包并决定 GO。" },
+  "codexTitle": {
+    "message": "Codex (ChatGPT)"
+  },
+  "codexToggle": {
+    "message": "自动批准 Codex 请求"
+  },
+  "codexHint": {
+    "message": "仅限 chatgpt.com。绝不点击 Deny；常驻授权保持手动。"
+  },
+  "codexChip": {
+    "message": "Codex"
+  },
+  "codexTabsFoundOne": {
+    "message": "已打开 1 个 chatgpt.com 标签页"
+  },
+  "codexTabsFound": {
+    "message": "已打开 $1 个 chatgpt.com 标签页"
+  },
+  "codexTabsNone": {
+    "message": "未找到 chatgpt.com 标签页"
+  },
+  "kindCodexAllow": {
+    "message": "codex 允许"
+  },
+  "kindCodexExpand": {
+    "message": "codex 展开"
+  },
+  "kindCodexOpenPanel": {
+    "message": "codex 打开面板"
+  },
+  "kindCodexDry": {
+    "message": "codex（试）"
+  }
 }

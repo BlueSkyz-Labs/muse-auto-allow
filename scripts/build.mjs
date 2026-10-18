@@ -37,6 +37,7 @@ const EXT = path.join(ROOT, 'extension');
 const SHIPPED = [
   'manifest.json',
   'content.js',
+  'codex.js',
   'background.js',
   'popup.html',
   'popup.js',

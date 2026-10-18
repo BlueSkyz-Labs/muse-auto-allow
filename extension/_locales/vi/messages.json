@@ -3,7 +3,7 @@
     "message": "Muse Auto-Allow"
   },
   "extDesc": {
-    "message": "Tự động bấm Allow cho các yêu cầu phê duyệt của Muse (muse.ai). Có công tắc bật/tắt, nhật ký bấm, chỉ lưu cục bộ."
+    "message": "Tự động bấm Allow cho yêu cầu phê duyệt của Muse (muse.ai) và Codex (chatgpt.com). Có công tắc bật/tắt, nhật ký bấm, lưu cục bộ."
   },
   "toggleLabel": {
     "message": "Tự động bấm Allow"
@@ -69,7 +69,7 @@
     "message": "Không tìm thấy tab muse.ai nào"
   },
   "onlyMuse": {
-    "message": "Chỉ hoạt động trên muse.ai"
+    "message": "Hoạt động trên muse.ai và chatgpt.com"
   },
   "last7": {
     "message": "7 ngày gần nhất"
@@ -493,5 +493,38 @@
   "missionFix": { "message": "SỬA PHÁT HIỆN" },
   "missionFixDesc": { "message": "Sửa các phát hiện đang mở từ đầu đến cuối, chứng minh rồi đối chiếu." },
   "missionRelease": { "message": "CHUẨN BỊ PHÁT HÀNH" },
-  "missionReleaseDesc": { "message": "Đóng băng phạm vi, xác minh, lập gói phát hành, quyết định GO." }
+  "missionReleaseDesc": { "message": "Đóng băng phạm vi, xác minh, lập gói phát hành, quyết định GO." },
+  "codexTitle": {
+    "message": "Codex (ChatGPT)"
+  },
+  "codexToggle": {
+    "message": "Tự động duyệt yêu cầu Codex"
+  },
+  "codexHint": {
+    "message": "Chỉ trên chatgpt.com. Không bao giờ bấm Deny; quyền cấp thường trực vẫn thủ công."
+  },
+  "codexChip": {
+    "message": "Codex"
+  },
+  "codexTabsFoundOne": {
+    "message": "1 tab chatgpt.com đang mở"
+  },
+  "codexTabsFound": {
+    "message": "$1 tab chatgpt.com đang mở"
+  },
+  "codexTabsNone": {
+    "message": "Không tìm thấy tab chatgpt.com"
+  },
+  "kindCodexAllow": {
+    "message": "codex duyệt"
+  },
+  "kindCodexExpand": {
+    "message": "codex mở rộng"
+  },
+  "kindCodexOpenPanel": {
+    "message": "codex mở bảng"
+  },
+  "kindCodexDry": {
+    "message": "codex (thử)"
+  }
 }

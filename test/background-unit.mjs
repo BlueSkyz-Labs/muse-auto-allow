@@ -13,14 +13,16 @@
  *   B1-B2  badge: paused => '||' (grey); otherwise today's count ('' when zero)
  *   A1-A2  one-shot pause-expiry alarm armed at pauseUntil, cleared when not paused
  *   C1-C2  send-followup command: active muse tab receives followup-send-now; no tab => none
+ *   U1     tabs.onUpdated: completed muse.ai OR chatgpt.com loads are nudged; others are not
  *   D1-D4  startup digest: notification + lastDigestAt + counters reset when clicks>0;
  *          no notification (nothing touched) when clicks=0; notify failure keeps lastDigestAt;
  *          singular/plural message text exact
  *   S1-S8  syncSettings: write-through on subset changes only, snapshot on enable,
  *          BYTE-accurate 8KB per-item skip (multibyte content included) + surfaced write
  *          failures, load-time pull fills only ABSENT keys, sync-area echoes ignored
- *   L1-L2  startup listeners run cleanly; sweep alarm nudges muse tabs, pause alarm refreshes
- *   G1     migrate() seeds schemaVersion while preserving explicit values
+ *   L1-L2  startup listeners run cleanly; sweep alarm nudges muse.ai + chatgpt.com tabs
+ *          (url-filtered, exactly once each), pause alarm refreshes the badge
+ *   G1..   migrate() seeds schemaVersion while preserving explicit values (incl. codexEnabled)
  *
  * Usage: node test/background-unit.mjs [path/to/background.js]
  *   (a mutated copy MUST fail the matching checks — reverse-mutation falsification run.)
@@ -126,7 +128,22 @@ function makeEnv() {
       onAlarm: { addListener: (fn) => state.alarmListeners.push(fn) },
     },
     tabs: {
-      query: (q, cb) => { if (typeof cb === 'function') cb(state.tabQueryResult); },
+      // v1.10.0: model the url filter — the sweep query carries match patterns and must
+      // only receive matching tabs (the shapes chrome.tabs.query understands here).
+      query: (q, cb) => {
+        const pats = q && Array.isArray(q.url) ? q.url : null;
+        const hit = (u, p) => {
+          const m = /^(https?):\/\/([^/]+)\/.*$/.exec(String(p || ''));
+          if (!m) return false;
+          const um = /^(https?):\/\/([^/?#]+)/.exec(String(u || ''));
+          if (!um || um[1] !== m[1]) return false;
+          const host = um[2].toLowerCase();
+          const want = m[2].toLowerCase();
+          return want.startsWith('*.') ? (host === want.slice(2) || host.endsWith('.' + want.slice(2))) : host === want;
+        };
+        const list = pats ? state.tabQueryResult.filter((t) => t && t.url && pats.some((p) => hit(t.url, p))) : state.tabQueryResult.slice();
+        if (typeof cb === 'function') cb(list);
+      },
       sendMessage: (id, msg, cb) => { state.sentMessages.push({ id, msg }); if (typeof cb === 'function') cb(); },
       onUpdated: { addListener: (fn) => state.updatedListeners.push(fn) },
     },
@@ -244,6 +261,18 @@ async function main() {
   await tick();
   check('C2 send-followup. no active muse.ai tab => nothing is sent', state.sentMessages.length === 0, { sent: state.sentMessages });
 
+  // ---------- U1: onUpdated nudges (v1.10.0 also reaches chatgpt.com) ----------
+  state.sentMessages.length = 0;
+  const onUpd = state.updatedListeners[0];
+  onUpd(7, { status: 'complete' }, { id: 7, url: 'https://muse.ai/chat' });
+  onUpd(55, { status: 'complete' }, { id: 55, url: 'https://chatgpt.com/codex' });
+  onUpd(66, { status: 'complete' }, { id: 66, url: 'https://evil.example/' });
+  onUpd(8, { status: 'loading' }, { id: 8, url: 'https://muse.ai/' });
+  const updSweeps = state.sentMessages.map((m) => m.id);
+  check('U1 onUpdated. a completed muse.ai OR chatgpt.com load is nudged; unrelated hosts and non-complete statuses are not',
+    updSweeps.length === 2 && updSweeps.includes(7) && updSweeps.includes(55) && !updSweeps.includes(66) && !updSweeps.includes(8),
+    { updSweeps });
+
   // ---------- D1-D4: startup digest ----------
   state.notifications.length = 0;
   resetStore({ lastDigestAt: 111, digestCounters: { clicks: 5, followups: 2, blocked: 3 } });
@@ -297,13 +326,13 @@ async function main() {
   state.changeListeners.forEach((fn) => fn({ enabled: { oldValue: false, newValue: true } }, 'local'));
   await tick();
   check('S3 sync mirror. syncSettings=false => no write-through', Object.keys(state.syncStore).length === 0, { syncStore: { ...state.syncStore } });
-  resetStore({ syncSettings: true, enabled: true, minDelayMs: 500, yoloMode: true, rules: { allowTopics: ['x'], blockKeywords: [] }, followupEnabled: true, followupRotateIdx: 3, log: [1, 2], clickCount: 9, schemaVersion: 2 });
+  resetStore({ syncSettings: true, enabled: true, minDelayMs: 500, yoloMode: true, codexEnabled: true, rules: { allowTopics: ['x'], blockKeywords: [] }, followupEnabled: true, followupRotateIdx: 3, log: [1, 2], clickCount: 9, schemaVersion: 2 });
   resetSync({});
   state.changeListeners.forEach((fn) => fn({ syncSettings: { oldValue: false, newValue: true } }, 'local'));
   await tick();
   const snap = { ...state.syncStore };
   check('S4 sync mirror. enabling syncSettings pushes a snapshot of PRESENT subset keys only (no rotateIdx/log/clickCount/schemaVersion)',
-    snap.enabled === true && snap.minDelayMs === 500 && snap.yoloMode === true && JSON.stringify(snap.rules) === JSON.stringify({ allowTopics: ['x'], blockKeywords: [] }) && snap.followupEnabled === true &&
+    snap.enabled === true && snap.minDelayMs === 500 && snap.yoloMode === true && snap.codexEnabled === true && JSON.stringify(snap.rules) === JSON.stringify({ allowTopics: ['x'], blockKeywords: [] }) && snap.followupEnabled === true &&
     !('followupRotateIdx' in snap) && !('log' in snap) && !('clickCount' in snap) && !('schemaVersion' in snap) && !('syncSettings' in snap),
     { snap });
   // 8KB per-item quota: an oversized item is skipped (warned), the rest still syncs
@@ -368,28 +397,35 @@ async function main() {
   check('L1 startup. every onStartup listener runs cleanly (digest + badge + alarm + pull)',
     startupErr === null && state.startupListeners.length >= 4, { listeners: state.startupListeners.length, startupErr });
   state.sentMessages.length = 0;
-  state.tabQueryResult = [{ id: 7, url: 'https://muse.ai/' }, { id: 8, url: 'https://x.muse.ai/' }];
+  state.tabQueryResult = [{ id: 7, url: 'https://muse.ai/' }, { id: 8, url: 'https://x.muse.ai/' },
+    { id: 55, url: 'https://chatgpt.com/codex' }, { id: 66, url: 'https://evil.example/' }];
   for (const fn of state.alarmListeners) fn({ name: 'muse-sweep' });
   const sweeps = state.sentMessages.filter((m) => m.msg && m.msg.type === 'sweep').map((m) => m.id);
   state.sentMessages.length = 0;
   state.badge.text = 'stale';
   for (const fn of state.alarmListeners) fn({ name: 'maa-pause-expiry' });
   const pauseAlarmSwept = state.sentMessages.length;
-  check('L2 alarms. sweep alarm nudges every muse tab; the pause alarm only refreshes the badge',
-    sweeps.length === 2 && sweeps.includes(7) && sweeps.includes(8) && pauseAlarmSwept === 0 && state.badge.text !== 'stale',
+  check('L2 alarms. sweep alarm nudges every muse.ai + chatgpt.com tab exactly once (url-filtered; unrelated tabs excluded); the pause alarm only refreshes the badge',
+    sweeps.length === 3 && sweeps.includes(7) && sweeps.includes(8) && sweeps.includes(55) && !sweeps.includes(66) && pauseAlarmSwept === 0 && state.badge.text !== 'stale',
     { sweeps, pauseAlarmSwept, badge: state.badge.text });
 
   // ---------- G1: migrate ----------
   resetStore({ enabled: false });
   await T.migrate();
   check('G1 migrate. seeds schemaVersion without touching explicit values',
-    state.store.schemaVersion === 2 && state.store.enabled === false && state.store.minDelayMs === 300 && state.store.yoloMode === false,
+    state.store.schemaVersion === 2 && state.store.enabled === false && state.store.minDelayMs === 300 && state.store.yoloMode === false && state.store.codexEnabled === false,
     { store: { ...state.store } });
   // v1.9.4: the yoloMode seed is ABSENT-only — an explicit true is never overwritten
   resetStore({ yoloMode: true });
   await T.migrate();
   check('G1b migrate. an explicit yoloMode:true survives the seed (absent-only rule)',
     state.store.yoloMode === true && state.store.dryRun === true && state.store.schemaVersion === 2,
+    { store: { ...state.store } });
+  // v1.10.0: the codexEnabled seed follows the same absent-only rule
+  resetStore({ codexEnabled: true });
+  await T.migrate();
+  check('G1c migrate. an explicit codexEnabled:true survives the seed (absent-only rule)',
+    state.store.codexEnabled === true && state.store.schemaVersion === 2,
     { store: { ...state.store } });
 
   // ---------- report ----------
