@@ -94,11 +94,13 @@ explicit (blocked reasons, newer-schema refusal, failure messages), CC-3 safety 
 Experience convergence/evidence stays in its **own domain record** (never embedded as generic
 adoption fields): the audit instrument is `docs/SGPS_EXPERIENCE_CHECKLIST.md` (30 items + the
 mandatory evidence classes), and the pass execution + results are recorded in
-`docs/EXPERIENCE_CYCLE_2026-10-18.md`. Status here: the experience dimension is explicitly
-`NOT VERIFIED` as of this record (see the machine-readable evidence entry in
-`docs/SGPS_ADOPTION.json`). The machine-readable adoption record (same directory, conforming to
-`schemas/project-adoption.schema.json`) carries the primary canonical item
-(BPXS / `sgps.standard.portfolio-experience`) with this markdown as its human companion.
+`docs/EXPERIENCE_CYCLE_2026-10-18.md`. Status: the machine-checkable subset **PASSES 11/11** on
+the frozen v1.14.0 tree (`scratch/experience-v2.json`; the v1 run's 3 reports were probe defects
+— scheme-emulation race and selectors — corrected in v2). Residual manual-class evidence
+(screen-reader pass, beauty-blind review) is explicitly pending. The machine-readable adoption
+record (same directory, conforming to `schemas/project-adoption.schema.json`) carries the primary
+canonical item (BPXS / `sgps.standard.portfolio-experience`) with this markdown as its human
+companion.
 
 ## 5. Residual gates / exceptions (explicit)
 

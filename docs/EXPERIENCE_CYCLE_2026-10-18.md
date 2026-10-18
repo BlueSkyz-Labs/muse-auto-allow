@@ -188,3 +188,15 @@ VALIDATE until an owner decision.
   (approvalPresent re-implemented with the structural actionable-pair predicate), 2 PASS+nuances;
   verdicts in `scratch/cycle4-candidates.md`. +1 i18n key (`followupSendBlockedSubmit`, flagged
   by the F2 reason-coverage assert) → 203 keys × 6.
+
+## SGPS:Experience pass (overnight 2026-10-18/19, on the frozen v1.14.0 tree)
+
+Instrument: `docs/SGPS_EXPERIENCE_CHECKLIST.md` (standard-derived, 30 items; machine-checkable
+subset automated in `qa-experience`). Result: **v2 — 11/11 PASS** (`scratch/experience-v2.json`):
+WCAG AA contrast in both themes on popup + stats, `prefers-reduced-motion` fully honored,
+`:focus-visible` coverage incl. the `.numwrap` wrapper-ring pattern, `vi` long-string layout
+without overflow, state communicated as text (dry-run band / live state line). The v1 probe's
+3 reported failures were **probe defects** (color-scheme emulation race + wrong selectors) —
+recorded as LSN-007; nothing was filed as a product defect without live re-derivation.
+Residual manual-class evidence (screen-reader pass, beauty-blind review, 200%-zoom pass) is the
+next experience cycle's scope; deviation-recording rules (GUX §20) apply if any FAIL is accepted.

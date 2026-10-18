@@ -69,9 +69,9 @@
     },
     {
       "kind": "experience-pass",
-      "status": "NOT VERIFIED",
-      "ref": "docs/SGPS_EXPERIENCE_CHECKLIST.md",
-      "scope": "SGPS:Experience 30-item checklist execution on the frozen tree — running record in docs/EXPERIENCE_CYCLE_2026-10-18.md"
+      "status": "PASS",
+      "ref": "qa-experience v2 — 11/11 (scratch/experience-v2.json); instrument docs/SGPS_EXPERIENCE_CHECKLIST.md",
+      "scope": "machine-checkable subset: WCAG contrast both themes (popup+stats), reduced-motion, focus-visible coverage, vi long-string layout, state-as-text. Residual manual-class evidence (screen reader, beauty-blind review) pending — next experience cycle."
     },
     {
       "kind": "paid-go-live",

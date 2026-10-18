@@ -104,12 +104,15 @@ Run from the repo root during the freeze, tree stable, editing lanes stopped.
   the node-vm `fetch` sandbox gap and the strict-viewport over-block, LSN-005/006; both fixed),
   #3 on the exact frozen tree: every exit 0. `scripts/cleanup-chrome-scratch.mjs` ran after
   each battery (kills only `maa-*` scratch profiles).
-- SGPS:Experience pass v1 (same night, on this frozen tree; instrument
-  `docs/SGPS_EXPERIENCE_CHECKLIST.md`): 8/11 machine checks PASS; 3 stand → v1.15.0 scope —
-  light-theme contrast (header "Missions" 2.19, onboarding primary CTA 1.19); the popup
-  `.numwrap input:focus-visible {outline:none}` rule is covered by the wrapper ring (probe false
-  positive, probe v2 will understand the pattern); the state-line probe selector is fixed for
-  v2. Evidence: `scratch/experience-v1.json`.
+- SGPS:Experience pass (same night, on this frozen tree; instrument
+  `docs/SGPS_EXPERIENCE_CHECKLIST.md`): **v2 machine checks 11/11 PASS** — WCAG contrast
+  (both themes, popup + stats), reduced-motion honored, `:focus-visible` coverage (the
+  `.numwrap` wrapper-ring pattern understood), `vi` long-string layout without overflow,
+  state-as-text (dry-run band / live state line). The v1 probe reported 3 failures that were
+  **probe defects, not product defects** (color-scheme emulation race + selectors); corrected in
+  v2 with scheme confirmation before every read (evidence: `scratch/experience-v1.json`,
+  `scratch/experience-v2.json`). Residual manual-class evidence (screen reader pass, beauty-blind
+  review) remains for the next experience cycle.
 
 ## Freeze procedure (v1.13.0 freeze)
 

@@ -61,3 +61,16 @@ below-the-fold fixture card unclickable — a functional regression the very nex
 never-click-the-bad-thing AND still-click-the-real-thing.
 **Guard:** `test/e2e.mjs` EXPECTED set (below-fold cards must still be clicked) alongside the
 FORBIDDEN set.
+
+## LSN-muse-auto-allow-007 — automation probes fabricate failures too; confirm state before reading
+
+**Date:** 2026-10-18 · **Found by:** the SGPS:Experience pass v1 (three reported failures, all fake)
+**Lesson:** the v1 contrast probe set a colour-scheme emulation and read computed styles ~300 ms
+later without confirming the media state — it mixed dark-theme computed colours with a
+light-theme background and reported three product failures that did not exist (verified live:
+"Allow always"/"Missions"/primary-CTA all pass WCAG AA in both themes). The focus probe also
+mis-read the `.numwrap` wrapper-ring pattern, and the state probe used a guessed selector. A
+probe is code under test: confirm the emulated state (`matchMedia` loop), verify selectors against
+the real DOM, and re-derive before filing anything as a product defect.
+**Guard:** `qa-experience` v2 confirms the scheme before every contrast read, understands the
+wrapper-ring pattern, and reads `#dryBand`/`#stateLine` — the corrected pass is 11/11.

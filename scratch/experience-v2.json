@@ -1,0 +1,105 @@
+{
+  "built": "qa-experience-v2",
+  "checks": [
+    {
+      "name": "A. contrast dark popup.html: all visible text ≥ WCAG AA (scheme confirmed)",
+      "ok": true,
+      "detail": {
+        "coherent": true,
+        "bad": []
+      }
+    },
+    {
+      "name": "A. contrast dark stats.html: all visible text ≥ WCAG AA (scheme confirmed)",
+      "ok": true,
+      "detail": {
+        "coherent": true,
+        "bad": []
+      }
+    },
+    {
+      "name": "A. contrast light popup.html: all visible text ≥ WCAG AA (scheme confirmed)",
+      "ok": true,
+      "detail": {
+        "coherent": true,
+        "bad": []
+      }
+    },
+    {
+      "name": "A. contrast light stats.html: all visible text ≥ WCAG AA (scheme confirmed)",
+      "ok": true,
+      "detail": {
+        "coherent": true,
+        "bad": []
+      }
+    },
+    {
+      "name": "B. reduced-motion popup.html: nothing animates (worst=0s)",
+      "ok": true,
+      "detail": {
+        "worst": 0,
+        "tag": null
+      }
+    },
+    {
+      "name": "B. reduced-motion stats.html: nothing animates (worst=0s)",
+      "ok": true,
+      "detail": {
+        "worst": 0,
+        "tag": null
+      }
+    },
+    {
+      "name": "C. focus popup.html: :focus-visible rules present (4) + every outline:none has a wrapper-ring pattern",
+      "ok": true,
+      "detail": {
+        "fv": 4,
+        "outlineNone": 1,
+        "focusWithin": 1,
+        "uncovered": []
+      }
+    },
+    {
+      "name": "C. focus stats.html: :focus-visible rules present (1) + every outline:none has a wrapper-ring pattern",
+      "ok": true,
+      "detail": {
+        "fv": 1,
+        "outlineNone": 0,
+        "focusWithin": 0,
+        "uncovered": []
+      }
+    },
+    {
+      "name": "D. vi layout popup.html: no horizontal overflow",
+      "ok": true,
+      "detail": {
+        "bodySW": 320,
+        "bodyCW": 320,
+        "deSW": 1166,
+        "deCW": 1166,
+        "lang": "vi"
+      }
+    },
+    {
+      "name": "D. vi layout stats.html: no horizontal overflow",
+      "ok": true,
+      "detail": {
+        "bodySW": 1156,
+        "bodyCW": 1156,
+        "deSW": 1156,
+        "deCW": 1156,
+        "lang": "vi"
+      }
+    },
+    {
+      "name": "E. state is communicated as text (dry-run band or live state line)",
+      "ok": true,
+      "detail": {
+        "bandShown": true,
+        "bannerText": "Logging only — nothing will be clicked",
+        "lineText": ""
+      }
+    }
+  ],
+  "failed": 0
+}
