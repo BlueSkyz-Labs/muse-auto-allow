@@ -16,9 +16,9 @@ dashboard (no repo value to fill).
 | Item name | **Muse Auto-Allow** |
 | Category | **Productivity** |
 | Default language | English (en) |
-| Version | 1.9.3 |
+| Version | 1.10.0 |
 | Manifest version | Manifest V3 |
-| Extension package | `dist/muse-auto-allow-v1.9.3.zip` |
+| Extension package | `dist/muse-auto-allow-v1.10.0.zip` |
 | License | MIT © 2026 BlueSkyz Labs |
 | Homepage / support URL | `https://github.com/BlueSkyz-Labs/muse-auto-allow` |
 | Privacy policy URL | `https://blueskyz-labs.github.io/muse-auto-allow/privacy.html` (GitHub Pages copy of `store/PRIVACY.md`; verified live 2026-10-12) |
@@ -27,11 +27,11 @@ dashboard (no repo value to fill).
 ### Short description (English, ≤132 characters)
 
 ```
-Auto-click Allow on Muse (muse.ai) approvals so your agent keeps running. Starts in logging-only mode; local-only; optional sync.
+Auto-click Allow on Muse (muse.ai) and Codex (chatgpt.com) approvals. Starts in logging-only mode; local-only.
 ```
 
-> Verified length: 129 characters (limit 132; all six count cells below were re-verified
-> programmatically at the v1.9.3 freeze, 2026-10-12). The listing title stays **Muse
+> Verified length: 110 characters (limit 132; all six count cells below were re-verified
+> programmatically at the v1.10.0 freeze, 2026-10-18). The listing title stays **Muse
 > Auto-Allow** as-is in every locale; the in-browser name is localized separately via
 > `extension/_locales/*/messages.json`. The Chrome Web Store lets you localize the
 > short description per language in the **Store listing → localized** tab — all six
@@ -41,12 +41,12 @@ Auto-click Allow on Muse (muse.ai) approvals so your agent keeps running. Starts
 
 | Locale | Short description | Characters |
 |---|---|---|
-| en | Auto-click Allow on Muse (muse.ai) approvals so your agent keeps running. Starts in logging-only mode; local-only; optional sync. | 129 |
-| vi | Tự động bấm Allow cho yêu cầu phê duyệt Muse (muse.ai) để agent chạy liên tục. Khởi đầu chỉ ghi log; lưu cục bộ, đồng bộ tuỳ chọn. | 130 |
-| zh_CN | 自动点击 Muse（muse.ai）批准请求中的“Allow”，让智能体持续运行；内置分步任务并显示进度。初始为仅记录模式，默认仅本地保存，可选同步。 | 75 |
-| ja | Muse（muse.ai）の承認リクエストで「Allow」を自動クリックし、エージェントを止めずに動かします。ミッションは進捗表示つき。初期は記録のみ、既定はローカル保存、同期は任意。 | 92 |
-| ko | Muse(muse.ai)의 승인 요청에서 'Allow'를 자동 클릭해 에이전트가 계속 실행됩니다. 미션은 진행 상황을 표시합니다. 시작은 기록 전용 모드, 기본은 로컬 저장, 동기화는 선택. | 106 |
-| es | Auto-clic en Allow cuando Muse (muse.ai) pide aprobación y tu agente sigue. Empieza en modo solo registro; local, sync opcional. | 128 |
+| en | Auto-click Allow on Muse (muse.ai) and Codex (chatgpt.com) approvals. Starts in logging-only mode; local-only. | 110 |
+| vi | Tự động bấm Allow cho yêu cầu phê duyệt của Muse (muse.ai) và Codex (chatgpt.com). Khởi đầu chỉ ghi log; lưu cục bộ. | 116 |
+| zh_CN | 自动点击 Muse（muse.ai）与 Codex（chatgpt.com）批准请求中的“Allow”。初始为仅记录模式，默认仅本地保存。 | 69 |
+| ja | Muse（muse.ai）と Codex（chatgpt.com）の承認リクエストで「Allow」を自動クリック。初期は記録のみ、既定はローカル保存。 | 75 |
+| ko | Muse(muse.ai)와 Codex(chatgpt.com) 승인 요청에서 'Allow'를 자동 클릭합니다. 시작은 기록 전용 모드, 기본은 로컬 저장. | 85 |
+| es | Auto-clic en Allow cuando Muse (muse.ai) o Codex (chatgpt.com) piden aprobación. Empieza en modo solo registro; local. | 118 |
 
 ---
 
@@ -88,6 +88,16 @@ Auto-click Allow on Muse (muse.ai) approvals so your agent keeps running. Starts
 > Axis 3): 0 actions *to see the tool work* (logging-only, zero setup), 1 action *to grant
 > it live approval authority*.
 
+> **v1.10.0 — Codex (ChatGPT), en copy updated (CURRENT copy):** the English detailed
+> description below gains the Codex (ChatGPT) scope (chatgpt.com, separate switch, off by
+> default) — bullets under *What it does* and *You stay in control*, plus the corrected
+> closing scope line — and all six short descriptions name both scopes (counted
+> 2026-10-18: en 110, vi 116, zh_CN 69, ja 75, ko 85, es 118 — all ≤132). The five
+> localized detailed descriptions keep their Muse feature set; **their feature bodies do
+> not yet describe the Codex switch** — refresh before CWS submission (honest TODO,
+> mirrored in `store/CWS_SUBMISSION_PACK.md`). The closing scope line of each localized
+> description now names both scopes (a one-line factual fix, not a full pass).
+
 ### English (en)
 
 Muse Auto-Allow keeps your Muse agent running.
@@ -104,6 +114,12 @@ keeps moving.
   them first), and the background “N tasks need your approval” banner (it opens the
   approvals panel so pending cards can render).
 - Handles approvals in background tabs too, checking once a minute.
+- With its own **Codex (ChatGPT)** switch on (a separate opt-in, off by default), the
+  same care applies on chatgpt.com: it clicks the affirmative option on Codex approval
+  requests ("Yes, proceed", "Allow", "Approve" — one-shot forms preferred) only when a
+  clickable negative counterpart sits in the same button container, expands collapsed
+  "Allow Codex to …" cards first, and opens "A task needs your approval" review bars so
+  the approval panel renders.
 
 **What it will never do**
 - It never clicks **Deny**, **Reject**, or **Decline**.
@@ -140,6 +156,11 @@ keeps moving.
   follow-ups, blocked items) — composed on your device.
 - Optional settings sync: carry your settings to other Chrome profiles through Chrome's
   built-in sync — off by default, settings only (logs and statistics never sync).
+- Codex (ChatGPT) switch: a separate opt-in for chatgpt.com — off by default, living in the
+  popup's **Safety & Control** panel next to YOLO. It never
+  clicks Deny, never clicks a lone affirmative, never touches auth/connector surfaces
+  (Connect, Authorize, link account, API key/token), and keeps standing grants ("Always
+  allow", "don't ask again") manual unless YOLO is on.
 - A short first-run setup wizard.
 - A built-in Statistics page: clicks by day / week / month / year, and by topic
   (repo / project) — light inline charts, instant load.
@@ -152,7 +173,8 @@ keeps moving.
   a settings-only subset is mirrored through Chrome's own sync to your Google profile —
   logs and statistics never sync.
 
-Muse Auto-Allow runs only on muse.ai pages, only while you have the extension enabled.
+Muse Auto-Allow runs only on muse.ai pages (and, with the opt-in Codex switch on,
+chatgpt.com), only while you have the extension enabled.
 
 ### Tiếng Việt (vi)
 
@@ -216,7 +238,8 @@ bị ngắt quãng.
   gì lên máy chủ nào. Nếu bạn bật tuỳ chọn Đồng bộ cài đặt (mặc định tắt), chỉ cài đặt
   được đồng bộ qua Chrome — nhật ký và thống kê không bao giờ được đồng bộ.
 
-Muse Auto-Allow chỉ chạy trên các trang muse.ai, và chỉ khi bạn đang bật tiện ích.
+Muse Auto-Allow chỉ chạy trên các trang muse.ai (và, khi bật công tắc Codex, trên
+chatgpt.com), chỉ khi bạn đang bật tiện ích.
 
 ### 简体中文 (zh_CN)
 
@@ -259,7 +282,7 @@ Muse（muse.ai）在执行操作前会暂停并向你请求批准。你一旦离
 - 一切都在你的设备上完成。设置和点击日志仅保存在浏览器本地。
 - 无需账号，无分析、无追踪、无远程代码，默认也不会向任何服务器发送数据。若开启“同步设置”（默认关闭），仅设置通过 Chrome 同步镜像——日志与统计绝不会同步。
 
-Muse Auto-Allow 仅在 muse.ai 页面上运行，且只在你启用该扩展时运行。
+Muse Auto-Allow 仅在 muse.ai 页面上运行（开启 Codex 开关后还包括 chatgpt.com），且只在你启用该扩展时运行。
 
 ### 日本語 (ja)
 
@@ -306,8 +329,8 @@ Muse（muse.ai）は操作の前に承認を求めて一時停止します。席
   一切ありません。「設定の同期」（既定でオフ）を有効にした場合のみ、設定が Chrome の同期で
   ミラーされます。ログと統計は同期されません。
 
-Muse Auto-Allow は muse.ai のページでのみ、あなたが拡張機能を有効にしている間だけ動作
-します。
+Muse Auto-Allow は muse.ai のページでのみ（Codex スイッチをオンにした場合は
+chatgpt.com でも）、あなたが拡張機能を有効にしている間だけ動作します。
 
 ### 한국어 (ko)
 
@@ -355,7 +378,8 @@ Muse(muse.ai)는 작업 전에 승인을 요청하며 잠시 멈춥니다. 자�
   '설정 동기화'(기본 꺼짐)를 켜면 설정만 Chrome 동기화로 미러링되며, 로그와 통계는
   동기화되지 않습니다.
 
-Muse Auto-Allow는 muse.ai 페이지에서만, 그리고 확장 기능을 켜 둔 동안에만 실행됩니다.
+Muse Auto-Allow는 muse.ai 페이지에서만(Codex 스위치를 켠 경우 chatgpt.com에서도),
+그리고 확장 기능을 켜 둔 동안에만 실행됩니다.
 
 ### Español (es)
 
@@ -406,8 +430,8 @@ se detenga.
   solo los ajustes se replican mediante Chrome; los registros y estadísticas nunca se
   sincronizan.
 
-Muse Auto-Allow solo se ejecuta en páginas de muse.ai, y solo mientras tengas la extensión
-activada.
+Muse Auto-Allow solo se ejecuta en páginas de muse.ai (y, con el interruptor de Codex
+activado, en chatgpt.com), y solo mientras tengas la extensión activada.
 
 ---
 
@@ -421,13 +445,15 @@ entertainment item.
 
 ## 4. Single purpose statement
 
-> **Single purpose:** Muse Auto-Allow automatically clicks the **Allow** button on
-> approval requests displayed by Muse (muse.ai) in the user's own browser, so the user's
-> Muse agent runs without stopping for manual approvals.
+> **Single purpose:** Muse Auto-Allow automatically clicks the **Allow** button (and, on
+> chatgpt.com, the affirmative option on Codex approval requests) displayed by the user's
+> own agent UI in the user's own browser, so the user's agent runs without stopping for
+> manual approvals.
 
 Every part of the extension serves this one purpose. It does nothing else: it does not
 browse the web for the user, it does not modify, collect, or transmit page content, and
-it does not interact with any site other than muse.ai.
+it does not interact with any site other than muse.ai — and, while the user has the
+opt-in Codex (ChatGPT) switch on, chatgpt.com.
 
 ---
 
@@ -463,6 +489,13 @@ Muse pages. A host permission (rather than `activeTab`) is necessary because app
 can appear in background tabs while the user is elsewhere, so the extension must be able
 to act without the user actively clicking the toolbar icon. No other site is requested.
 
+### Host permission — `https://chatgpt.com/*` and `https://*.chatgpt.com/*`
+Required to run the Codex (ChatGPT) content script that detects and clicks the
+affirmative option on Codex approval requests on chatgpt.com — used **only** while the
+user has turned on the opt-in Codex switch (off by default; with it off the script reads
+settings and does nothing). Same background-tab rationale as the Muse host permission.
+No other site is requested.
+
 **Permissions deliberately NOT requested** (worth stating in the review note): no
 `tabs`, no `scripting`, no `webRequest`, no `<all_urls>`, no `cookies`, no `downloads`.
 The extension needs none of them.
@@ -472,16 +505,16 @@ The extension needs none of them.
 ## 6. Remote code declaration
 
 > **Remote code: none.** This extension ships no remote code. All JavaScript is bundled
-> inside the package (`content.js`, `background.js`, `popup.js`); nothing is downloaded,
-> evaluated, or loaded from a remote source at runtime. There is no `eval`, no `new
-> Function`, no external `<script src>`, and no network requests of any kind. The
-> extension makes zero calls to any server.
+> inside the package (`content.js`, `codex.js`, `background.js`, `popup.js`); nothing is
+> downloaded, evaluated, or loaded from a remote source at runtime. There is no `eval`,
+> no `new Function`, no external `<script src>`, and no network requests of any kind.
+> The extension makes zero calls to any server.
 
 Compliance notes for this declaration:
 - Manifest V3, no `content_security_policy` relaxation.
 - No analytics SDK, no CDN, no update endpoint. (The optional settings sync uses
   Chrome's built-in sync service — a browser feature, not an extension network call.)
-- `dist/muse-auto-allow-v1.9.3.zip` contains only static files with `manifest.json` at the
+- `dist/muse-auto-allow-v1.10.0.zip` contains only static files with `manifest.json` at the
   zip root.
 
 ---
@@ -521,18 +554,22 @@ These map to the Chrome Web Store **Privacy practices** form.
 **7.4 Review note (paste into “Notes for the reviewer”)**
 
 ```
-Muse Auto-Allow has a single purpose: on muse.ai pages only, it auto-clicks the
-"Allow" button on Muse's own approval-request UI so the user's Muse agent does not
-stop for manual approvals. It calls no remote servers, contains no remote code, and
-sends no data to the developer. Settings, a local last-50 click log and compact click
-statistics live in chrome.storage.local. The optional "Sync settings" feature is off
-by default; when enabled it mirrors a settings-only subset through Chrome's built-in
-sync into the user's own Google Account (never logs or statistics). It never clicks
-Deny/Reject/Decline and never clicks lone "Allow" permission banners. Permissions:
-storage (local settings + log; optional settings sync), alarms (once-a-minute check so
-background-tab approvals are handled), notifications (show the locally-composed
-activity digest), host permission muse.ai (detect/click the Allow button). Keyboard
-shortcuts (commands: Alt+Shift+P pause, Alt+Shift+F follow-up) need no extra
+Muse Auto-Allow has a single purpose: on muse.ai pages it auto-clicks the "Allow"
+button on Muse's own approval-request UI, and — only while the user has turned on the
+separate opt-in Codex (ChatGPT) switch (off by default) — it clicks the affirmative
+option ("Yes, proceed"/"Allow"/"Approve") on Codex approval requests on chatgpt.com,
+so the user's agent does not stop for manual approvals. It calls no remote servers,
+contains no remote code, and sends no data to the developer. Settings, a local
+last-50 click log and compact click statistics live in chrome.storage.local. The
+optional "Sync settings" feature is off by default; when enabled it mirrors a
+settings-only subset through Chrome's built-in sync into the user's own Google Account
+(never logs or statistics). It never clicks Deny/Reject/Decline, never clicks lone
+"Allow" permission banners, and never touches auth/connector surfaces (Connect,
+Authorize, API key) — those stay manual. Permissions: storage (local settings + log;
+optional settings sync), alarms (once-a-minute check so background-tab approvals are
+handled), notifications (show the locally-composed activity digest), host permissions
+muse.ai and chatgpt.com (detect/click the approval options on those two sites only).
+Keyboard shortcuts (commands: Alt+Shift+P pause, Alt+Shift+F follow-up) need no extra
 permission. See https://blueskyz-labs.github.io/muse-auto-allow/privacy.html.
 ```
 

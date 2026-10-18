@@ -30,7 +30,7 @@ All gates are zero-dependency scripts; run them from the repo root:
 
 | Command | What it proves |
 |---|---|
-| `node scripts/lint.mjs` | JS syntax + JSON validity, i18n key parity across all 6 locales, no remote-code / network primitives, manifest hygiene (MV3, permission allowlist, muse.ai-only hosts, explicit CSP). |
+| `node scripts/lint.mjs` | JS syntax + JSON validity, i18n key parity across all 6 locales, no remote-code / network primitives, manifest hygiene (MV3, permission allowlist, the two pinned host sets + per-engine `content_scripts` matches, the shared `BLOCK_SEED` lockstep, explicit CSP). |
 | `node test/e2e.mjs` | Real-Chrome runtime E2E of the approval-detection paths + safety invariants (never Deny, never lone Allow, one click per node, dedupe). Scratch profile only. |
 | `node test/followup-e2e.mjs` | Real-Chrome E2E of the follow-up engine and the popup builder (idle waits, cooldowns, guards, rotation). |
 | `node scripts/build.mjs` && `python scripts/verify-zip.py` | Store zip is built with `manifest.json` at the zip root and byte-verified against `extension/` (exit 0 = match). |
@@ -77,10 +77,11 @@ These are the extension's contract. PRs that relax any of them will be declined:
    `importScripts`, `eval`, remote `<script src>`) anywhere in `extension/` — the lint
    gate enforces this. Keep storage growth bounded (click log ≤ 50 entries; pruned
    aggregates).
-6. **muse.ai only**: keep the host set and content-script matches pinned to
-   `https://muse.ai/*` and `https://*.muse.ai/*`; never add `<all_urls>` or extra
+6. **Two scopes, both pinned**: keep the host set and content-script matches pinned to
+   `https://muse.ai/*` + `https://*.muse.ai/*` (Muse engine) and `https://chatgpt.com/*`
+   + `https://*.chatgpt.com/*` (Codex engine); never add `<all_urls>` or extra
    permissions without a strong, stated reason (the lint gate fails on any permission
-   outside the allowlist).
+   outside the allowlist and on any host-set or matches drift).
 7. **Tests must not be weakened to go green.** The negative controls (Deny never
    clicked, lone/prefix Allow never clicked, no send while blocked) are the point of
    the suites.

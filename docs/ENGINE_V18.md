@@ -239,12 +239,12 @@ mirrors the subset below to `chrome.storage.sync` on every **local** change
 (`storage.onChanged`; sync-area echoes are ignored so the mirror can never loop):
 
 ```
-enabled, minDelayMs, dryRun, yoloMode, allowOnceMode, rules,
+enabled, minDelayMs, dryRun, yoloMode, allowOnceMode, codexEnabled, rules,
 followupEnabled, followupPrompt, followupPrompts, followupChips,
 followupSmart, followupSchedule
 ```
 
-(`followupRotateIdx`, `log`, `stats`, `clickCount`, `schemaVersion` stay device-local.)
+(`codexEnabled` joined the subset at v1.10.0. `followupRotateIdx`, `log`, `stats`, `clickCount`, `schemaVersion` stay device-local.)
 Enabling the toggle pushes a snapshot of the present subset keys. **On load**, sync values are
 applied only to keys **absent** from local storage — a local choice is never overwritten.
 

@@ -5,23 +5,26 @@
 </head><body>
 <h1>Privacy Policy — Muse Auto-Allow</h1>
 <p>**Effective date:** 2026-10-10</p>
-<p>**Last updated:** 2026-10-11 — adds the optional settings-sync disclosure, the desktop-notification (digest) disclosure and the current log-kind list.</p>
+<p>**Last updated:** 2026-10-18 — adds the Codex (ChatGPT) scope on chatgpt.com (opt-in, off by default) to the host-access and content-reading disclosures, and the current log-kind list.</p>
 <p>This privacy policy applies to the **Muse Auto-Allow** browser extension for Google</p>
 <p>Chrome (&quot;the extension&quot;), published by **BlueSkyz Labs** (&quot;we&quot;, &quot;us&quot;).</p>
 <p>Contact: **TODO: fill before submit** (support email)</p>
 <p>Publisher / homepage: <https://github.com/BlueSkyz-Labs/muse-auto-allow></p>
 <p>Muse Auto-Allow has one job: on **muse.ai** pages, it automatically clicks the</p>
-<p>**Allow** button on Muse&#x27;s approval requests so your Muse agent does not stop for</p>
-<p>manual approvals. This policy explains exactly what that involves — which is very little,</p>
-<p>because the extension keeps everything on your own device.</p>
+<p>**Allow** button on Muse&#x27;s approval requests — and, when you turn on its separate **Codex</p>
+<p>(ChatGPT)** switch (off by default), it clicks the affirmative option on Codex approval</p>
+<p>requests on **chatgpt.com** — so your agents do not stop for manual approvals. This policy</p>
+<p>explains exactly what that involves — which is very little, because the extension keeps</p>
+<p>everything on your own device.</p>
 <p>---</p>
 <h2>1. Summary (the short version)</h2>
 <ul>
-<li>The extension reads the content of **muse.ai** pages only, and only to find Muse</li>
+<li>The extension reads the content of **muse.ai** pages (to find Muse approval buttons)</li>
 </ul>
-<p>  approval buttons.</p>
+<p>  and, only while the opt-in Codex (ChatGPT) switch is on, the content of **chatgpt.com**</p>
+<p>  pages (to find Codex approval buttons). It reads nothing else.</p>
 <ul>
-<li>It stores your settings (on/off, click delay, click counter), a local log of the **last 50 clicks** (each with a timestamp), and **compact click statistics** (per day / month / year and per topic) in your browser.</li>
+<li>It stores your settings (on/off, the Codex (ChatGPT) switch, click delay, click counter), a local log of the **last 50 clicks** (each with a timestamp), and **compact click statistics** (per day / month / year and per topic) in your browser.</li>
 <li>It **collects nothing** about you.</li>
 <li>It **transmits nothing** to us or anyone else.</li>
 <li>There is **no analytics**, **no tracking**, and **no advertising**.</li>
@@ -30,17 +33,20 @@
 </ul>
 <p>---</p>
 <h2>2. What the extension can access, and why</h2>
-<p>**Page content of muse.ai tabs.** To find and click the correct button, the extension&#x27;s</p>
-<p>content script reads the page structure (DOM) of Muse pages you have open. This access is</p>
-<p>limited to `https://muse.ai/*` and `https://*.muse.ai/*`. The extension requests no access</p>
-<p>to any other website.</p>
+<p>**Page content of muse.ai and chatgpt.com tabs.** To find and click the correct button,</p>
+<p>the extension&#x27;s content scripts read the page structure (DOM) of Muse pages you have open</p>
+<p>(`https://muse.ai/*`, `https://*.muse.ai/*`) and of chatgpt.com pages</p>
+<p>(`https://chatgpt.com/*`, `https://*.chatgpt.com/*`) — the latter only while the opt-in</p>
+<p>Codex (ChatGPT) switch is on; with it off, the script on chatgpt.com does nothing. The</p>
+<p>extension requests no access to any other website.</p>
 <p>**Your browser storage.** The extension saves, locally in your browser</p>
 <p>(`chrome.storage.local`):</p>
 <ul>
 <li>your settings — whether auto-clicking is on or off, the delay between clicks, dry-run and allow-once preferences, topic and keyword rules, your follow-up options (prompts, chips, smart follow-up, schedule), a mission choice, and a click counter;</li>
 <li>a click log — the **last 50 actions** it performed, each described by timestamp, kind</li>
 </ul>
-<p>  (allow / expand / open panel / review bar / blocked / follow-up / mission), button label,</p>
+<p>  (allow / expand / open panel / review bar / blocked / follow-up / mission, with codex</p>
+<p>  variants for chatgpt.com), button label,</p>
 <p>  and context;</p>
 <ul>
 <li>click statistics — compact counters only: clicks per day, per month, per year, and per topic</li>
@@ -71,9 +77,9 @@
 <ul>
 <li>It does **not** read, store, or send the content of any page other than the muse.ai</li>
 </ul>
-<p>  button detection described above.</p>
+<p>  and chatgpt.com button detection described above.</p>
 <ul>
-<li>It does **not** collect your web history, keystrokes, or activity outside muse.ai.</li>
+<li>It does **not** collect your web history, keystrokes, or activity outside muse.ai and chatgpt.com.</li>
 <li>It does **not** transmit any data to our servers or to any third party — **there are no</li>
 </ul>
 <p>  servers**. The extension makes no outbound network calls (the optional settings sync uses</p>
@@ -111,7 +117,8 @@
 <p>| `storage` | Save your on/off setting, click delay, click counter, the local last-50 click log, and compact click statistics. |</p>
 <p>| `alarms` | Run a once-a-minute check so approvals in background tabs are handled. |</p>
 <p>| `notifications` | Show the optional startup digest. It is composed locally on your device; no data leaves it. |</p>
-<p>| Host: `https://muse.ai/*`, `https://*.muse.ai/*` | Detect and click the Allow button on Muse pages. No other site is accessed. |</p>
+<p>| Host: `https://muse.ai/*`, `https://*.muse.ai/*` | Detect and click the Allow button on Muse pages. |</p>
+<p>| Host: `https://chatgpt.com/*`, `https://*.chatgpt.com/*` | Detect and click the affirmative option on Codex approval requests on chatgpt.com — used only while the opt-in Codex (ChatGPT) switch is on. No other site is accessed. |</p>
 <p>The extension deliberately does **not** request `tabs`, `scripting`, `webRequest`,</p>
 <p>`cookies`, `downloads`, or `&lt;all_urls&gt;`. Its two keyboard shortcuts (`commands`: pause,</p>
 <p>follow-up) are a manifest key, not a permission.</p>
@@ -127,16 +134,16 @@
 <p><https://github.com/BlueSkyz-Labs/muse-auto-allow></p>
 <p>---</p>
 <h2>Ghi chú tiếng Việt (tóm tắt)</h2>
-<p>Muse Auto-Allow chỉ đọc nội dung trang **muse.ai** để tìm nút Allow của Muse. Tiện ích</p>
+<p>Muse Auto-Allow chỉ đọc nội dung trang **muse.ai** (để tìm nút Allow của Muse) và — chỉ khi bạn bật công tắc **Codex (ChatGPT)** (mặc định tắt) — nội dung trang **chatgpt.com** (để tìm nút đồng ý của Codex). Tiện ích</p>
 <p>lưu cục bộ trong trình duyệt của bạn: cài đặt bật/tắt, độ trễ bấm, nhật ký 50 lần bấm</p>
 <p>gần nhất, và thống kê đếm gọn (theo ngày / tháng / năm và theo chủ đề). Tiện ích **không thu thập** dữ liệu nào, **không gửi** dữ liệu đi đâu, không có</p>
 <p>analytics, không có mã từ xa. Nếu bạn bật **Đồng bộ cài đặt** (mặc định tắt), chỉ một tập cài đặt gọn được đồng bộ qua tài khoản Google của chính bạn — nhật ký và thống kê **không bao giờ** được đồng bộ. Thông báo khởi động (digest) được tạo cục bộ trên máy bạn. Gỡ tiện ích khỏi Chrome là xoá sạch dữ liệu đã lưu. Liên hệ:</p>
 <p>TODO: fill before submit.</p>
 <h2>中文说明（摘要）</h2>
-<p>Muse Auto-Allow 仅读取 **muse.ai** 页面的内容，用于查找 Muse 的 Allow（允许）按钮。</p>
+<p>Muse Auto-Allow 仅读取 **muse.ai** 页面（用于查找 Muse 的 Allow 按钮）的内容，以及——仅当你开启 **Codex (ChatGPT)** 开关（默认关闭）时——**chatgpt.com** 页面（用于查找 Codex 的确认按钮）的内容。</p>
 <p>扩展在你的浏览器中本地保存：开关设置、点击间隔、最近 50 次点击的日志，以及精简的点击统计</p>
 <p>（按日 / 月 / 年与主题）。扩展</p>
 <p>**不收集**任何数据，**不向任何地方发送**数据，没有分析统计，也没有远程代码。可选的**设置同步**（默认关闭）仅通过你自己的 Google 账户同步精简的设置子集；日志与统计**绝不**同步。启动摘要通知在本地生成。从</p>
 <p>Chrome 移除该扩展即可清除已保存的数据。联系方式：TODO: fill before submit。</p>
-<footer>Muse Auto-Allow is an unofficial extension by BlueSkyz Labs and is not affiliated with Meta or Muse.</footer>
+<footer>Muse Auto-Allow is an unofficial extension by BlueSkyz Labs and is not affiliated with Meta, Muse or OpenAI.</footer>
 </body></html>

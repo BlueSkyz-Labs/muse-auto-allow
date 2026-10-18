@@ -17,7 +17,9 @@
 >
 > **v1.9.2 addendum (history):** the packet shipped as **v1.9.2** (`dist/muse-auto-allow-v1.9.2.zip`) — superseded by the v1.9.3 addendum; kept as history.
 >
-> **v1.9.3 addendum (current verification):** the packet now ships as **v1.9.3** (`dist/muse-auto-allow-v1.9.3.zip`) — the v1.9.3 addendum at the end of this document is the **current verification** for this packet; it extends the v1.9.2 addendum with the 1.9.3 artifact, the new fresh-install pre-phase, and the re-run gates. Everything above (the v1.2.0 record and the v1.4.0 / v1.5.0 / v1.9.0 / v1.9.1 / v1.9.2 addenda) is the frozen historical record; the **v1.6.0 / v1.7.0 / v1.8.0 gap** in this file is a known stale item (those releases moved without a verification addendum here).
+> **v1.9.3 addendum (history):** the packet shipped as **v1.9.3** (`dist/muse-auto-allow-v1.9.3.zip`) — the v1.9.3 addendum at the end of this document was the verification of record for that packet; superseded by the v1.10.0 addendum below.
+>
+> **v1.10.0 addendum (current verification):** the packet ships as **v1.10.0** (`dist/muse-auto-allow-v1.10.0.zip`) — the v1.10.0 addendum at the end of this document is the **current verification** for this packet; it extends the v1.9.3 addendum with the Codex (ChatGPT) engine, the two-scope host set, the v1.10.0 artifact, and the re-run freeze battery. Everything above (the v1.2.0 record and the v1.4.0 / v1.5.0 / v1.9.0 / v1.9.1 / v1.9.2 / v1.9.3 addenda) is the frozen historical record; the **v1.6.0 / v1.7.0 / v1.8.0 gap** in this file is a known stale item.
 
 ## Verdict
 
@@ -413,3 +415,34 @@ Entries carry an ISO `at` timestamp (`content.js:203`); PRIVACY §2 describes "k
 - **Items 1.3–1.21, 3.1, 3.3–3.6, 4.1–4.8** (the v1.2.0 per-line checks) — only the subset re-listed in the table above was re-checked; the rest stand as the historical v1.2.0/v1.4.0/v1.5.0/v1.9.0/v1.9.1/v1.9.2 record and are **NOT_VERIFIED** against the v1.9.3 tree in this pass.
 
 **Bottom line:** the v1.9.3 freeze evidence (artifact + sha256 + verify-zip + smoke 20/20 + the green gates, including the new fresh-install pre-phase that caught and now guards the boot-order fail-open) is the current verification for this packet; the sections above it are the frozen historical record, and the v1.6.0–v1.8.0 gap here is a known stale item. Nothing in this document claims a Chrome Web Store upload, review, or publish — the package has not been uploaded.
+
+---
+
+## v1.10.0 Addendum (2026-10-18) — current verification
+
+**Method note (honest):** this addendum is a repository-maintainer pass executed at the v1.10.0 release freeze (same person as the maker), not the independent verifier of record from the header. It re-checks the packet's version-bound claims against the frozen tree and cites the executed gates; the prior independent structure (maker ≠ judge) is preserved in the historical sections above.
+
+### Re-verification of the item list that still applies (v1.10.0 freeze)
+
+| # | Item | v1.10.0 re-check | Status |
+|---|---|---|---|
+| 1.2 / 4.6 | Version consistency | `extension/manifest.json` `"version"` `1.10.0` = `store/LISTING.md` §1 `Version 1.10.0` = `dist/muse-auto-allow-v1.10.0.zip` (all three read in this pass) | PASS (superseded from 1.9.3) |
+| 1.5 / 3.7 | Page access limited to the pinned scopes | `host_permissions` and per-engine `content_scripts` matches pin exactly muse.ai + chatgpt.com sets (lint-enforced); `grep` for `localhost`/`127.0.0.1` in the shipped manifest: 0 hits | PASS (two scopes since 1.10.0) |
+| 3.8 | Permissions table matches manifest | manifest = `storage` / `alarms` / `notifications` + the four host patterns (`commands` is a manifest key, **not** a permission) — matches `store/LISTING.md` §5 (now carrying both host sections) / `store/PRIVACY.md` §5 | PASS |
+| 3.9 | "collects nothing / transmits nothing / no analytics / no advertising" | unchanged in 1.10.0 — the new engine adds no data flow; `store/PRIVACY.md` + `docs/privacy.html` were updated to disclose the chatgpt.com scope and the `codex` log kinds (v1.10 revision) | PASS |
+| 2.1–2.6 | Zip structural hygiene + artifact bytes | 19 entries (`codex.js` added), `manifest.json` at root, all CRCs verified, zip == tree byte-for-byte (`verify-zip.py` 19/0/0/0), sidecar sha256 `144ef8ba…5316` matches the artifact; deterministic double-build byte-identical | PASS |
+| 1.10 / 7 | Short descriptions ≤132 | programmatic recount of the `store/LISTING.md` §1 table (now naming both scopes): en 110, vi 116, zh_CN 69, ja 75, ko 85, es 118 — all ≤132 | PASS (re-run) |
+| 1.11–1.14 | Engine detection paths + rails (Muse) + controls | unchanged for the Muse engine; the Codex engine's rails and paths are the subject of `docs/CODEX.md` and `test/codex-e2e.mjs` | PASS (unchanged) |
+| — | Lint gate | `node scripts/lint.mjs` → exit 0 (27 checks across 19 files), incl. the new host-set/matches pins and the two engines' `BLOCK_SEED` lockstep | PASS (re-run) |
+| — | i18n parity | all six locale files = 190 keys (parity enforced by lint, exit 0) | PASS (re-run) |
+| — | Runtime E2E (not re-run in the v1.9.3 docs pass; **executed here**) | `test/e2e.mjs` 0 · `test/followup-e2e.mjs` 0 · `test/mission-e2e.mjs` 0 · `test/lang-switch-e2e.mjs` 0 · `test/codex-e2e.mjs` 0 (4 phases) · `scripts/bench/experience.mjs --only=assert` 22/0 · `scripts/smoke-zip.mjs` ok (20/20) — exit codes captured directly at the freeze | PASS (executed) |
+| — | Falsification | mutant without the Codex OFF-gate → `codex-e2e` exit 2, OFF phase RED; pristine → GREEN | PASS (recorded) |
+
+### NOT_VERIFIED in this pass (explicit)
+
+- **Visual content of the store images** — dimensions are exact-spec by PNG header, but the popup-bearing captures (`screenshot1`, `screenshot3-popup`) predate the v1.10.0 layout and MUST be regenerated before CWS submission (flagged in `store/PUBLISH_RUNBOOK.md`). **NOT_VERIFIED / open item.**
+- **The five localized detailed descriptions** in `store/LISTING.md` §2 — they still describe only the Muse feature set (their closing scope line was corrected to name both scopes). Refresh before Submit. **NOT_VERIFIED / open item.**
+- **Chrome Web Store submission state** — no dashboard was opened; nothing was uploaded, reviewed, or published. **NOT_VERIFIED / NOT DONE.**
+- **The v1.2.0 per-line checks not re-listed above** (1.3–1.9, 1.15–1.21, 3.1, 3.3–3.6, 4.1–4.8, etc.) — they stand as the historical record; only the subset above was re-checked against the v1.10.0 tree.
+
+**Bottom line (v1.10.0):** the freeze evidence — artifact `dist/muse-auto-allow-v1.10.0.zip` (202,680 bytes, 19 entries, sha256 `144ef8ba1dca38b344db96275b2fc61643375a8fa7ab926af7b8555f61025316`), verify-zip 19/0, smoke 20/20, the green battery incl. the new Codex engine suite, and the recorded falsification — is the current verification for this packet; everything above it is the frozen historical record. The package has not been uploaded to the Chrome Web Store.
