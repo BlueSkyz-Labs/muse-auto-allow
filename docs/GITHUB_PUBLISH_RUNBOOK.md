@@ -175,8 +175,9 @@ gh release create "v<VERSION>" \
 - The attached zip must be the one that passed `scripts/build.mjs` +
   `scripts/verify-zip.py` (step 0.5) — the same bytes that go to the Chrome Web Store.
 - Attach the `.sha256` sidecar alongside the zip, as done for the existing
-  v1.8.0 / v1.9.0 / v1.9.1 / v1.9.2 Releases and the current v1.9.3 Release (which exists
-  with the zip + `.sha256` sidecar attached), so a downloader can
+  v1.8.0 / v1.9.0 / v1.9.1 / v1.9.2 / v1.9.3 Releases and the current v1.10.0 Release
+  (created from the v1.10.0 freeze tree, with the zip + `.sha256` sidecar attached), so a
+  downloader can
   verify the exact artifact bytes.
 - `--verify-tag` aborts if the tag does not already exist, so the Release always
   matches a pushed tag.
