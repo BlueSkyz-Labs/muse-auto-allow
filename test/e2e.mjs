@@ -178,7 +178,7 @@ function killMyChrome() {
 
 const EXPECTED = ['1', '2', '3', '4', '5', '6', '7', '11', '17', 'pending5', 'surface', 'reviewbar', '18'];
 const FORBIDDEN = ['8', '9', '10', '12', '13', '14', '16', '19', 'surface2', 'surface3', 'lone', 'notif', 'plain-review',
-  '20', 'lone-connect']; // v1.8.0: the connector card (any button inside) + the lone Connect twin
+  '20', 'lone-connect', 'f1-standing', 'f2-offscreen', 'f2-faint', 'f3-authorize', 'f3-allow', 'f3b-allow']; // v1.14.0 (F1-F3): postfix standing grant, off-screen / near-invisible buttons, reworded consent surfaces
 
 let ws = null;
 let send = null;

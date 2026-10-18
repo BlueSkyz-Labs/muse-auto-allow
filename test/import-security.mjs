@@ -104,6 +104,7 @@ function makeEnv() {
     URL: { createObjectURL: () => 'blob:test', revokeObjectURL: () => {} },
     setTimeout: (fn, ms) => setTimeout(fn, ms),
     clearTimeout: (t) => clearTimeout(t),
+    fetch: async () => ({ json: async () => ({}) }), // extension pages have fetch; the sandbox must too (stats.js readAsset alias binds it at load)
     console: { log() {}, warn() {}, error() {} },
   };
   return { sandbox, alerts, listeners, store, state };
@@ -449,6 +450,42 @@ async function main() {
   const aF = await importFile(backup({ log: [{ at: iso, kind: 'allow', label: 'x', ctx: { iv: 'AAAAAAAAAAAA', ct: 'BBBBBBBBBBBB' } }] }));
   check('G13 no-key notice: a ctx-bearing file without a key surfaces the kept-key alert',
     aF.includes(MSG.kept), { alerts: aF });
+
+  // ============ G14 (v5.0) — C5-3: newer-schema backups are refused, not silently degraded ============
+  resetStore({ cryptKeyRaw: K1, enabled: false, marker: 'KEEP-ME' });
+  const aG = await importFile(Object.assign(backup({ clickCount: 999 }), { schemaVersion: 3 }));
+  check('G14 schema guard: a schemaVersion:3 backup is REFUSED with the update-first notice (nothing imported)',
+    aG.some((m) => /newer version/.test(m)) && store.marker === 'KEEP-ME' && store.clickCount === undefined && store.enabled === false,
+    { alerts: aG, store: { ...store } });
+  const aH = await importFile(backup({ clickCount: 7 }));
+  check('G14 schema guard: a schemaVersion:2 backup still imports normally',
+    store.marker === 'KEEP-ME' && store.clickCount === 7, { store: { ...store }, alerts: aH });
+
+  // ============ G15 (v1.14.0, F4) — every autonomy-switch flip asks first (crafted-backup guard) ============
+  resetStore({ cryptKeyRaw: K1, marker: 'G15-MARK' });
+  state.confirmAnswer = false;
+  const aK = await importFile(backup({ dryRun: false }));
+  check('G15 dry-run off-flip: refused without the authority confirm (store untouched)',
+    store.marker === 'G15-MARK' && !('dryRun' in store) && aK.length === 0, { alerts: aK, store: { ...store } });
+  const aL = await importFile(backup({ followupEnabled: true, missionEnabled: true }));
+  check('G15 follow-up/mission on-flip: refused without the authority confirm',
+    store.followupEnabled === undefined && store.missionEnabled === undefined && aL.length === 0, { alerts: aL });
+  resetStore({ cryptKeyRaw: K1, pauseUntil: Date.now() + 600000, marker: 'G15-MARK' });
+  const aM = await importFile(backup({ pauseUntil: 0 }));
+  check('G15 active-pause clear: refused without the authority confirm (pause kept)',
+    Number(store.pauseUntil) > Date.now(), { alerts: aM, pauseUntil: store.pauseUntil });
+  state.confirmAnswer = true;
+  resetStore({ cryptKeyRaw: K1, marker: 'G15-MARK' });
+  const aN = await importFile(backup({ dryRun: false }));
+  check('G15 dry-run off-flip: applies once the authority confirm is accepted', store.dryRun === false, { alerts: aN, store: { ...store } });
+
+  // ============ G16 (v1.14.0, F5-codex) — a present-but-non-numeric schemaVersion is refused; absent = legacy = accepted ============
+  resetStore({ cryptKeyRaw: K1, marker: 'G16' });
+  const aS = await importFile({ app: 'muse-auto-allow', schemaVersion: 'abc', data: { clickCount: 77 } });
+  check('G16 garbage schemaVersion: refused as not-a-backup (store untouched)',
+    aS.some((m) => /not a muse auto-allow backup/i.test(m)) && store.marker === 'G16' && store.clickCount === undefined, { alerts: aS });
+  const aT = await importFile({ app: 'muse-auto-allow', data: { clickCount: 21 } });
+  check('G16 absent schemaVersion: legacy import still accepted', store.clickCount === 21, { alerts: aT, store: { ...store } });
 
   resetStore({ cryptKeyRaw: K1, enabled: false });
   state.setBehavior = () => new Error('QUOTA_BYTES quota exceeded');

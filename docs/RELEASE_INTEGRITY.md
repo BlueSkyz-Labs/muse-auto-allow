@@ -60,6 +60,57 @@ of the artifact gets `http://127.0.0.1/*` appended to `content_scripts[0].matche
 fixture origin — the pristine extraction dir and the shipped manifest stay untouched,
 and the artifact's own bytes are what gets loaded everywhere else.
 
+## Freeze procedure (v1.14.0 freeze)
+
+Run from the repo root during the freeze, tree stable, editing lanes stopped.
+
+1. Confirm the version: `extension/manifest.json` reads `1.14.0` (the freeze owns version
+   bumps — no script edits it).
+2. Rebuild clean: `node scripts/build.mjs` — expect `manifest at root: true`, the file count of
+   `extension/` as entries, and a fresh `dist/muse-auto-allow-v1.14.0.zip` + `.sha256`.
+3. Record the hash: `sha256sum dist/muse-auto-allow-v1.14.0.zip` (must equal the sidecar;
+   `sha256sum -c` clean).
+4. Determinism proof: build once more; the hash must be **identical**.
+5. Byte-verify + smoke: `python scripts/verify-zip.py` (19 matched, 0 mismatched, 0 disk-only,
+   0 zip-only) then `node scripts/smoke-zip.mjs` — exit 0 and `"ok": true`.
+6. Attach the zip **and** its `.sha256` sidecar to the GitHub Release `v1.14.0` per
+   `docs/GITHUB_PUBLISH_RUNBOOK.md` §3. If anything is rebuilt after step 5, restart from step 2.
+
+## Recorded evidence (v1.14.0 freeze)
+
+- Frozen tree: `extension/manifest.json` `"version": "1.14.0"`; git tag `v1.14.0` (this release
+  commit; GitHub Release carries the zip + `.sha256` sidecar).
+- Artifact: `dist/muse-auto-allow-v1.14.0.zip` — **212,606 bytes**, **19 entries**,
+  `manifest.json` at the zip root; sha256
+  `836a999172e206107f0b0b41564ff6b67238dede6a7ee35ff3d2aa527fd2b5a3` (sidecar
+  `dist/muse-auto-allow-v1.14.0.zip.sha256`; `sha256sum -c` clean).
+- Determinism: two full builds at the frozen tree produced the identical sha256.
+- `python scripts/verify-zip.py`: 19 matched, 0 mismatched, 0 disk-only, 0 zip-only (exit 0).
+- `node scripts/smoke-zip.mjs`: exit 0, `"ok": true` (extracts the shipped zip, loads it in
+  scratch Chrome, passes the core e2e).
+- Gates on the frozen tree (2026-10-18, exit codes captured directly — no pipes, one battery,
+  self-cleaning): `lint.mjs` 0 (27 checks across 19 files) · `background-unit.mjs` 0 (35/35) ·
+  `import-security.mjs` 0 (**162/0** — new G14 schema refusal, G15 authority flips, G16 garbage
+  schema) · `yolo-ux-unit.mjs` 0 (5 checks) · `e2e.mjs` 0 (six new FORBIDDEN negatives:
+  `f1-standing`, `f2-offscreen`, `f2-faint`, `f3-authorize`, `f3-allow`, `f3b-allow`) ·
+  `followup-e2e.mjs` 0 · `mission-e2e.mjs` 0 · `lang-switch-e2e.mjs` 0 (**204 keys × 6**) ·
+  `codex-e2e.mjs` 0 (4 phases, `ok: true`) · `scripts/bench/experience.mjs --only=assert` 0 ·
+  QA v1.14.0 (scratch Chrome) **8/8** (stats locale reload + live switch, traversal rejection,
+  schema guard through the real file input).
+- Independent adversarial audit (separate read-only child; live Chromium reproductions): F1–F4
+  fixed with regression coverage, plus F5-codex (present-but-non-numeric `schemaVersion`) — all
+  in CHANGELOG v1.14.0; falsification directions in the PR body.
+- Battery hygiene: three batteries ran during the cycle — #1/#2 on intermediate trees (caught
+  the node-vm `fetch` sandbox gap and the strict-viewport over-block, LSN-005/006; both fixed),
+  #3 on the exact frozen tree: every exit 0. `scripts/cleanup-chrome-scratch.mjs` ran after
+  each battery (kills only `maa-*` scratch profiles).
+- SGPS:Experience pass v1 (same night, on this frozen tree; instrument
+  `docs/SGPS_EXPERIENCE_CHECKLIST.md`): 8/11 machine checks PASS; 3 stand → v1.15.0 scope —
+  light-theme contrast (header "Missions" 2.19, onboarding primary CTA 1.19); the popup
+  `.numwrap input:focus-visible {outline:none}` rule is covered by the wrapper ring (probe false
+  positive, probe v2 will understand the pattern); the state-line probe selector is fixed for
+  v2. Evidence: `scratch/experience-v1.json`.
+
 ## Freeze procedure (v1.13.0 freeze)
 
 Run from the repo root during the freeze, tree stable, editing lanes stopped.

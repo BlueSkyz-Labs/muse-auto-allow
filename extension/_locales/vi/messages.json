@@ -137,6 +137,9 @@
   "importAuthorityWarn": {
     "message": "Bản sao lưu này sẽ bật: $1 — tiếp tục?"
   },
+  "importNewer": {
+    "message": "Bản sao lưu này được tạo bởi phiên bản Muse Auto-Allow mới hơn — hãy cập nhật tiện ích trước."
+  },
   "importQuota": {
     "message": "Không thể khôi phục bản sao lưu: bộ nhớ trình duyệt đã đầy."
   },
