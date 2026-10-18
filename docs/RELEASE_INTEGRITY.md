@@ -60,6 +60,25 @@ of the artifact gets `http://127.0.0.1/*` appended to `content_scripts[0].matche
 fixture origin — the pristine extraction dir and the shipped manifest stay untouched,
 and the artifact's own bytes are what gets loaded everywhere else.
 
+## Freeze procedure (v1.17.0 freeze)
+
+Same procedure (version `1.17.0`; build → hash → rebuild identical; sidecar `-c`; verify-zip
+19/0/0/0; smoke `ok:true`; attach to the GitHub Release).
+
+## Recorded evidence (v1.17.0 freeze)
+
+- Frozen tree: `extension/manifest.json` `"version": "1.17.0"`; tag `v1.17.0`.
+- Artifact: `dist/muse-auto-allow-v1.17.0.zip` — **212,978 bytes**, **19 entries**; sha256
+  `787284fd3937a67b696cec16db86221b6e464c53320d27eafcab5439f96b6676` (sidecar clean); determinism 2× byte-identical; verify-zip 19/0/0/0; smoke
+  exit 0 `"ok": true`.
+- Gates on the frozen tree (2026-10-19, one self-cleaning battery, all exit 0): lint 0 (27) ·
+  background-unit 0 · import-security 0 (162) · yolo-ux 0 (5) · e2e 0 · followup-e2e 0 ·
+  mission-e2e 0 · lang-switch-e2e 0 (204×6) · codex-e2e 0 · bench 0 · QA v1.14.0 8/8 ·
+  `qa-experience` **20/20**.
+- Cycle scope: R6 (micro-label 10.5→11 px, tracking .065em, ticks 11 px) · R8 (`#ccap`
+  `aria-live=polite` announces the range switch) · `docs/LICENSING_DESIGN.md` — the PROPOSED
+  paid-tier design (ES256 offline tokens, owner-held key, DEC-040 mapping, no paid code shipped).
+
 ## Freeze procedure (v1.16.0 freeze)
 
 Same procedure (version `1.16.0`; build → hash → rebuild identical; sidecar `-c`; verify-zip
