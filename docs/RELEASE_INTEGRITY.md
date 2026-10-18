@@ -60,6 +60,31 @@ of the artifact gets `http://127.0.0.1/*` appended to `content_scripts[0].matche
 fixture origin — the pristine extraction dir and the shipped manifest stay untouched,
 and the artifact's own bytes are what gets loaded everywhere else.
 
+## Freeze procedure (v1.16.0 freeze)
+
+Same procedure (version `1.16.0`; build → hash → rebuild identical; sidecar `-c`; verify-zip
+19/0/0/0; smoke `ok:true`; attach to the GitHub Release).
+
+## Recorded evidence (v1.16.0 freeze)
+
+- Frozen tree: `extension/manifest.json` `"version": "1.16.0"`; tag `v1.16.0`.
+- Artifact: `dist/muse-auto-allow-v1.16.0.zip` — **212,964 bytes**, **19 entries**; sha256
+  `77ac96812d6edb875beb1af741384f74928ec2d29086687f7020d9048a49aa26` (sidecar clean);
+  determinism 2× byte-identical; verify-zip 19/0/0/0; smoke exit 0 `"ok": true`.
+- Gates on the frozen tree (2026-10-19, one self-cleaning battery): `lint.mjs` 0 · 
+  `background-unit` 0 · `import-security.mjs` — **first run crashed on a sandbox GAP** (the
+  node-vm fake element lacked `closest()`, which `renderKpis`'s new `.kpi.zero` walk uses —
+  LSN-005 class: the sandbox must mirror real DOM APIs); the harness was extended (parentless
+  `closest()→null`, `querySelector/All` stubs) and the suite **re-ran clean on the SAME tree:
+  162/0** · `yolo-ux-unit` 0 · `e2e` 0 · `followup-e2e` 0 · `mission-e2e` 0 · `lang-switch-e2e`
+  0 · `codex-e2e` 0 · `bench --only=assert` 0 · QA v1.14.0 8/8 · **`qa-experience` 20/20**
+  (new K: topics print %; zero KPI cards carry the calm class).
+- Beauty-blind cycle: three fixes shipped (R4 zero-card calm, R5 topic percentages, R1
+  empty-line spacing); R2/R3 rejected with in-product evidence; R6–R8 deferred with records —
+  `docs/EXPERIENCE_REVIEW_V115.md`. Visual re-verification via the vision lane confirmed bars
+  render, calmer zeros, printed percentages, no new defects. Capture-seed bug disclosed (the
+  earlier "empty chart" reading) — fix in the same PR.
+
 ## Freeze procedure (v1.15.0 freeze)
 
 Same procedure as v1.14.0 (version `1.15.0`; `build.mjs` → hash → rebuild → identical; sidecar
