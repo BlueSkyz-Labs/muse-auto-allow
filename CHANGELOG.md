@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased (post-1.9.4; no version bump)
+- **Safety / trust-state UX correctness:** the Safety header now shows effective Dry-run (no clicks) over configured YOLO; while YOLO bypasses topic/keyword filtering the Safety sheet states that saved restrictions are **not enforced**, instead of promising they always block. When YOLO is configured alongside Dry-run, the note explains that no approvals are clicked until logging-only mode is turned off.
+- **Consistency and accessibility:** Safety controls refresh against persisted settings (including imported/synced changes) without discarding an armed two-step YOLO confirmation; the explanatory note announces changes through a polite status region. Two new localized messages across all six shipped UI languages, with key parity.
+- **Regression evidence:** a zero-dependency renderer-level test checks all four YOLO × Dry-run combinations plus the armed-confirmation case; wired into the lint CI job. Chrome E2E and release verification remain separate evidence gates; do not infer deployed readiness from this entry.
+
 ## 1.9.4
 - **YOLO mode — explicit opt-in "approve everything"** (owner-requested after a live-log audit): one switch in the Safety panel (two-step confirm) that bypasses the keyword block-list, recognises **standing-grant** labels ("Always allow", "Allow for this site/task") as clickable positive options, and caps click pacing at 100 ms. It ships **off**; with it off the engine behaves as before. Even with it on, the hard rails hold: **Deny/Reject/Decline are never clicked**, connector/credential surfaces stay hard-blocked (the user-input boundary), the consent/permission filters stay in force, and the dedup + rate caps are unchanged. Enabling YOLO also turns live clicking on (an explicit `dryRun:false`).
 - Why: the owner's live log showed **3,816 blocked approvals vs 2,250 clicked** — `keyword:deploy` alone accounted for 3,273 blocks — i.e. the most common "it didn't click" report was the keyword rail holding back cards the user wanted approved. The seed list and its default behaviour are unchanged; YOLO is the opt-out for power users.

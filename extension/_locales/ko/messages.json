@@ -305,6 +305,12 @@
   "yoloChip": {
     "message": "YOLO"
   },
+  "rulesIgnoredYolo": {
+    "message": "YOLO가 켜져 있으면 주제 및 키워드 규칙은 저장되지만 적용되지 않습니다. 규칙을 적용하려면 YOLO를 끄세요."
+  },
+  "yoloDormant": {
+    "message": "YOLO가 설정되어 있지만 드라이런이 켜져 있어 승인을 클릭하지 않습니다. 실제 승인을 재개하려면 드라이런을 끄세요."
+  },
   "allowOnceTitle": {
     "message": "\"한 번만 허용\" 우선"
   },

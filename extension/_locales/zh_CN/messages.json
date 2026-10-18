@@ -305,6 +305,12 @@
   "yoloChip": {
     "message": "YOLO"
   },
+  "rulesIgnoredYolo": {
+    "message": "YOLO 已开启——主题和关键词规则仍会保存，但不会生效。关闭 YOLO 才能重新应用规则。"
+  },
+  "yoloDormant": {
+    "message": "YOLO 已配置，但试运行仍开启：不会点击任何批准。关闭试运行后，YOLO 才会执行实际批准。"
+  },
   "allowOnceTitle": {
     "message": "优先“仅允许一次”"
   },

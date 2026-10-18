@@ -305,6 +305,12 @@
   "yoloChip": {
     "message": "YOLO"
   },
+  "rulesIgnoredYolo": {
+    "message": "YOLO is on — saved topic and keyword rules are not enforced. Turn off YOLO to apply these rules."
+  },
+  "yoloDormant": {
+    "message": "YOLO is configured but Dry-run is on: no approvals are clicked. Turn off Dry-run to resume live YOLO approvals."
+  },
   "allowOnceTitle": {
     "message": "Prefer \"Allow once\""
   },

@@ -305,6 +305,12 @@
   "yoloChip": {
     "message": "YOLO"
   },
+  "rulesIgnoredYolo": {
+    "message": "YOLO がオンの間、トピックとキーワードのルールは保存されますが適用されません。適用するには YOLO をオフにしてください。"
+  },
+  "yoloDormant": {
+    "message": "YOLO は設定済みですが、ドライラン中のため承認はクリックされません。実際に承認するにはドライランをオフにしてください。"
+  },
   "allowOnceTitle": {
     "message": "「一度だけ許可」を優先"
   },
