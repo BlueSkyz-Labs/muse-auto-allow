@@ -76,6 +76,11 @@ function makeEnv() {
           Object.assign(store, obj);
           return Promise.resolve();
         },
+        remove(keys) { // v1.13.0 (C4-D): the data-restart path uses the real local.remove surface
+          const ks = Array.isArray(keys) ? keys : [keys];
+          for (const k of ks) delete store[k];
+          return Promise.resolve();
+        },
       },
       onChanged: { addListener() {} },
     },
@@ -429,6 +434,21 @@ async function main() {
   const s12brJunkLog = Array.isArray(s12brJunk.log) ? s12brJunk.log : [];
   check('G12 blockedReason junk: non-string reasons are dropped (entries still import)',
     s12brJunkLog.length === 2 && s12brJunkLog.every((e) => !('blockedReason' in e)), { log: s12brJunkLog });
+
+  // ============ G13 (v1.13.0) — C4-D: honest data restore + the no-key notice ============
+  resetStore({ cryptKeyRaw: K1, log: [{ at: iso, kind: 'allow', label: 'SECRET PROJECT X' }], clickCount: 777, stats: { byDay: { '2026-01-01': 5 } }, rules: { blockKeywords: ['deploy'] } });
+  const aD = await importFile(backup({ enabled: true }));
+  check('G13 data restart: log/stats/clickCount absent from the file are REMOVED (start clean)',
+    !('log' in store) && !('stats' in store) && !('clickCount' in store), { keys: Object.keys(store), alerts: aD });
+  check('G13 data restart: restriction keys absent from the file are NOT cleared (fail-closed merge kept)',
+    !!(store.rules && Array.isArray(store.rules.blockKeywords) && store.rules.blockKeywords.includes('deploy')), { rules: store.rules });
+  const aE = await importFile(backup({ log: [{ at: iso, kind: 'allow', label: 'NEW ENT' }], clickCount: 3 }));
+  check('G13 data restart: a file-carried log replaces the old one (the old label is gone)',
+    Array.isArray(store.log) && store.log.length === 1 && store.log[0].label === 'NEW ENT' && store.clickCount === 3, { log: store.log, cc: store.clickCount, alerts: aE });
+  resetStore({ cryptKeyRaw: K1 });
+  const aF = await importFile(backup({ log: [{ at: iso, kind: 'allow', label: 'x', ctx: { iv: 'AAAAAAAAAAAA', ct: 'BBBBBBBBBBBB' } }] }));
+  check('G13 no-key notice: a ctx-bearing file without a key surfaces the kept-key alert',
+    aF.includes(MSG.kept), { alerts: aF });
 
   resetStore({ cryptKeyRaw: K1, enabled: false });
   state.setBehavior = () => new Error('QUOTA_BYTES quota exceeded');

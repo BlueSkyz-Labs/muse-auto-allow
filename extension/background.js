@@ -253,20 +253,27 @@ function mirrorToSync(changes) {
 }
 // On load: sync values apply ONLY to keys ABSENT from local storage (a local choice always
 // wins; sync never overwrites).
-function pullFromSync() {
+function pullFromSync(done) {
+  const fin = () => { if (typeof done === 'function') { try { done(); } catch { /* ignore */ } } };
   try {
     chrome.storage.sync.get(SYNC_SUBSET, (syncVals) => {
       try {
         chrome.storage.local.get(null, (localVals) => {
-          const seed = {};
-          for (const k of SYNC_SUBSET) {
-            if (!(k in localVals) && syncVals && syncVals[k] !== undefined) seed[k] = syncVals[k];
-          }
-          if (Object.keys(seed).length) { try { chrome.storage.local.set(seed); } catch { /* ignore */ } }
+          // v1.13.0 red-team hardening: the callback body gets its OWN try — a throw in the async
+          // callback is outside the outer try's dynamic extent and used to leave `fin` unfired
+          // (migrate() would never run). The callback now always fires fin exactly once.
+          try {
+            const seed = {};
+            for (const k of SYNC_SUBSET) {
+              if (!(k in localVals) && syncVals && syncVals[k] !== undefined) seed[k] = syncVals[k];
+            }
+            if (Object.keys(seed).length) { try { chrome.storage.local.set(seed, fin); return; } catch { /* ignore */ } }
+          } catch { /* ignore */ }
+          fin();
         });
-      } catch { /* ignore */ }
+      } catch { fin(); }
     });
-  } catch { /* ignore */ }
+  } catch { fin(); }
 }
 
 // --- listeners --------------------------------------------------------------------------
@@ -304,8 +311,11 @@ chrome.storage.onChanged.addListener((ch, area) => {
 
 chrome.runtime.onInstalled.addListener(({ reason } = {}) => {
   ensureAlarm();
-  migrate();
-  pullFromSync();
+  // v1.13.0 (C4-A): pull FIRST, then migrate — synced values fill absent keys before the
+  // fresh-install seeds run, so install defaults can never shadow a synced kill-switch
+  // (enabled:false) or live choice (dryRun:false) — and the later syncSettings push cannot
+  // carry those defaults over the shared bucket.
+  pullFromSync(() => { migrate(); });
   schedulePauseBadgeRefresh();
   if (reason !== 'chrome_update') updateBadge();
 });

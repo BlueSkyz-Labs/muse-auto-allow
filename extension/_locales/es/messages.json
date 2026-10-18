@@ -129,7 +129,7 @@
     "message": "Importar datos"
   },
   "importConfirm": {
-    "message": "¿Restaurar esta copia de seguridad? La configuración, el registro y las estadísticas actuales se reemplazarán."
+    "message": "¿Restaurar esta copia? El historial y las estadísticas se reemplazan por los de la copia; los ajustes que no estén en el archivo conservan su valor actual."
   },
   "importBad": {
     "message": "No es un archivo de copia de seguridad de Muse Auto-Allow."
@@ -289,6 +289,9 @@
   },
   "followupSendBlockedDead": {
     "message": "No se pudo enviar — la pestaña de Muse no responde"
+  },
+  "followupSendBlockedSubmit": {
+    "message": "No se pudo enviar — Muse no aceptó el mensaje"
   },
   "followupRotateStarterConfirm": {
     "message": "¿Reemplazar tus $1 combos guardados? Toca de nuevo"

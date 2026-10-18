@@ -129,7 +129,7 @@
     "message": "データをインポート"
   },
   "importConfirm": {
-    "message": "このバックアップを復元しますか？現在の設定・ログ・統計は置き換えられます。"
+    "message": "このバックアップを復元しますか？履歴と統計はバックアップの内容に置き換わり、ファイルにない設定は現在の値を保ちます。"
   },
   "importBad": {
     "message": "Muse Auto-Allow のバックアップファイルではありません。"
@@ -289,6 +289,9 @@
   },
   "followupSendBlockedDead": {
     "message": "送信できません — Muse タブが応答していません"
+  },
+  "followupSendBlockedSubmit": {
+    "message": "送信できません — Muse がメッセージを受け付けませんでした"
   },
   "followupRotateStarterConfirm": {
     "message": "保存済みの $1 件のコンボを置き換えますか？もう一度タップ"

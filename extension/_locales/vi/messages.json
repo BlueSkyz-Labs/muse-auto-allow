@@ -129,7 +129,7 @@
     "message": "Nhập dữ liệu"
   },
   "importConfirm": {
-    "message": "Khôi phục bản sao lưu? Cài đặt, nhật ký và thống kê hiện tại sẽ bị thay thế."
+    "message": "Khôi phục bản sao lưu? Nhật ký và thống kê sẽ thay bằng dữ liệu trong tệp; các cài đặt không có trong tệp vẫn giữ nguyên giá trị hiện tại."
   },
   "importBad": {
     "message": "Không phải tệp sao lưu của Muse Auto-Allow."
@@ -289,6 +289,9 @@
   },
   "followupSendBlockedDead": {
     "message": "Không gửi được — tab Muse không phản hồi"
+  },
+  "followupSendBlockedSubmit": {
+    "message": "Không gửi được — Muse không nhận thao tác gửi"
   },
   "followupRotateStarterConfirm": {
     "message": "Thay thế $1 combo đã lưu? Chạm lần nữa"
