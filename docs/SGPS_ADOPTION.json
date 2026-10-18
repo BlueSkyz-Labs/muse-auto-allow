@@ -11,7 +11,7 @@
   "project": {
     "measured_base_revision": "63d2470643b0d5193ebbc0963385f5bd422f1e0b",
     "adoption_revision": null,
-    "pull_request": null,
+    "pull_request": 10,
     "record_path": "docs/SGPS_ADOPTION.json",
     "last_reconciled": "2026-10-18"
   },
