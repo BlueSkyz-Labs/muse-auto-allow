@@ -70,8 +70,8 @@
     {
       "kind": "experience-pass",
       "status": "PASS",
-      "ref": "qa-experience v2 — 11/11 (scratch/experience-v2.json); instrument docs/SGPS_EXPERIENCE_CHECKLIST.md",
-      "scope": "machine-checkable subset: WCAG contrast both themes (popup+stats), reduced-motion, focus-visible coverage, vi long-string layout, state-as-text. Residual manual-class evidence (screen reader, beauty-blind review) pending — next experience cycle."
+      "ref": "scripts/qa-experience.mjs — 19/19 machine checks (scratch/experience-latest.json)",
+      "scope": "WCAG contrast both themes (popup+stats), reduced-motion, focus-visible coverage, vi long-string layout, state-as-text, AX-name coverage, real Tab traversal (modal focus-trap + full reachability), 200%-zoom proxy, empty state, locale data formats. Residual manual-class evidence (screen reader session, beauty-blind review) pending — next experience cycle."
     },
     {
       "kind": "paid-go-live",

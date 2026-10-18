@@ -17,14 +17,13 @@ const pad2 = (n) => String(n).padStart(2, '0');
 // cycle 2026-10-18 (A2): chart tick labels follow the UI locale via Intl (the popup's mini
 // chart has always done this) — a fixed DD/MM reads as month/day for en/zh/ja/ko readers.
 // Falls back to the old numeric form only if Intl rejects the locale string (never throws).
-// Recorded limit (red-team note): this page follows the BROWSER UI locale; the popup's manual
-// language switcher does not reach the stats surface (same class as TS-04).
+// v1.15.0 (E1): the tick formatters follow the EFFECTIVE locale — the popup's manual switcher
+// once applyUserLocale has landed, the browser locale otherwise (the TS-04 class is now closed
+// for data formats too). Formatters rebuild per call, so a live switch re-renders correctly.
 const UI_LOCALE = (() => { try { return chrome.i18n.getUILanguage() || 'en'; } catch { return 'en'; } })();
-const i18nFmt = (opts) => { try { return new Intl.DateTimeFormat(UI_LOCALE, opts); } catch { return null; } };
-const fmtDayTick = i18nFmt({ day: '2-digit', month: '2-digit' });
-const fmtMonthTick = i18nFmt({ month: '2-digit', year: '2-digit' });
-const tickDay = (d) => (fmtDayTick ? fmtDayTick.format(d) : pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1));
-const tickMonth = (d) => (fmtMonthTick ? fmtMonthTick.format(d) : pad2(d.getMonth() + 1) + '/' + String(d.getFullYear()).slice(2));
+const i18nFmt = (opts) => { try { return new Intl.DateTimeFormat(manualMsgs ? manualLocale : UI_LOCALE, opts); } catch { return null; } };
+const tickDay = (d) => { const f = i18nFmt({ day: '2-digit', month: '2-digit' }); return f ? f.format(d) : pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1); };
+const tickMonth = (d) => { const f = i18nFmt({ month: '2-digit', year: '2-digit' }); return f ? f.format(d) : pad2(d.getMonth() + 1) + '/' + String(d.getFullYear()).slice(2); };
 const dayKeyOf = (d) => d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
 const monthKeyOf = (d) => d.getFullYear() + '-' + pad2(d.getMonth() + 1);
 const num = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };

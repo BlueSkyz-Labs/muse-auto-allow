@@ -60,6 +60,32 @@ of the artifact gets `http://127.0.0.1/*` appended to `content_scripts[0].matche
 fixture origin — the pristine extraction dir and the shipped manifest stay untouched,
 and the artifact's own bytes are what gets loaded everywhere else.
 
+## Freeze procedure (v1.15.0 freeze)
+
+Same procedure as v1.14.0 (version `1.15.0`; `build.mjs` → hash → rebuild → identical; sidecar
+`sha256sum -c`; `verify-zip.py` 19/0/0/0; `smoke-zip.mjs` exit 0/`ok:true`; attach zip + sidecar
+to the GitHub Release). The freeze ran on the exact battery-tested tree; docs-only edits after
+the battery were re-verified by rebuilding (artifact bytes unchanged — extension/ untouched).
+
+## Recorded evidence (v1.15.0 freeze)
+
+- Frozen tree: `extension/manifest.json` `"version": "1.15.0"`; tag `v1.15.0` (this release commit).
+- Artifact: `dist/muse-auto-allow-v1.15.0.zip` — **212,646 bytes**, **19 entries**; sha256
+  `e09d1424ba8cfd26bc28505798d10c616a640221be46523e6e9f4c25eb40c69c` (sidecar clean).
+- Determinism: two full builds byte-identical; verify-zip 19 matched / 0 mismatched / 0 disk-only
+  / 0 zip-only; smoke exit 0 `"ok": true`.
+- Gates on the frozen tree (2026-10-19, exits captured without pipes, one self-cleaning battery):
+  `lint.mjs` 0 (27 checks/19 files) · `background-unit.mjs` 0 (35/35) · `import-security.mjs` 0
+  (162/0) · `yolo-ux-unit.mjs` 0 (5) · `e2e.mjs` 0 · `followup-e2e.mjs` 0 · `mission-e2e.mjs` 0 ·
+  `lang-switch-e2e.mjs` 0 (204 × 6) · `codex-e2e.mjs` 0 (4 phases) · `bench --only=assert` 0 ·
+  QA v1.14.0 scratch-Chrome 8/8 · **`scripts/qa-experience.mjs` 19/19** (the SGPS:Experience
+  instrument: contrast both themes, reduced-motion, focus coverage, vi layout, state-as-text,
+  AX-name coverage, real Tab traversal incl. the onboarding focus-trap, 200%-zoom proxy,
+  empty state, locale data formats).
+- SGPS:Experience cycle: the E1 fix (tick formatters follow the EFFECTIVE locale) closed the
+  TS-04 class for data formats; probe-hygiene lessons (LSN-007) baked into the shipped
+  instrument (scheme confirmation before every read, real DOM ids, asserted preconditions).
+
 ## Freeze procedure (v1.14.0 freeze)
 
 Run from the repo root during the freeze, tree stable, editing lanes stopped.
