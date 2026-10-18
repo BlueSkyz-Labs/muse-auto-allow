@@ -148,7 +148,7 @@ are instructions to the agent — while all UI chrome is localized.
   launch/attach/teardown pattern from `test/e2e.mjs`; never touches the user's real
   profile). Loads a temp copy of the extension whose manifest gains
   `http://127.0.0.1/*` as a content-script match **and host permission** (test-only —
-  the shipped manifest stays muse.ai-only). Fixture: `test/followup-fixture.html`
+  the shipped manifest stays pinned to its real host set: muse.ai + chatgpt.com). Fixture: `test/followup-fixture.html`
   (switchable status, composer + `window.__sent` recorder, approval-card block, and the
   GitHub-card family: the owner-reported card, its unmarked twin, a lone-allow negative
   control and the prefixed pending variant).

@@ -60,27 +60,80 @@ of the artifact gets `http://127.0.0.1/*` appended to `content_scripts[0].matche
 fixture origin — the pristine extraction dir and the shipped manifest stay untouched,
 and the artifact's own bytes are what gets loaded everywhere else.
 
-## Freeze procedure (v1.9.3 freeze)
+## Freeze procedure (v1.10.0 freeze)
 
 Run from the repo root during the freeze, tree stable, editing lanes stopped.
 
-1. Confirm the version: `extension/manifest.json` reads `1.9.3` (the freeze owns
+1. Confirm the version: `extension/manifest.json` reads `1.10.0` (the freeze owns
    version bumps — no script edits it).
 2. Rebuild clean:
    `node scripts/build.mjs`
    Expect: `manifest at root: true`, an entry count equal to the number of files in
-   `extension/`, and a fresh `dist/muse-auto-allow-v1.9.3.zip` + `.sha256`.
-3. Record the hash: `sha256sum dist/muse-auto-allow-v1.9.3.zip` (must equal the
+   `extension/`, and a fresh `dist/muse-auto-allow-v1.10.0.zip` + `.sha256`.
+3. Record the hash: `sha256sum dist/muse-auto-allow-v1.10.0.zip` (must equal the
    sidecar; verify with `sha256sum -c` as above).
 4. Determinism proof: build once more; the hash must be **identical**. A differing
    hash means the tree changed between builds — stop and find out what moved.
-5. Byte-verify + smoke: `python scripts/verify-zip.py` (18 matched, 0 mismatched)
+5. Byte-verify + smoke: `python scripts/verify-zip.py` (19 matched, 0 mismatched)
    then `node scripts/smoke-zip.mjs` — exit 0 and `"ok": true` in the JSON summary.
 6. Attach to the GitHub Release: the zip **and** its `.sha256` sidecar, per
    `docs/GITHUB_PUBLISH_RUNBOOK.md` §3 —
-   `gh release create "v1.9.3" "dist/muse-auto-allow-v1.9.3.zip#…" "dist/muse-auto-allow-v1.9.3.zip.sha256#checksum" …`
+   `gh release create "v1.10.0" "dist/muse-auto-allow-v1.10.0.zip#…" "dist/muse-auto-allow-v1.10.0.zip.sha256#checksum" …`
    The attached zip must be the exact bytes that passed steps 2–5; if anything is
    rebuilt after step 5, restart from step 2.
+
+## Recorded evidence (v1.10.0 freeze)
+
+- Frozen tree: `extension/manifest.json` `"version": "1.10.0"`; git tag `v1.10.0` → the
+  release commit (`git rev-parse v1.10.0`; the GitHub Release v1.10.0 exists with the zip
+  + `.sha256` sidecar attached, created from this tree).
+- Artifact: `dist/muse-auto-allow-v1.10.0.zip` — **202,680 bytes**, **19 entries**
+  (`codex.js` joins the 18 from v1.9.3), `manifest.json` at the zip root; sha256
+  `144ef8ba1dca38b344db96275b2fc61643375a8fa7ab926af7b8555f61025316` (sidecar
+  `dist/muse-auto-allow-v1.10.0.zip.sha256`; `sha256sum -c` clean).
+- Determinism proof: two consecutive `node scripts/build.mjs` runs produced byte-identical
+  zips (same sha256, verified at this freeze).
+- `python scripts/verify-zip.py`: 19 matched, 0 mismatched, 0 disk-only, 0 zip-only (exit 0).
+- `node scripts/smoke-zip.mjs`: exit 0, `ok: true`, 20/20 checks (extracts the shipped zip
+  and passes the core e2e in scratch Chrome).
+- Gates on the frozen tree (2026-10-18, exit codes captured directly — no pipes): `lint.mjs`
+  0 (27 checks across 19 files) · `background-unit.mjs` 0 (32 checks / 0 failed) ·
+  `import-security` 0 (142 checks / 0 failed) · `yolo-ux-unit.mjs` 0 (5 checks) · `e2e.mjs`
+  0 (incl. the fresh-install pre-phase, `leak: null`) · `followup-e2e.mjs` 0 ·
+  `mission-e2e.mjs` 0 · `lang-switch-e2e.mjs` 0 (190 keys × 6 locales) · `codex-e2e.mjs` 0
+  (4 phases: OFF dormant, DRY logging-only, LIVE expected set + forbidden set untouched,
+  YOLO branch; store contract: 19 `codex-allow` entries, 0 plaintext, topic `chatgpt.com`
+  = 23) · `scripts/bench/experience.mjs --only=assert` 22 passed / 0 failed.
+- Falsification (recorded, both directions): a mutant copy of the shipped tree with
+  `if (!state.enabled) return;` removed from `codex.js` → `codex-e2e` **exit 2**, OFF phase
+  `ok:false` (`logLen 10`, `codexKinds 8` — the engine acted while the switch was off);
+  the pristine tree → exit 0, OFF phase `ok:true` (`logLen 0`, `codexKinds 0`), other phases
+  unchanged. Run: `MAA_EXT_DIR=<mutant> node test/codex-e2e.mjs`.
+- Harness hardening found by this freeze (disclosed, not hidden): `smoke-zip.mjs`'s
+  fresh-install seed (write `dryRun:false`) runs immediately after extension load and could
+  race the installer migration (`background.js migrate()`: get → set). Landing inside that
+  window let migrate's set carry `dryRun:true` and the phase then silently measured the
+  dry-run default instead of the live click path (observed under load: fixture clicks none,
+  log kinds only `*-dry`; the **artifact itself was unaffected** — the post-fix run clicks
+  the full expected set). The seed now verifies `dryRun === false` with the schema stamp
+  present, re-asserting if the migration wins a lap; no check was weakened. The `test/`
+  harnesses seed after the migration has settled and were not affected.
+- New in 1.10.0: a second, opt-in engine — **Codex (ChatGPT) auto-approve** on chatgpt.com
+  (`extension/codex.js`; `codexEnabled`, default off; the switch lives in the popup's
+  Safety & Control panel — a full-popup overlay, so the ≤600 px popup discipline is
+  unchanged — with a "Codex" chip on the Safety entry while on) carrying the same rails
+  (never Deny / never a lone affirmative; auth/connector surfaces hard-blocked; the shared
+  block-list + rate caps; English-label matching, fail closed). The manifest pins two
+  scopes (never `<all_urls>`; still no `tabs`/`scripting`/`webRequest`/`cookies`).
+  Recording rides the same store contract (kinds `codex-*`, topic `chatgpt.com`, AES-GCM
+  at rest, one serialized flush under the `maa-record-v1` Web Lock). i18n is **190 keys ×
+  6 locales** (11 new strings; parity green).
+- Honest open items: the popup-bearing store screenshots predate the v1.10.0 layout
+  (regeneration flagged in `store/PUBLISH_RUNBOOK.md`); the five localized detailed
+  descriptions in `store/LISTING.md` §2 still describe only the Muse feature set (their
+  closing scope line names both scopes; refresh flagged for CWS submission).
+- Not done: the package has **not** been uploaded to the Chrome Web Store; no CWS review,
+  no store publish.
 
 ## Recorded evidence (v1.9.3 freeze)
 

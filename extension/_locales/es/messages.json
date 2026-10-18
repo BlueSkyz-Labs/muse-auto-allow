@@ -3,7 +3,7 @@
     "message": "Muse Auto-Aprobar"
   },
   "extDesc": {
-    "message": "Hace clic automáticamente en Allow cuando Muse (muse.ai) pide aprobación. Interruptor, registro de clics; todo local."
+    "message": "Hace clic en Allow cuando Muse (muse.ai) o Codex (chatgpt.com) pide aprobación. Interruptor, registro de clics; todo local."
   },
   "toggleLabel": {
     "message": "Clic automático en Allow"
@@ -69,7 +69,7 @@
     "message": "No se encontró ninguna pestaña de muse.ai"
   },
   "onlyMuse": {
-    "message": "Solo funciona en muse.ai"
+    "message": "Funciona en muse.ai y chatgpt.com"
   },
   "last7": {
     "message": "Últimos 7 días"
@@ -493,5 +493,38 @@
   "missionFix": { "message": "CORREGIR HALLAZGOS" },
   "missionFixDesc": { "message": "Corrige los hallazgos abiertos de extremo a extremo, pruébalo y concilia." },
   "missionRelease": { "message": "PREPARACIÓN DE LANZAMIENTO" },
-  "missionReleaseDesc": { "message": "Congela el alcance, verifica el artefacto, arma el paquete y decide GO." }
+  "missionReleaseDesc": { "message": "Congela el alcance, verifica el artefacto, arma el paquete y decide GO." },
+  "codexTitle": {
+    "message": "Codex (ChatGPT)"
+  },
+  "codexToggle": {
+    "message": "Aprobar automáticamente las solicitudes de Codex"
+  },
+  "codexHint": {
+    "message": "Solo en chatgpt.com. Nunca se pulsa Deny; los permisos permanentes siguen siendo manuales."
+  },
+  "codexChip": {
+    "message": "Codex"
+  },
+  "codexTabsFoundOne": {
+    "message": "1 pestaña de chatgpt.com abierta"
+  },
+  "codexTabsFound": {
+    "message": "$1 pestañas de chatgpt.com abiertas"
+  },
+  "codexTabsNone": {
+    "message": "No se encontró ninguna pestaña de chatgpt.com"
+  },
+  "kindCodexAllow": {
+    "message": "codex permitir"
+  },
+  "kindCodexExpand": {
+    "message": "codex expandir"
+  },
+  "kindCodexOpenPanel": {
+    "message": "codex panel"
+  },
+  "kindCodexDry": {
+    "message": "codex (prueba)"
+  }
 }

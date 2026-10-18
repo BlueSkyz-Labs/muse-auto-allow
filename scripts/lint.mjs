@@ -7,8 +7,10 @@
 //                  (eval, new Function, fetch, XMLHttpRequest, WebSocket, importScripts,
 //                  remote <script src>); local-only dialogs (alert) restricted to the
 //                  popup/stats pages, never content/background
-//   5. manifest  — minimal permissions allowlist, __MSG_ indirection intact, host set
-//                  pinned to muse.ai only
+//   5. manifest  — minimal permissions allowlist, __MSG_ indirection intact, host sets and
+//                  content_scripts matches pinned to the two engine scopes (muse.ai + chatgpt.com)
+//   6. lockstep  — the shared safety constants duplicated between content.js and codex.js
+//                  (the keyword BLOCK_SEED) must stay byte-identical
 // Exit 1 on any finding; prints a compact summary. Usage: node scripts/lint.mjs
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -213,15 +215,46 @@ try {
   for (const p of man.permissions || []) if (!ALLOWED.has(p)) findings.push(`MANIFEST unexpected permission "${p}"`);
   if (String(man.name || '') !== '__MSG_extName__') findings.push('MANIFEST name must use __MSG_extName__');
   if (!man.default_locale) findings.push('MANIFEST missing default_locale');
+  // v1.10.0: TWO pinned engine scopes. host_permissions powers the background/popup tab
+  // queries and nudges; content_scripts matches decide where each engine's script is
+  // injected — both pinned exactly, per engine.
   const hosts = (man.host_permissions || []).join(', ');
-  if (!/^https:\/\/muse\.ai\/\*, https:\/\/\*\.muse\.ai\/\*$/i.test(hosts)) {
+  if (!/^https:\/\/muse\.ai\/\*, https:\/\/\*\.muse\.ai\/\*, https:\/\/chatgpt\.com\/\*, https:\/\/\*\.chatgpt\.com\/\*$/i.test(hosts)) {
     findings.push(`MANIFEST host_permissions unexpected: ${hosts}`);
+  }
+  const cs = man.content_scripts || [];
+  const scriptEntry = (file) => cs.find((e) => Array.isArray(e.js) && e.js.indexOf(file) !== -1) || {};
+  const museEntry = scriptEntry('content.js');
+  const codexEntry = scriptEntry('codex.js');
+  if ((museEntry.matches || []).join(', ') !== 'https://muse.ai/*, https://*.muse.ai/*') {
+    findings.push(`MANIFEST content_scripts[content.js] matches unexpected: ${(museEntry.matches || []).join(', ')}`);
+  }
+  if ((codexEntry.matches || []).join(', ') !== 'https://chatgpt.com/*, https://*.chatgpt.com/*') {
+    findings.push(`MANIFEST content_scripts[codex.js] matches unexpected: ${(codexEntry.matches || []).join(', ')}`);
   }
   if (!man.content_security_policy || !man.content_security_policy.extension_pages) {
     findings.push('MANIFEST missing explicit extension_pages CSP');
   }
 } catch (e) {
   findings.push(`MANIFEST scan failed: ${e.message}`);
+}
+
+// 6. shared-rule lockstep (v1.10.0) — the keyword block-list seed is a frozen safety
+//    contract shared by BOTH engines: content.js BLOCK_SEED and codex.js BLOCK_SEED must
+//    stay identical, or a drifted copy would silently change what one engine blocks.
+try {
+  checked++;
+  const seedOf = (rel) => {
+    const src = fs.readFileSync(path.join(EXT, rel), 'utf8');
+    const m = src.match(/const BLOCK_SEED = \[([\s\S]*?)\];/);
+    return m ? m[1].replace(/\s+/g, ' ').trim() : null;
+  };
+  const a = seedOf('content.js');
+  const b = seedOf('codex.js');
+  if (!a || !b) findings.push(`SEED lockstep: BLOCK_SEED not found (${a ? 'codex.js' : 'content.js'})`);
+  else if (a !== b) findings.push('SEED lockstep: content.js and codex.js BLOCK_SEED differ');
+} catch (e) {
+  findings.push(`SEED lockstep scan failed: ${e.message}`);
 }
 
 // summary

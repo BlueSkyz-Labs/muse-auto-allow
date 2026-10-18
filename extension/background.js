@@ -1,14 +1,17 @@
-// Muse Auto-Allow — service worker (v1.8.0: pause badge + commands + startup digest + sync mirror).
+// Muse Auto-Allow — service worker (v1.10.0: chatgpt.com nudges for the opt-in Codex
+// engine; v1.8.0 pause badge + commands + startup digest + sync mirror).
 // 1) Nudges muse.ai tabs once a minute so approvals are handled even when a tab is
-//    throttled or otherwise quiet.
-// 2) Proactively sweeps a muse.ai tab the moment it finishes loading (tab detection).
+//    throttled or otherwise quiet. v1.10.0: chatgpt.com tabs are nudged the same way —
+//    the Codex engine they carry stays dormant unless the user enabled it (its own
+//    `codexEnabled` switch), so the nudge itself never interacts with anything.
+// 2) Proactively sweeps a muse.ai (or chatgpt.com) tab the moment it finishes loading.
 // 3) Keeps the toolbar badge showing today's click count. While the engine is PAUSED
 //    (chrome.storage.local.pauseUntil > now) the badge shows the pause marker '||'.
 // 4) Commands (manifest "commands"): toggle-pause (Alt+Shift+P) toggles pauseUntil —
 //    pause for 15 minutes, or clear an active pause; send-followup (Alt+Shift+F) triggers
 //    the content script's existing followup-send-now path on the ACTIVE muse.ai tab.
 // 5) Startup digest (chrome.runtime.onStartup): composes {since, clicks, followups, blocked}
-//    from digestCounters (incremented by the content script) and shows ONE
+//    from digestCounters (incremented by the content scripts) and shows ONE
 //    chrome.notifications notification when clicks > 0; lastDigestAt is updated when shown.
 //    The notification text is hardcoded English on purpose (docs/ENGINE_V18.md).
 // 6) syncSettings (chrome.storage.local, default false): when true, every local change of a
@@ -16,6 +19,11 @@
 //    ONLY to keys absent from local storage (never overwriting a local choice). See
 //    docs/ENGINE_V18.md for the 8KB per-item sync quota handling.
 const MUSE_URL_RE = /^https:\/\/([a-z0-9-]+\.)*muse\.ai(?=[:/])/i;
+const CHATGPT_URL_RE = /^https:\/\/([a-z0-9-]+\.)*chatgpt\.com(?=[:/])/i;
+const MUSE_TAB_MATCHES = ['https://muse.ai/*', 'https://*.muse.ai/*'];
+// v1.10.0 — the Codex (chatgpt.com) engine's tabs; nudged alongside the muse.ai set.
+const CHATGPT_TAB_MATCHES = ['https://chatgpt.com/*', 'https://*.chatgpt.com/*'];
+const SWEEP_TAB_MATCHES = MUSE_TAB_MATCHES.concat(CHATGPT_TAB_MATCHES);
 
 const PAUSE_TOGGLE_MS = 15 * 60 * 1000; // Alt+Shift+P: 15 minutes, or clear
 const PAUSE_BADGE_TEXT = '||';
@@ -26,7 +34,9 @@ const DIGEST_NOTIFICATION_ID = 'maa-digest';
 const DIGEST_ICON = 'icons/icon128.png';
 // The mirrored settings subset (frozen contract): syncSettings itself is deliberately NOT
 // mirrored — it is a per-device opt-in. followupRotateIdx is device-local too.
-const SYNC_SUBSET = ['enabled', 'minDelayMs', 'dryRun', 'yoloMode', 'allowOnceMode', 'rules',
+// v1.10.0: codexEnabled (the Codex/ChatGPT feature switch) joins the subset — it is an
+// explicit user choice, like yoloMode, and only travels while syncSettings is opted in.
+const SYNC_SUBSET = ['enabled', 'minDelayMs', 'dryRun', 'yoloMode', 'allowOnceMode', 'codexEnabled', 'rules',
   'followupEnabled', 'followupPrompt', 'followupPrompts', 'followupChips', 'followupSmart', 'followupSchedule'];
 const SYNC_ITEM_MAX_BYTES = 8192; // chrome.storage.sync QUOTA_BYTES_PER_ITEM — BYTES (UTF-8), not code units
 
@@ -49,7 +59,7 @@ function ensureAlarm() {
 const SCHEMA_VERSION = 2;
 async function migrate() {
   try {
-    const raw = await chrome.storage.local.get(['schemaVersion', 'enabled', 'minDelayMs', 'dryRun', 'yoloMode']);
+    const raw = await chrome.storage.local.get(['schemaVersion', 'enabled', 'minDelayMs', 'dryRun', 'yoloMode', 'codexEnabled']);
     const from = Number(raw.schemaVersion) || 0;
     if (from >= SCHEMA_VERSION) return;
     const seed = {};
@@ -71,6 +81,10 @@ async function migrate() {
     // stored choice is never overwritten. A fresh install records the explicit false so the
     // popup toggle and the engine agree from the first run.
     if (!('yoloMode' in raw)) seed.yoloMode = false;
+    // v1.10.0 — the Codex (chatgpt.com) feature switch: ABSENT only. The shipped default is
+    // false (opt-in, off) — a fresh install records the explicit false so the popup switch,
+    // the content script's reader and the sync subset all agree from the first run.
+    if (!('codexEnabled' in raw)) seed.codexEnabled = false;
     // v0 -> v2: log/counter/aggregate shapes are read defensively everywhere; there is
     // nothing to transform. Future steps: add one `if (from < N)` block per version.
     // v1.8.0 keys (pauseUntil/rules/followupSmart/followupSchedule/syncSettings) are
@@ -268,14 +282,16 @@ chrome.alarms.onAlarm.addListener((a) => {
   if (a.name === PAUSE_ALARM) { updateBadge(); return; }
   if (a.name !== 'muse-sweep') return;
   updateBadge(); // pause expiry also lands within a minute if the one-shot alarm was lost
-  chrome.tabs.query({ url: ['https://muse.ai/*', 'https://*.muse.ai/*'] }, (tabs) => {
+  // v1.10.0: the sweep reaches muse.ai AND chatgpt.com tabs (the latter only acts when
+  // the user enabled the Codex engine — the content script self-gates).
+  chrome.tabs.query({ url: SWEEP_TAB_MATCHES }, (tabs) => {
     for (const t of tabs) nudge(t.id);
   });
 });
 
-// Proactive detection: as soon as a muse.ai page finishes loading, sweep it.
+// Proactive detection: as soon as a muse.ai (or chatgpt.com) page finishes loading, sweep it.
 chrome.tabs.onUpdated.addListener((tabId, info, tab) => {
-  if (info && info.status === 'complete' && tab && tab.url && MUSE_URL_RE.test(tab.url)) nudge(tabId);
+  if (info && info.status === 'complete' && tab && tab.url && (MUSE_URL_RE.test(tab.url) || CHATGPT_URL_RE.test(tab.url))) nudge(tabId);
 });
 
 chrome.storage.onChanged.addListener((ch, area) => {

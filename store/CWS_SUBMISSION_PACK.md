@@ -10,6 +10,14 @@ version currently in `extension/manifest.json` and the `dist/` zip built from it
 > **[OWNER]** marks steps that need the owner's Google account, payment, or a human
 > decision. Everything else is prepared here.
 
+> **Current freeze: v1.10.0 (2026-10-18).** The copy below was updated where the
+> v1.10.0 feature set changed it: §1 single purpose + supporting sentence (now names
+> both scopes), §2 host justifications (muse.ai + the opt-in chatgpt.com scope, per
+> engine), §3.4 reviewer note (same rewrite as `store/LISTING.md` §7.4), §5 listing
+> table note, §6 pitfalls row, §7 checklist. Freeze records that still read `1.9.3`
+> are historical addenda kept for traceability; the effectives are in the v1.10.0
+> items below.
+
 ---
 
 ## 0. Preconditions (owner, one-time)
@@ -41,13 +49,15 @@ Source: <https://developer.chrome.com/docs/webstore/cws-dashboard-privacy#state_
 
 **Paste (verbatim from `store/LISTING.md` §4):**
 
-> Muse Auto-Allow automatically clicks the **Allow** button on approval requests
-> displayed by Muse (muse.ai) in the user's own browser, so the user's Muse agent runs
-> without stopping for manual approvals.
+> Muse Auto-Allow automatically clicks the **Allow** button (and, on chatgpt.com, the
+> affirmative option on Codex approval requests) displayed by the user's own agent UI
+> in the user's own browser, so the user's agent runs without stopping for manual
+> approvals.
 
 Supporting sentence (same source): every part of the extension serves this one
 purpose — it does not browse the web for the user, does not modify, collect, or
-transmit page content, and does not interact with any site other than muse.ai.
+transmit page content, and does not interact with any site other than muse.ai — and,
+while the user has the opt-in Codex (ChatGPT) switch on, chatgpt.com.
 
 ---
 
@@ -60,15 +70,17 @@ Sources: <https://developer.chrome.com/docs/webstore/cws-dashboard-privacy#list_
 <https://developer.chrome.com/docs/webstore/program-policies/permissions> ("Use of
 Permissions": request the *narrowest* permissions necessary; no future-proofing).
 
-Verified against `extension/manifest.json` (frozen v1.9.3 tree, freeze commit `a13689a`, 2026-10-12):
+Verified against `extension/manifest.json` (working tree as of the **v1.10.0 freeze**, 2026-10-18):
 `permissions: ["storage", "alarms", "notifications"]`; `commands: { toggle-pause
 (Alt+Shift+P), send-followup (Alt+Shift+F) }`; `host_permissions: ["https://muse.ai/*",
-"https://*.muse.ai/*"]`. Nothing else is declared — exactly what the current feature set
+"https://*.muse.ai/*", "https://chatgpt.com/*", "https://*.chatgpt.com/*"]`. Nothing else
+is declared — exactly what the current feature set
 (v1.8 pause, dry-run, rules, smart/scheduled follow-ups, digest, optional settings sync,
-onboarding; v1.9 Mission Orchestrator; v1.9.3 first-run logging-only default) requires, and
+onboarding; v1.9 Mission Orchestrator; v1.9.3 first-run logging-only default; v1.10.0
+Codex (ChatGPT) engine, opt-in, off by default) requires, and
 `scripts/lint.mjs` fails on any added permission.
-*(`manifest.version` reads `1.9.3` on the frozen tree — the release freeze has
-happened; the package is `dist/muse-auto-allow-v1.9.3.zip`. This section matches the
+*(`manifest.version` reads `1.10.0` on the working tree — the release freeze is in
+progress; the package is `dist/muse-auto-allow-v1.10.0.zip`. This section matches the
 frozen package; it has not been uploaded to the Chrome Web Store — no CWS review, no
 store publish.)*
 
@@ -118,16 +130,24 @@ approvals can appear in background tabs while the user is elsewhere, so the exte
 must be able to act without the user actively clicking the toolbar icon. No other site
 is requested.
 
+### Host permission — `https://chatgpt.com/*` and `https://*.chatgpt.com/*` (v1.10.0)
+
+Required to run the Codex (ChatGPT) content script that detects and clicks the
+affirmative option on Codex approval requests on chatgpt.com — used **only** while the
+user has turned on the opt-in Codex switch (off by default; with it off the script
+reads settings and does nothing). Same background-tab rationale as the Muse host
+permission. No other site is requested.
+
 **Deliberately NOT requested** (state this in the reviewer note): no `tabs`, no
 `scripting`, no `webRequest`, no `<all_urls>`, no `cookies`, no `downloads`. The
 extension needs none of them.
 
 **Integrity guard:** `scripts/lint.mjs` fails on any manifest permission outside the
-`storage`/`alarms`/`notifications` allowlist, any host set other than the two muse.ai
-patterns, or a missing explicit `extension_pages` CSP — so the packaged manifest can
-never silently drift from these answers. (Allowlist verified in the working tree,
-freeze commit `a13689a`, 2026-10-12, lint exit 0 — the allowlist is unchanged since the
-v1.8 lane and still matches the frozen v1.9.3 manifest.)
+`storage`/`alarms`/`notifications` allowlist, any host set other than the pinned
+muse.ai + chatgpt.com patterns, or a missing explicit `extension_pages` CSP — so the
+packaged manifest can never silently drift from these answers. (Allowlist verified in
+the working tree; as of the v1.10.0 freeze the gate also pins the two host sets and
+the per-engine `content_scripts` matches — lint exit 0.)
 
 ---
 
@@ -206,20 +226,28 @@ Source: <https://developer.chrome.com/docs/webstore/cws-dashboard-privacy#set-pr
 ### 3.4 Reviewer note (where the form offers notes to reviewers)
 
 ```text
-Muse Auto-Allow has a single purpose: on muse.ai pages only, it auto-clicks the
-"Allow" button on Muse's own approval-request UI so the user's Muse agent does not
-stop for manual approvals. It calls no remote servers, contains no remote code, and
-sends no data to the developer. Settings, a local last-50 click log and compact click
-statistics live in chrome.storage.local. The optional "Sync settings" feature is off
-by default; when enabled it mirrors a settings-only subset through Chrome's built-in
-sync into the user's own Google Account (never logs or statistics). It never clicks
-Deny/Reject/Decline and never clicks lone "Allow" permission banners. Permissions:
-storage (local settings + log; optional settings sync), alarms (once-a-minute check so
-background-tab approvals are handled), notifications (show the locally-composed
-activity digest), host permission muse.ai (detect/click the Allow button). Keyboard
-shortcuts (commands: Alt+Shift+P pause, Alt+Shift+F follow-up) need no extra
+Muse Auto-Allow has a single purpose: on muse.ai pages it auto-clicks the "Allow"
+button on Muse's own approval-request UI, and — only while the user has turned on the
+separate opt-in Codex (ChatGPT) switch (off by default) — it clicks the affirmative
+option ("Yes, proceed"/"Allow"/"Approve") on Codex approval requests on chatgpt.com,
+so the user's agent does not stop for manual approvals. It calls no remote servers,
+contains no remote code, and sends no data to the developer. Settings, a local
+last-50 click log and compact click statistics live in chrome.storage.local. The
+optional "Sync settings" feature is off by default; when enabled it mirrors a
+settings-only subset through Chrome's built-in sync into the user's own Google Account
+(never logs or statistics). It never clicks Deny/Reject/Decline, never clicks lone
+"Allow" permission banners, and never touches auth/connector surfaces (Connect,
+Authorize, API key) — those stay manual. Permissions: storage (local settings + log;
+optional settings sync), alarms (once-a-minute check so background-tab approvals are
+handled), notifications (show the locally-composed activity digest), host permissions
+muse.ai and chatgpt.com (detect/click the approval options on those two sites only).
+Keyboard shortcuts (commands: Alt+Shift+P pause, Alt+Shift+F follow-up) need no extra
 permission. See https://blueskyz-labs.github.io/muse-auto-allow/privacy.html.
 ```
+
+> Identical to `store/LISTING.md` §7.4 (v1.10.0 rewrite). The privacy-policy URL is
+> filled and `store/PRIVACY.md` covers the chatgpt.com scope since the v1.10.0 pass
+> (log kinds, host table, OpenAI trademark footer).
 
 > The reviewer-facing equivalent of this pack's §5.2 walkthrough can go in the
 > **Test instructions** tab — see §5.2 for when that tab is useful.
@@ -233,8 +261,8 @@ Dashboard reference: <https://developer.chrome.com/docs/webstore/cws-dashboard-l
 | Field | Value (from this repo) | Official limit / requirement | Source |
 |---|---|---|---|
 | Item name | "Muse Auto-Allow" — resolved from manifest `name` = `__MSG_extName__` (`extension/_locales/en/messages.json`); 15 characters | Manifest `name` is "a short, plain text string (maximum of **75 characters**)". Note: older guides still cite a legacy 45-character store limit — this name satisfies both. Keep listing names consistent across locales. | [manifest/name](https://developer.chrome.com/docs/extensions/reference/manifest/name) · [prepare](https://developer.chrome.com/docs/webstore/prepare) |
-| Short description | EN: "Auto-click Allow on Muse (muse.ai) approvals so your agent keeps running. Starts in logging-only mode; local-only; optional sync." (129 chars; all 6 localized variants in `LISTING.md` §1 — recounted 2026-10-12: vi 130, zh_CN 75, ja 92, ko 106, es 128, all ≤132) | **≤ 132 characters** — "A string of no more than 132 characters"; "Your summary … (132 characters or less)". | [prepare](https://developer.chrome.com/docs/webstore/prepare) · [best-listing](https://developer.chrome.com/docs/webstore/best-listing) |
-| Detailed description | Per locale, from `store/LISTING.md` §2 (en, vi, zh_CN, ja, ko, es). All six carry the current feature set including the v1.9 Mission Orchestrator and the v1.9.1 experience work (missions with live progress and pause, faster reaction, exact refusal/blocked reasons, keyboard/assistive-tech support); the five localized descriptions were refreshed for the v1.9.1 packet and use the same in-product wording as `extension/_locales/*/messages.json`. At v1.9.3 all six detailed descriptions state the fresh-install logging-only start in their dry-run bullet, and every short description carries the "Starts in logging-only mode" clause (`LISTING.md` §1). The localized privacy lines carry the sync disclosure. | No numeric limit is published in the official docs (the dashboard enforces its own bound at entry); keep it accurate, concise, and free of keyword stuffing. | [cws-dashboard-listing](https://developer.chrome.com/docs/webstore/cws-dashboard-listing) · [spam FAQ](https://developer.chrome.com/docs/webstore/program-policies/spam-faq#keyword-spam) |
+| Short description | EN: "Auto-click Allow on Muse (muse.ai) and Codex (chatgpt.com) approvals. Starts in logging-only mode; local-only." (110 chars; all 6 localized variants in `LISTING.md` §1 — recounted at the v1.10.0 freeze 2026-10-18: vi 116, zh_CN 69, ja 75, ko 85, es 118, all ≤132) | **≤ 132 characters** — "A string of no more than 132 characters"; "Your summary … (132 characters or less)". | [prepare](https://developer.chrome.com/docs/webstore/prepare) · [best-listing](https://developer.chrome.com/docs/webstore/best-listing) |
+| Detailed description | Per locale, from `store/LISTING.md` §2 (en, vi, zh_CN, ja, ko, es). The **en** description covers the v1.10.0 feature set end to end (including the Codex (ChatGPT) switch bullets); the five localized descriptions keep the Muse feature set from the v1.9.1/v1.9.3 packets and their closing scope line now names both scopes — **refresh their feature bodies before Submit** (`LISTING.md` §2 carries the same TODO). All six short descriptions name both scopes and were recounted at the v1.10.0 freeze (en 110 / vi 116 / zh_CN 69 / ja 75 / ko 85 / es 118, limit 132). The localized privacy lines carry the sync disclosure. | No numeric limit is published in the official docs (the dashboard enforces its own bound at entry); keep it accurate, concise, and free of keyword stuffing. | [cws-dashboard-listing](https://developer.chrome.com/docs/webstore/cws-dashboard-listing) · [spam FAQ](https://developer.chrome.com/docs/webstore/program-policies/spam-faq#keyword-spam) |
 | Category | **Productivity** (one primary category; rationale in `LISTING.md` §3) | "The primary category under which your item should be listed." | [cws-dashboard-listing](https://developer.chrome.com/docs/webstore/cws-dashboard-listing) |
 | Language(s) | Default English (en); localized listings for vi, zh_CN, ja, ko, es (copy in `LISTING.md`) | "Your item's language"; localized listings use the extension's `_locales` set. | [cws-dashboard-listing#localize_your_listing](https://developer.chrome.com/docs/webstore/cws-dashboard-listing#localize_your_listing) |
 | Homepage / support URL | `https://github.com/BlueSkyz-Labs/muse-auto-allow` (`LISTING.md` §1/§9) | Optional fields; appear on the listing. | [cws-dashboard-listing#additional-fields](https://developer.chrome.com/docs/webstore/cws-dashboard-listing#additional-fields) |
@@ -347,8 +375,8 @@ notification IDs) · <https://developer.chrome.com/docs/webstore/program-policie
 
 | Common cause (official category) | Why this submission is clear |
 |---|---|
-| **No / vague single purpose** | §1 statement names the exact site (muse.ai) and the exact action (click Allow on approval requests); every feature in the package serves it. |
-| **Broader permissions than needed / unused permissions** | Only `storage`, `alarms`, `notifications`, and the muse.ai hosts are requested, each justified in §2 (`commands` is a manifest key, not a permission). The lint gate fails on any added permission. "Use of Permissions" policy: narrowest permissions only. |
+| **No / vague single purpose** | §1 statement names the exact sites (muse.ai, and the opt-in chatgpt.com scope) and the exact actions (click Allow / the affirmative option on approval requests); every feature in the package serves it. |
+| **Broader permissions than needed / unused permissions** | Only `storage`, `alarms`, `notifications`, and the two pinned host sets (muse.ai + opt-in chatgpt.com) are requested, each justified in §2 (`commands` is a manifest key, not a permission). The lint gate fails on any added permission. "Use of Permissions" policy: narrowest permissions only. |
 | **Remote code in MV3** (Blue Argon) | None — bundled JS only; no `eval`/`new Function`/external scripts/network calls (lint-enforced); declared "No remote code" in §3.1. |
 | **Obfuscated code** (Red Titanium) | The package ships as-authored, unminified source — "Developers must not obfuscate code or conceal functionality"; submitting code "as authored" also shortens review time. Sources: [code-readability](https://developer.chrome.com/docs/webstore/program-policies/code-readability) · [review-process](https://developer.chrome.com/docs/webstore/review-process). |
 | **Inaccurate / misleading metadata** (Listing Requirements) | Listing copy describes exactly what the code does; screenshots are real captures of the extension (or designed overviews with fictional data); no overclaiming, no security-bypass promises. |
@@ -417,8 +445,9 @@ Source: <https://developer.chrome.com/docs/webstore/review-process#warning>
 - [x] **Zip built + verified + attached to the GitHub Release** — the `v1.9.3` Release exists with the zip + `.sha256` sidecar (releases also exist for v1.8.0 / v1.9.0 / v1.9.1 / v1.9.2). Frozen artifact: `dist/muse-auto-allow-v1.9.3.zip`, 185,014 bytes, 18 entries, sha256 `e3dd7703b85fffd9ad5b78a8b353c90929f4b87487f3d9dc932fdb2c5f140326`; `python scripts/verify-zip.py` → 18 matched / 0 mismatched (exit 0) at the freeze.
 - [x] **Screenshots regenerated** — `store/screenshot1.png` (real runtime capture), `screenshot2-stats.png` (Statistics), `screenshot3-popup.png` (popup stage) are the current captures; `screenshot4-overview.png` is the **designed overview** (a rendered composition, not a runtime capture). Verified in this pass: all five screenshots + promo + marquee present and exact-spec by PNG header (1280×800 / 440×280 / 1400×560); `store/screenshot5-safety.png` (the first-run safety step, captured with `node scripts/store-shot.mjs --safety`) was additionally reviewed deterministically — a pixel census confirms the approval-card Allow buttons render and the card panel is complete (vision passes disagreed with each other on the same asset and are not a gate; see the benchmark report's methodology note). **Not verified here:** whether screenshot1/2/3/4 show the current build pixel-for-pixel — give them one human look against the frozen build before upload.
 - [x] **Muse ToS check done** — `docs/MUSE_TOS_RESEARCH.md` records the reading: **MEDIUM** tension (the Muse ToS oversight clause asks for "meaningful human oversight"; no clause explicitly bans extensions or UI auto-clicking). Findings only, not legal advice — the **owner/legal decision remains** before a public launch.
-- [ ] **Owner items (cannot be done from the repo):** (a) confirm the publisher display name in the dashboard; (b) fill the support email — the only `TODO: fill before submit` left in `store/LISTING.md` (plus the policy dates/contact in `store/PRIVACY.md`); (c) complete CWS developer-account 2-Step Verification (and the one-time registration fee if not yet paid); (d) hash-verify before upload — run `sha256sum -c dist/muse-auto-allow-v1.9.3.zip.sha256` and `python scripts/verify-zip.py` (both exit 0) immediately before uploading the zip to the CWS.
-- [x] **§2 re-verified against the frozen package** — §2 matches the frozen `extension/manifest.json` at freeze commit `a13689a` (`manifest.version` reads `1.9.3`; permissions `storage`/`alarms`/`notifications`; muse.ai-only hosts; `commands` `toggle-pause`/`send-followup`); the package is `dist/muse-auto-allow-v1.9.3.zip`.
+- [ ] **Owner items (cannot be done from the repo):** (a) confirm the publisher display name in the dashboard; (b) fill the support email — the only `TODO: fill before submit` left in `store/LISTING.md` (plus the policy dates/contact in `store/PRIVACY.md`); (c) complete CWS developer-account 2-Step Verification (and the one-time registration fee if not yet paid); (d) hash-verify before upload — run `sha256sum -c dist/muse-auto-allow-v1.10.0.zip.sha256` and `python scripts/verify-zip.py` (both exit 0) immediately before uploading the zip to the CWS.
+- [ ] **v1.10.0 freeze items (2026-10-18):** (a) build + verify the v1.10.0 artifact — `node scripts/build.mjs` + `python scripts/verify-zip.py` (expect 19 matched / 0 mismatched), then attach it to the `v1.10.0` GitHub Release with its `.sha256` sidecar; (b) refresh the five localized detailed descriptions in `store/LISTING.md` §2 (they still describe the Muse feature set only — their closing scope line already names both scopes); (c) regenerate the popup-bearing store screenshots (`screenshot1` real runtime, `screenshot3-popup` stage) at the v1.10.0 layout (the current captures predate the Codex switch row); (d) run through §1's paste blocks once more before Submit — the single-purpose/reviewer-note/justification copy was rewritten this freeze.
+- [x] **§2 re-verified against the frozen package** — §2 matches the frozen `extension/manifest.json` at freeze commit `a13689a` (`manifest.version` reads `1.9.3`; permissions `storage`/`alarms`/`notifications`; muse.ai-only hosts; `commands` `toggle-pause`/`send-followup`); the package is `dist/muse-auto-allow-v1.9.3.zip`. *(Historical — superseded by the v1.10.0 freeze items §7 above: the v1.10.0 §2 re-verification is the updated "Verified against `extension/manifest.json` (working tree as of the v1.10.0 freeze)" block in §2 itself.)*
 
 ---
 

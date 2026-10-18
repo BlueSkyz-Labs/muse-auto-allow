@@ -4,7 +4,7 @@ Step-by-step launch and update procedure. Steps marked **[MANUAL/owner]** requir
 with the Google account and payment; everything else can be done from the repo.
 
 **One-line flow:** register developer account → `node scripts/build.mjs` +
-`python scripts/verify-zip.py` → upload `dist/muse-auto-allow-v1.9.3.zip` → fill every
+`python scripts/verify-zip.py` → upload `dist/muse-auto-allow-v1.10.0.zip` → fill every
 dashboard tab → submit → wait for review → publish → for updates: bump version →
 rebuild + verify zip → upload → resubmit.
 
@@ -30,7 +30,7 @@ rebuild + verify zip → upload → resubmit.
 
 ## Step 2 — Build, verify, and upload the package
 
-1. Confirm the version in `extension/manifest.json` is correct (currently `1.9.3`).
+1. Confirm the version in `extension/manifest.json` is correct (currently `1.10.0`).
 2. **Lint gate (mandatory, zero-dependency).** Run from the repo root:
 
    ```bash
@@ -41,14 +41,15 @@ rebuild + verify zip → upload → resubmit.
    JSON validity (manifest + all locales), i18n key parity across the 6 locales, no remote
    code / network primitives (`eval`, `new Function`, `fetch`, `XMLHttpRequest`, remote
    `<script src>`, stray `alert` outside popup/stats), and manifest hygiene (MV3, minimal
-   permission allowlist, `__MSG_` name, pinned muse.ai host set, explicit CSP).
+   permission allowlist, `__MSG_` name, the two pinned host sets — muse.ai + chatgpt.com —
+   with per-engine `content_scripts` matches, and the shared `BLOCK_SEED` lockstep, explicit CSP).
 3. Build the store zip from the repo root:
 
    ```bash
    node scripts/build.mjs
    ```
 
-   Output: `dist/muse-auto-allow-v1.9.3.zip` with `manifest.json` at the **zip root**
+   Output: `dist/muse-auto-allow-v1.10.0.zip` with `manifest.json` at the **zip root**
    (not nested inside a folder). The build fails closed if the zip does not mirror the
    whole `extension/` tree (exit 3 = file missing from the zip, exit 4 = unexpected file
    in the zip).
@@ -60,11 +61,11 @@ rebuild + verify zip → upload → resubmit.
 
    It checks every zip entry against the on-disk file (sha-identical bytes) and exits
    non-zero on any mismatch, missing file, or extra file. Expected output for this
-   release: `muse-auto-allow-v1.9.3.zip: 18 matched, 0 mismatched, 0 disk-only, 0
+   release: `muse-auto-allow-v1.10.0.zip: 19 matched, 0 mismatched, 0 disk-only, 0
    zip-only` and exit 0. **Do not upload a zip that fails this check.**
 5. In the Developer Dashboard, click **New item** (first release) or open the existing
    item (for updates).
-6. **Upload** `dist/muse-auto-allow-v1.9.3.zip`.
+6. **Upload** `dist/muse-auto-allow-v1.10.0.zip`.
 7. Wait for the dashboard to parse the manifest. It will read the name/description from
    `__MSG_*__` keys resolved against `_locales/en/messages.json`; verify the default
    locale resolves cleanly (no blank name).
@@ -148,7 +149,7 @@ Work through all tabs before submitting; an incomplete listing cannot be submitt
 ## Step 5 — Post-publish update flow
 
 1. Make the code change in `extension/`.
-2. **Bump the version** in `extension/manifest.json` (e.g. `1.9.3` → `1.9.4`); Chrome
+2. **Bump the version** in `extension/manifest.json` (e.g. `1.10.0` → `1.10.1`); Chrome
    rejects a re-upload with a version number that is not higher than the published one.
 3. Rebuild:
 
@@ -156,8 +157,8 @@ Work through all tabs before submitting; an incomplete listing cannot be submitt
    node scripts/build.mjs
    ```
 
-   Output: `dist/muse-auto-allow-v<new version>.zip` (after a bump from 1.9.3, e.g. `muse-auto-allow-v1.9.4.zip`).
-4. **Verify:** `python scripts/verify-zip.py` — must report 18 matched / 0 mismatched /
+   Output: `dist/muse-auto-allow-v<new version>.zip` (after a bump from 1.10.0, e.g. `muse-auto-allow-v1.10.1.zip`).
+4. **Verify:** `python scripts/verify-zip.py` — must report 19 matched / 0 mismatched /
    0 disk-only / 0 zip-only (exit 0) before uploading (same mandatory check as Step 2).
 5. In the dashboard, open the item → **Package** → **Upload new package** → select the new
    zip.
@@ -172,12 +173,12 @@ Work through all tabs before submitting; an incomplete listing cannot be submitt
 
 | Pitfall | How this extension stays clear of it |
 |---|---|
-| Requesting broad host permissions or `<all_urls>` | Only `https://muse.ai/*` and `https://*.muse.ai/*` are requested, and only to click the Allow button. |
+| Requesting broad host permissions or `<all_urls>` | Only `https://muse.ai/*` + `https://*.muse.ai/*` (Muse engine) and `https://chatgpt.com/*` + `https://*.chatgpt.com/*` (Codex engine, opt-in, off by default) are requested — each to click the affirmative option on that site's own approval cards. |
 | Unused or unjustified permissions | Only `storage` and `alarms` are used; each is justified in the listing. No `tabs`/`scripting`/`webRequest`/`cookies`. |
 | Remote code | None. All JS is bundled; no `eval`, no external scripts, no network calls. |
-| Vague or misleading single purpose | The single-purpose statement names the exact site and action. |
+| Vague or misleading single purpose | The single-purpose statement names the exact sites and actions. |
 | Privacy disclosure mismatch | The extension collects/transmits nothing; the privacy answers and policy say exactly that. |
-| Promising to bypass security or restrictions | The listing never claims to bypass any security control. It only clicks Muse's own "Allow" button on the user's behalf, and it never clicks Deny/Reject/Decline. |
+| Promising to bypass security or restrictions | The listing never claims to bypass any security control. It only clicks Muse's own "Allow" button (and, with the opt-in Codex switch on, the affirmative option on Codex's own approval cards on chatgpt.com) on the user's behalf, and it never clicks Deny/Reject/Decline. |
 | Misleading screenshots | Screenshots must show the real Muse approval card with the popup open — no mockups implying extra capabilities. (Render real screenshots before submit.) |
 | Automating a site against its terms | The extension acts only within the user's own logged-in browser session on muse.ai; there is no server-side automation and no scraping. Confirm this reading against Muse's terms before launch — see the open item below. |
 | Missing or dead privacy policy link | Host `store/PRIVACY.md`, paste the public URL, and verify it loads before submitting. |
@@ -209,10 +210,23 @@ Work through all tabs before submitting; an incomplete listing cannot be submitt
       artifact `dist/muse-auto-allow-v1.9.3.zip` — 185,014 bytes, sha256
       `e3dd7703b85fffd9ad5b78a8b353c90929f4b87487f3d9dc932fdb2c5f140326`).
       Re-run both immediately before the CWS upload.
-- [x] `store/LISTING.md` reflects v1.9.3 (version/package references, the logging-only
-      first-run clause in all six short descriptions — recounted ≤132 — and the localized
-      descriptions) — refreshed at the v1.9.3 release freeze; re-check it
-      still matches if any later edit lands.
+- [x] `node scripts/build.mjs` **and** `python scripts/verify-zip.py` both exit 0 at the
+      v1.10.0 freeze (verify-zip **19 matched / 0 mismatched / 0 disk-only / 0 zip-only**;
+      artifact `dist/muse-auto-allow-v1.10.0.zip` — **202,680 bytes, 19 entries**, sha256
+      `144ef8ba1dca38b344db96275b2fc61643375a8fa7ab926af7b8555f61025316`; the entry list adds
+      `codex.js` to the 18 from v1.9.3). Re-run both immediately before the CWS upload.
+- [x] `store/LISTING.md` reflects v1.10.0 (version/package references, all six short
+      descriptions naming both scopes — recounted ≤132 — and the en detailed copy covering
+      the Codex switch). **Open sub-item:** the five localized detailed descriptions still
+      describe only the Muse feature set (their closing scope line was corrected) — refresh
+      them before CWS submission (also flagged in `store/LISTING.md` §2 and
+      `store/CWS_SUBMISSION_PACK.md`).
+- [ ] **Regenerate `store/screenshot3-popup.png` (and any popup-bearing capture such as
+      `store/screenshot1.png`) at the v1.10.0 freeze** so the captured popup shows the
+      v1.10.0 layout (the Codex (ChatGPT) switch in the Safety & Control panel + the
+      "Codex" chip, and the updated footer wording) — the current captures were rendered
+      before the feature existed. (Store-asset regeneration is a separate lane; see
+      `store/SHOWCASE.md`.)
 - [ ] Load the unpacked extension and scroll the four detection paths once (see
       `test/e2e.mjs`) so the shipped build matches the description. A fresh install starts
       in logging-only — turn live clicking on (one action) before checking live clicks.

@@ -255,6 +255,22 @@ try {
     }
     dryPhase.installerSeed = seeded; // fresh install => { dryRun: true, schemaVersion: 2 }
     dryStage = 'popup safety snapshot';
+    // The popup renders its stored state after an ASYNC boot (cold open→painted has been
+    // measured at ~0.5–0.9 s). Poll (bounded, 6 s) for the logging-only banner to render
+    // before snapshotting — otherwise this races the first storage read on slower hosts
+    // and reads the pre-boot defaults (banner hidden + Safety unchecked). The assertions
+    // are unchanged: after the bounded wait the banner must be visible or the phase fails.
+    const popDeadline = Date.now() + 6000;
+    let bannerReady = false;
+    while (Date.now() < popDeadline) {
+      try {
+        const rb = await peval(`JSON.stringify({ v: !document.getElementById('dryBand').hidden })`);
+        bannerReady = (JSON.parse(rb || '{}').v === true);
+      } catch { /* page may be mid-navigation between targets */ }
+      if (bannerReady) break;
+      await sleep(250);
+    }
+    dryPhase.bannerReadyAfterWait = bannerReady;
     dryPhase.popup = JSON.parse(await peval(`(() => {
       const band = document.getElementById('dryBand');
       document.getElementById('safetyBtn').click();

@@ -3,7 +3,7 @@
     "message": "Muse 自動承認"
   },
   "extDesc": {
-    "message": "Muse（muse.ai）の承認リクエストで「Allow」を自動クリック。オン/オフ切替とクリックログ付き、データはローカルのみ。"
+    "message": "Muse（muse.ai）と Codex（chatgpt.com）の承認リクエストで「Allow」を自動クリック。オン/オフ切替とクリックログ付き、データはローカルのみ。"
   },
   "toggleLabel": {
     "message": "Allow を自動クリック"
@@ -69,7 +69,7 @@
     "message": "muse.ai タブが見つかりません"
   },
   "onlyMuse": {
-    "message": "muse.ai でのみ動作します"
+    "message": "muse.ai と chatgpt.com で動作します"
   },
   "last7": {
     "message": "直近 7 日間"
@@ -493,5 +493,38 @@
   "missionFix": { "message": "指摘の修正" },
   "missionFixDesc": { "message": "未解決の指摘を最後まで修正し、証明してから突き合わせる。" },
   "missionRelease": { "message": "リリース準備" },
-  "missionReleaseDesc": { "message": "範囲を凍結し、成果物を検証し、パケットをまとめ、GO を判断。" }
+  "missionReleaseDesc": { "message": "範囲を凍結し、成果物を検証し、パケットをまとめ、GO を判断。" },
+  "codexTitle": {
+    "message": "Codex (ChatGPT)"
+  },
+  "codexToggle": {
+    "message": "Codex のリクエストを自動承認"
+  },
+  "codexHint": {
+    "message": "chatgpt.com のみ。Deny はクリックしません。常時許可は手動のままです。"
+  },
+  "codexChip": {
+    "message": "Codex"
+  },
+  "codexTabsFoundOne": {
+    "message": "chatgpt.com タブが 1 個開いています"
+  },
+  "codexTabsFound": {
+    "message": "chatgpt.com タブが $1 個開いています"
+  },
+  "codexTabsNone": {
+    "message": "chatgpt.com タブが見つかりません"
+  },
+  "kindCodexAllow": {
+    "message": "codex 許可"
+  },
+  "kindCodexExpand": {
+    "message": "codex 展開"
+  },
+  "kindCodexOpenPanel": {
+    "message": "codex パネル"
+  },
+  "kindCodexDry": {
+    "message": "codex（ドライ）"
+  }
 }

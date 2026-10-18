@@ -3,7 +3,7 @@
     "message": "Muse Auto-Allow"
   },
   "extDesc": {
-    "message": "Auto-clicks Allow on Muse (muse.ai) approval requests. On/off switch, click log, local-only."
+    "message": "Auto-clicks Allow on Muse (muse.ai) and Codex (chatgpt.com) approval requests. On/off switch, click log, local-only."
   },
   "toggleLabel": {
     "message": "Auto-click Allow"
@@ -69,7 +69,7 @@
     "message": "No muse.ai tab found"
   },
   "onlyMuse": {
-    "message": "Works only on muse.ai"
+    "message": "Works on muse.ai and chatgpt.com"
   },
   "last7": {
     "message": "Last 7 days"
@@ -493,5 +493,38 @@
   "missionFix": { "message": "FIX FINDINGS" },
   "missionFixDesc": { "message": "Fix open findings end-to-end, prove each fix, then reconcile." },
   "missionRelease": { "message": "RELEASE PREP" },
-  "missionReleaseDesc": { "message": "Freeze scope, verify the artifact, assemble the packet, decide GO." }
+  "missionReleaseDesc": { "message": "Freeze scope, verify the artifact, assemble the packet, decide GO." },
+  "codexTitle": {
+    "message": "Codex (ChatGPT)"
+  },
+  "codexToggle": {
+    "message": "Auto-approve Codex requests"
+  },
+  "codexHint": {
+    "message": "chatgpt.com only. Deny is never clicked; standing grants stay manual."
+  },
+  "codexChip": {
+    "message": "Codex"
+  },
+  "codexTabsFoundOne": {
+    "message": "1 chatgpt.com tab open"
+  },
+  "codexTabsFound": {
+    "message": "$1 chatgpt.com tabs open"
+  },
+  "codexTabsNone": {
+    "message": "No chatgpt.com tab found"
+  },
+  "kindCodexAllow": {
+    "message": "codex allow"
+  },
+  "kindCodexExpand": {
+    "message": "codex expand"
+  },
+  "kindCodexOpenPanel": {
+    "message": "codex panel"
+  },
+  "kindCodexDry": {
+    "message": "codex (dry)"
+  }
 }

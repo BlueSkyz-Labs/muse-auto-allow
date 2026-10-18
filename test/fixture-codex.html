@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Codex (ChatGPT) approvals fixture</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: #101112; color: #eee; padding: 24px; }
+  .card { border: 1px solid #333; border-radius: 12px; padding: 16px; margin: 12px 0; background: #191a1c; }
+  button { padding: 8px 18px; border-radius: 999px; border: 0; margin-right: 8px; font-size: 14px; cursor: pointer; }
+  .pos { background: #2f6df6; color: #fff; }
+  .neg { background: #333; color: #ddd; }
+  .pending { background: #1b2438; color: #cfe1ff; text-align: left; border-radius: 10px; }
+</style>
+</head>
+<body>
+<h2>Codex approval shapes — synthetic fixture (no real chatgpt.com markup)</h2>
+
+<!-- EXPECTED: classic affirmative/negative pair (app action approval) -->
+<div class="card" id="card1">
+  <p>Codex wants to run a command: npm test</p>
+  <div class="row">
+    <button type="button" class="pos" id="c1a">Allow</button>
+    <button type="button" class="neg" id="c1d">Deny</button>
+  </div>
+</div>
+
+<!-- EXPECTED (only "Yes, proceed"): the shipped Codex trio — the standing grant and the
+     negative must never be clicked by default -->
+<div class="card" id="card1t">
+  <p>Codex wants to run a command outside the workspace: npm ci &amp;&amp; npm run build</p>
+  <div class="row">
+    <button type="button" class="pos" id="c1tP">Yes, proceed</button>
+    <button type="button" class="pos" id="c1tS">Yes, and don&#39;t ask again for this command in this session</button>
+    <button type="button" class="neg" id="c1tN">No, and tell Codex what to do differently</button>
+  </div>
+</div>
+
+<!-- EXPECTED: plain Approve pair -->
+<div class="card" id="card5">
+  <p>Approve this plan to continue?</p>
+  <div class="row">
+    <button type="button" class="pos" id="c5a">Approve</button>
+    <button type="button" class="neg" id="c5d">Decline</button>
+  </div>
+</div>
+
+<!-- EXPECTED: Allow + Reject (reject is the negative counterpart) -->
+<div class="card" id="card6">
+  <p>GitHub push requested</p>
+  <div class="row">
+    <button type="button" class="pos" id="c6a">Allow</button>
+    <button type="button" class="neg" id="c6d">Reject</button>
+  </div>
+</div>
+
+<!-- EXPECTED: Allow + "Not now" (a negative wording variant) -->
+<div class="card" id="cardnow">
+  <p>Network access requested</p>
+  <div class="row">
+    <button type="button" class="pos" id="cnowa">Allow</button>
+    <button type="button" class="neg" id="cnowd">Not now</button>
+  </div>
+</div>
+
+<!-- EXPECTED over TWO steps: collapsed pending card expands (c3pending), the revealed pair
+     is approved on the next sweep (c3) -->
+<button type="button" id="c3pending" class="pending">Allow Codex to run the project test suite? The command leaves the sandbox once.</button>
+
+<!-- EXPECTED over TWO steps: review bar opens the panel (cbar), the revealed pair is
+     approved (cbar2) -->
+<div id="barwrap" class="card">
+  <span>A task needs your approval</span>
+  <button type="button" id="cbarBtn">Review</button>
+</div>
+<div class="card" id="cbar2card" style="display:none">
+  <p>Bar-opened approval</p>
+  <div class="row">
+    <button type="button" class="pos" id="cbar2a">Allow</button>
+    <button type="button" class="neg" id="cbar2d">Deny</button>
+  </div>
+</div>
+
+<!-- EXPECTED once / dedup: clicking Allow replaces the card with an IDENTICAL one (new
+     nodes, same text) — the fingerprint dedup must hold it to ONE click in the 5s window -->
+<div class="card" id="card7">
+  <p>Dedup probe request</p>
+  <div class="row">
+    <button type="button" class="pos" id="c7a">Allow</button>
+    <button type="button" class="neg" id="c7d">Deny</button>
+  </div>
+</div>
+
+<!-- negative controls: must NEVER be clicked -->
+<p><button type="button" class="pos" id="lone">Allow</button></p>
+
+<div class="card" id="carddis">
+  <p>Disabled negative probe</p>
+  <div class="row">
+    <button type="button" class="pos" id="cdisa">Allow</button>
+    <button type="button" class="neg" id="cdisd" disabled>Deny</button>
+  </div>
+</div>
+
+<div class="card" id="cardsplit">
+  <p>Split container probe</p>
+  <div class="row"><button type="button" class="pos" id="csplita">Allow</button></div>
+  <div class="row"><button type="button" class="neg" id="csplitd">Deny</button></div>
+</div>
+
+<div class="card" id="cardanchor">
+  <p>Anchor probe</p>
+  <div class="row">
+    <a href="#noop"><button type="button" class="pos" id="canchora">Allow</button></a>
+    <button type="button" class="neg" id="canchord">Deny</button>
+  </div>
+</div>
+
+<!-- consent wording wins over approval wording (fail closed) -->
+<div class="card" id="cardnotif">
+  <p>Allow notifications about finished Codex tasks?</p>
+  <div class="row">
+    <button type="button" class="pos" id="cnotifa">Allow</button>
+    <button type="button" class="neg" id="cnotifd">Deny</button>
+  </div>
+</div>
+
+<!-- auth/connector surface: the WHOLE container is hard-blocked — Connect, the inner Allow
+     and the inner Deny all record the same forbidden id 'cauth' -->
+<div class="card" id="cardauth">
+  <p>Connect your GitHub account</p>
+  <p>Authorize ChatGPT to read and write repositories</p>
+  <button type="button" id="cauthc" style="display:block;width:100%">Connect</button>
+  <div class="row">
+    <button type="button" class="pos" id="cautha">Allow</button>
+    <button type="button" class="neg" id="cauthd">Deny</button>
+  </div>
+</div>
+
+<!-- standing-grant-only pair: silent by default; clicked ONLY with the explicit YOLO opt-in -->
+<div class="card" id="cardstanding">
+  <p>Repeated command in this session</p>
+  <div class="row">
+    <button type="button" class="pos" id="cstda">Always allow</button>
+    <button type="button" class="neg" id="cstdd">Deny</button>
+  </div>
+</div>
+
+<!-- keyword block: the card text carries a seed keyword ('delete') -> blocked by default;
+     clicked only with the explicit YOLO opt-in -->
+<div class="card" id="cardkw">
+  <p>Codex wants to delete the build folder: rm -rf dist</p>
+  <div class="row">
+    <button type="button" class="pos" id="ckwa">Yes, proceed</button>
+    <button type="button" class="neg" id="ckwd">No, keep waiting</button>
+  </div>
+</div>
+
+<!-- deny-only: nothing affirmative to click -->
+<div class="card" id="carddeny">
+  <p>Decision required</p>
+  <div class="row">
+    <button type="button" class="neg" id="cdeny1">Deny</button>
+    <button type="button" class="neg" id="cdeny2">No, provide feedback</button>
+  </div>
+</div>
+
+<!-- generic Review button without approval wording: the bar path must not fire -->
+<div id="plainreviewwrap" class="card">
+  <span>Review your changes</span>
+  <button type="button" id="plainreview">Review</button>
+</div>
+
+<script>
+window.__clicks = [];
+window.__errors = [];
+window.addEventListener('error', function (e) { window.__errors.push(String(e.message)); });
+function rec(n, extra) { window.__clicks.push(Object.assign({ n: String(n), t: Date.now() }, extra || {})); }
+
+function wire(id, aid, did, opts) {
+  opts = opts || {};
+  document.getElementById(aid).addEventListener('click', function () { rec(id, { allow: true }); if (opts.remove) { var c = document.getElementById(opts.remove); if (c) c.remove(); } });
+  document.getElementById(did).addEventListener('click', function () { rec(id, { deny: true }); if (opts.remove) { var c = document.getElementById(opts.remove); if (c) c.remove(); } });
+}
+wire('c1', 'c1a', 'c1d', { remove: 'card1' });
+// the trio: each button records its own id so any interaction is visible by name
+document.getElementById('c1tP').addEventListener('click', function () { rec('c1t', { allow: true }); });
+document.getElementById('c1tS').addEventListener('click', function () { rec('c1t-standing'); });
+document.getElementById('c1tN').addEventListener('click', function () { rec('c1t-deny', { deny: true }); });
+wire('c5', 'c5a', 'c5d', { remove: 'card5' });
+wire('c6', 'c6a', 'c6d', { remove: 'card6' });
+wire('cnow', 'cnowa', 'cnowd', { remove: 'cardnow' });
+
+// path E: expanding the collapsed pending card reveals the pair
+document.getElementById('c3pending').addEventListener('click', function () {
+  rec('c3pending');
+  var d = document.createElement('div');
+  d.className = 'card'; d.id = 'card3';
+  d.innerHTML = '<p>Expanded pending</p><div class="row">' +
+    '<button type="button" class="pos" id="c3a">Allow</button>' +
+    '<button type="button" class="neg" id="c3d">Deny</button></div>';
+  this.replaceWith(d);
+  wire('c3', 'c3a', 'c3d', { remove: 'card3' });
+});
+
+// path R: the review bar opens the panel and reveals a pair
+document.getElementById('cbarBtn').addEventListener('click', function () {
+  rec('cbar');
+  var c = document.getElementById('cbar2card');
+  if (c) { c.style.display = ''; }
+  wire('cbar2', 'cbar2a', 'cbar2d', { remove: 'cbar2card' });
+});
+
+// dedup probe: the first click replaces the card with an identical one (same ids)
+var replaced7 = false;
+function wire7() {
+  document.getElementById('c7a').addEventListener('click', function () {
+    rec('c7', { allow: true });
+    if (!replaced7) {
+      replaced7 = true;
+      var old = document.getElementById('card7');
+      var d = document.createElement('div');
+      d.className = 'card'; d.id = 'card7';
+      d.innerHTML = '<p>Dedup probe request</p><div class="row">' +
+        '<button type="button" class="pos" id="c7a">Allow</button>' +
+        '<button type="button" class="neg" id="c7d">Deny</button></div>';
+      old.replaceWith(d);
+      wire7();
+    } else {
+      var c = document.getElementById('card7'); if (c) c.remove();
+    }
+  });
+  document.getElementById('c7d').addEventListener('click', function () { rec('c7', { deny: true }); });
+}
+wire7();
+
+// negative controls
+document.getElementById('lone').addEventListener('click', function () { rec('lone', { allow: true }); });
+document.getElementById('cdisa').addEventListener('click', function () { rec('cdis', { allow: true }); });
+document.getElementById('csplita').addEventListener('click', function () { rec('csplit', { allow: true }); });
+document.getElementById('canchora').addEventListener('click', function () { rec('canchor', { allow: true }); });
+document.getElementById('cnotifa').addEventListener('click', function () { rec('cnotif', { allow: true }); });
+document.getElementById('cauthc').addEventListener('click', function () { rec('cauth'); });
+document.getElementById('cautha').addEventListener('click', function () { rec('cauth', { allow: true }); });
+document.getElementById('cauthd').addEventListener('click', function () { rec('cauth', { deny: true }); });
+// standing + keyword cards: forbidden by default, EXPECTED under the YOLO opt-in
+document.getElementById('cstda').addEventListener('click', function () { rec('standing', { allow: true }); });
+document.getElementById('cstdd').addEventListener('click', function () { rec('standing-deny', { deny: true }); });
+document.getElementById('ckwa').addEventListener('click', function () { rec('kw', { allow: true }); });
+document.getElementById('ckwd').addEventListener('click', function () { rec('kw-deny', { deny: true }); });
+document.getElementById('cdeny1').addEventListener('click', function () { rec('denyonly', { deny: true }); });
+document.getElementById('plainreview').addEventListener('click', function () { rec('plainreview'); });
+</script>
+</body>
+</html>

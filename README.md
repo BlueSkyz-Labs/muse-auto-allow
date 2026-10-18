@@ -10,13 +10,15 @@
 [![Chrome 116+](https://img.shields.io/badge/Chrome-116%2B-4285F4?logo=googlechrome&logoColor=white)](https://developer.chrome.com/docs/extensions/reference/manifest/minimum-chrome-version)
 [![Zero dependencies](https://img.shields.io/badge/dependencies-0-31A24C)](CONTRIBUTING.md)
 
-**Auto-accepts Muse approval cards — so your long-running agent keeps working while you're away.**
+**Auto-accepts Muse approval cards — and, with its own opt-in switch, Codex (ChatGPT) requests — so your long-running agents keep working while you're away.**
 
 </div>
 
 Muse Auto-Allow is a zero-dependency Chrome (Manifest V3) extension that clicks **Allow** on
-[Muse](https://muse.ai) approval requests, so your agent keeps running instead of waiting on you.
-It never clicks **Deny**, never clicks a lone **Allow**, and sends nothing anywhere.
+[Muse](https://muse.ai) approval requests — and the affirmative option on **Codex (ChatGPT)**
+approval requests on chatgpt.com, behind a separate switch that ships off — so your agents keep
+running instead of waiting on you. It never clicks **Deny**, never clicks a lone **Allow**, and
+sends nothing anywhere.
 
 ---
 
@@ -32,14 +34,19 @@ conservative — the full list is below. Optionally, **Auto follow-up** (off by 
 Muse itself moving: when its status line reads *Connected* and stays idle, the extension sends a
 prompt you composed from a phrase library, so the agent continues on its own.
 
+The same problem exists one surface over: **Codex (ChatGPT)** stops a cloud task when it asks for
+approval — *"Yes, proceed"* / *"No, and tell Codex what to do differently"* — and the run waits on
+you. **Codex (ChatGPT)** is a separate, opt-in engine for exactly that (its own switch, off by
+default), with the same conservative rails; details: [`docs/CODEX.md`](docs/CODEX.md).
+
 ## Screenshots
 
 <p align="center">
   <img src="store/screenshot3-popup.png" alt="The popup — Auto-click Allow toggle, click delay, live click log, and the Auto follow-up builder" width="100%">
 </p>
 
-**The popup.** On/off toggle, click delay, today's counter, the live click log, and the opt-in
-Auto follow-up builder.
+**The popup.** On/off toggle, click delay, today's counter, the live click log, the Codex
+(ChatGPT) switch, and the opt-in Auto follow-up builder.
 
 <p align="center">
   <img src="store/screenshot1.png" alt="Approval cards on muse.ai being clicked automatically — Allow only, never Deny" width="100%">
@@ -52,14 +59,15 @@ the popup alongside.
   <img src="store/screenshot2-stats.png" alt="Statistics page — clicks by day, week, month and year, and by topic, with export and import" width="100%">
 </p>
 
-**Statistics.** Clicks by day / week / month / year and by topic, plus JSON export & import.
+**Statistics.** Clicks by day / week / month / year and by topic (Muse topics and `chatgpt.com`
+separate at a glance), plus JSON export & import.
 
 > All demo data in public assets is fictional. Asset inventory and regenerate commands:
 > [`store/SHOWCASE.md`](store/SHOWCASE.md).
 
 ## Features
 
-### Auto-approve that keeps the run alive
+### Auto-approve that keeps the run alive (muse.ai)
 
 Approval surfaces are found five ways, in priority order:
 
@@ -77,24 +85,46 @@ Approval surfaces are found five ways, in priority order:
 Clicks are paced by a configurable delay, and every click is recorded — kind, label, context,
 timestamp (last 50) — and shown in the popup.
 
+### Codex (ChatGPT) — a separate, opt-in engine (chatgpt.com)
+
+Its **own switch** — in the popup's **Safety & Control** panel, next to YOLO (default
+**off**; with it off, chatgpt.com is untouched — no
+click, no log entry). The engine follows the shipped Codex vocabulary — *"Yes, proceed"*,
+*"Allow"*, *"Approve"*, one-shot forms preferred — and finds requests three ways:
+
+1. **Affirmative/negative pairs** — an affirmative option whose SAME button container holds a
+   clickable negative counterpart (a lone affirmative is never clicked).
+2. **Collapsed pending cards** — *"Allow Codex to …"* is expanded first; the revealed pair is
+   approved on the next sweep.
+3. **Review bars** — *"A task needs your approval"* + **Review** opens the approvals panel.
+
+Standing grants (*"Always allow"*, *"Yes, and don't ask again…"*) stay **manual** — no silent
+scope escalation — except under the explicit YOLO opt-in. Auth/connector surfaces (Connect,
+Authorize, link account, API key/token wording) are hard-blocked container-wide; consent wording
+is never overridden; the shared keyword block-list and the rate caps/cooldowns apply. Matching is
+English-label based and fails closed. Contract, rails, evidence and honest limits:
+[`docs/CODEX.md`](docs/CODEX.md).
+
 ### Safety rails — the parts that must never go wrong
 
-- **Never clicks Deny** — or Reject, or Decline, or any destructive counterpart, anywhere.
-- **Never clicks a lone Allow** — only an Allow that is part of a real Allow/Deny pair. Permission
-  banners and prefix matches like "Allow notifications" are never clicked.
+- **Never clicks Deny** — or Reject, or Decline, or No, or any destructive counterpart, anywhere
+  (Muse cards and Codex cards alike).
+- **Never clicks a lone Allow** — only an affirmative that is part of a real affirmative/negative
+  pair. Permission banners and prefix matches like "Allow notifications" are never clicked.
 - **Consent cards fail closed** — notifications, camera, microphone, location, clipboard,
   newsletter/subscribe/marketing prompts are skipped; approval wording can never override the
   consent filter.
-- **No silent scope escalation** — standing grants ("Always allow", "Allow for this site/task")
-  are deliberately not auto-clicked (the opt-in YOLO mode below is the one explicit exception;
-  it ships off).
+- **No silent scope escalation** — standing grants ("Always allow", "Allow for this site/task",
+  "don't ask again") are deliberately not auto-clicked (the opt-in YOLO mode below is the one
+  explicit exception; it ships off).
 - **One click per element** (WeakSet), a 5-second re-render dedup, and per-text cooldowns — no
   pathological loops.
-- **Hard rate caps** — at most 30 Allow clicks per minute; expand / open-panel clicks are capped
-  the same way.
+- **Hard rate caps** — at most 30 affirmative clicks per minute; expand / open-panel clicks are
+  capped the same way.
 - **Fail closed** — unknown or ambiguous state means do nothing.
-- **muse.ai only** — a hard hostname guard backs the manifest's muse.ai-only matches; the
-  extension never runs anywhere else.
+- **Two scopes, both guarded** — muse.ai for the Muse engine, chatgpt.com for the Codex engine;
+  each content script carries a hard hostname guard behind its manifest match, and the extension
+  runs nowhere else.
 - **YOLO mode — explicit opt-in, off by default** — for power users: bypasses the keyword
   block-list, clicks standing grants, caps pacing at 100 ms. Deny is still never clicked,
   connector surfaces stay hard-blocked, and the consent filters stay in force.
@@ -152,7 +182,9 @@ install unpacked:
 2. Open `chrome://extensions` and enable **Developer mode**.
 3. Click **Load unpacked** and select the `extension/` directory (the manifest sits at its root).
 4. Open or refresh a **muse.ai** tab so the content script injects — the toolbar popup shows
-   status, the toggle, the counter, and the log.
+   status, the toggle, the counter, and the log. For the Codex engine, turn on **Codex (ChatGPT)**
+   in the popup's **Safety & Control** panel (a **"Codex" chip** appears on the Safety entry)
+   and refresh a **chatgpt.com** tab.
 
 Requires **Chrome 116+** (`minimum_chrome_version` in the manifest). Nothing else — no build
 step, no dependencies. Packaged builds ship on
@@ -164,9 +196,12 @@ zip + SHA256 sidecar).
 ```mermaid
 flowchart LR
     SW["Service worker<br/>1-minute alarm · tab-load sweep · badge"] -->|"sweeps"| CS["Content script on muse.ai<br/>approval engine (paths A–E)"]
+    SW -->|"sweeps"| CX["Content script on chatgpt.com<br/>Codex engine (opt-in switch)"]
     CS -->|"one click per node"| BTN["Allow button<br/>never Deny"]
+    CX -->|"one click per node"| CBTN["Affirmative option<br/>never Deny"]
     CS -.->|"opt-in · verified send"| FU["Muse composer<br/>auto follow-up"]
     CS -->|"one serialized write"| ST[("chrome.storage.local<br/>settings · log · statistics")]
+    CX -->|"same store · same lock"| ST
     POP["Popup"] --> ST
     SP["Statistics page"] --> ST
 ```
@@ -174,9 +209,12 @@ flowchart LR
 - **Content script** (`extension/content.js`) — runs only on muse.ai pages; on a 1-second
   heartbeat it scans for the five approval surfaces above, clicks through the safety rails,
   records every click in one serialized storage write, and runs the opt-in follow-up engine.
+- **Codex content script** (`extension/codex.js`) — runs only on chatgpt.com pages; sweeps the
+  three Codex paths above behind its own `codexEnabled` switch, writes through the SAME
+  serialized flush and Web Lock as the Muse engine, and halts on pause/dry-run exactly like it.
 - **Service worker** (`extension/background.js`) — a once-a-minute alarm plus a sweep when a
-  muse.ai tab finishes loading; keeps the toolbar badge current and runs versioned, idempotent
-  storage migrations.
+  muse.ai (or chatgpt.com) tab finishes loading; keeps the toolbar badge current and runs
+  versioned, idempotent storage migrations.
 - **Popup + Statistics page** — the control surface and the dashboard; both read and write the
   same `chrome.storage.local` store.
 - **Storage** — settings, the last 50 clicks (approval text encrypted), counters,
@@ -190,8 +228,10 @@ flowchart LR
   ([`scripts/lint.mjs`](scripts/lint.mjs)) fails the build if `fetch`, `XMLHttpRequest`,
   `WebSocket`, `importScripts`, `eval`, or a remote `<script src>` ever appears in the extension
   source.
-- **Minimal permissions.** `storage` + `alarms`, and host access pinned to `https://muse.ai/*`
-  and `https://*.muse.ai/*` — no `tabs`, `scripting`, `webRequest`, `cookies`, or `<all_urls>`.
+- **Minimal permissions.** `storage` + `alarms`, and host access pinned to `https://muse.ai/*` +
+  `https://*.muse.ai/*` (Muse engine) and `https://chatgpt.com/*` + `https://*.chatgpt.com/*`
+  (Codex engine, opt-in) — no `tabs`, `scripting`, `webRequest`, `cookies`, or `<all_urls>`; the
+  lint gate pins both host sets and each engine's `content_scripts` match exactly.
 - **Encrypted at rest, with documented limits.** The log-encryption key lives in the same local
   store as the data — that protects casual profile inspection, not a full local attacker, and it
   is written down rather than hidden.
@@ -213,9 +253,11 @@ Chrome 116+ for the extension; the E2E harnesses need Chrome 137+.
 
 | Command | What it proves |
 |---|---|
-| `node scripts/lint.mjs` | JS syntax + JSON validity, i18n key parity across all six locales, no remote-code or network primitives, manifest hygiene (MV3, permission allowlist, muse.ai-only hosts, explicit CSP) |
-| `node test/e2e.mjs` | Real-Chrome E2E of the approval paths + safety invariants — never Deny, never lone Allow, one click per node, dedupe (scratch profile only) |
+| `node scripts/lint.mjs` | JS syntax + JSON validity, i18n key parity across all six locales, no remote-code or network primitives, manifest hygiene (MV3, permission allowlist, the two pinned host sets, per-engine `content_scripts` matches, the shared `BLOCK_SEED` lockstep, explicit CSP) |
+| `node test/e2e.mjs` | Real-Chrome E2E of the Muse approval paths + safety invariants — never Deny, never lone Allow, one click per node, dedupe (scratch profile only) |
+| `node test/codex-e2e.mjs` | Real-Chrome E2E of the Codex (ChatGPT) engine: the off-switch is dormant, dry-run logs only, the pair/expand/review-bar paths click, the forbidden set is never touched, YOLO branch, encrypted-at-rest store contract |
 | `node test/followup-e2e.mjs` | Real-Chrome E2E of the follow-up engine and popup builder: idle waits, cooldowns, guards, rotation |
+| `node test/background-unit.mjs` | Service-worker contract without a browser: pause badge + commands + digest + sync subset (incl. the chatgpt.com nudge filtering) + migrations |
 | `node test/import-security.mjs` | Falsification harness for the backup-import path (key-rotation proof, sanitization, bounds) |
 | `node scripts/build.mjs` + `python scripts/verify-zip.py` | Deterministic store zip + SHA256 sidecar, byte-verified against `extension/` |
 | `node scripts/smoke-zip.mjs` | Extracts the built zip and proves the artifact passes the core E2E in a scratch Chrome |
@@ -228,13 +270,15 @@ checklist: [`docs/CHROME_BEST_PRACTICES.md`](docs/CHROME_BEST_PRACTICES.md); rel
 [`docs/RELEASE_INTEGRITY.md`](docs/RELEASE_INTEGRITY.md).
 
 ```
-extension/   the loadable MV3 extension (manifest at its root): content script + service worker,
-             popup, Statistics page, icons, 6 locales
-test/        real-Chrome E2E harnesses (approval paths, follow-up engine, import security) + fixtures
+extension/   the loadable MV3 extension (manifest at its root): two content scripts (Muse + Codex)
+             + service worker, popup, Statistics page, icons, 6 locales
+test/        real-Chrome E2E harnesses (approval paths, Codex engine, follow-up engine,
+             import security) + fixtures
 scripts/     lint gate, deterministic build + verify, artifact smoke test, asset renderers
 assets/      HTML sources for every rendered asset (icons, store images, README hero)
 store/       Chrome Web Store kit: listing copy, privacy, runbooks, compliance, screenshots
-docs/        follow-up engine + phrase library, brand kit, security round, release integrity
+docs/        follow-up engine + phrase library, Codex engine contract, brand kit, security round,
+             release integrity
 ```
 
 ## Contributing
@@ -249,7 +293,9 @@ never a public issue.
 [MIT](LICENSE) © 2026 BlueSkyz Labs — **a BlueSkyz Labs product.**
 
 **Unofficial and independent.** Muse Auto-Allow is an unofficial companion tool for Muse
-(muse.ai); it is not affiliated with, endorsed by, or sponsored by Meta. "Muse" and "Meta" are
-trademarks of their respective owners, used here only to describe what the extension works with.
-It automates clicking **Allow** in your own browser session, on your own account — make sure that
-fits how you use Muse before enabling it.
+(muse.ai) and Codex (ChatGPT); it is not affiliated with, endorsed by, or sponsored by Meta or
+OpenAI. "Muse" and "Meta" are trademarks of their respective owners; "ChatGPT" and "Codex" are
+trademarks of OpenAI — used here only to describe what the extension works with. It automates
+clicking **Allow** (muse.ai) and the affirmative option (Codex cards on chatgpt.com) in your own
+browser session, on your own account — make sure that fits how you use Muse and Codex before
+enabling it.

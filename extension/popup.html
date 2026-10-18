@@ -560,6 +560,10 @@
     <span class="stat"><span class="muted" data-i18n="todayLabel" data-nc>Today</span><b class="count" id="today">0</b></span>
   </div>
   <div class="mini"><div class="mcaprow"><div class="mcap muted" data-i18n="last7">Last 7 days</div><span class="clegend"><i class="ldot" aria-hidden="true"></i><span data-i18n="todayLabel">Today</span></span></div><svg id="mini" width="292" height="46" aria-hidden="true"></svg></div>
+  <!-- v1.10.0 — the Codex (ChatGPT) feature switch lives in the Safety & Control panel
+       (a full-popup overlay: ZERO main-popup height, so the <=600px popup discipline is
+       untouched — measured: any in-flow section over ~6px overflows the crowded state).
+       The Safety entry shows a 'Codex' chip while the switch is on. -->
   <!-- v1.6.0 — Auto follow-up: keep Muse working long-run when it goes idle -->
   <!-- v1.7.0 — phrase library + combo builder + round-robin prompt rotation -->
   <div class="sect" id="followupSect">
@@ -642,7 +646,7 @@
     </div>
     <div id="logList"></div>
   </div>
-  <div class="row foot"><span class="note muted" data-i18n="onlyMuse">Works only on muse.ai</span><button class="btn ghost" id="openstats" data-i18n="statsOpen">Statistics</button></div>
+  <div class="row foot"><span class="note muted" data-i18n="onlyMuse">Works on muse.ai and chatgpt.com</span><button class="btn ghost" id="openstats" data-i18n="statsOpen">Statistics</button></div>
 
   <!-- v1.9.0 — Mission Orchestrator sheet (full-popup overlay: opening it never grows the
        popup). Reached from the compact entry on the Auto-follow-up header row. Drives the
@@ -685,6 +689,17 @@
       <div class="rgroup">
         <label class="sw"><input type="checkbox" id="yoloMode"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="yoloTitle">YOLO — approve everything</span></label>
         <div class="rnote" id="yoloNote" role="status" aria-live="polite" data-i18n="yoloNote">Skips keyword blocks, clicks standing grants, fastest pace. Deny is never clicked; connectors stay manual.</div>
+      </div>
+      <!-- v1.10.0 — the Codex (ChatGPT) feature switch: a separate opt-in engine for
+           chatgpt.com (off by default). Lives here (like YOLO) because this panel is a
+           full-popup overlay — the switch costs the main popup zero height. The Safety
+           entry shows a 'Codex' chip while it is on, and the chatgpt.com tab status is
+           reported live below. -->
+      <div class="rgroup">
+        <div class="rlabel" data-i18n="codexTitle">Codex (ChatGPT)</div>
+        <div class="rnote" data-i18n="codexHint">chatgpt.com only. Deny is never clicked; standing grants stay manual.</div>
+        <label class="sw"><input type="checkbox" id="codexEnabled"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="codexToggle">Auto-approve Codex requests</span></label>
+        <div class="rnote muted" id="codexStatText" role="status"></div>
       </div>
       <div class="rgroup">
         <label class="sw"><input type="checkbox" id="allowOnce"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="allowOnceTitle">Prefer "Allow once"</span></label>
