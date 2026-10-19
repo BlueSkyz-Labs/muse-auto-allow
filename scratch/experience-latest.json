@@ -203,10 +203,10 @@
     },
     {
       "name": "E. state communicated as text (dry-run band or live state line)",
-      "ok": false,
+      "ok": true,
       "detail": {
-        "bandShown": false,
-        "bannerText": "",
+        "bandShown": true,
+        "bannerText": "Logging only — nothing will be clicked",
         "lineText": ""
       }
     },
@@ -225,17 +225,27 @@
       }
     },
     {
-      "name": "G1. keyboard: onboarding open on boot (probe precondition)",
-      "ok": false,
+      "name": "G1. keyboard: while onboarding is open, Tab stays inside the modal (focus trap)",
+      "ok": true,
       "detail": {
-        "modalOpen": false
+        "modalOpen": true,
+        "inModal": [
+          "obPrimary",
+          "obSkip",
+          "BODY",
+          "obPrimary",
+          "obSkip",
+          "BODY",
+          "obPrimary",
+          "obSkip"
+        ]
       }
     },
     {
-      "name": "G2. keyboard: Tab reaches the controls (16/15 unique) and does not trap",
+      "name": "G2. keyboard: Tab reaches the controls (10/10 unique) and does not trap",
       "ok": true,
       "detail": {
-        "total": 15,
+        "total": 10,
         "uniq": [
           "langBtn",
           "p15",
@@ -246,19 +256,14 @@
           "delay",
           "misbtn",
           "followupEnabled",
-          "fq0",
-          "fq1",
-          "fq2",
-          "fadvbtn",
-          "fprompt",
-          "fsendnow"
+          "openstats"
         ],
         "tail": [
-          "p15",
           "p60",
           "ptom",
           "safetyBtn",
-          "enabled"
+          "enabled",
+          "delay"
         ]
       }
     },
@@ -277,11 +282,11 @@
     },
     {
       "name": "H. 200%-zoom proxy stats.html: no overflow + primary control intact",
-      "ok": false,
+      "ok": true,
       "detail": {
         "w0": 1400,
         "z": {
-          "sw": 414,
+          "sw": 360,
           "cw": 360,
           "primaryId": null,
           "primaryVisible": true
@@ -333,48 +338,51 @@
     },
     {
       "name": "L1. log day groups + filters bar render",
-      "ok": false,
+      "ok": true,
       "detail": {
-        "days": 0,
-        "items": 0,
-        "filtersShown": false,
-        "dayLabels": []
+        "days": 2,
+        "items": 3,
+        "filtersShown": true,
+        "dayLabels": [
+          "Hôm nay",
+          "Hôm qua"
+        ]
       }
     },
     {
       "name": "L2. Blocked chip filters to the blocked entry only",
-      "ok": false,
+      "ok": true,
       "detail": {
-        "items": 0,
-        "txt": "Chưa bấm lần nào"
+        "items": 1,
+        "txt": "Hôm nay08:30:00bị chặn · keyword:testBeta Blocked"
       }
     },
     {
       "name": "L3. search narrows to the matching entry",
-      "ok": false,
+      "ok": true,
       "detail": {
-        "items": 0,
-        "txt": "Chưa bấm lần nào"
+        "items": 1,
+        "txt": "Hôm qua07:30:00duyệt (thử)Gamma Dry"
       }
     },
     {
       "name": "L4. no-match state shows a non-empty localized empty line (no items)",
       "ok": true,
       "detail": {
-        "empty": "Chưa bấm lần nào",
+        "empty": "Không có mục phù hợp",
         "items": 0
       }
     },
     {
       "name": "M. G07 briefing: card visible, text carries the signal, fits the surface",
-      "ok": false,
+      "ok": true,
       "detail": {
-        "hidden": true,
-        "top": "—",
-        "trend": "0",
-        "delta": "",
-        "sw": 0,
-        "cw": 0
+        "hidden": false,
+        "top": "keyword:banana (1)",
+        "trend": "5",
+        "delta": "↑ 5 so với 7 ngày trước",
+        "sw": 290,
+        "cw": 290
       }
     },
     {
@@ -404,9 +412,10 @@
     },
     {
       "name": "P1. layers card renders stored rule (kind ask) + digest asks counter + ask chip in log",
-      "ok": false,
+      "ok": true,
       "detail": {
-        "rows": 0,
+        "rows": 1,
+        "kind": "ask",
         "asked": "2",
         "chip": 1
       }
@@ -444,5 +453,5 @@
       }
     }
   ],
-  "failed": 8
+  "failed": 0
 }
