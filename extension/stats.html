@@ -169,6 +169,11 @@
   .wk span b { color: var(--ink); font-variant-numeric: tabular-nums; }
   .topics .n { display: inline-flex; align-items: baseline; gap: 4px; }
   .topics .pct { font-style: normal; color: var(--ink-2); }
+  .sstatus { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border: 1px solid var(--line);
+             border-radius: 999px; font-size: 12px; color: var(--ink-2); background: var(--surface); }
+  .sstatus .sdot { width: 7px; height: 7px; border-radius: 50%; background: #2f9e6e; }
+  .sstatus .sdot.warn { background: #d69614; }
+  .chart #chartEmpty { font-size: 12px; color: var(--ink-2); padding: 26px 0 0; }
   .wk b { color: var(--ink); }
   .rempty { font-size: 12px; color: var(--muted); }
 </style>
@@ -179,6 +184,7 @@
       <svg class="logo" viewBox="0 0 512 512" aria-hidden="true"><defs><linearGradient id="hbg" x1="72" y1="60" x2="452" y2="464" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#0082FB"/><stop offset="0.62" stop-color="#0064E0"/><stop offset="1" stop-color="#0040DC"/></linearGradient></defs><rect x="16" y="16" width="480" height="480" rx="133" fill="url(#hbg)"/><path d="M124 284 L214 374 L368 182" fill="none" stroke="#fff" stroke-width="76" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <span data-i18n="statsTitle">Muse Auto-Allow — Statistics</span>
     </h1>
+    <span class="sstatus" id="statsStatus"><span class="sdot" id="stDot" aria-hidden="true"></span><span id="stText">…</span></span>
     <div class="seg" id="seg">
       <button data-range="day" class="active" aria-pressed="true" data-i18n="rangeDay">Day</button>
       <button data-range="week" aria-pressed="false" data-i18n="rangeWeek">Week</button>
@@ -211,7 +217,8 @@
     <div class="wk" id="auditWeekBody"></div>
   </div>
 
-  <div class="chart"><div class="ccap" id="ccap" aria-live="polite"></div><svg id="chart" viewBox="0 0 720 158" role="img" aria-labelledby="ccap"></svg></div>
+  <div class="chart"><div class="ccap" id="ccap" aria-live="polite"></div><svg id="chart" viewBox="0 0 720 158" role="img" aria-labelledby="ccap"></svg>
+    <div id="chartEmpty" hidden data-i18n="chartEmpty">No history yet — the chart appears after the first click</div></div>
 
   <div class="topics">
     <div class="cap" data-i18n="topicsTitle">By topic (repo / project)</div>

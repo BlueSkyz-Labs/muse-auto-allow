@@ -867,13 +867,13 @@
     "message": "只点击 Allow——绝不点击拒绝"
   },
   "onbRailLocalLog": {
-    "message": "每次点击都记录在本机日志中"
+    "message": "每次点击都记录在本机（最近 50 条）"
   },
   "onbRailDryFirst": {
-    "message": "以仅记录（试运行）模式开始——在你开启前不会点击"
+    "message": "以试运行开始——在你开启前不会点击"
   },
   "ruleMatchHint": {
-    "message": "一条规则 = 同一行中的主题 + 关键词；两者都填时，卡片必须同时匹配。"
+    "message": "一条规则 = 同一行中的主题 + 关键词；两者都填时，卡片必须同时匹配。多个主题/关键词 = 匹配其中任意一个。例如：主题 github.com + 关键词 payment, billing → 仅在 github.com 且内容包含 payment 或 billing 时匹配。"
   },
   "ruleOrderHint": {
     "message": "顺序只在同一层内有意义——拦截总是优先"
@@ -882,12 +882,45 @@
     "message": "仅在 Muse 标签页打开时发送"
   },
   "drySwitchSub": {
-    "message": "模拟——不会点击"
+    "message": "试运行——不会点击"
   },
   "yoloDryWarn": {
     "message": "开启 YOLO 会同时关闭试运行。"
   },
   "yoloWarn": {
     "message": "YOLO 已开启——关键词与分层规则不生效"
+  },
+  "modeSim": {
+    "message": "模拟——未实际点击"
+  },
+  "modeLive": {
+    "message": "实时——正在点击"
+  },
+  "ruleConfirmDelete": {
+    "message": "再次点击以删除"
+  },
+  "ruleConfirmApply": {
+    "message": "替换 $1 条规则？再次点击"
+  },
+  "tabWord": {
+    "message": "标签页"
+  },
+  "closeLabel": {
+    "message": "关闭"
+  },
+  "unitMs": {
+    "message": "毫秒"
+  },
+  "unitSec": {
+    "message": "秒"
+  },
+  "unitMin": {
+    "message": "分钟"
+  },
+  "unitPerMin": {
+    "message": "/分钟"
+  },
+  "chartEmpty": {
+    "message": "暂无记录——首次点击后显示图表"
   }
 }

@@ -325,7 +325,9 @@ try {
   await sleep(300);
   const p2 = await evOn(pop)(`({ rows: document.querySelectorAll('#layersList .lrow').length, kinds: Array.from(document.querySelectorAll('#layersList .lkind')).map((e) => (e.dataset || {}).kind) })`);
   check('P2. add-rule writes a new block row through the UI', !!p2 && p2.rows === 2 && p2.kinds.indexOf('block') >= 0, p2);
-  await evOn(pop)(`(() => { const rows = document.querySelectorAll('#layersList .lrow'); rows[rows.length - 1].querySelector('[data-act="del"]').click(); return 'ok'; })()`);
+  await evOn(pop)(`(() => { const rows = document.querySelectorAll('#layersList .lrow'); const d = rows[rows.length - 1].querySelector('[data-act="del"]'); d.click(); return 'armed'; })()`);
+  await sleep(150);
+  await evOn(pop)(`(() => { const rows = document.querySelectorAll('#layersList .lrow'); const d = rows[rows.length - 1].querySelector('[data-act="del"]'); d.click(); return 'confirmed'; })()`); // v1.22.2: delete is a two-tap action
   await sleep(300);
   const p3 = await evOn(pop)(`new Promise((res) => chrome.storage.local.get({ rules: null }, (s) => res({ rows: document.querySelectorAll('#layersList .lrow').length, stored: (s.rules && s.rules.layers || []).length, keepKw: (s.rules && s.rules.blockKeywords || []).indexOf('zzz-keep') >= 0, allowTopics: (s.rules && s.rules.allowTopics || []).length })))`, true);
   check('P3. delete-rule persists; legacy blockKeywords + allowTopics survive the layers write', !!p3 && p3.rows === 1 && p3.stored === 1 && p3.keepKw === true && p3.allowTopics === 0, p3);

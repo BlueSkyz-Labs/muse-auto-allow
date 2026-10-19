@@ -792,13 +792,13 @@
     "message": "Desactivada"
   },
   "ruleKindAllow": {
-    "message": "permitir"
+    "message": "Permitir"
   },
   "ruleKindAsk": {
-    "message": "preguntar"
+    "message": "Preguntar"
   },
   "ruleKindBlock": {
-    "message": "bloquear"
+    "message": "Bloquear"
   },
   "ruleId": {
     "message": "Aún no hay reglas por capas"
@@ -867,13 +867,13 @@
     "message": "Solo pulsa Allow, nunca Denegar"
   },
   "onbRailLocalLog": {
-    "message": "Cada clic queda registrado en este equipo"
+    "message": "Cada clic queda registrado en este equipo (últimos 50)"
   },
   "onbRailDryFirst": {
-    "message": "Empieza en modo solo registro (prueba): no se pulsa nada hasta que lo actives"
+    "message": "Empieza en modo de prueba: no se pulsa nada hasta que lo actives"
   },
   "ruleMatchHint": {
-    "message": "Una regla = los temas + palabras clave de una fila; si defines ambos, la tarjeta debe coincidir con ambos."
+    "message": "Una regla = los temas + palabras clave de una fila; si defines ambos, la tarjeta debe coincidir con ambos. Varios temas/palabras = coincide con CUALQUIERA. Ej.: temas github.com + palabras payment, billing → solo coincide en github.com Y si el contenido tiene payment o billing."
   },
   "ruleOrderHint": {
     "message": "El orden solo importa dentro de la misma capa: bloquear siempre gana"
@@ -882,12 +882,45 @@
     "message": "Enviar solo mientras la pestaña de Muse esté abierta"
   },
   "drySwitchSub": {
-    "message": "Simulación: no se pulsa nada"
+    "message": "Prueba: no se pulsa nada"
   },
   "yoloDryWarn": {
     "message": "Activar YOLO también desactiva la prueba."
   },
   "yoloWarn": {
     "message": "YOLO está activo: las palabras clave y las reglas por capas no se aplican"
+  },
+  "modeSim": {
+    "message": "SIMULACIÓN: SIN PULSAR"
+  },
+  "modeLive": {
+    "message": "EN VIVO: PULSANDO"
+  },
+  "ruleConfirmDelete": {
+    "message": "Toca otra vez para eliminar"
+  },
+  "ruleConfirmApply": {
+    "message": "¿Reemplazar $1 reglas? Toca otra vez"
+  },
+  "tabWord": {
+    "message": "pestaña"
+  },
+  "closeLabel": {
+    "message": "Cerrar"
+  },
+  "unitMs": {
+    "message": "ms"
+  },
+  "unitSec": {
+    "message": "s"
+  },
+  "unitMin": {
+    "message": "min"
+  },
+  "unitPerMin": {
+    "message": "/min"
+  },
+  "chartEmpty": {
+    "message": "Aún no hay historial: el gráfico aparece tras el primer clic"
   }
 }

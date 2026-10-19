@@ -68,6 +68,8 @@ await scheme(popup, 'light'); await shot(popup, 'popup-live-light', 400, 640);
 // --- v1.21.0: Safety panel (anomaly guard + license) + mission playbook config preview ---
 await ev(popup, `(() => { const b = document.getElementById('safetyBtn'); if (b) b.click(); return 'ok'; })()`);
 await sleep(500);
+// v1.22.2: ảnh đầu panel (status strip + Dry-run/YOLO) — panel scroll mới tới layers ở dưới
+await scheme(popup, 'dark'); await shot(popup, 'popup-safety-top-dark', 400, 640);
 // v1.22.0: trưng khối LUẬT BA TẦNG (mới W5) — scroll tới #layersGroup (thấy bảng luật + phần dưới)
 await ev(popup, `(() => { const o = document.querySelector('#safetyPanel .ovbody'); const g = document.getElementById('layersGroup'); if (o && g) o.scrollTop = Math.max(0, g.offsetTop - 80); return 'ok'; })()`);
 await sleep(250);
@@ -86,7 +88,7 @@ await scheme(popup, 'dark');  await shot(popup, 'popup-playbook-dark', 400, 640)
 const stats = await mk('stats.html');
 const d1 = new Date(); const d2 = new Date(Date.now() - 26 * 3600e3);
 const key = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-await ev(stats, `new Promise((res) => chrome.storage.local.set({ stats: { byDay: { ${JSON.stringify(key(d1))}: 6, ${JSON.stringify(key(d2))}: 5, ${JSON.stringify(key(new Date(Date.now() - 50 * 3600e3)))}: 3, ${JSON.stringify(key(new Date(Date.now() - 74 * 3600e3)))}: 1 }, byMonth: { ${mk}: 15 }, byYear: { ${JSON.stringify(String(new Date().getFullYear()))}: 15 }, byTopic: { 'docs.muse.ai': 12, 'github.com': 3 } }, clickCount: 15 }, () => res('ok')))`, true);
+await ev(stats, `new Promise((res) => chrome.storage.local.set({ stats: { byDay: { ${JSON.stringify(key(d1))}: 6, ${JSON.stringify(key(d2))}: 5, ${JSON.stringify(key(new Date(Date.now() - 50 * 3600e3)))}: 3, ${JSON.stringify(key(new Date(Date.now() - 74 * 3600e3)))}: 1 }, byMonth: { ${JSON.stringify(key(d1).slice(0, 7))}: 15 }, byYear: { ${JSON.stringify(String(new Date().getFullYear()))}: 15 }, byTopic: { 'docs.muse.ai': 12, 'github.com': 3 } }, clickCount: 15 }, () => res('ok')))`, true);
 await send('Page.reload', {}, stats); await sleep(1200);
 await scheme(stats, 'dark');  await shot(stats, 'stats-dark', 960, 820);
 await scheme(stats, 'light'); await shot(stats, 'stats-light', 960, 820);

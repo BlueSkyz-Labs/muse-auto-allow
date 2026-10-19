@@ -666,19 +666,19 @@
     "message": "Tự động tạm dừng khi có bất thường"
   },
   "anomalyEnableHint": {
-    "message": "Tự tạm dừng engine khi hành vi nhấp có vẻ bất thường (tần suất hoặc đột biến chủ đề). Không làm suy yếu bất kỳ lớp bảo vệ nào."
+    "message": "Tự tạm dừng khi hành vi bấm có vẻ bất thường (tần suất hoặc đột biến chủ đề). Không bao giờ làm yếu bất kỳ rail an toàn nào."
   },
   "anomalyRateLabel": {
-    "message": "Tần suất duy trì (lượt nhấp/phút)"
+    "message": "Tốc độ bấm duy trì (lượt bấm/phút)"
   },
   "anomalyRateHint": {
-    "message": "Tạm dừng khi lượt nhấp Allow duy trì trên ngưỡng này trong cửa sổ 5 phút."
+    "message": "Tạm dừng khi số lượt bấm Allow duy trì trên mức này trong cửa sổ 5 phút."
   },
   "anomalyTopicLabel": {
     "message": "Bảo vệ khi chủ đề tăng đột biến"
   },
   "anomalyTopicHint": {
-    "message": "Cũng tạm dừng khi một chủ đề chiếm ưu thế trong cửa sổ 10 phút (từ 40 lượt nhấp và chiếm 70%)."
+    "message": "Cũng tạm dừng khi một chủ đề chiếm phần lớn cửa sổ (40+ lượt bấm và 70% tỷ lệ trong 10 phút)."
   },
   "anomalyDurationLabel": {
     "message": "Thời lượng tự tạm dừng (phút)"
@@ -792,13 +792,13 @@
     "message": "Tắt"
   },
   "ruleKindAllow": {
-    "message": "cho phép"
+    "message": "Cho phép"
   },
   "ruleKindAsk": {
-    "message": "hỏi"
+    "message": "Hỏi"
   },
   "ruleKindBlock": {
-    "message": "chặn"
+    "message": "Chặn"
   },
   "ruleId": {
     "message": "Chưa có luật ba tầng"
@@ -867,13 +867,13 @@
     "message": "Chỉ bấm Allow — không bao giờ bấm Deny/Từ chối"
   },
   "onbRailLocalLog": {
-    "message": "Mỗi lần bấm đều được ghi log trên máy bạn"
+    "message": "Mỗi lần bấm đều được ghi log trên máy bạn (50 lượt gần nhất)"
   },
   "onbRailDryFirst": {
-    "message": "Bắt đầu ở chế độ Chạy thử (chỉ ghi log, chưa bấm thật)"
+    "message": "Bắt đầu ở chế độ chạy thử — chưa bấm thật cho đến khi bạn bật"
   },
   "ruleMatchHint": {
-    "message": "Một luật = các chủ đề + từ khoá trong cùng dòng; nhập cả hai thì thẻ phải khớp cả hai."
+    "message": "Một luật = các chủ đề + từ khoá trong cùng dòng; nhập cả hai thì thẻ phải khớp cả hai. Nhiều chủ đề/từ khoá = khớp BẤT KỲ mục nào. VD: chủ đề github.com + từ khoá payment, billing → chỉ khớp khi ở github.com VÀ nội dung có payment hoặc billing."
   },
   "ruleOrderHint": {
     "message": "Thứ tự chỉ có ý nghĩa trong cùng tầng — Chặn luôn thắng"
@@ -882,12 +882,45 @@
     "message": "Chỉ gửi khi tab Muse đang mở"
   },
   "drySwitchSub": {
-    "message": "Mô phỏng — không bấm gì"
+    "message": "Chạy thử — không bấm gì"
   },
   "yoloDryWarn": {
     "message": "Bật YOLO cũng sẽ tắt Chạy thử."
   },
   "yoloWarn": {
     "message": "YOLO đang bật — từ khoá và luật ba tầng không được áp dụng"
+  },
+  "modeSim": {
+    "message": "MÔ PHỎNG — CHƯA BẤM THẬT"
+  },
+  "modeLive": {
+    "message": "ĐANG BẤM THẬT"
+  },
+  "ruleConfirmDelete": {
+    "message": "Bấm lần nữa để xoá"
+  },
+  "ruleConfirmApply": {
+    "message": "Thay $1 luật? Bấm lần nữa"
+  },
+  "tabWord": {
+    "message": "tab"
+  },
+  "closeLabel": {
+    "message": "Đóng"
+  },
+  "unitMs": {
+    "message": "ms"
+  },
+  "unitSec": {
+    "message": "giây"
+  },
+  "unitMin": {
+    "message": "phút"
+  },
+  "unitPerMin": {
+    "message": "/phút"
+  },
+  "chartEmpty": {
+    "message": "Chưa có lịch sử — biểu đồ hiện sau lượt bấm đầu tiên"
   }
 }

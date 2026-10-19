@@ -309,7 +309,7 @@
     "message": "15 min"
   },
   "pause60": {
-    "message": "1 hour"
+    "message": "60 min"
   },
   "pauseTomorrow": {
     "message": "Tomorrow"
@@ -792,13 +792,13 @@
     "message": "Disabled"
   },
   "ruleKindAllow": {
-    "message": "allow"
+    "message": "Allow"
   },
   "ruleKindAsk": {
-    "message": "ask"
+    "message": "Ask"
   },
   "ruleKindBlock": {
-    "message": "block"
+    "message": "Block"
   },
   "ruleId": {
     "message": "No layered rules yet"
@@ -867,13 +867,13 @@
     "message": "Only clicks Allow — never Deny"
   },
   "onbRailLocalLog": {
-    "message": "Every click is logged on this device"
+    "message": "Every click is logged on this device (latest 50)"
   },
   "onbRailDryFirst": {
-    "message": "Starts in logging-only (dry-run) mode — nothing is clicked until you turn it on"
+    "message": "Starts in dry-run (logs only) — nothing is clicked until you turn it on"
   },
   "ruleMatchHint": {
-    "message": "One rule = the topics + keywords on one row; when both are set, the card must match both."
+    "message": "One rule = the topics + keywords on one row; when both are set, the card must match both. Several topics/keywords = match ANY of them. E.g. topics: github.com + keywords: payment, billing → matches only on github.com AND content containing payment or billing."
   },
   "ruleOrderHint": {
     "message": "Order only matters within the same layer — block always wins"
@@ -882,12 +882,45 @@
     "message": "Only send while the Muse tab is open"
   },
   "drySwitchSub": {
-    "message": "Simulation — nothing is clicked"
+    "message": "Dry-run — nothing is clicked"
   },
   "yoloDryWarn": {
     "message": "Turning YOLO on also turns Dry-run off."
   },
   "yoloWarn": {
     "message": "YOLO is on — keyword and layered rules are not enforced"
+  },
+  "modeSim": {
+    "message": "SIMULATION — NOT CLICKING"
+  },
+  "modeLive": {
+    "message": "LIVE — CLICKING"
+  },
+  "ruleConfirmDelete": {
+    "message": "Tap again to delete"
+  },
+  "ruleConfirmApply": {
+    "message": "Replace $1 rules? Tap again"
+  },
+  "tabWord": {
+    "message": "tab"
+  },
+  "closeLabel": {
+    "message": "Close"
+  },
+  "unitMs": {
+    "message": "ms"
+  },
+  "unitSec": {
+    "message": "s"
+  },
+  "unitMin": {
+    "message": "min"
+  },
+  "unitPerMin": {
+    "message": "/min"
+  },
+  "chartEmpty": {
+    "message": "No history yet — the chart appears after the first click"
   }
 }

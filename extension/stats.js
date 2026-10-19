@@ -96,6 +96,10 @@ function renderChart() {
   const data = series();
   const segBtn = document.querySelector('#seg button[data-range="' + RANGE + '"]');
   $('ccap').textContent = t(RANGE_KEY[RANGE], segBtn ? segBtn.textContent : RANGE) + ' \u00b7 ' + t(CAP[RANGE][0], CAP[RANGE][1]);
+  const chEmpty = $('chartEmpty');
+  const chartHasData = data.some((x) => x.v > 0);
+  if (chEmpty) chEmpty.hidden = chartHasData;
+  svg.style.display = chartHasData ? '' : 'none'; // v1.22.2 UX: an empty plot looked like a render failure
   const W = 720, H = 158, padL = 8, padR = 8, padT = 26, padB = 22;
   const innerW = W - padL - padR, innerH = H - padT - padB;
   const n = data.length || 1;
@@ -194,6 +198,20 @@ function renderAll() {
   renderChart();
   renderTopics();
   renderAuditWeek(); // v1.22.0 (W5/F2)
+  renderEngineStatus(); // v1.22.2 UX: the stats page now says which mode the engine is in
+}
+async function renderEngineStatus() {
+  const el = $('stText'); if (!el) return;
+  try {
+    const s = await chrome.storage.local.get({ pauseUntil: 0, dryRun: false, yoloMode: false, enabled: true });
+    const paused = Date.now() < (Number(s.pauseUntil) || 0);
+    const parts = [paused ? t('pauseLabel', 'Paused') : t('stateLive', 'Live')];
+    if (s.dryRun === true) parts.push(t('dryRunChip', 'Dry-run'));
+    if (s.yoloMode === true) parts.push(t('yoloChip', 'YOLO'));
+    if (s.enabled === false) parts.push(t('stateOff', 'Off'));
+    el.textContent = parts.join(' · ');
+    const dot = $('stDot'); if (dot) dot.classList.toggle('warn', paused || s.dryRun === true || s.yoloMode === true);
+  } catch { /* keep */ }
 }
 
 // ---- v1.22.0 (W5/F2): xuất audit + tóm tắt tuần — KHÔNG lộ trường cấm ----------------------
@@ -276,6 +294,7 @@ $('auditJson').addEventListener('click', () => { auditExport('json'); });
 $('auditCsv').addEventListener('click', () => { auditExport('csv'); });
 
 applyI18n();
+chrome.storage.onChanged.addListener(() => { renderEngineStatus(); }); // v1.22.2 UX
 chrome.storage.local.get({ stats: null, clickCount: 0 }, (s) => {
   if (s.stats && typeof s.stats === 'object') {
     STATS = {

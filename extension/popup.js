@@ -66,8 +66,8 @@ function applyI18n() {
   try { document.documentElement.lang = userLocale === 'auto' ? (chrome.i18n.getUILanguage() || 'en') : userLocale.replace('_', '-'); } catch { /* keep */ }
   // v1.8.0 — aria labels / titles that are not plain textContent
   const aria = (id, key, fb) => { const el = $(id); if (el) el.setAttribute('aria-label', t(key, fb)); };
-  aria('safetyClose', 'safetyClose', 'Close');
-  aria('missionClose', 'safetyClose', 'Close'); // v1.9.0: the mission sheet's close button
+  aria('safetyClose', 'closeLabel', 'Close'); // v1.22.2 UX: was labelled 'Safety' (wrong name)
+  aria('missionClose', 'closeLabel', 'Close');
   aria('schStart', 'scheduleStart', 'Start hour');
   aria('schEnd', 'scheduleEnd', 'End hour');
   const pt = $('ptom');
@@ -695,6 +695,10 @@ function renderMini(byDay, now) {
     out += '<line class="grid" x1="0" y1="' + (top - 0.5) + '" x2="' + W + '" y2="' + (top - 0.5) + '"/>' +
       '<text class="tick" x="0" y="' + (top - 3) + '">' + yMax + '</text>';
   }
+  const isEmpty = days.every((x) => !x.v);
+  const em = $('miniEmpty'); if (em) em.hidden = !isEmpty;
+  svg.style.display = isEmpty ? 'none' : '';
+  if (isEmpty) { svg.innerHTML = ''; return; } // v1.22.2 UX: an empty chart read as a rendering bug
   days.forEach((x, i) => {
     const cx = i * (bw + gap) + bw / 2;
     const h = x.v ? Math.max(3, Math.round((base - top) * (x.v / max))) : 4;
@@ -720,7 +724,7 @@ function refreshMuseStat() {
       const full = n > 0
         ? (n === 1 ? t('museTabsFoundOne', '1 muse.ai tab open') : t('museTabsFound', '$1 muse.ai tabs open', [String(n)]))
         : t('museTabsNone', 'No muse.ai tab found');
-      tx.textContent = String(n);
+      tx.textContent = n > 0 ? (n + ' ' + t('tabWord', 'tab')) : '0'; // v1.22.2 UX: label says what is counted; zero stays compact
       el.title = full; // full text on hover
       el.setAttribute('aria-label', full);
       el.classList.toggle('on', n > 0);
@@ -1261,7 +1265,14 @@ function renderDry() {
   const db = $('dryBand');
   if (db) db.hidden = v18.dryRun !== true;
   try { if (typeof document !== 'undefined' && document.body && document.body.classList) document.body.classList.toggle('dry', v18.dryRun === true); } catch { /* vm sandboxes have no DOM */ } // v1.22.1 UX: simulation reads differently from live
-  const dsub = $('drySub'); if (dsub) dsub.hidden = v18.dryRun !== true;
+  const mt = $('modeTag');
+  if (mt) {
+    // v1.22.2 UX: the simulation tag appears only while dry-run is on; in live mode the
+    // always-visible state line already says "running — Allow only", and the 20px are
+    // needed for the <=600px popup contract.
+    if (v18.dryRun === true) { mt.hidden = false; mt.textContent = t('modeSim', 'SIMULATION — NOT CLICKING'); mt.className = 'modetag sim'; }
+    else { mt.hidden = true; }
+  }
   const chip = $('safetyChip');
   if (chip) {
     const yolo = v18.yoloMode === true;
@@ -1271,7 +1282,7 @@ function renderDry() {
     if (v18.dryRun === true) chip.textContent = t('dryRunChip', 'Dry-run');
     else if (yolo) chip.textContent = t('yoloChip', 'YOLO');
     else if (codexOn) chip.textContent = t('codexChip', 'Codex');
-    chip.classList.toggle('warn', yolo && v18.dryRun !== true); // v1.22.1 UX: warning tint while YOLO is the effective mode
+    if (chip.classList) chip.classList.toggle('warn', (yolo || v18.dryRun === true)); // v1.22.2: dry-run and YOLO share the attention tint // v1.22.1 UX: warning tint while YOLO is the effective mode
   }
   renderYoloNote();
   renderLogTop();
@@ -1564,8 +1575,15 @@ async function applyLocale(lang) {
   const app = $('layerImportApply');
   if (app) app.addEventListener('click', () => {
     if (!pendingLayers) return;
+    if (app.dataset.armed !== '1') { // v1.22.2 UX: replacing the stored rules asks once before it happens
+      app.dataset.armed = '1';
+      app.textContent = t('ruleConfirmApply', 'Replace $1 rules? Tap again', [String(pendingLayers.length)]);
+      setTimeout(() => { if (app.dataset.armed === '1') { app.dataset.armed = ''; app.textContent = t('ruleApplyImport', 'Apply'); } }, 6000);
+      return;
+    }
     writeLayers(pendingLayers);
-    pendingLayers = null; app.disabled = true;
+    pendingLayers = null; app.disabled = true; app.dataset.armed = '';
+    app.textContent = t('ruleApplyImport', 'Apply');
     layersNote(t('ruleApplyImport', 'Applied') + ' ✓');
   });
   const box = $('layersList');
@@ -1577,7 +1595,15 @@ async function applyLocale(lang) {
     const layers = (v18.rules.layers || []).slice();
     const idx = layers.findIndex((r) => r.id === id); if (idx < 0) return;
     const act = btn.dataset.act;
-    if (act === 'del') layers.splice(idx, 1);
+    if (act === 'del') {
+      // v1.22.2 UX (Nielsen 5): deleting a rule is a one-tap destructive action — arm, then confirm.
+      if (btn.dataset.armed !== '1') {
+        btn.dataset.armed = '1'; btn.textContent = t('ruleConfirmDelete', 'Tap again to delete');
+        setTimeout(() => { if (btn.dataset.armed === '1') { btn.dataset.armed = ''; btn.innerHTML = '&#10005;'; } }, 5000);
+        return;
+      }
+      layers.splice(idx, 1);
+    }
     else if (act === 'up' && idx > 0) { const x = layers[idx - 1]; layers[idx - 1] = layers[idx]; layers[idx] = x; }
     else if (act === 'dn' && idx < layers.length - 1) { const x = layers[idx + 1]; layers[idx + 1] = layers[idx]; layers[idx] = x; }
     if (act === 'del' || act === 'up' || act === 'dn') writeLayers(layers);
