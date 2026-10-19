@@ -309,6 +309,17 @@ const sanitizeMissionObj = (m) => {
 const sanitizeBackup = (d) => {
   const out = {}; let seen = 0;
   if (typeof d.enabled === 'boolean') { out.enabled = d.enabled; seen++; }
+  // v1.21.0 (W4): a license token may ride a backup, but ONLY as an opaque bounded string —
+  // forged tier/lastSeenAt claims are dropped; the getter re-verifies against the committed key.
+  if (d.license && typeof d.license === 'object' && !Array.isArray(d.license)) {
+    const t0 = d.license.token;
+    if (typeof t0 === 'string' && t0.length > 0 && t0.length <= 4096 && /^MAA1\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(t0)) {
+      const lic = { token: t0 };
+      const ex = d.license.exp;
+      if (typeof ex === 'number' && isFinite(ex)) lic.exp = ex; else lic.exp = null;
+      out.license = lic; seen++;
+    }
+  }
   if (typeof d.minDelayMs === 'number' && isFinite(d.minDelayMs)) { out.minDelayMs = Math.min(10000, Math.max(0, Math.round(d.minDelayMs))); seen++; }
   if (typeof d.clickCount === 'number' && isFinite(d.clickCount)) { out.clickCount = Math.min(1e7, Math.max(0, Math.floor(d.clickCount))); seen++; } // SA-3: hard ceiling
   if (Array.isArray(d.log)) {
@@ -529,6 +540,14 @@ $('importFile').addEventListener('change', async (ev) => {
           // file are REMOVED (start clean), so a partial backup never leaves the old encrypted
           // log or counters behind. Settings/restriction keys keep merge semantics: an absent
           // restriction is never cleared by a file (fail-closed symmetry preserved).
+          // v1.21.0 (W4): a backup WITHOUT a license must never wipe the stored one — the
+          // entitlement is a credential, not history (log/stats keep their start-clean rule).
+          // A backup WITH a sanitized license replaces it (sanitizeBackup already dropped any
+          // forged tier/lastSeenAt claims).
+          try {
+            const curLic = await chrome.storage.local.get({ license: null });
+            if (!clean.license && curLic && curLic.license) clean.license = curLic.license;
+          } catch { /* storage read failure: proceed with the file's own view */ }
           const staleData = ['log', 'stats', 'clickCount'].filter((k) => !(k in clean));
           try {
             await chrome.storage.local.set(clean);

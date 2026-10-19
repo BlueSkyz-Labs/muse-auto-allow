@@ -373,6 +373,25 @@ async function main() {
   check('SA-2 bounds: non-boolean followupEnabled dropped', !('followupEnabled' in b), { has: 'followupEnabled' in b });
   check('SA-2 bounds: followupPrompt capped at 4000 chars', typeof b.followupPrompt === 'string' && b.followupPrompt.length === 4000, { len: b.followupPrompt && b.followupPrompt.length });
 
+  // ================= W4 — license token round-trip (bounded; forged claims dropped) =============
+  const LTOK = 'MAA1.' + 'eyJza3UiOiJtYWEtcHJvIn0' + '.' + 'c2lnbmF0dXJl';
+  const l1 = T.sanitizeBackup({ license: { token: LTOK, exp: 1799999999, tier: 'pro', lastSeenAt: 42 } });
+  check('W4 license: a bounded token round-trips as {token, exp} — forged tier/lastSeenAt dropped',
+    !!l1 && !!l1.license && l1.license.token === LTOK && l1.license.exp === 1799999999
+    && !('tier' in l1.license) && !('lastSeenAt' in l1.license), { lic: l1 && l1.license });
+  const l2 = T.sanitizeBackup({ license: { token: 'x'.repeat(5000) } });
+  check('W4 license: oversized token dropped', !l2 || !('license' in l2), { sanitized: l2 ? Object.keys(l2) : null });
+  const l3 = T.sanitizeBackup({ license: { token: 42 } });
+  check('W4 license: non-string token dropped', !l3 || !('license' in l3), { sanitized: l3 ? Object.keys(l3) : null });
+  const l4 = T.sanitizeBackup({ license: { token: 'not-a-token' } });
+  check('W4 license: malformed shape dropped', !l4 || !('license' in l4), { sanitized: l4 ? Object.keys(l4) : null });
+  const l5 = T.sanitizeBackup({ license: { token: LTOK } });
+  check('W4 license: absent exp normalizes to null', !!l5 && !!l5.license && l5.license.exp === null, { lic: l5 && l5.license });
+  resetStore({ license: { token: LTOK, exp: 1 } });
+  await importFile(backup({ enabled: true }));
+  check('W4 license: an import WITHOUT a license preserves the stored one',
+    !!store.license && store.license.token === LTOK, { lic: store.license || null });
+
   // ================= SA-3 — dataset bounds + quota message =================
   const s3 = T.sanitizeBackup({
     clickCount: 1e308,

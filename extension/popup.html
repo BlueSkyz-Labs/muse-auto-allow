@@ -429,6 +429,14 @@
   .rgroup { margin: 8px 0 0; border-top: 1px solid var(--divide); padding-top: 6px; position: relative; }
   .rgroup:first-child { margin-top: 0; border-top: 0; padding-top: 0; }
   .rlabel { font-weight: 500; }
+.licchip { font-size: 10.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase;
+            color: var(--accent-text); background: var(--accent-tint); border: 1px solid var(--accent-line);
+            border-radius: 999px; padding: 0 6px; }
+  .licinput { flex: 1; min-width: 0; font: inherit; font-size: 12px; padding: 3px 8px; border-radius: 8px;
+              border: 1px solid var(--stroke); background: var(--fill); color: var(--ink); }
+  .licinput:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+  .licro { display: flex; gap: 6px; }
+  #licenseStatus { overflow-wrap: anywhere; }
   .rnote { font-size: 11px; color: var(--muted); margin: 1px 0 4px; }
   .rlist { display: flex; flex-wrap: wrap; gap: 4px; min-height: 20px; }
   .rchip { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; font-size: 11px; line-height: 1.4;
@@ -805,6 +813,19 @@
         <label class="sw"><input type="checkbox" id="syncSet"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="syncTitle">Sync settings across devices</span></label>
         <div class="rnote" data-i18n="syncNote">Uses Chrome Sync (8 KB per-item limit). Lists larger than the limit stay on this device; local settings always win.</div>
       </div>
+      <!-- v1.21.0 (W4) — License: dormant until the Owner's key ceremony. The input value is
+           never rendered back, never logged, and the token is verified offline (ES256). -->
+      <div class="rgroup" id="licenseGroup">
+        <div class="rlabel"><span data-i18n="licenseTitle">License</span> <span class="licchip" id="licTier" data-i18n="licenseFree">Free</span></div>
+        <div class="row field fset">
+          <input type="password" id="licToken" class="licinput" autocomplete="off" spellcheck="false" data-i18n-ph="licenseTokenPlaceholder" placeholder="Paste license token">
+        </div>
+        <div class="row licro">
+          <button type="button" class="btn" id="licActivate" data-i18n="licenseActivate">Activate</button>
+          <button type="button" class="btn" id="licDeactivate" data-i18n="licenseDeactivate">Deactivate</button>
+        </div>
+        <div class="rnote" id="licenseStatus" role="status" aria-live="polite" aria-atomic="true"></div>
+      </div>
       <!-- v1.20.0 (G04) — Anomaly guard: the engine pauses itself when click behaviour
            looks abnormal. ONE switch governs both rules (sustained rate + topic
            spike); the detector only ADDS pauses — it never weakens any rail. -->
@@ -858,6 +879,8 @@
       </div>
     </div>
   </div>
+  <script src="license-pubkey.js"></script>
+  <script src="license.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

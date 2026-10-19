@@ -626,5 +626,47 @@
   "kindAnomalyPause": { "message": "Pausa automática (anomalía)" },
   "digestRecentNote": {
     "message": "entre las entradas de registro m\u00e1s recientes"
+  },
+  "licenseTitle": {
+    "message": "Licencia"
+  },
+  "licenseFree": {
+    "message": "Gratis"
+  },
+  "licensePro": {
+    "message": "PRO"
+  },
+  "licenseTokenPlaceholder": {
+    "message": "Pega el token de licencia"
+  },
+  "licenseActivate": {
+    "message": "Activar"
+  },
+  "licenseDeactivate": {
+    "message": "Desactivar"
+  },
+  "licenseActivated": {
+    "message": "Licencia activada."
+  },
+  "licenseDormant": {
+    "message": "La activación de licencia aún no está configurada."
+  },
+  "licenseMalformed": {
+    "message": "El token de licencia tiene un formato incorrecto."
+  },
+  "licenseBadSignature": {
+    "message": "No se pudo verificar el token de licencia."
+  },
+  "licenseWrongProduct": {
+    "message": "Esta licencia es de otro producto."
+  },
+  "licenseExpired": {
+    "message": "Esta licencia ha caducado."
+  },
+  "licenseClockGrace": {
+    "message": "El reloj retrocedió; hay un periodo de gracia temporal."
+  },
+  "licenseStorageError": {
+    "message": "No se pudo guardar la licencia. Inténtalo de nuevo."
   }
 }

@@ -761,6 +761,7 @@ function refresh() {
     pauseUntil: 0, dryRun: false, yoloMode: false, allowOnceMode: false, rules: null, followupSmart: null, followupSchedule: null,
     syncSettings: false, onboarded: false, digestCounters: null, lastDigestAt: 0,
     anomaly: null, anomalyLastPause: null, // v1.20.0 (G04)
+    license: null, // v1.21.0 (W4)
     missionEnabled: false, mission: null, codexEnabled: false }, (s) => {
     $('enabled').checked = s.enabled !== false;
     $('delay').value = s.minDelayMs ?? 300;
@@ -1037,6 +1038,49 @@ function writeAnomaly(patch) {
   } catch { /* ignore */ }
 }
 
+// ---- v1.21.0 (W4): license UI — DORMANT until the Owner's key ceremony (docs/W4_LICENSE_IMPL_PLAN.md).
+// The module is pure: we pass the committed key (null = dormant), the stored token and the clock.
+// The token is never echoed, never put in title/attributes and never logged.
+function licKey() { return (typeof MAA_LICENSE_PUBKEY !== 'undefined' && MAA_LICENSE_PUBKEY) ? MAA_LICENSE_PUBKEY : null; }
+function licCodeMsg(code) {
+  switch (String(code || '')) {
+    case 'malformed': return t('licenseMalformed', 'This license token is malformed.');
+    case 'bad_signature': return t('licenseBadSignature', 'This license token could not be verified.');
+    case 'wrong_product': return t('licenseWrongProduct', 'This license is for a different product.');
+    case 'expired': return t('licenseExpired', 'This license has expired.');
+    case 'dormant': return t('licenseDormant', 'License activation is not configured yet.');
+    default: return t('licenseBadSignature', 'This license token could not be verified.');
+  }
+}
+async function renderLicense() {
+  const chip = $('licTier'), st = $('licenseStatus');
+  const key = licKey();
+  const rec = v18.license;
+  let tier = 'free';
+  if (rec && typeof rec.token === 'string' && rec.token && key && typeof MuseLicense !== 'undefined' && MuseLicense) {
+    try {
+      const v = await MuseLicense.verifyToken(rec.token, key, Date.now(), Number(rec.lastSeenAt) || 0);
+      if (v && v.ok) { tier = 'pro'; if (st) st.textContent = t('licenseActivated', 'License activated.'); }
+      else if (st) st.textContent = licCodeMsg(v && v.code);
+    } catch { /* a verifier error keeps the free tier (fail closed) */ }
+  } else if (st && !rec) {
+    st.textContent = key ? '' : t('licenseDormant', 'License activation is not configured yet.');
+  }
+  if (chip) chip.textContent = tier === 'pro' ? t('licensePro', 'PRO') : t('licenseFree', 'Free');
+}
+function licDeactivate() {
+  try {
+    chrome.storage.local.set({ license: null }, () => {
+      const st = $('licenseStatus');
+      if (st) st.textContent = t('licenseFree', 'Free');
+      renderLicense();
+    });
+  } catch {
+    const st = $('licenseStatus');
+    if (st) st.textContent = t('licenseStorageError', 'Could not save the license. Try again.');
+  }
+}
+
 // ---- 'While you were away' digest (digestCounters + lastDigestAt) --------------------
 // v1.20.0 (G07): the top block reason (among the recent log entries) + the 7-day trend
 function digestTopReason() {
@@ -1192,7 +1236,7 @@ function setSafety(open) {
   const b = $('safetyBtn');
   if (b) b.setAttribute('aria-expanded', safetyOpen ? 'true' : 'false');
   if (safetyOpen) {
-    renderRules(); renderSchedule(); renderSmart(); renderSync(); renderAnomaly(); // v1.20.0 (G04)
+    renderRules(); renderSchedule(); renderSmart(); renderSync(); renderAnomaly(); renderLicense(); // v1.20.0/21
     const dr = $('dryRun'); if (dr) dr.checked = v18.dryRun === true;
     const ym = $('yoloMode'); if (ym) ym.checked = v18.yoloMode === true;
     const ao = $('allowOnce'); if (ao) ao.checked = v18.allowOnce === true;
@@ -1277,6 +1321,7 @@ function applyV18UI(s) {
   v18.log = Array.isArray(s.log) ? s.log : [];           // v1.20.0 (G07)
   v18.stats = s.stats && typeof s.stats === 'object' ? s.stats : null;
   v18.anomaly = (s.anomaly && typeof s.anomaly === 'object') ? s.anomaly : null; // v1.20.0 (G04)
+  v18.license = (s.license && typeof s.license === 'object' && typeof s.license.token === 'string') ? s.license : null; // v1.21.0 (W4)
   v18.anomalyLastPause = (s.anomalyLastPause && typeof s.anomalyLastPause === 'object') ? s.anomalyLastPause : null;
   const rules = s.rules === null || s.rules === undefined ? null : asObj(s.rules);
   const hasKw = !!(rules && Array.isArray(rules.blockKeywords));
@@ -1892,6 +1937,27 @@ $('stuckMin').addEventListener('change', () => {
 });
 $('errRec').addEventListener('change', () => writeSmart({ errorRecovery: $('errRec').checked }));
 // v1.20.0 (G04): anomaly guard — every change writes ONE merged object, clamped, never NaN
+// v1.21.0 (W4): license activation — always clears the field, never stores a bad token.
+$('licActivate').addEventListener('click', async () => {
+  const inp = $('licToken'), st = $('licenseStatus');
+  const raw = inp ? String(inp.value || '').trim() : '';
+  if (inp) inp.value = '';
+  const key = licKey();
+  if (!key) { if (st) st.textContent = t('licenseDormant', 'License activation is not configured yet.'); return; }
+  if (!raw || typeof MuseLicense === 'undefined' || !MuseLicense) { if (st) st.textContent = t('licenseMalformed', 'This license token is malformed.'); return; }
+  const parsed = MuseLicense.parseToken(raw);
+  if (!parsed || !parsed.ok) { if (st) st.textContent = licCodeMsg(parsed && parsed.code); return; }
+  let v = null;
+  try { v = await MuseLicense.verifyToken(raw, key, Date.now(), 0); } catch { v = null; }
+  if (!v || !v.ok) { if (st) st.textContent = licCodeMsg(v && v.code); return; }
+  try {
+    chrome.storage.local.set({ license: { token: raw, exp: (v.claims && Number(v.claims.exp)) || null, lastSeenAt: Date.now() } }, () => {
+      if (st) st.textContent = t('licenseActivated', 'License activated.');
+      renderLicense();
+    });
+  } catch { if (st) st.textContent = t('licenseStorageError', 'Could not save the license. Try again.'); }
+});
+$('licDeactivate').addEventListener('click', licDeactivate);
 $('anomalyEnable').addEventListener('change', () => { writeAnomaly({ enabled: $('anomalyEnable').checked }); });
 $('anomalyRate').addEventListener('change', () => {
   const v = Math.max(1, Math.min(120, Math.round(Number($('anomalyRate').value) || 30)));

@@ -257,6 +257,27 @@ try {
   findings.push(`SEED lockstep scan failed: ${e.message}`);
 }
 
+// 7. license guards (v1.21.0 / W4) — the committed public key must stay null until the Owner's
+//    key ceremony, and no EC public JWK literal may ever appear in extension sources or locale
+//    JSON: fixture keys belong under test/ only and must never reach the release artifact.
+try {
+  checked++;
+  const pubSrc = fs.readFileSync(path.join(EXT, 'license-pubkey.js'), 'utf8');
+  if (!/var\s+MAA_LICENSE_PUBKEY\s*=\s*null\s*;/.test(pubSrc)) {
+    findings.push('LICENSE-PUBKEY-DORMANT: extension/license-pubkey.js must hold "var MAA_LICENSE_PUBKEY = null;" until the Owner key ceremony');
+  }
+  const jwkRe = /"kty"\s*:\s*"EC"|"crv"\s*:\s*"P-256"/;
+  for (const f of files.filter((f) => SRC_EXTS.some((x) => f.endsWith(x)) || f.endsWith('.json'))) {
+    checked++;
+    const rel = path.relative(ROOT, f).replace(/\\/g, '/');
+    if (jwkRe.test(fs.readFileSync(f, 'utf8'))) {
+      findings.push(`LICENSE-TEST-KEY-NOT-IN-RELEASE: ${rel} contains an EC public JWK literal (fixture keys belong under test/ only)`);
+    }
+  }
+} catch (e) {
+  findings.push(`LICENSE guards scan failed: ${e.message}`);
+}
+
 // summary
 if (findings.length) {
   console.error(`lint: ${findings.length} finding(s)\n` + findings.map((f) => '  - ' + f).join('\n'));

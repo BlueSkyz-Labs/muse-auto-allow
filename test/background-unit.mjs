@@ -53,6 +53,18 @@ check('M2 manifest. commands: toggle-pause (Alt+Shift+P) + send-followup (Alt+Sh
   !!(cmds['toggle-pause'] && cmds['toggle-pause'].suggested_key && cmds['toggle-pause'].suggested_key.default === 'Alt+Shift+P' &&
      cmds['send-followup'] && cmds['send-followup'].suggested_key && cmds['send-followup'].suggested_key.default === 'Alt+Shift+F'),
   { commands: cmds });
+// v1.21.0 (W4): the license scripts are popup-local resources only — never content scripts,
+// and the permission set stays pinned (no new permission/host rides the license UI).
+{
+  const csAll = (man.content_scripts || []).flatMap((e) => (Array.isArray(e.js) ? e.js : []));
+  const perms = (man.permissions || []).slice().sort().join(',');
+  check('L1 manifest. license scripts stay popup-local; permissions pinned (alarms,notifications,storage)',
+    !csAll.includes('license.js') && !csAll.includes('license-pubkey.js')
+    && perms === 'alarms,notifications,storage'
+    && (man.optional_permissions || []).length === 0 && (man.optional_host_permissions || []).length === 0,
+    { cs: csAll, permissions: man.permissions });
+}
+
 // v1.9.4: the freeze check compares against the CHANGELOG's top section instead of a hardcoded
 // string — the previous literal ('1.9.2') silently went stale through the v1.9.3 bump, and a
 // release whose manifest and CHANGELOG disagree should never read as green.

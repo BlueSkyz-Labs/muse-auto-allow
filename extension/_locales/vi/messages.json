@@ -626,5 +626,47 @@
   "kindAnomalyPause": { "message": "Tự tạm dừng (bất thường)" },
   "digestRecentNote": {
     "message": "trong c\u00e1c m\u1ee5c log g\u1ea7n nh\u1ea5t"
+  },
+  "licenseTitle": {
+    "message": "Bản quyền"
+  },
+  "licenseFree": {
+    "message": "Miễn phí"
+  },
+  "licensePro": {
+    "message": "PRO"
+  },
+  "licenseTokenPlaceholder": {
+    "message": "Dán mã bản quyền"
+  },
+  "licenseActivate": {
+    "message": "Kích hoạt"
+  },
+  "licenseDeactivate": {
+    "message": "Hủy kích hoạt"
+  },
+  "licenseActivated": {
+    "message": "Đã kích hoạt bản quyền."
+  },
+  "licenseDormant": {
+    "message": "Tính năng kích hoạt bản quyền chưa được cấu hình."
+  },
+  "licenseMalformed": {
+    "message": "Mã bản quyền không đúng định dạng."
+  },
+  "licenseBadSignature": {
+    "message": "Không thể xác minh mã bản quyền."
+  },
+  "licenseWrongProduct": {
+    "message": "Bản quyền này thuộc sản phẩm khác."
+  },
+  "licenseExpired": {
+    "message": "Bản quyền đã hết hạn."
+  },
+  "licenseClockGrace": {
+    "message": "Đồng hồ bị lùi; đang áp dụng thời gian ân hạn tạm thời."
+  },
+  "licenseStorageError": {
+    "message": "Không lưu được bản quyền. Thử lại."
   }
 }

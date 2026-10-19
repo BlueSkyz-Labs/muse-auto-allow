@@ -650,5 +650,47 @@
   },
   "digestRecentNote": {
     "message": "among the most recent log entries"
+  },
+  "licenseTitle": {
+    "message": "License"
+  },
+  "licenseFree": {
+    "message": "Free"
+  },
+  "licensePro": {
+    "message": "PRO"
+  },
+  "licenseTokenPlaceholder": {
+    "message": "Paste license token"
+  },
+  "licenseActivate": {
+    "message": "Activate"
+  },
+  "licenseDeactivate": {
+    "message": "Deactivate"
+  },
+  "licenseActivated": {
+    "message": "License activated."
+  },
+  "licenseDormant": {
+    "message": "License activation is not configured yet."
+  },
+  "licenseMalformed": {
+    "message": "This license token is malformed."
+  },
+  "licenseBadSignature": {
+    "message": "This license token could not be verified."
+  },
+  "licenseWrongProduct": {
+    "message": "This license is for a different product."
+  },
+  "licenseExpired": {
+    "message": "This license has expired."
+  },
+  "licenseClockGrace": {
+    "message": "Clock moved backward; temporary verification grace is active."
+  },
+  "licenseStorageError": {
+    "message": "Could not save the license. Try again."
   }
 }

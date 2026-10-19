@@ -626,5 +626,47 @@
   "kindAnomalyPause": { "message": "自动暂停（异常）" },
   "digestRecentNote": {
     "message": "\u57fa\u4e8e\u6700\u8fd1\u7684\u65e5\u5fd7\u8bb0\u5f55"
+  },
+  "licenseTitle": {
+    "message": "许可证"
+  },
+  "licenseFree": {
+    "message": "免费"
+  },
+  "licensePro": {
+    "message": "PRO"
+  },
+  "licenseTokenPlaceholder": {
+    "message": "粘贴许可证令牌"
+  },
+  "licenseActivate": {
+    "message": "激活"
+  },
+  "licenseDeactivate": {
+    "message": "停用"
+  },
+  "licenseActivated": {
+    "message": "许可证已激活。"
+  },
+  "licenseDormant": {
+    "message": "尚未配置许可证激活。"
+  },
+  "licenseMalformed": {
+    "message": "许可证令牌格式不正确。"
+  },
+  "licenseBadSignature": {
+    "message": "无法验证许可证令牌。"
+  },
+  "licenseWrongProduct": {
+    "message": "此许可证属于其他产品。"
+  },
+  "licenseExpired": {
+    "message": "许可证已过期。"
+  },
+  "licenseClockGrace": {
+    "message": "时钟回拨；临时验证宽限期已生效。"
+  },
+  "licenseStorageError": {
+    "message": "无法保存许可证，请重试。"
   }
 }
