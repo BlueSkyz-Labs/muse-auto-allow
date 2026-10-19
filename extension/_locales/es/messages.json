@@ -596,5 +596,23 @@
   },
   "onbLearnMore": {
     "message": "M\u00e1s informaci\u00f3n: c\u00f3mo funcionan las protecciones"
+  },
+  "digestTopReason": {
+    "message": "Motivo de bloqueo principal"
+  },
+  "digestTopReasonNone": {
+    "message": "sin bloqueos"
+  },
+  "digestTrendMore": {
+    "message": "\u2191 $1 frente a los 7 d\u00edas anteriores"
+  },
+  "digestTrendLess": {
+    "message": "\u2193 $1 frente a los 7 d\u00edas anteriores"
+  },
+  "digestTrendSame": {
+    "message": "igual que los 7 d\u00edas anteriores"
+  },
+  "digestRecentNote": {
+    "message": "entre las entradas de registro m\u00e1s recientes"
   }
 }

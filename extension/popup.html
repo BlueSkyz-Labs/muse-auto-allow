@@ -401,6 +401,8 @@
             background: var(--panel); border: 1px solid var(--stroke); }
   .digest .dhead { font-size: 10px; line-height: 1.3; color: var(--muted); display: flex; gap: 6px; }
   .digest .drow { display: flex; align-items: baseline; gap: 9px; font-size: 11px; line-height: 1.3; white-space: nowrap; }
+  .digest .dreason, .digest .dtrend { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; font-size: 11px; line-height: 1.3; }
+  .digest .dreason b, .digest .dtrend b { font-variant-numeric: tabular-nums; }
   .digest .dstat { display: inline-flex; align-items: baseline; gap: 3px; min-width: 0; }
   .digest b { font-weight: 600; font-variant-numeric: tabular-nums; }
   @media (prefers-color-scheme: dark) {
@@ -685,6 +687,9 @@
           <span class="dstat"><b id="dFollowups">0</b><span data-i18n="digestFollowups">follow-ups</span></span>
           <span class="dstat"><b id="dBlocked">0</b><span data-i18n="digestBlocked">blocked</span></span>
         </div>
+        <!-- v1.20.0 (G07): top block reason + 7-day trend ride inside the existing digest card -->
+        <div class="dreason"><span data-i18n="digestTopReason">Top block reason</span><b id="dTopReason">—</b></div>
+        <div class="dtrend"><span data-i18n="last7">Last 7 days</span><b id="dTrend">0</b><span id="dTrendDelta"></span></div>
       </div>
     </div>
     <!-- v1.19.0 (S02): log filters + day groups — kind chips and a search field above the list -->

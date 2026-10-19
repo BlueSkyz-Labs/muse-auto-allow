@@ -596,5 +596,23 @@
   },
   "onbLearnMore": {
     "message": "\u8a73\u3057\u304f\u306f\u3053\u3061\u3089 \u2014 \u5b89\u5168\u30ec\u30fc\u30eb\u306e\u4ed5\u7d44\u307f"
+  },
+  "digestTopReason": {
+    "message": "\u4e3b\u306a\u30d6\u30ed\u30c3\u30af\u7406\u7531"
+  },
+  "digestTopReasonNone": {
+    "message": "\u30d6\u30ed\u30c3\u30af\u306a\u3057"
+  },
+  "digestTrendMore": {
+    "message": "\u2191 \u524d7\u65e5\u9593\u3088\u308a $1"
+  },
+  "digestTrendLess": {
+    "message": "\u2193 \u524d7\u65e5\u9593\u3088\u308a $1"
+  },
+  "digestTrendSame": {
+    "message": "\u524d7\u65e5\u9593\u3068\u540c\u3058"
+  },
+  "digestRecentNote": {
+    "message": "\u76f4\u8fd1\u306e\u30ed\u30b0\u8a18\u9332\u5185"
   }
 }

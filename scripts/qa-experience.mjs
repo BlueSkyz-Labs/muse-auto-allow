@@ -290,6 +290,13 @@ try {
   await sleep(200);
   const l3 = await evOn(pop)(`({ empty: (document.getElementById('logList').textContent || ''), items: document.querySelectorAll('#logList .item').length })`);
   check('L4. no-match state shows a non-empty localized empty line (no items)', l3 && l3.items === 0 && (l3.empty || '').trim().length > 2, l3);
+
+  // M. G07 briefing card (v1.20.0): counters + top reason + trend, fits the 320px surface
+  const mk = (off) => { const d = new Date(Date.now() - off * 86400000); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  await evOn(pop)(`new Promise((res) => chrome.storage.local.set({ digestCounters: { clicks: 3, followups: 1, blocked: 2 }, lastDigestAt: 0, stats: { byDay: { ${JSON.stringify(mk(0))}: 5 } }, log: [ { at: new Date().toISOString(), kind: 'blocked', blockedReason: 'keyword:banana' } ] }, () => res('ok')))`, true);
+  await send('Page.reload', {}, pop); await sleep(1000);
+  const m = await evOn(pop)(`({ hidden: document.getElementById('digest').hidden, top: (document.getElementById('dTopReason').textContent || ''), trend: (document.getElementById('dTrend').textContent || ''), delta: (document.getElementById('dTrendDelta').textContent || ''), sw: document.getElementById('digest').scrollWidth, cw: document.getElementById('digest').clientWidth })`);
+  check('M. G07 briefing: card visible, text carries the signal, fits the surface', !!m && m.hidden === false && /banana \(1\)/.test(m.top) && m.trend === '5' && (m.delta || '').length > 2 && m.sw <= m.cw + 2, m);
 } catch (e) {
   check('X. harness completed without exception', false, String(e && e.message || e));
 } finally {

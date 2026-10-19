@@ -1001,6 +1001,33 @@ function renderSync() {
 }
 
 // ---- 'While you were away' digest (digestCounters + lastDigestAt) --------------------
+// v1.20.0 (G07): the top block reason (among the recent log entries) + the 7-day trend
+function digestTopReason() {
+  const until = v18.lastDigestAt;
+  const counts = Object.create(null);
+  let best = null;
+  for (const e of v18.log) {
+    if (!e || e.kind !== 'blocked') continue;
+    const at = Date.parse(e.at);
+    if (until > 0 && (!Number.isFinite(at) || at < until)) continue;
+    const r = String(e.blockedReason || '').trim();
+    if (!r) continue;
+    counts[r] = (counts[r] || 0) + 1;
+    if (!best || counts[r] > counts[best]) best = r;
+  }
+  return best ? { reason: best, n: counts[best] } : null;
+}
+function digestTrend() {
+  const byDay = asObj(v18.stats && v18.stats.byDay);
+  const now = new Date();
+  let cur = 0, prev = 0;
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+    const v = Number(byDay[dayKeyOf(d)]) || 0;
+    if (i < 7) cur += v; else prev += v;
+  }
+  return { cur, prev };
+}
 function renderDigest() {
   const c = asObj(v18.counters);
   const clicks = Number(c.clicks) || 0, fups = Number(c.followups) || 0, blocked = Number(c.blocked) || 0;
@@ -1015,6 +1042,20 @@ function renderDigest() {
       since.textContent = v18.lastDigestAt > 0
         ? t('digestSince', 'since $1', [localFull(new Date(v18.lastDigestAt).toISOString())])
         : t('digestSinceStart', 'since you started');
+    }
+    const tr = $('dTopReason');
+    if (tr) {
+      const top = digestTopReason();
+      tr.textContent = top ? top.reason + ' (' + top.n + ')' : t('digestTopReasonNone', 'no blocks');
+      tr.title = t('digestRecentNote', 'among the most recent log entries');
+    }
+    const tv = $('dTrend'), td = $('dTrendDelta');
+    if (tv && td) {
+      const { cur, prev } = digestTrend();
+      tv.textContent = String(cur);
+      td.textContent = cur > prev ? t('digestTrendMore', '↑ $1 vs the previous 7 days', [cur - prev])
+        : cur < prev ? t('digestTrendLess', '↓ $1 vs the previous 7 days', [prev - cur])
+        : t('digestTrendSame', 'same as the previous 7 days');
     }
   }
   renderLogTop();
@@ -1196,6 +1237,8 @@ function applyV18UI(s) {
   v18.onboarded = s.onboarded === true;
   v18.counters = asObj(s.digestCounters);
   v18.lastDigestAt = Number(s.lastDigestAt) || 0;
+  v18.log = Array.isArray(s.log) ? s.log : [];           // v1.20.0 (G07)
+  v18.stats = s.stats && typeof s.stats === 'object' ? s.stats : null;
   const rules = s.rules === null || s.rules === undefined ? null : asObj(s.rules);
   const hasKw = !!(rules && Array.isArray(rules.blockKeywords));
   v18.rules.topics = cleanList(rules && rules.allowTopics);

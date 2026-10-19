@@ -1323,6 +1323,20 @@ try {
   const dg = (dgStore && dgStore.digestCounters) || null;
   check('v18 digest. counters recorded real clicks + blocked + verified follow-ups',
     !!dg && dg.clicks >= 1 && dg.blocked >= 2 && dg.followups >= 1, { counters: dg });
+
+  // ---- v1.20.0 (G07): briefing card — counters + top block reason + 7-day trend ----
+  const g7key = (off) => { const d = new Date(Date.now() - off * 86400000); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  await seed({ log: [
+    { at: new Date(Date.now() - 3600e3).toISOString(), kind: 'blocked', blockedReason: 'keyword:banana' },
+    { at: new Date(Date.now() - 3500e3).toISOString(), kind: 'blocked', blockedReason: 'keyword:banana' },
+    { at: new Date(Date.now() - 3400e3).toISOString(), kind: 'blocked', blockedReason: 'keyword:delete' },
+  ], digestCounters: { clicks: 3, followups: 1, blocked: 2 }, lastDigestAt: 0,
+  stats: { byDay: { [g7key(0)]: 5, [g7key(1)]: 2, [g7key(7)]: 3 } } });
+  try { await send('Page.reload', {}, popSession); } catch { /* ignore */ }
+  await sleep(900);
+  const g7 = await pEval(`({ hidden: document.getElementById('digest').hidden, top: (document.getElementById('dTopReason').textContent || ''), trend: (document.getElementById('dTrend').textContent || ''), delta: (document.getElementById('dTrendDelta').textContent || '') })`);
+  check('G07 briefing. #digest shows counters + top reason + 7-day trend',
+    !!g7 && g7.hidden === false && /keyword:banana \(2\)/.test(g7.top) && g7.trend === '7' && /4/.test(g7.delta), g7);
   results.v18 = { dryEntry, blEntry, bananaEntry, topicBadEntry, badge, visState, counters: dg, applied: v18Applied };
 
   // ---- fixture-side evidence + hygiene ----

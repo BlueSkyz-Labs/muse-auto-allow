@@ -596,5 +596,23 @@
   },
   "onbLearnMore": {
     "message": "Learn more \u2014 how the rails work"
+  },
+  "digestTopReason": {
+    "message": "Top block reason"
+  },
+  "digestTopReasonNone": {
+    "message": "no blocks"
+  },
+  "digestTrendMore": {
+    "message": "\u2191 $1 vs the previous 7 days"
+  },
+  "digestTrendLess": {
+    "message": "\u2193 $1 vs the previous 7 days"
+  },
+  "digestTrendSame": {
+    "message": "same as the previous 7 days"
+  },
+  "digestRecentNote": {
+    "message": "among the most recent log entries"
   }
 }
