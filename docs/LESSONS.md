@@ -143,3 +143,20 @@ chống lùi đồng hồ chỉ nên ghi khi lệch > ngưỡng (60 giây) để
 **Guard:** `license-unit` L4b (tier lạ, chữ ký hợp lệ → từ chối) · renderLicense đặt Free trước await ·
 lint `LICENSE-TEST-KEY-NOT-IN-RELEASE` mở rộng quét base64 (đột biến trực tiếp: chèn → đỏ, gỡ → xanh) ·
 `import-security` biên token 2048/2049 khớp `license.js`.
+
+## LSN-muse-auto-allow-014 — bài học từ battery v1.22.0/W5 (chuỗi null + khoanh vùng bằng bản cũ)
+
+**Ngày:** 2026-10-19 · **Phát hiện bởi:** battery W5 (e2e + qa đỏ hàng loạt sau khi ráp luật ba tầng)
+**Bài học:** hai mẫu lỗi. (1) Đọc sub-property của giá trị có thể null phải đi qua chuỗi an toàn:
+`Array.isArray(rules && rules.layers)` — fresh install có `rules: null` (default của storage.get), và
+một `rules.layers` trần ném TypeError NGAY GIỮA `applyV18UI`, giết mọi render phía sau (banner chạy
+thử, digest, onboarding, log) mà KHÔNG lộ ra ở dạng crash toàn phần — triệu chứng là "popup im lặng
+một nửa" (onboarding không mở, banner trống, log rỗng) trong khi vài phần phía trước vẫn render bình
+thường. Kiểm tra tĩnh (`node --check`) và unit thuần không bắt được vì lỗi chỉ nổ trên nhánh dữ liệu
+cụ thể. (2) Khoanh vùng hồi quy bằng SO SÁNH BẢN CŨ trên cùng harness: chạy đúng scratch-debug trên
+`git archive v1.21.0` (MAA_EXT_DIR trỏ bản cũ) trong ~2 phút chỉ ra chính xác hành vi nào đổi
+(onboard hidden true vs false) — nhanh hơn đọc diff thủ công và không cần đoán. Phụ: `Runtime.enable`
+gắn SAU khi popup boot không bắt được exception giai đoạn đầu — muốn thấy lỗi boot phải so-sánh-trạng
+thái hoặc attach trước khi target chạy.
+**Guard:** e2e pre-phase + qa E/G1/L/M/P (fresh install mở onboarding, banner chạy thử hiện, log/digest
+render) — đột biến: bỏ guard `rules &&` → 8 check đỏ trở lại, thêm lại → xanh.
