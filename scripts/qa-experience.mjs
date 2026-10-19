@@ -313,6 +313,27 @@ try {
   await sleep(500);
   const n1 = await evOn(pop)(`({ st: (document.getElementById('licenseStatus').textContent || ''), inputCleared: document.getElementById('licToken').value === '', chip: (document.getElementById('licTier').textContent || '') })`);
   check('N2. dormant: Kích hoạt báo chưa cấu hình, ô nhập bị xoá, chip vẫn Free', !!n1 && /(not configured|chưa được cấu hình)/i.test(n1.st) && n1.inputCleared === true && /(Free|Miễn phí)/.test(n1.chip), n1);
+
+  // P. W5 (v1.22.0): luật ba tầng (F1) + xuất audit (F2)
+  await evOn(pop)(`new Promise((res) => chrome.storage.local.set({ rules: { allowTopics: [], blockKeywords: ['zzz-keep'], layers: [ { id: 'ask-test', kind: 'ask', match: { topics: ['test-topic'] } } ] }, digestCounters: { clicks: 3, followups: 1, blocked: 1, asked: 2 }, log: [ { at: new Date().toISOString(), kind: 'ask', label: 'Ask Card', blockedReason: 'ask' }, { at: new Date().toISOString(), kind: 'allow', label: 'Ok Card' } ] }, () => res('ok')))`, true);
+  await send('Page.reload', {}, pop); await sleep(1000);
+  await evOn(pop)(`(() => { const s = document.getElementById('obSkip'); if (s) s.click(); return 'ok'; })()`); await sleep(300);
+  const p1 = await evOn(pop)(`({ rows: document.querySelectorAll('#layersList .lrow').length, kind: (document.querySelector('#layersList .lkind') || {}).textContent, asked: (document.getElementById('dAsked') || {}).textContent, chip: document.querySelectorAll('#logList .k-ask').length })`);
+  check('P1. layers card renders stored rule (kind ask) + digest asks counter + ask chip in log', !!p1 && p1.rows === 1 && p1.kind === 'ask' && p1.asked === '2' && p1.chip >= 1, p1);
+  await evOn(pop)(`(() => { const k = document.getElementById('layerKind'); k.value = 'block'; const t = document.getElementById('layerTopics'); t.value = 'demo-x'; document.getElementById('layerAdd').click(); return 'ok'; })()`);
+  await sleep(300);
+  const p2 = await evOn(pop)(`({ rows: document.querySelectorAll('#layersList .lrow').length, kinds: Array.from(document.querySelectorAll('#layersList .lkind')).map((e) => e.textContent) })`);
+  check('P2. add-rule writes a new block row through the UI', !!p2 && p2.rows === 2 && p2.kinds.indexOf('block') >= 0, p2);
+  await evOn(pop)(`(() => { const rows = document.querySelectorAll('#layersList .lrow'); rows[rows.length - 1].querySelector('[data-act="del"]').click(); return 'ok'; })()`);
+  await sleep(300);
+  const p3 = await evOn(pop)(`new Promise((res) => chrome.storage.local.get({ rules: null }, (s) => res({ rows: document.querySelectorAll('#layersList .lrow').length, stored: (s.rules && s.rules.layers || []).length, keepKw: (s.rules && s.rules.blockKeywords || []).indexOf('zzz-keep') >= 0, allowTopics: (s.rules && s.rules.allowTopics || []).length })))`, true);
+  check('P3. delete-rule persists; legacy blockKeywords + allowTopics survive the layers write', !!p3 && p3.rows === 1 && p3.stored === 1 && p3.keepKw === true && p3.allowTopics === 0, p3);
+  const stp = sids['stats.html'];
+  const todayKey = (() => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); })();
+  await evOn(stp)(`new Promise((res) => chrome.storage.local.set({ stats: { byDay: { '${todayKey}': 4 } }, digestCounters: { clicks: 2, followups: 1, blocked: 1, asked: 1 } }, () => res('ok')))`, true);
+  await send('Page.reload', {}, stp); await sleep(900);
+  const p4 = await evOn(stp)(`({ hasJson: !!document.getElementById('auditJson'), hasCsv: !!document.getElementById('auditCsv'), weekHidden: document.getElementById('auditWeek').hidden, body: (document.getElementById('auditWeekBody').textContent || ''), csv: (typeof window.MuseAudit === 'object' && window.MuseAudit) ? window.MuseAudit.buildCsv([ { at: 't', kind: 'ask', label: 'l', context: 'c' } ]).indexOf('at,kind,label,context,blockedReason') >= 0 : false })`);
+  check('P4. audit buttons present, weekly card renders clicks, CSV builder reachable in the page', !!p4 && p4.hasJson && p4.hasCsv && p4.weekHidden === false && /4/.test(p4.body) && p4.csv === true, p4);
 } catch (e) {
   check('X. harness completed without exception', false, String(e && e.message || e));
 } finally {

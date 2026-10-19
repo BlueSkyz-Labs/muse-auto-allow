@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.22.0
+- **W5 shipped (F1 + F2 từ tình báo thị trường, đã được chủ sở hữu duyệt): luật ba tầng + xuất audit.**
+  - **F1 — Luật ba tầng (allow / ask / block).** Mô-đun thuần mới `extension/rules.js` (`MuseRules`:
+    `defaults`/`sanitize`/`decide`) đánh giá theo decision table D1–D6: block thắng mọi tầng; `ask` =
+    KHÔNG bấm, để người dùng tự xử lý (log kind `ask`, chip trung tính, bộ đếm `asked` riêng); `allow`
+    chỉ thu hẹp — legacy `allowTopics`/`blockKeywords` giữ nguyên hành vi từng byte; connector/auth
+    screens bất biến, không luật nào gỡ được. Bảng luật trong Safety (thêm/xoá/bật-tắt/đổi thứ tự) +
+    Nhập/Xuất JSON có validate + preview trước khi áp.
+  - **F2 — Xuất audit.** Mô-đun thuần mới `extension/audit.js` (`MuseAudit`: `buildJson`/`buildCsv`/
+    `weeklySummary`/`containsForbidden`). Nút "Xuất audit JSON/CSV" trên trang Thống kê (log đã giải mã,
+    allowlist trường chặt — không license, không khoá mã hoá, không `iv/ct`); card "Tuần này" với số
+    bấm/bị chặn/chờ bạn. CSV có BOM + escape đúng chuẩn.
+  - **Hạ tầng**: 33 khóa i18n mới ×6 locale (**288/288 parity**); `manifest` + SHIPPED thêm 2 mô-đun;
+    giá trị YOLO vẫn bypass toàn bộ tầng luật như trước.
+  - **Kiểm thử**: `test/rule-engine-unit.mjs` 20/20 (bảng quyết định, sanitize fail-closed, CSV escape,
+    quét trường cấm, purity); qa-experience +4 check (P1–P4); battery đầy đủ trước freeze.
+
 ## 1.21.0
 - **W3 + W4 của catalog đã duyệt shipped: G02 Mission Playbooks + lõi giấy phép ngoại tuyến (dormant).**
   - **G02 — Playbooks có biến.** Mô-đun thuần mới `extension/playbook.js` (declare/parseTokens/
