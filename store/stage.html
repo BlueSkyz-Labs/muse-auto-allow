@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Muse Auto-Allow — store stage</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #0e0f11; }
+  .stage { position: relative; width: 1280px; height: 800px; overflow: hidden;
+           font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #eceef2;
+           background:
+             radial-gradient(1200px 640px at 84% -12%, rgba(0,90,191,.22), rgba(0,90,191,0) 60%),
+             radial-gradient(900px 520px at -8% 112%, rgba(0,64,220,.12), rgba(0,64,220,0) 60%),
+             #0e0f11; }
+  .stage::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+                  background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0) 28%); }
+  .grid { position: absolute; inset: 0; opacity: .5;
+          background-image: linear-gradient(rgba(236,238,242,.035) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(236,238,242,.035) 1px, transparent 1px);
+          background-size: 56px 56px; mask-image: radial-gradient(900px 600px at 72% 40%, #000 40%, transparent 78%); }
+  .wrap { position: relative; display: flex; align-items: center; gap: 56px; height: 100%; padding: 0 64px; }
+  .copy { width: 430px; flex: none; }
+  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 26px; }
+  .brand .mark { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center;
+                 background: linear-gradient(135deg, #0082FB, #0064E0 62%, #0040DC); box-shadow: 0 10px 26px -12px rgba(0,64,220,.8); }
+  .brand .mark svg { width: 17px; height: 17px; }
+  .brand .name { font-size: 14px; font-weight: 600; letter-spacing: .01em; color: #eceef2; }
+  h1 { font-size: 40px; line-height: 1.12; letter-spacing: -.028em; font-weight: 600; margin: 0 0 16px; }
+  .sub { font-size: 16px; line-height: 1.55; color: #a6abb5; margin: 0; letter-spacing: .002em; }
+  .facts { display: flex; gap: 18px; margin-top: 30px; }
+  .fact { font-size: 12px; color: #8f95a0; display: flex; align-items: center; gap: 7px; }
+  .fact i { width: 6px; height: 6px; border-radius: 50%; background: #4b8ff0; box-shadow: 0 0 0 3px rgba(75,143,240,.16); }
+  .shot { position: relative; flex: 1; display: flex; align-items: center; justify-content: center; }
+  .shot img { display: block; width: var(--shotw, 640px); border-radius: 18px;
+              box-shadow: 0 40px 110px -40px rgba(0,0,0,.85), 0 0 0 1px rgba(236,238,242,.10), 0 2px 0 rgba(255,255,255,.04) inset;
+              background: #161719; }
+  .tag { position: absolute; right: 0; bottom: 26px; font-size: 11px; letter-spacing: .09em;
+         text-transform: uppercase; color: #6f7580; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="grid"></div>
+  <div class="wrap">
+    <div class="copy">
+      <div class="brand">
+        <span class="mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M5 12.6l4.4 4.4L19 6.4" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <span class="name">Muse Auto-Allow</span>
+      </div>
+      <h1 id="title">Auto-click Allow, with a seatbelt.</h1>
+      <p class="sub" id="sub">Starts in logging-only mode. Local-only, no telemetry, six languages.</p>
+      <div class="facts">
+        <span class="fact"><i></i>Logging-only by default</span>
+        <span class="fact"><i></i>Never clicks Deny</span>
+        <span class="fact"><i></i>Local-only</span>
+      </div>
+    </div>
+    <div class="shot">
+      <img id="shot" src="" alt="">
+    </div>
+  </div>
+  <div class="tag">muse.ai · chatgpt.com</div>
+</div>
+<script>
+  const q = new URLSearchParams(location.search);
+  const img = document.getElementById('shot');
+  img.src = q.get('src') || 'shots/popup-live-dark.png';
+  img.style.setProperty('--shotw', (q.get('w') || '640') + 'px');
+  if (q.get('title')) document.getElementById('title').textContent = q.get('title');
+  if (q.get('sub')) document.getElementById('sub').textContent = q.get('sub');
+  if (q.get('w')) img.style.width = q.get('w') + 'px';
+  window.__stageReady = img.complete ? true : false;
+  img.addEventListener('load', () => { window.__stageReady = true; });
+</script>
+</body>
+</html>

@@ -136,6 +136,30 @@
   </div>
 </div>
 
+<!-- v1.18.0 (CX-02) negatives — reworded auth/consent surfaces the independent audit clicked
+     live on the pre-fix engine; every button id here is FORBIDDEN in codex-e2e -->
+<div class="card" id="cardbearer">
+  <p>Provide the Bearer value</p>
+  <div class="row">
+    <button type="button" class="pos" id="cbearer">Allow</button>
+    <button type="button" class="neg" id="cbearer-d">Deny</button>
+  </div>
+</div>
+<div class="card" id="cardapikey">
+  <p>Enter your API-key</p>
+  <div class="row">
+    <button type="button" class="pos" id="capikey">Allow</button>
+    <button type="button" class="neg" id="capikey-d">Deny</button>
+  </div>
+</div>
+<div class="card" id="cardlogin">
+  <p>Complete login to GitHub</p>
+  <div class="row">
+    <button type="button" class="pos" id="clogin">Allow</button>
+    <button type="button" class="neg" id="clogin-d">Deny</button>
+  </div>
+</div>
+
 <!-- standing-grant-only pair: silent by default; clicked ONLY with the explicit YOLO opt-in -->
 <div class="card" id="cardstanding">
   <p>Repeated command in this session</p>

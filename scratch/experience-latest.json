@@ -75,8 +75,8 @@
       "detail": {
         "bodySW": 320,
         "bodyCW": 320,
-        "deSW": 1166,
-        "deCW": 1166,
+        "deSW": 1400,
+        "deCW": 1400,
         "lang": "vi"
       }
     },
@@ -84,10 +84,10 @@
       "name": "D. vi layout stats.html: no horizontal overflow",
       "ok": true,
       "detail": {
-        "bodySW": 1156,
-        "bodyCW": 1156,
-        "deSW": 1156,
-        "deCW": 1156,
+        "bodySW": 1390,
+        "bodyCW": 1390,
+        "deSW": 1390,
+        "deCW": 1390,
         "lang": "vi"
       }
     },
@@ -161,7 +161,7 @@
       "name": "H. 200%-zoom proxy popup.html: no overflow + primary control intact",
       "ok": true,
       "detail": {
-        "w0": 1166,
+        "w0": 1400,
         "z": {
           "sw": 360,
           "cw": 360,
@@ -174,7 +174,7 @@
       "name": "H. 200%-zoom proxy stats.html: no overflow + primary control intact",
       "ok": true,
       "detail": {
-        "w0": 1166,
+        "w0": 1400,
         "z": {
           "sw": 360,
           "cw": 360,

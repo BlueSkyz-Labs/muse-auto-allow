@@ -168,7 +168,8 @@ function killMyChrome() {
 
 const EXPECTED_LIVE = ['c1', 'c1t', 'c5', 'c6', 'cnow', 'c3pending', 'c3', 'cbar', 'cbar2', 'c7'];
 const FORBIDDEN_ALL = ['lone', 'cdis', 'csplit', 'canchor', 'cnotif', 'cauth', 'standing', 'standing-deny',
-  'kw', 'kw-deny', 'denyonly', 'plainreview', 'c1t-standing', 'c1t-deny'];
+  'kw', 'kw-deny', 'denyonly', 'plainreview', 'c1t-standing', 'c1t-deny',
+  'cbearer', 'capikey', 'clogin']; // v1.18.0 (CX-02): reworded auth surfaces stay forbidden
 const DEDUP_MS = 5000;
 
 let ws = null;

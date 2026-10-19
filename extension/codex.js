@@ -95,8 +95,11 @@
   const CONSENT_ONLY_RE = /\b(notifications?|newsletter|subscribe|cookies?|marketing|alerts?|reminders?|tips?)\b/i;
   const APPROVAL_CONTEXT_RE = /\b(approv|perform this action|allow (codex|chatgpt)\b|proceed)\b/i;
   // Auth/connector hard-block: the account-linking boundary is the user's own.
-  const AUTH_WORD_RE = /\b(authorize|authorization|sign\s+in|log\s+in|connect|oauth|link\s+(your\s+)?account|grant\s+access|api\s+key|access\s+token|personal\s+access\s+token|api\s+token|paste\s+(the\s+|your\s+)?token)\b/i;
-  const CONNECT_BTN_RE = /^(connect\b|authorize\b|sign\s+in\b|log\s+in\b|link\b|set\s+up\b|add\s+account\b)/i;
+  // v1.18.0 (CX-02): widened to content.js parity + bearer/api-key/login variants — the audit
+  // clicked live through 'Provide the Bearer value', 'Enter your API-key' and 'Complete login
+  // to GitHub'. Over-blocking stays the intended trade-off.
+  const AUTH_WORD_RE = /\b(authorize|authorization|sign[\s-]?in|log[\s-]?in|login|connect|oauth|link\s+(your\s+)?account|grant\s+access|api[\s_-]?key|access\s+token|personal\s+access\s+token|api\s+token|bearer(\s+(key|token|value))?|paste\s+(the\s+|your\s+)?(token|key))\b/i;
+  const CONNECT_BTN_RE = /^(connect\b|authorize\b|sign[\s-]?in\b|log[\s-]?in\b|login\b|link\b|set\s+up\b|add\s+account\b)/i;
 
   const EXPAND_THROTTLE_MS = 800;
   const BAR_THROTTLE_MS = 1000;
@@ -370,8 +373,11 @@
             const entry = item.entry;
             try {
               const enc = await encryptCtx(entry.context);
-              if (enc) { entry.ctx = enc; delete entry.context; }
-            } catch { /* keep plaintext */ }
+              if (enc) entry.ctx = enc;
+            } catch { /* ignore */ }
+            // v1.18.0 (CX-03): NEVER persist DOM context as plaintext — a failed encryption
+            // drops the sentence (the label/kind/reason stay); the log contract is 0 plaintext.
+            delete entry.context;
             log.unshift(entry);
             if (item.counts !== false) {
               count += 1;
@@ -522,6 +528,7 @@
       const t = txt(b);
       if (!PENDING_RE.test(t)) continue;
       if (/hide details/i.test(t) || DONE_STATUS_RE.test(t)) continue;
+      if (DESTRUCTIVE_RE.test(t)) continue; // v1.18.0 (CX-01 hardening): an expand click never targets destructive wording
       if (authNear(b, 2)) { noteBlocked('Connect', 'connector', t, 'connector:' + t.slice(0, 160)); continue; }
       const reason = blockReasonFor(t, contextText(b));
       if (reason) { noteBlocked('expand', reason, t, 'expand:' + t.slice(0, 160)); continue; }

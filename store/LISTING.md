@@ -16,9 +16,9 @@ dashboard (no repo value to fill).
 | Item name | **Muse Auto-Allow** |
 | Category | **Productivity** |
 | Default language | English (en) |
-| Version | 1.13.0 |
+| Version | 1.18.0 |
 | Manifest version | Manifest V3 |
-| Extension package | `dist/muse-auto-allow-v1.13.0.zip` |
+| Extension package | `dist/muse-auto-allow-v1.18.0.zip` |
 | License | MIT © 2026 BlueSkyz Labs |
 | Homepage / support URL | `https://github.com/BlueSkyz-Labs/muse-auto-allow` |
 | Privacy policy URL | `https://blueskyz-labs.github.io/muse-auto-allow/privacy.html` (GitHub Pages copy of `store/PRIVACY.md`; verified live 2026-10-12) |
@@ -558,7 +558,7 @@ Compliance notes for this declaration:
 - Manifest V3, no `content_security_policy` relaxation.
 - No analytics SDK, no CDN, no update endpoint. (The optional settings sync uses
   Chrome's built-in sync service — a browser feature, not an extension network call.)
-- `dist/muse-auto-allow-v1.13.0.zip` contains only static files with `manifest.json` at the
+- `dist/muse-auto-allow-v1.18.0.zip` contains only static files with `manifest.json` at the
   zip root.
 
 ---
