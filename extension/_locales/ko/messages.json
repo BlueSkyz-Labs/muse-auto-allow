@@ -515,27 +515,69 @@
   "langMenuAria": {
     "message": "언어"
   },
-  "missionTitle": { "message": "미션" },
-  "missionToggle": { "message": "미션 사용" },
-  "missionChoose": { "message": "미션 선택" },
-  "missionSendStep": { "message": "지금 단계 보내기" },
-  "missionPause": { "message": "미션 일시정지" },
-  "missionProgress": { "message": "$1/$2 단계 · $3 사이클" },
-  "missionStepCtx": { "message": "$1/$2 단계 · $3 사이클" },
-  "missionCompleteCtx": { "message": "완료 · $1 사이클" },
-  "missionSteps": { "message": "$1단계" },
-  "missionGateNote": { "message": "미션을 실행하려면 자동 팔로업을 켜세요" },
-  "missionLastDone": { "message": "마지막 완료: $1" },
-  "kindMission": { "message": "미션" },
-  "kindMissionDry": { "message": "미션(드라이런)" },
-  "missionGolive": { "message": "GOLIVE 준비 — 프로젝트 오케스트레이터" },
-  "missionGoliveDesc": { "message": "계약 → 감사 → 실행 → 수렴하여 GOLIVE READY로." },
-  "missionAudit": { "message": "감사 전용" },
-  "missionAuditDesc": { "message": "읽기 전용: 격차를 찾아 순위를 매기고 증거와 함께 보고." },
-  "missionFix": { "message": "지적 사항 수정" },
-  "missionFixDesc": { "message": "미해결 지적을 끝까지 수정하고 증명한 뒤 정리." },
-  "missionRelease": { "message": "릴리스 준비" },
-  "missionReleaseDesc": { "message": "범위를 동결하고 산출물을 검증하고 릴리스 패킷을 구성해 GO를 결정." },
+  "missionTitle": {
+    "message": "미션"
+  },
+  "missionToggle": {
+    "message": "미션 사용"
+  },
+  "missionChoose": {
+    "message": "미션 선택"
+  },
+  "missionSendStep": {
+    "message": "지금 단계 보내기"
+  },
+  "missionPause": {
+    "message": "미션 일시정지"
+  },
+  "missionProgress": {
+    "message": "$1/$2 단계 · $3 사이클"
+  },
+  "missionStepCtx": {
+    "message": "$1/$2 단계 · $3 사이클"
+  },
+  "missionCompleteCtx": {
+    "message": "완료 · $1 사이클"
+  },
+  "missionSteps": {
+    "message": "$1단계"
+  },
+  "missionGateNote": {
+    "message": "미션을 실행하려면 자동 팔로업을 켜세요"
+  },
+  "missionLastDone": {
+    "message": "마지막 완료: $1"
+  },
+  "kindMission": {
+    "message": "미션"
+  },
+  "kindMissionDry": {
+    "message": "미션(드라이런)"
+  },
+  "missionGolive": {
+    "message": "GOLIVE 준비 — 프로젝트 오케스트레이터"
+  },
+  "missionGoliveDesc": {
+    "message": "계약 → 감사 → 실행 → 수렴하여 GOLIVE READY로."
+  },
+  "missionAudit": {
+    "message": "감사 전용"
+  },
+  "missionAuditDesc": {
+    "message": "읽기 전용: 격차를 찾아 순위를 매기고 증거와 함께 보고."
+  },
+  "missionFix": {
+    "message": "지적 사항 수정"
+  },
+  "missionFixDesc": {
+    "message": "미해결 지적을 끝까지 수정하고 증명한 뒤 정리."
+  },
+  "missionRelease": {
+    "message": "릴리스 준비"
+  },
+  "missionReleaseDesc": {
+    "message": "범위를 동결하고 산출물을 검증하고 릴리스 패킷을 구성해 GO를 결정."
+  },
   "codexTitle": {
     "message": "Codex (ChatGPT)"
   },
@@ -568,8 +610,7 @@
   },
   "kindCodexDry": {
     "message": "codex (드라이)"
-  }
-,
+  },
   "logFilterAll": {
     "message": "전체"
   },
@@ -595,37 +636,61 @@
     "message": "일치하는 항목 없음"
   },
   "onbLearnMore": {
-    "message": "\uc790\uc138\ud788 \ubcf4\uae30 \u2014 \uc548\uc804 \uc7a5\uce58\uc758 \uc791\ub3d9 \ubc29\uc2dd"
+    "message": "자세히 보기 — 안전 장치의 작동 방식"
   },
   "digestTopReason": {
-    "message": "\uc8fc\uc694 \ucc28\ub2e8 \uc0ac\uc720"
+    "message": "주요 차단 사유"
   },
   "digestTopReasonNone": {
-    "message": "\ucc28\ub2e8 \uc5c6\uc74c"
+    "message": "차단 없음"
   },
   "digestTrendMore": {
-    "message": "\u2191 \uc9c0\ub09c 7\uc77c \ub300\ube44 $1"
+    "message": "↑ 지난 7일 대비 $1"
   },
   "digestTrendLess": {
-    "message": "\u2193 \uc9c0\ub09c 7\uc77c \ub300\ube44 $1"
+    "message": "↓ 지난 7일 대비 $1"
   },
   "digestTrendSame": {
-    "message": "\uc9c0\ub09c 7\uc77c\uacfc \ub3d9\uc77c"
+    "message": "지난 7일과 동일"
   },
-  "followupSendBlockedAnomaly": { "message": "전송 거부: 이상 동작으로 엔진이 자동 일시중지되었습니다" },
-  "anomalyPauseState": { "message": "$1까지 자동 일시중지됨 — 비정상적인 클릭 활동이 감지되었습니다" },
-  "anomalyActiveNote": { "message": "감지기가 엔진을 자동으로 일시중지했으며, 시간이 지나면 자동으로 다시 시작됩니다." },
-  "anomalyEnable": { "message": "이상 동작 자동 일시중지" },
-  "anomalyEnableHint": { "message": "클릭 동작이 비정상적으로 보이면(속도 또는 주제 급증) 엔진을 자동으로 일시중지합니다. 어떤 안전 장치도 약화하지 않습니다." },
-  "anomalyRateLabel": { "message": "지속 속도(클릭/분)" },
-  "anomalyRateHint": { "message": "5분 동안 Allow 클릭이 이 속도를 계속 초과하면 일시중지합니다." },
-  "anomalyTopicLabel": { "message": "주제 급증 보호" },
-  "anomalyTopicHint": { "message": "10분 동안 한 주제가 창을 지배하는 경우에도 일시중지합니다(40회 이상 클릭 및 70% 점유율)." },
-  "anomalyDurationLabel": { "message": "자동 일시중지 시간(분)" },
-  "anomalyDurationHint": { "message": "타이머가 끝나면 엔진이 자동으로 다시 시작됩니다." },
-  "kindAnomalyPause": { "message": "자동 일시중지(이상 동작)" },
+  "followupSendBlockedAnomaly": {
+    "message": "전송 거부: 이상 동작으로 엔진이 자동 일시중지되었습니다"
+  },
+  "anomalyPauseState": {
+    "message": "$1까지 자동 일시중지됨 — 비정상적인 클릭 활동이 감지되었습니다"
+  },
+  "anomalyActiveNote": {
+    "message": "감지기가 엔진을 자동으로 일시중지했으며, 시간이 지나면 자동으로 다시 시작됩니다."
+  },
+  "anomalyEnable": {
+    "message": "이상 동작 자동 일시중지"
+  },
+  "anomalyEnableHint": {
+    "message": "클릭 동작이 비정상적으로 보이면(속도 또는 주제 급증) 엔진을 자동으로 일시중지합니다. 어떤 안전 장치도 약화하지 않습니다."
+  },
+  "anomalyRateLabel": {
+    "message": "지속 속도(클릭/분)"
+  },
+  "anomalyRateHint": {
+    "message": "5분 동안 Allow 클릭이 이 속도를 계속 초과하면 일시중지합니다."
+  },
+  "anomalyTopicLabel": {
+    "message": "주제 급증 보호"
+  },
+  "anomalyTopicHint": {
+    "message": "10분 동안 한 주제가 창을 지배하는 경우에도 일시중지합니다(40회 이상 클릭 및 70% 점유율)."
+  },
+  "anomalyDurationLabel": {
+    "message": "자동 일시중지 시간(분)"
+  },
+  "anomalyDurationHint": {
+    "message": "타이머가 끝나면 엔진이 자동으로 다시 시작됩니다."
+  },
+  "kindAnomalyPause": {
+    "message": "자동 일시중지(이상 동작)"
+  },
   "digestRecentNote": {
-    "message": "\ucd5c\uadfc \ub85c\uadf8 \ud56d\ubaa9 \uae30\uc900"
+    "message": "최근 로그 항목 기준"
   },
   "licenseTitle": {
     "message": "라이선스"
@@ -698,5 +763,104 @@
   },
   "missionUnavailable": {
     "message": "이 단계를 사용할 수 없습니다. 미션은 일시 중지 상태로 유지됩니다."
+  },
+  "kindAsk": {
+    "message": "확인"
+  },
+  "digestAsked": {
+    "message": "확인 대기"
+  },
+  "rulesTitle": {
+    "message": "단계별 규칙(허용 / 확인 / 차단)"
+  },
+  "rulesDescription": {
+    "message": "차단이 우선합니다. 확인은 직접 처리하라는 뜻입니다. 허용은 범위를 좁힐 뿐 넓히지 않습니다."
+  },
+  "ruleAdd": {
+    "message": "규칙 추가"
+  },
+  "ruleMoveUp": {
+    "message": "위로"
+  },
+  "ruleMoveDown": {
+    "message": "아래로"
+  },
+  "ruleEnabled": {
+    "message": "사용"
+  },
+  "ruleDisabled": {
+    "message": "사용 안 함"
+  },
+  "ruleKindAllow": {
+    "message": "허용"
+  },
+  "ruleKindAsk": {
+    "message": "확인"
+  },
+  "ruleKindBlock": {
+    "message": "차단"
+  },
+  "ruleId": {
+    "message": "아직 단계별 규칙이 없습니다"
+  },
+  "ruleTopics": {
+    "message": "주제"
+  },
+  "ruleKeywords": {
+    "message": "키워드"
+  },
+  "ruleNote": {
+    "message": "메모"
+  },
+  "ruleCancel": {
+    "message": "취소"
+  },
+  "ruleSave": {
+    "message": "저장"
+  },
+  "ruleInvalid": {
+    "message": "유효하지 않은 규칙이 거부되었습니다."
+  },
+  "ruleImportJson": {
+    "message": "JSON 가져오기"
+  },
+  "ruleExportJson": {
+    "message": "JSON 내보내기"
+  },
+  "ruleImportPreview": {
+    "message": "유효함"
+  },
+  "ruleApplyImport": {
+    "message": "적용"
+  },
+  "ruleDryRunLink": {
+    "message": "드라이런 열기"
+  },
+  "ruleDryRunHint": {
+    "message": "팁: 규칙을 조정하는 동안 드라이런을 켜 두세요. 모두 기록되고 아무것도 클릭되지 않습니다."
+  },
+  "auditExportJson": {
+    "message": "감사 JSON 내보내기"
+  },
+  "auditExportCsv": {
+    "message": "감사 CSV 내보내기"
+  },
+  "auditWeeklyTitle": {
+    "message": "이번 주"
+  },
+  "auditWeekClicks": {
+    "message": "클릭"
+  },
+  "auditWeekBlocked": {
+    "message": "차단"
+  },
+  "auditWeekAsked": {
+    "message": "확인 대기"
+  },
+  "auditWeekFollowups": {
+    "message": "후속"
+  },
+  "auditNoData": {
+    "message": "아직 데이터가 없습니다"
   }
 }

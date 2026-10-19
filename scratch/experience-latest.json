@@ -203,10 +203,10 @@
     },
     {
       "name": "E. state communicated as text (dry-run band or live state line)",
-      "ok": true,
+      "ok": false,
       "detail": {
-        "bandShown": true,
-        "bannerText": "Logging only — nothing will be clicked",
+        "bandShown": false,
+        "bannerText": "",
         "lineText": ""
       }
     },
@@ -225,27 +225,17 @@
       }
     },
     {
-      "name": "G1. keyboard: while onboarding is open, Tab stays inside the modal (focus trap)",
-      "ok": true,
+      "name": "G1. keyboard: onboarding open on boot (probe precondition)",
+      "ok": false,
       "detail": {
-        "modalOpen": true,
-        "inModal": [
-          "obPrimary",
-          "obSkip",
-          "BODY",
-          "obPrimary",
-          "obSkip",
-          "BODY",
-          "obPrimary",
-          "obSkip"
-        ]
+        "modalOpen": false
       }
     },
     {
-      "name": "G2. keyboard: Tab reaches the controls (10/10 unique) and does not trap",
+      "name": "G2. keyboard: Tab reaches the controls (16/15 unique) and does not trap",
       "ok": true,
       "detail": {
-        "total": 10,
+        "total": 15,
         "uniq": [
           "langBtn",
           "p15",
@@ -256,14 +246,19 @@
           "delay",
           "misbtn",
           "followupEnabled",
-          "openstats"
+          "fq0",
+          "fq1",
+          "fq2",
+          "fadvbtn",
+          "fprompt",
+          "fsendnow"
         ],
         "tail": [
+          "p15",
           "p60",
           "ptom",
           "safetyBtn",
-          "enabled",
-          "delay"
+          "enabled"
         ]
       }
     },
@@ -282,11 +277,11 @@
     },
     {
       "name": "H. 200%-zoom proxy stats.html: no overflow + primary control intact",
-      "ok": true,
+      "ok": false,
       "detail": {
         "w0": 1400,
         "z": {
-          "sw": 360,
+          "sw": 414,
           "cw": 360,
           "primaryId": null,
           "primaryVisible": true
@@ -338,51 +333,48 @@
     },
     {
       "name": "L1. log day groups + filters bar render",
-      "ok": true,
+      "ok": false,
       "detail": {
-        "days": 2,
-        "items": 3,
-        "filtersShown": true,
-        "dayLabels": [
-          "Hôm nay",
-          "Hôm qua"
-        ]
+        "days": 0,
+        "items": 0,
+        "filtersShown": false,
+        "dayLabels": []
       }
     },
     {
       "name": "L2. Blocked chip filters to the blocked entry only",
-      "ok": true,
+      "ok": false,
       "detail": {
-        "items": 1,
-        "txt": "Hôm nay08:30:00bị chặn · keyword:testBeta Blocked"
+        "items": 0,
+        "txt": "Chưa bấm lần nào"
       }
     },
     {
       "name": "L3. search narrows to the matching entry",
-      "ok": true,
+      "ok": false,
       "detail": {
-        "items": 1,
-        "txt": "Hôm qua07:30:00duyệt (thử)Gamma Dry"
+        "items": 0,
+        "txt": "Chưa bấm lần nào"
       }
     },
     {
       "name": "L4. no-match state shows a non-empty localized empty line (no items)",
       "ok": true,
       "detail": {
-        "empty": "Không có mục phù hợp",
+        "empty": "Chưa bấm lần nào",
         "items": 0
       }
     },
     {
       "name": "M. G07 briefing: card visible, text carries the signal, fits the surface",
-      "ok": true,
+      "ok": false,
       "detail": {
-        "hidden": false,
-        "top": "keyword:banana (1)",
-        "trend": "5",
-        "delta": "↑ 5 so với 7 ngày trước",
-        "sw": 290,
-        "cw": 290
+        "hidden": true,
+        "top": "—",
+        "trend": "0",
+        "delta": "",
+        "sw": 0,
+        "cw": 0
       }
     },
     {
@@ -409,7 +401,48 @@
         "inputCleared": true,
         "chip": "Miễn phí"
       }
+    },
+    {
+      "name": "P1. layers card renders stored rule (kind ask) + digest asks counter + ask chip in log",
+      "ok": false,
+      "detail": {
+        "rows": 0,
+        "asked": "2",
+        "chip": 1
+      }
+    },
+    {
+      "name": "P2. add-rule writes a new block row through the UI",
+      "ok": true,
+      "detail": {
+        "rows": 2,
+        "kinds": [
+          "ask",
+          "block"
+        ]
+      }
+    },
+    {
+      "name": "P3. delete-rule persists; legacy blockKeywords + allowTopics survive the layers write",
+      "ok": true,
+      "detail": {
+        "rows": 1,
+        "stored": 1,
+        "keepKw": true,
+        "allowTopics": 0
+      }
+    },
+    {
+      "name": "P4. audit buttons present, weekly card renders clicks, CSV builder reachable in the page",
+      "ok": true,
+      "detail": {
+        "hasJson": true,
+        "hasCsv": true,
+        "weekHidden": false,
+        "body": "lượt bấm: 4 bị chặn: 1 chờ bạn: 1 nhắc tiếp: 1",
+        "csv": true
+      }
     }
   ],
-  "failed": 0
+  "failed": 8
 }

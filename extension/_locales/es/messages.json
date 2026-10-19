@@ -515,27 +515,69 @@
   "langMenuAria": {
     "message": "Idioma"
   },
-  "missionTitle": { "message": "Misiones" },
-  "missionToggle": { "message": "Activar misión" },
-  "missionChoose": { "message": "Elige una misión" },
-  "missionSendStep": { "message": "Enviar el paso ahora" },
-  "missionPause": { "message": "Pausar la misión" },
-  "missionProgress": { "message": "paso $1/$2 · ciclo $3" },
-  "missionStepCtx": { "message": "paso $1/$2 · ciclo $3" },
-  "missionCompleteCtx": { "message": "completa · $1 ciclos" },
-  "missionSteps": { "message": "$1 pasos" },
-  "missionGateNote": { "message": "Activa el seguimiento automático para ejecutar una misión" },
-  "missionLastDone": { "message": "Última completada: $1" },
-  "kindMission": { "message": "misión" },
-  "kindMissionDry": { "message": "misión (prueba)" },
-  "missionGolive": { "message": "LISTO PARA GOLIVE — Orquestador de proyecto" },
-  "missionGoliveDesc": { "message": "Contrato → auditoría → ejecución → convergencia a GOLIVE READY." },
-  "missionAudit": { "message": "SOLO AUDITORÍA" },
-  "missionAuditDesc": { "message": "Solo lectura: halla brechas, priorízalas e informa con evidencia." },
-  "missionFix": { "message": "CORREGIR HALLAZGOS" },
-  "missionFixDesc": { "message": "Corrige los hallazgos abiertos de extremo a extremo, pruébalo y concilia." },
-  "missionRelease": { "message": "PREPARACIÓN DE LANZAMIENTO" },
-  "missionReleaseDesc": { "message": "Congela el alcance, verifica el artefacto, arma el paquete y decide GO." },
+  "missionTitle": {
+    "message": "Misiones"
+  },
+  "missionToggle": {
+    "message": "Activar misión"
+  },
+  "missionChoose": {
+    "message": "Elige una misión"
+  },
+  "missionSendStep": {
+    "message": "Enviar el paso ahora"
+  },
+  "missionPause": {
+    "message": "Pausar la misión"
+  },
+  "missionProgress": {
+    "message": "paso $1/$2 · ciclo $3"
+  },
+  "missionStepCtx": {
+    "message": "paso $1/$2 · ciclo $3"
+  },
+  "missionCompleteCtx": {
+    "message": "completa · $1 ciclos"
+  },
+  "missionSteps": {
+    "message": "$1 pasos"
+  },
+  "missionGateNote": {
+    "message": "Activa el seguimiento automático para ejecutar una misión"
+  },
+  "missionLastDone": {
+    "message": "Última completada: $1"
+  },
+  "kindMission": {
+    "message": "misión"
+  },
+  "kindMissionDry": {
+    "message": "misión (prueba)"
+  },
+  "missionGolive": {
+    "message": "LISTO PARA GOLIVE — Orquestador de proyecto"
+  },
+  "missionGoliveDesc": {
+    "message": "Contrato → auditoría → ejecución → convergencia a GOLIVE READY."
+  },
+  "missionAudit": {
+    "message": "SOLO AUDITORÍA"
+  },
+  "missionAuditDesc": {
+    "message": "Solo lectura: halla brechas, priorízalas e informa con evidencia."
+  },
+  "missionFix": {
+    "message": "CORREGIR HALLAZGOS"
+  },
+  "missionFixDesc": {
+    "message": "Corrige los hallazgos abiertos de extremo a extremo, pruébalo y concilia."
+  },
+  "missionRelease": {
+    "message": "PREPARACIÓN DE LANZAMIENTO"
+  },
+  "missionReleaseDesc": {
+    "message": "Congela el alcance, verifica el artefacto, arma el paquete y decide GO."
+  },
   "codexTitle": {
     "message": "Codex (ChatGPT)"
   },
@@ -568,8 +610,7 @@
   },
   "kindCodexDry": {
     "message": "codex (prueba)"
-  }
-,
+  },
   "logFilterAll": {
     "message": "Todo"
   },
@@ -595,7 +636,7 @@
     "message": "Sin coincidencias"
   },
   "onbLearnMore": {
-    "message": "M\u00e1s informaci\u00f3n: c\u00f3mo funcionan las protecciones"
+    "message": "Más información: cómo funcionan las protecciones"
   },
   "digestTopReason": {
     "message": "Motivo de bloqueo principal"
@@ -604,28 +645,52 @@
     "message": "sin bloqueos"
   },
   "digestTrendMore": {
-    "message": "\u2191 $1 frente a los 7 d\u00edas anteriores"
+    "message": "↑ $1 frente a los 7 días anteriores"
   },
   "digestTrendLess": {
-    "message": "\u2193 $1 frente a los 7 d\u00edas anteriores"
+    "message": "↓ $1 frente a los 7 días anteriores"
   },
   "digestTrendSame": {
-    "message": "igual que los 7 d\u00edas anteriores"
+    "message": "igual que los 7 días anteriores"
   },
-  "followupSendBlockedAnomaly": { "message": "Envío rechazado: el motor se pausó automáticamente (anomalía)" },
-  "anomalyPauseState": { "message": "Pausa automática hasta $1 — se detectó actividad de clics inusual" },
-  "anomalyActiveNote": { "message": "El detector pausó el motor; se reanudará automáticamente." },
-  "anomalyEnable": { "message": "Pausa automática por anomalías" },
-  "anomalyEnableHint": { "message": "Pausa el motor automáticamente si el comportamiento de los clics parece anómalo (ritmo o concentración en un tema). Nunca debilita ninguna protección." },
-  "anomalyRateLabel": { "message": "Ritmo sostenido (clics/min)" },
-  "anomalyRateHint": { "message": "Pausa si los clics en Allow superan este ritmo durante una ventana de 5 minutos." },
-  "anomalyTopicLabel": { "message": "Protección ante picos por tema" },
-  "anomalyTopicHint": { "message": "También pausa si un tema domina la ventana (40 o más clics y una cuota del 70 % en 10 minutos)." },
-  "anomalyDurationLabel": { "message": "Duración de la pausa automática (minutos)" },
-  "anomalyDurationHint": { "message": "El motor se reanuda automáticamente al terminar el temporizador." },
-  "kindAnomalyPause": { "message": "Pausa automática (anomalía)" },
+  "followupSendBlockedAnomaly": {
+    "message": "Envío rechazado: el motor se pausó automáticamente (anomalía)"
+  },
+  "anomalyPauseState": {
+    "message": "Pausa automática hasta $1 — se detectó actividad de clics inusual"
+  },
+  "anomalyActiveNote": {
+    "message": "El detector pausó el motor; se reanudará automáticamente."
+  },
+  "anomalyEnable": {
+    "message": "Pausa automática por anomalías"
+  },
+  "anomalyEnableHint": {
+    "message": "Pausa el motor automáticamente si el comportamiento de los clics parece anómalo (ritmo o concentración en un tema). Nunca debilita ninguna protección."
+  },
+  "anomalyRateLabel": {
+    "message": "Ritmo sostenido (clics/min)"
+  },
+  "anomalyRateHint": {
+    "message": "Pausa si los clics en Allow superan este ritmo durante una ventana de 5 minutos."
+  },
+  "anomalyTopicLabel": {
+    "message": "Protección ante picos por tema"
+  },
+  "anomalyTopicHint": {
+    "message": "También pausa si un tema domina la ventana (40 o más clics y una cuota del 70 % en 10 minutos)."
+  },
+  "anomalyDurationLabel": {
+    "message": "Duración de la pausa automática (minutos)"
+  },
+  "anomalyDurationHint": {
+    "message": "El motor se reanuda automáticamente al terminar el temporizador."
+  },
+  "kindAnomalyPause": {
+    "message": "Pausa automática (anomalía)"
+  },
   "digestRecentNote": {
-    "message": "entre las entradas de registro m\u00e1s recientes"
+    "message": "entre las entradas de registro más recientes"
   },
   "licenseTitle": {
     "message": "Licencia"
@@ -698,5 +763,104 @@
   },
   "missionUnavailable": {
     "message": "El paso no está disponible; la misión permanece en pausa."
+  },
+  "kindAsk": {
+    "message": "Preguntar"
+  },
+  "digestAsked": {
+    "message": "por revisar"
+  },
+  "rulesTitle": {
+    "message": "Reglas por capas (permitir / preguntar / bloquear)"
+  },
+  "rulesDescription": {
+    "message": "Bloquear gana siempre. Preguntar deja la tarjeta en tus manos. Permitir solo restringe, nunca amplía."
+  },
+  "ruleAdd": {
+    "message": "Añadir regla"
+  },
+  "ruleMoveUp": {
+    "message": "Subir"
+  },
+  "ruleMoveDown": {
+    "message": "Bajar"
+  },
+  "ruleEnabled": {
+    "message": "Activa"
+  },
+  "ruleDisabled": {
+    "message": "Desactivada"
+  },
+  "ruleKindAllow": {
+    "message": "permitir"
+  },
+  "ruleKindAsk": {
+    "message": "preguntar"
+  },
+  "ruleKindBlock": {
+    "message": "bloquear"
+  },
+  "ruleId": {
+    "message": "Aún no hay reglas por capas"
+  },
+  "ruleTopics": {
+    "message": "temas"
+  },
+  "ruleKeywords": {
+    "message": "palabras clave"
+  },
+  "ruleNote": {
+    "message": "nota"
+  },
+  "ruleCancel": {
+    "message": "Cancelar"
+  },
+  "ruleSave": {
+    "message": "Guardar"
+  },
+  "ruleInvalid": {
+    "message": "Regla no válida rechazada."
+  },
+  "ruleImportJson": {
+    "message": "Importar JSON"
+  },
+  "ruleExportJson": {
+    "message": "Exportar JSON"
+  },
+  "ruleImportPreview": {
+    "message": "Válido"
+  },
+  "ruleApplyImport": {
+    "message": "Aplicar"
+  },
+  "ruleDryRunLink": {
+    "message": "Abrir prueba"
+  },
+  "ruleDryRunHint": {
+    "message": "Consejo: mantén la prueba activa mientras ajustas las reglas: todo se registra y no se hace clic."
+  },
+  "auditExportJson": {
+    "message": "Exportar auditoría JSON"
+  },
+  "auditExportCsv": {
+    "message": "Exportar auditoría CSV"
+  },
+  "auditWeeklyTitle": {
+    "message": "Esta semana"
+  },
+  "auditWeekClicks": {
+    "message": "clics"
+  },
+  "auditWeekBlocked": {
+    "message": "bloqueados"
+  },
+  "auditWeekAsked": {
+    "message": "por revisar"
+  },
+  "auditWeekFollowups": {
+    "message": "seguimientos"
+  },
+  "auditNoData": {
+    "message": "Aún no hay datos"
   }
 }

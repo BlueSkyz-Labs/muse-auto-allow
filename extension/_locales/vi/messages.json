@@ -515,27 +515,69 @@
   "langMenuAria": {
     "message": "Ngôn ngữ"
   },
-  "missionTitle": { "message": "Nhiệm vụ" },
-  "missionToggle": { "message": "Bật nhiệm vụ" },
-  "missionChoose": { "message": "Chọn một nhiệm vụ" },
-  "missionSendStep": { "message": "Gửi bước ngay" },
-  "missionPause": { "message": "Tạm dừng nhiệm vụ" },
-  "missionProgress": { "message": "bước $1/$2 · vòng $3" },
-  "missionStepCtx": { "message": "bước $1/$2 · vòng $3" },
-  "missionCompleteCtx": { "message": "hoàn tất · $1 vòng" },
-  "missionSteps": { "message": "$1 bước" },
-  "missionGateNote": { "message": "Bật Tự động theo dõi để chạy nhiệm vụ" },
-  "missionLastDone": { "message": "Hoàn tất gần nhất: $1" },
-  "kindMission": { "message": "nhiệm vụ" },
-  "kindMissionDry": { "message": "nhiệm vụ (thử)" },
-  "missionGolive": { "message": "SẴN SÀNG GOLIVE — Điều phối dự án" },
-  "missionGoliveDesc": { "message": "Hợp đồng → kiểm toán → thực thi → hội tụ về GOLIVE READY." },
-  "missionAudit": { "message": "CHỈ KIỂM TOÁN" },
-  "missionAuditDesc": { "message": "Chỉ đọc: tìm lỗ hổng, xếp hạng, báo cáo kèm bằng chứng." },
-  "missionFix": { "message": "SỬA PHÁT HIỆN" },
-  "missionFixDesc": { "message": "Sửa các phát hiện đang mở từ đầu đến cuối, chứng minh rồi đối chiếu." },
-  "missionRelease": { "message": "CHUẨN BỊ PHÁT HÀNH" },
-  "missionReleaseDesc": { "message": "Đóng băng phạm vi, xác minh, lập gói phát hành, quyết định GO." },
+  "missionTitle": {
+    "message": "Nhiệm vụ"
+  },
+  "missionToggle": {
+    "message": "Bật nhiệm vụ"
+  },
+  "missionChoose": {
+    "message": "Chọn một nhiệm vụ"
+  },
+  "missionSendStep": {
+    "message": "Gửi bước ngay"
+  },
+  "missionPause": {
+    "message": "Tạm dừng nhiệm vụ"
+  },
+  "missionProgress": {
+    "message": "bước $1/$2 · vòng $3"
+  },
+  "missionStepCtx": {
+    "message": "bước $1/$2 · vòng $3"
+  },
+  "missionCompleteCtx": {
+    "message": "hoàn tất · $1 vòng"
+  },
+  "missionSteps": {
+    "message": "$1 bước"
+  },
+  "missionGateNote": {
+    "message": "Bật Tự động theo dõi để chạy nhiệm vụ"
+  },
+  "missionLastDone": {
+    "message": "Hoàn tất gần nhất: $1"
+  },
+  "kindMission": {
+    "message": "nhiệm vụ"
+  },
+  "kindMissionDry": {
+    "message": "nhiệm vụ (thử)"
+  },
+  "missionGolive": {
+    "message": "SẴN SÀNG GOLIVE — Điều phối dự án"
+  },
+  "missionGoliveDesc": {
+    "message": "Hợp đồng → kiểm toán → thực thi → hội tụ về GOLIVE READY."
+  },
+  "missionAudit": {
+    "message": "CHỈ KIỂM TOÁN"
+  },
+  "missionAuditDesc": {
+    "message": "Chỉ đọc: tìm lỗ hổng, xếp hạng, báo cáo kèm bằng chứng."
+  },
+  "missionFix": {
+    "message": "SỬA PHÁT HIỆN"
+  },
+  "missionFixDesc": {
+    "message": "Sửa các phát hiện đang mở từ đầu đến cuối, chứng minh rồi đối chiếu."
+  },
+  "missionRelease": {
+    "message": "CHUẨN BỊ PHÁT HÀNH"
+  },
+  "missionReleaseDesc": {
+    "message": "Đóng băng phạm vi, xác minh, lập gói phát hành, quyết định GO."
+  },
   "codexTitle": {
     "message": "Codex (ChatGPT)"
   },
@@ -568,8 +610,7 @@
   },
   "kindCodexDry": {
     "message": "codex (thử)"
-  }
-,
+  },
   "logFilterAll": {
     "message": "Tất cả"
   },
@@ -595,37 +636,61 @@
     "message": "Không có mục phù hợp"
   },
   "onbLearnMore": {
-    "message": "T\u00ecm hi\u1ec3u th\u00eam \u2014 c\u00e1c ch\u1ed1t an to\u00e0n ho\u1ea1t \u0111\u1ed9ng th\u1ebf n\u00e0o"
+    "message": "Tìm hiểu thêm — các chốt an toàn hoạt động thế nào"
   },
   "digestTopReason": {
-    "message": "L\u00fd do ch\u1eb7n h\u00e0ng \u0111\u1ea7u"
+    "message": "Lý do chặn hàng đầu"
   },
   "digestTopReasonNone": {
-    "message": "kh\u00f4ng c\u00f3 l\u1ea7n ch\u1eb7n n\u00e0o"
+    "message": "không có lần chặn nào"
   },
   "digestTrendMore": {
-    "message": "\u2191 $1 so v\u1edbi 7 ng\u00e0y tr\u01b0\u1edbc"
+    "message": "↑ $1 so với 7 ngày trước"
   },
   "digestTrendLess": {
-    "message": "\u2193 $1 so v\u1edbi 7 ng\u00e0y tr\u01b0\u1edbc"
+    "message": "↓ $1 so với 7 ngày trước"
   },
   "digestTrendSame": {
-    "message": "b\u1eb1ng 7 ng\u00e0y tr\u01b0\u1edbc"
+    "message": "bằng 7 ngày trước"
   },
-  "followupSendBlockedAnomaly": { "message": "Không thể gửi: engine tự động tạm dừng do bất thường" },
-  "anomalyPauseState": { "message": "Tự động tạm dừng đến $1 — phát hiện hoạt động nhấp bất thường" },
-  "anomalyActiveNote": { "message": "Bộ phát hiện đã tự tạm dừng engine; hệ thống sẽ tự tiếp tục." },
-  "anomalyEnable": { "message": "Tự động tạm dừng khi có bất thường" },
-  "anomalyEnableHint": { "message": "Tự tạm dừng engine khi hành vi nhấp có vẻ bất thường (tần suất hoặc đột biến chủ đề). Không làm suy yếu bất kỳ lớp bảo vệ nào." },
-  "anomalyRateLabel": { "message": "Tần suất duy trì (lượt nhấp/phút)" },
-  "anomalyRateHint": { "message": "Tạm dừng khi lượt nhấp Allow duy trì trên ngưỡng này trong cửa sổ 5 phút." },
-  "anomalyTopicLabel": { "message": "Bảo vệ khi chủ đề tăng đột biến" },
-  "anomalyTopicHint": { "message": "Cũng tạm dừng khi một chủ đề chiếm ưu thế trong cửa sổ 10 phút (từ 40 lượt nhấp và chiếm 70%)." },
-  "anomalyDurationLabel": { "message": "Thời lượng tự tạm dừng (phút)" },
-  "anomalyDurationHint": { "message": "Engine sẽ tự tiếp tục khi hết thời gian." },
-  "kindAnomalyPause": { "message": "Tự tạm dừng (bất thường)" },
+  "followupSendBlockedAnomaly": {
+    "message": "Không thể gửi: engine tự động tạm dừng do bất thường"
+  },
+  "anomalyPauseState": {
+    "message": "Tự động tạm dừng đến $1 — phát hiện hoạt động nhấp bất thường"
+  },
+  "anomalyActiveNote": {
+    "message": "Bộ phát hiện đã tự tạm dừng engine; hệ thống sẽ tự tiếp tục."
+  },
+  "anomalyEnable": {
+    "message": "Tự động tạm dừng khi có bất thường"
+  },
+  "anomalyEnableHint": {
+    "message": "Tự tạm dừng engine khi hành vi nhấp có vẻ bất thường (tần suất hoặc đột biến chủ đề). Không làm suy yếu bất kỳ lớp bảo vệ nào."
+  },
+  "anomalyRateLabel": {
+    "message": "Tần suất duy trì (lượt nhấp/phút)"
+  },
+  "anomalyRateHint": {
+    "message": "Tạm dừng khi lượt nhấp Allow duy trì trên ngưỡng này trong cửa sổ 5 phút."
+  },
+  "anomalyTopicLabel": {
+    "message": "Bảo vệ khi chủ đề tăng đột biến"
+  },
+  "anomalyTopicHint": {
+    "message": "Cũng tạm dừng khi một chủ đề chiếm ưu thế trong cửa sổ 10 phút (từ 40 lượt nhấp và chiếm 70%)."
+  },
+  "anomalyDurationLabel": {
+    "message": "Thời lượng tự tạm dừng (phút)"
+  },
+  "anomalyDurationHint": {
+    "message": "Engine sẽ tự tiếp tục khi hết thời gian."
+  },
+  "kindAnomalyPause": {
+    "message": "Tự tạm dừng (bất thường)"
+  },
   "digestRecentNote": {
-    "message": "trong c\u00e1c m\u1ee5c log g\u1ea7n nh\u1ea5t"
+    "message": "trong các mục log gần nhất"
   },
   "licenseTitle": {
     "message": "Bản quyền"
@@ -698,5 +763,104 @@
   },
   "missionUnavailable": {
     "message": "Bước này không khả dụng; nhiệm vụ vẫn tạm dừng."
+  },
+  "kindAsk": {
+    "message": "Hỏi"
+  },
+  "digestAsked": {
+    "message": "chờ bạn"
+  },
+  "rulesTitle": {
+    "message": "Luật ba tầng (cho phép / hỏi / chặn)"
+  },
+  "rulesDescription": {
+    "message": "Chặn thắng mọi tầng. Hỏi nghĩa là để bạn tự xử lý. Cho phép chỉ thu hẹp — không bao giờ nới rộng."
+  },
+  "ruleAdd": {
+    "message": "Thêm luật"
+  },
+  "ruleMoveUp": {
+    "message": "Lên"
+  },
+  "ruleMoveDown": {
+    "message": "Xuống"
+  },
+  "ruleEnabled": {
+    "message": "Bật"
+  },
+  "ruleDisabled": {
+    "message": "Tắt"
+  },
+  "ruleKindAllow": {
+    "message": "cho phép"
+  },
+  "ruleKindAsk": {
+    "message": "hỏi"
+  },
+  "ruleKindBlock": {
+    "message": "chặn"
+  },
+  "ruleId": {
+    "message": "Chưa có luật ba tầng"
+  },
+  "ruleTopics": {
+    "message": "chủ đề"
+  },
+  "ruleKeywords": {
+    "message": "từ khoá"
+  },
+  "ruleNote": {
+    "message": "ghi chú"
+  },
+  "ruleCancel": {
+    "message": "Huỷ"
+  },
+  "ruleSave": {
+    "message": "Lưu"
+  },
+  "ruleInvalid": {
+    "message": "Luật không hợp lệ đã bị từ chối."
+  },
+  "ruleImportJson": {
+    "message": "Nhập JSON"
+  },
+  "ruleExportJson": {
+    "message": "Xuất JSON"
+  },
+  "ruleImportPreview": {
+    "message": "Hợp lệ"
+  },
+  "ruleApplyImport": {
+    "message": "Áp dụng"
+  },
+  "ruleDryRunLink": {
+    "message": "Mở chạy thử"
+  },
+  "ruleDryRunHint": {
+    "message": "Mẹo: bật chạy thử khi chỉnh luật — mọi thứ được ghi log, không bấm gì cả."
+  },
+  "auditExportJson": {
+    "message": "Xuất audit JSON"
+  },
+  "auditExportCsv": {
+    "message": "Xuất audit CSV"
+  },
+  "auditWeeklyTitle": {
+    "message": "Tuần này"
+  },
+  "auditWeekClicks": {
+    "message": "lượt bấm"
+  },
+  "auditWeekBlocked": {
+    "message": "bị chặn"
+  },
+  "auditWeekAsked": {
+    "message": "chờ bạn"
+  },
+  "auditWeekFollowups": {
+    "message": "nhắc tiếp"
+  },
+  "auditNoData": {
+    "message": "Chưa có dữ liệu"
   }
 }

@@ -331,6 +331,7 @@
   .k-open-panel { background: var(--fill); color: var(--muted); }
   /* v1.8.0 log kinds: blocked (safety) + the dry-run variants (log-only) */
   .k-blocked { background: rgba(194,38,63,.12); color: #a51e35; }
+  .k-ask { background: var(--fill); color: var(--ink); } /* v1.22.0 (W5): 'ask' — trung tính, không phải lỗi */
   .k-dry { background: rgba(0,90,191,.08); color: var(--muted); }
   @media (prefers-color-scheme: dark) {
     .k-blocked { background: rgba(255,130,150,.18); color: #ff9db0; }
@@ -436,7 +437,19 @@
   #misVariables input[type="text"] { flex: 1; min-width: 0; font: inherit; font-size: 12px; padding: 2px 8px;
              border-radius: 8px; border: 1px solid var(--stroke); background: var(--fill); color: var(--ink); }
   #misVariables input[type="text"]:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
-.licchip { font-size: 10.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase;
+.lrow { display: flex; align-items: center; gap: 6px; padding: 2px 0; }
+  .lrow .lkind { flex: none; font-size: 10px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+                 border-radius: 999px; padding: 0 6px; border: 1px solid var(--stroke); color: var(--muted); }
+  .lrow .lkind.allow { color: var(--accent-text); border-color: var(--accent-line); background: var(--accent-tint); }
+  .lrow .lkind.block { color: #a51e35; background: rgba(194,38,63,.10); border-color: rgba(194,38,63,.35); }
+  .lrow .ltxt { flex: 1; min-width: 0; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lrow .lx { flex: none; }
+  .lrow [data-act] { font: inherit; font-size: 11px; background: transparent; border: 1px solid var(--stroke);
+                     border-radius: 6px; color: var(--muted); cursor: pointer; padding: 0 5px; line-height: 1.5; }
+  .lrow [data-act]:hover { color: var(--ink); border-color: var(--stroke-hover); }
+  .limport { width: 100%; box-sizing: border-box; font: inherit; font-size: 11px; min-height: 56px;
+             border-radius: 8px; border: 1px solid var(--stroke); background: var(--fill); color: var(--ink); resize: vertical; }
+  .licchip { font-size: 10.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase;
             color: var(--accent-text); background: var(--accent-tint); border: 1px solid var(--accent-line);
             border-radius: 999px; padding: 0 6px; }
   .licinput { flex: 1; min-width: 0; font: inherit; font-size: 12px; padding: 3px 8px; border-radius: 8px;
@@ -705,6 +718,7 @@
           <span class="dstat"><b id="dClicks">0</b><span data-i18n="digestClicks">clicks</span></span>
           <span class="dstat"><b id="dFollowups">0</b><span data-i18n="digestFollowups">follow-ups</span></span>
           <span class="dstat"><b id="dBlocked">0</b><span data-i18n="digestBlocked">blocked</span></span>
+          <span class="dstat"><b id="dAsked">0</b><span data-i18n="digestAsked">asks</span></span>
         </div>
         <!-- v1.20.0 (G07): top block reason + 7-day trend ride inside the existing digest card -->
         <div class="dreason"><span data-i18n="digestTopReason">Top block reason</span><b id="dTopReason">—</b></div>
@@ -811,7 +825,40 @@
           <button type="button" class="rbtn" id="kwAdd" data-i18n="rulesAdd">Add</button>
           <button type="button" class="rbtn" id="kwReset" data-i18n="keywordsReset">Reset to defaults</button></div>
       </div>
-      <div class="rgroup">
+            <!-- v1.22.0 (W5/F1) — Luật ba tầng (allow/ask/block): CHỈ thu hẹp — block thắng, ask =
+           để người dùng tự xử lý, allow hoạt động như danh sách cho phép bổ sung. Các screen
+           connector/auth là bất biến và không luật nào gỡ được. -->
+      <div class="rgroup" id="layersGroup">
+        <div class="rlabel" data-i18n="rulesTitle">Layered rules (allow / ask / block)</div>
+        <div class="rnote" data-i18n="rulesDescription">Block wins over everything. Ask leaves the card to you. Allow narrows what may be clicked — it never widens anything.</div>
+        <div id="layersList"></div>
+        <div class="row field fset">
+          <select id="layerKind" class="licinput" style="flex:0 0 auto; width:86px">
+            <option value="block" data-i18n="ruleKindBlock">block</option>
+            <option value="ask" data-i18n="ruleKindAsk">ask</option>
+            <option value="allow" data-i18n="ruleKindAllow">allow</option>
+          </select>
+          <input type="text" id="layerTopics" class="licinput" placeholder="topics: a, b" data-i18n-ph="ruleTopics">
+        </div>
+        <div class="row field fset">
+          <input type="text" id="layerKeywords" class="licinput" placeholder="keywords: x, y" data-i18n-ph="ruleKeywords">
+          <button type="button" class="btn" id="layerAdd" data-i18n="ruleAdd">Add rule</button>
+        </div>
+        <div class="row licro">
+          <button type="button" class="btn" id="layerExport" data-i18n="ruleExportJson">Export JSON</button>
+          <button type="button" class="rbtn" id="layerImportOpen" data-i18n="ruleImportJson">Import JSON</button>
+        </div>
+        <div id="layerImportBox" hidden>
+          <textarea id="layerImport" class="limport" spellcheck="false" data-i18n-ph="ruleImportPreview" placeholder="Paste rules JSON…"></textarea>
+          <div class="row licro">
+            <button type="button" class="btn" id="layerImportCheck" data-i18n="ruleImportPreview">Validate</button>
+            <button type="button" class="rbtn" id="layerImportApply" data-i18n="ruleApplyImport" disabled>Apply</button>
+          </div>
+        </div>
+        <div class="misnote" id="layerNote" role="status"></div>
+        <div class="rnote" data-i18n="ruleDryRunHint">Tip: keep Dry-run on while you tune the rules — everything is logged and nothing is clicked.</div>
+      </div>
+<div class="rgroup">
         <label class="sw"><input type="checkbox" id="schEnabled"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="scheduleTitle">Follow-up only during hours</span></label>
         <div class="rnote" data-i18n="scheduleNote">Sends are skipped outside this local-time window (overnight windows wrap around).</div>
         <div class="schrow">
@@ -901,7 +948,9 @@
     </div>
   </div>
   <script src="playbook.js"></script>
-  <script src="license-pubkey.js"></script>
+  <script src="rules.js"></script>
+  <script src="audit.js"></script>
+    <script src="license-pubkey.js"></script>
   <script src="license.js"></script>
   <script src="popup.js"></script>
 </body>

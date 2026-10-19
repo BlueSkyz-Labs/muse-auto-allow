@@ -162,6 +162,9 @@
   // ---- v1.20.0 (G04): anomaly auto-pause --------------------------------------------------
   // The detector can only ever ADD a pause (never touch a cap). All state is page-local except
   // the pause itself + its marker, which persist so the reason mapping survives a reload.
+  // ---- v1.22.0 (W5/F1): ba tầng rule (allow/ask/block), CHỈ thu hẹp ------------------------
+  let ruleLayers = []; // rules.layers đã sanitize bằng MuseRules (mảng rỗng = không tầng nào)
+
   let anomaly = null;            // sanitized MuseAnomaly settings (defaults once the boot read lands)
   let anomalyLatchUntil = 0;     // no re-evaluation before this ts (guards against a re-fire loop)
   let anomalyDead = false;       // a throwing detector stays disabled for this page (fail closed)
@@ -393,7 +396,22 @@
   // exactly (case-insensitively) match extractTopic(). null => no rule blocks the click.
   function blockReasonFor(cardText, ctx) {
     if (v18.yoloMode) return null; // v1.9.4 YOLO: block rules are bypassed by explicit opt-in
-    const kw = keywordIn(String(cardText || '') + ' ' + String(ctx || ''));
+    const textAll = String(cardText || '') + ' ' + String(ctx || '');
+    // v1.22.0 (W5/F1): ba tầng rule đi qua mô-đun thuần; 'ask:<reason>' là tín hiệu KHÔNG bấm
+    // và để người dùng tự xử lý (khác 'blocked' = vi phạm quy tắc an toàn). Mọi screen khác
+    // (connector/auth/token) vẫn nằm sau bước này và KHÔNG rule nào gỡ được.
+    if (typeof MuseRules !== 'undefined' && MuseRules && !v18.yoloMode) {
+      const topic = String(extractTopic(ctx || cardText || '')).toLowerCase();
+      const d = MuseRules.decide({
+        topic, text: textAll.toLowerCase(), yolo: false,
+        legacy: { blockKeywords: v18.blockKeywords, allowTopics: v18.allowTopics },
+      }, ruleLayers);
+      if (d && d.action === 'block') return d.reason || 'rule';
+      if (d && d.action === 'ask') return 'ask:' + (d.reason || 'rule');
+      if (d && (d.action === 'allow' || d.action === 'none')) return null;
+    }
+    // fallback nguyên trạng (khi mô-đun thiếu): hành vi cũ từng byte
+    const kw = keywordIn(textAll);
     if (kw) return 'keyword:' + kw;
     if (v18.allowTopics.length) {
       const topic = String(extractTopic(ctx || cardText || '')).toLowerCase();
@@ -415,6 +433,26 @@
     recordClick(entry, entry.context, false);
     bumpDigest({ blocked: 1 });
     console.log('[muse-auto-allow] blocked (' + reason + ') "' + entry.label + '"');
+  }
+  // v1.22.0 (W5/F1): 'ask' = chưa chắc — KHÔNG bấm, để người dùng tự xử lý. Dedup như blocked;
+  // KHÔNG tăng bộ đếm click; CÓ tăng bộ đếm asked (digest) và log kind 'ask'.
+  function noteAsk(label, text, fpKey) {
+    const key = (fpKey || String(text || '').slice(0, 160)) + '|ask';
+    const t0 = blockedFps.get(key);
+    if (t0 && Date.now() - t0 < BLOCKED_DEDUP_MS) return;
+    blockedFps.set(key, Date.now());
+    if (blockedFps.size > 200) blockedFps.delete(blockedFps.keys().next().value);
+    const entry = { at: new Date().toISOString(), kind: 'ask', label: String(label || '').slice(0, 60), blockedReason: 'ask', context: String(text || '').slice(0, 240) };
+    if (v18.dryRun) entry.dryRun = true;
+    state.lastResult = entry;
+    recordClick(entry, entry.context, false);
+    bumpDigest({ asked: 1 });
+    console.log('[muse-auto-allow] ask "' + entry.label + '"');
+  }
+  // Một cửa cho các "không bấm vì lý do": ask:... -> noteAsk, còn lại -> noteBlocked.
+  function noteNotClick(label, reason, text, fpKey) {
+    if (String(reason || '').startsWith('ask:')) noteAsk(label, text, fpKey);
+    else noteBlocked(label, reason, text, fpKey);
   }
   function sanitizeList(v, cap, maxLen) {
     if (!Array.isArray(v)) return null;
@@ -440,6 +478,10 @@
     if ('anomalyLastPause' in s) anomalyLastPause = (s.anomalyLastPause && typeof s.anomalyLastPause === 'object') ? s.anomalyLastPause : null;
     if ('rules' in s) {
       const rules = asObj(s.rules);
+      if ('layers' in rules) {
+        const rl = (typeof MuseRules !== 'undefined' && MuseRules) ? MuseRules.sanitize(rules.layers) : null;
+        ruleLayers = rl && rl.ok ? rl.layers : []; // v1.22.0 (W5/F1)
+      }
       if ('allowTopics' in rules) v18.allowTopics = sanitizeList(rules.allowTopics, TOPIC_MAX, TOPIC_LEN) || [];
       if ('blockKeywords' in rules) {
         // Fail closed: the list is never truncated (a dropped keyword would silently unblock).
@@ -499,13 +541,14 @@
   // accumulated here and folded into the click flush (flushClicks), so one action costs ONE
   // chrome.storage.local.set instead of two, and the counters travel under the same cross-tab
   // lock as the log entry they accompany (parallel tabs cannot lose an increment).
-  const digestDelta = { clicks: 0, followups: 0, blocked: 0 };
+  const digestDelta = { clicks: 0, followups: 0, blocked: 0, asked: 0 }; // v1.22.0 (W5): + asked
   let digestDirty = false;
   function bumpDigest(delta) {
     if (delta) {
       digestDelta.clicks += Number(delta.clicks) || 0;
       digestDelta.followups += Number(delta.followups) || 0;
       digestDelta.blocked += Number(delta.blocked) || 0;
+      digestDelta.asked += Number(delta.asked) || 0;
     }
     digestDirty = true;
     flushClicks();
@@ -536,7 +579,7 @@
         const c = contextText(contextScope(b));
         if (consentOnly(c)) return false;
         const reason = blockReasonFor(cardText, c);
-        if (reason) { noteBlocked(txt(b), reason, cardText, 'card:' + cardText.slice(0, 160)); return false; }
+        if (reason) { noteNotClick(txt(b), reason, cardText, 'card:' + cardText.slice(0, 160)); return false; }
         return !allowOnCooldown(allowFp(b, c));
       }));
       if (allow) return { btn: allow, card, ctx: contextText(contextScope(allow)) };
@@ -572,7 +615,7 @@
           if (consentOnly(ctx)) break; // skip this candidate
           const cardText = txt(node);
           const reason = blockReasonFor(cardText, ctx);
-          if (reason) { noteBlocked(txt(b), reason, cardText, 'pair:' + cardText.slice(0, 160)); break; }
+          if (reason) { noteNotClick(txt(b), reason, cardText, 'pair:' + cardText.slice(0, 160)); break; }
           if (allowOnCooldown(allowFp(b, ctx))) break;
           return { btn: b, card: node, ctx };
         }
@@ -592,7 +635,7 @@
       if (/hide details/i.test(t) || DONE_STATUS_RE.test(t)) continue;
       if (connectorNear(b, 2)) { noteBlocked('Connect', 'connector', t, 'connector:' + t.slice(0, 160)); continue; }
       const reason = blockReasonFor(t, contextText(b));
-      if (reason) { noteBlocked('expand', reason, t, 'expand:' + t.slice(0, 160)); continue; }
+      if (reason) { noteNotClick('expand', reason, t, 'expand:' + t.slice(0, 160)); continue; }
       const key = t.slice(0, 160);
       if (onCooldown(key)) continue;
       return { btn: b, key };
@@ -610,7 +653,7 @@
       if (!NEED_APPROVAL_RE.test(t)) continue;
       if (connectorNear(surface, 2)) { noteBlocked('Connect', 'connector', t, 'connector:' + t.slice(0, 160)); continue; }
       const reason = blockReasonFor(t, t);
-      if (reason) { noteBlocked('open-panel', reason, t, 'surface:' + t.slice(0, 160)); continue; }
+      if (reason) { noteNotClick('open-panel', reason, t, 'surface:' + t.slice(0, 160)); continue; }
       const key = 'surface:' + t.slice(0, 160);
       if (onCooldown(key)) continue;
       const btn = buttonsIn(surface).find((b) =>
@@ -767,7 +810,8 @@
             d.clicks = (Number(d.clicks) || 0) + digestDelta.clicks;
             d.followups = (Number(d.followups) || 0) + digestDelta.followups;
             d.blocked = (Number(d.blocked) || 0) + digestDelta.blocked;
-            digestDelta.clicks = 0; digestDelta.followups = 0; digestDelta.blocked = 0;
+            d.asked = (Number(d.asked) || 0) + digestDelta.asked; // v1.22.0 (W5/F1)
+            digestDelta.clicks = 0; digestDelta.followups = 0; digestDelta.blocked = 0; digestDelta.asked = 0;
             digestDirty = false;
             patch.digestCounters = d;
           }

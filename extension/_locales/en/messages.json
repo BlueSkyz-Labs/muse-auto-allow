@@ -551,27 +551,69 @@
   "langMenuAria": {
     "message": "Language"
   },
-  "missionTitle": { "message": "Missions" },
-  "missionToggle": { "message": "Enable mission" },
-  "missionChoose": { "message": "Choose a mission" },
-  "missionSendStep": { "message": "Send step now" },
-  "missionPause": { "message": "Pause mission" },
-  "missionProgress": { "message": "step $1/$2 · cycle $3" },
-  "missionStepCtx": { "message": "step $1/$2 · cycle $3" },
-  "missionCompleteCtx": { "message": "complete · $1 cycles" },
-  "missionSteps": { "message": "$1 steps" },
-  "missionGateNote": { "message": "Turn on Auto follow-up to run a mission" },
-  "missionLastDone": { "message": "Last completed: $1" },
-  "kindMission": { "message": "mission" },
-  "kindMissionDry": { "message": "mission (dry)" },
-  "missionGolive": { "message": "GOLIVE READY — Project Orchestrator" },
-  "missionGoliveDesc": { "message": "Contract → audit → execute → converge to GOLIVE READY." },
-  "missionAudit": { "message": "AUDIT ONLY" },
-  "missionAuditDesc": { "message": "Read-only: find gaps, rank them, report with evidence." },
-  "missionFix": { "message": "FIX FINDINGS" },
-  "missionFixDesc": { "message": "Fix open findings end-to-end, prove each fix, then reconcile." },
-  "missionRelease": { "message": "RELEASE PREP" },
-  "missionReleaseDesc": { "message": "Freeze scope, verify the artifact, assemble the packet, decide GO." },
+  "missionTitle": {
+    "message": "Missions"
+  },
+  "missionToggle": {
+    "message": "Enable mission"
+  },
+  "missionChoose": {
+    "message": "Choose a mission"
+  },
+  "missionSendStep": {
+    "message": "Send step now"
+  },
+  "missionPause": {
+    "message": "Pause mission"
+  },
+  "missionProgress": {
+    "message": "step $1/$2 · cycle $3"
+  },
+  "missionStepCtx": {
+    "message": "step $1/$2 · cycle $3"
+  },
+  "missionCompleteCtx": {
+    "message": "complete · $1 cycles"
+  },
+  "missionSteps": {
+    "message": "$1 steps"
+  },
+  "missionGateNote": {
+    "message": "Turn on Auto follow-up to run a mission"
+  },
+  "missionLastDone": {
+    "message": "Last completed: $1"
+  },
+  "kindMission": {
+    "message": "mission"
+  },
+  "kindMissionDry": {
+    "message": "mission (dry)"
+  },
+  "missionGolive": {
+    "message": "GOLIVE READY — Project Orchestrator"
+  },
+  "missionGoliveDesc": {
+    "message": "Contract → audit → execute → converge to GOLIVE READY."
+  },
+  "missionAudit": {
+    "message": "AUDIT ONLY"
+  },
+  "missionAuditDesc": {
+    "message": "Read-only: find gaps, rank them, report with evidence."
+  },
+  "missionFix": {
+    "message": "FIX FINDINGS"
+  },
+  "missionFixDesc": {
+    "message": "Fix open findings end-to-end, prove each fix, then reconcile."
+  },
+  "missionRelease": {
+    "message": "RELEASE PREP"
+  },
+  "missionReleaseDesc": {
+    "message": "Freeze scope, verify the artifact, assemble the packet, decide GO."
+  },
   "codexTitle": {
     "message": "Codex (ChatGPT)"
   },
@@ -604,8 +646,7 @@
   },
   "kindCodexDry": {
     "message": "codex (dry)"
-  }
-,
+  },
   "logFilterAll": {
     "message": "All"
   },
@@ -631,7 +672,7 @@
     "message": "No matching entries"
   },
   "onbLearnMore": {
-    "message": "Learn more \u2014 how the rails work"
+    "message": "Learn more — how the rails work"
   },
   "digestTopReason": {
     "message": "Top block reason"
@@ -640,10 +681,10 @@
     "message": "no blocks"
   },
   "digestTrendMore": {
-    "message": "\u2191 $1 vs the previous 7 days"
+    "message": "↑ $1 vs the previous 7 days"
   },
   "digestTrendLess": {
-    "message": "\u2193 $1 vs the previous 7 days"
+    "message": "↓ $1 vs the previous 7 days"
   },
   "digestTrendSame": {
     "message": "same as the previous 7 days"
@@ -722,5 +763,104 @@
   },
   "missionUnavailable": {
     "message": "The step is unavailable; the mission remains paused."
+  },
+  "kindAsk": {
+    "message": "Ask"
+  },
+  "digestAsked": {
+    "message": "asks"
+  },
+  "rulesTitle": {
+    "message": "Layered rules (allow / ask / block)"
+  },
+  "rulesDescription": {
+    "message": "Block wins over everything. Ask leaves the card to you. Allow narrows what may be clicked — it never widens anything."
+  },
+  "ruleAdd": {
+    "message": "Add rule"
+  },
+  "ruleMoveUp": {
+    "message": "Move up"
+  },
+  "ruleMoveDown": {
+    "message": "Move down"
+  },
+  "ruleEnabled": {
+    "message": "Enabled"
+  },
+  "ruleDisabled": {
+    "message": "Disabled"
+  },
+  "ruleKindAllow": {
+    "message": "allow"
+  },
+  "ruleKindAsk": {
+    "message": "ask"
+  },
+  "ruleKindBlock": {
+    "message": "block"
+  },
+  "ruleId": {
+    "message": "No layered rules yet"
+  },
+  "ruleTopics": {
+    "message": "topics"
+  },
+  "ruleKeywords": {
+    "message": "keywords"
+  },
+  "ruleNote": {
+    "message": "note"
+  },
+  "ruleCancel": {
+    "message": "Cancel"
+  },
+  "ruleSave": {
+    "message": "Save"
+  },
+  "ruleInvalid": {
+    "message": "Invalid rule rejected."
+  },
+  "ruleImportJson": {
+    "message": "Import JSON"
+  },
+  "ruleExportJson": {
+    "message": "Export JSON"
+  },
+  "ruleImportPreview": {
+    "message": "Valid"
+  },
+  "ruleApplyImport": {
+    "message": "Apply"
+  },
+  "ruleDryRunLink": {
+    "message": "Open dry-run"
+  },
+  "ruleDryRunHint": {
+    "message": "Tip: keep Dry-run on while you tune the rules — everything is logged and nothing is clicked."
+  },
+  "auditExportJson": {
+    "message": "Export audit JSON"
+  },
+  "auditExportCsv": {
+    "message": "Export audit CSV"
+  },
+  "auditWeeklyTitle": {
+    "message": "This week"
+  },
+  "auditWeekClicks": {
+    "message": "clicks"
+  },
+  "auditWeekBlocked": {
+    "message": "blocked"
+  },
+  "auditWeekAsked": {
+    "message": "asks"
+  },
+  "auditWeekFollowups": {
+    "message": "follow-ups"
+  },
+  "auditNoData": {
+    "message": "No data yet"
   }
 }

@@ -515,27 +515,69 @@
   "langMenuAria": {
     "message": "言語"
   },
-  "missionTitle": { "message": "ミッション" },
-  "missionToggle": { "message": "ミッションを有効化" },
-  "missionChoose": { "message": "ミッションを選択" },
-  "missionSendStep": { "message": "今すぐステップを送信" },
-  "missionPause": { "message": "ミッションを一時停止" },
-  "missionProgress": { "message": "ステップ $1/$2 · サイクル $3" },
-  "missionStepCtx": { "message": "ステップ $1/$2 · サイクル $3" },
-  "missionCompleteCtx": { "message": "完了 · $1 サイクル" },
-  "missionSteps": { "message": "$1 ステップ" },
-  "missionGateNote": { "message": "ミッションを実行するには自動フォローアップをオンにしてください" },
-  "missionLastDone": { "message": "前回の完了: $1" },
-  "kindMission": { "message": "ミッション" },
-  "kindMissionDry": { "message": "ミッション（ドライ）" },
-  "missionGolive": { "message": "GOLIVE レディ — プロジェクト統括" },
-  "missionGoliveDesc": { "message": "契約 → 監査 → 実行 → 収束して GOLIVE READY へ。" },
-  "missionAudit": { "message": "監査のみ" },
-  "missionAuditDesc": { "message": "読み取り専用: ギャップを洗い出し、優先順位づけし、証拠とともに報告。" },
-  "missionFix": { "message": "指摘の修正" },
-  "missionFixDesc": { "message": "未解決の指摘を最後まで修正し、証明してから突き合わせる。" },
-  "missionRelease": { "message": "リリース準備" },
-  "missionReleaseDesc": { "message": "範囲を凍結し、成果物を検証し、パケットをまとめ、GO を判断。" },
+  "missionTitle": {
+    "message": "ミッション"
+  },
+  "missionToggle": {
+    "message": "ミッションを有効化"
+  },
+  "missionChoose": {
+    "message": "ミッションを選択"
+  },
+  "missionSendStep": {
+    "message": "今すぐステップを送信"
+  },
+  "missionPause": {
+    "message": "ミッションを一時停止"
+  },
+  "missionProgress": {
+    "message": "ステップ $1/$2 · サイクル $3"
+  },
+  "missionStepCtx": {
+    "message": "ステップ $1/$2 · サイクル $3"
+  },
+  "missionCompleteCtx": {
+    "message": "完了 · $1 サイクル"
+  },
+  "missionSteps": {
+    "message": "$1 ステップ"
+  },
+  "missionGateNote": {
+    "message": "ミッションを実行するには自動フォローアップをオンにしてください"
+  },
+  "missionLastDone": {
+    "message": "前回の完了: $1"
+  },
+  "kindMission": {
+    "message": "ミッション"
+  },
+  "kindMissionDry": {
+    "message": "ミッション（ドライ）"
+  },
+  "missionGolive": {
+    "message": "GOLIVE レディ — プロジェクト統括"
+  },
+  "missionGoliveDesc": {
+    "message": "契約 → 監査 → 実行 → 収束して GOLIVE READY へ。"
+  },
+  "missionAudit": {
+    "message": "監査のみ"
+  },
+  "missionAuditDesc": {
+    "message": "読み取り専用: ギャップを洗い出し、優先順位づけし、証拠とともに報告。"
+  },
+  "missionFix": {
+    "message": "指摘の修正"
+  },
+  "missionFixDesc": {
+    "message": "未解決の指摘を最後まで修正し、証明してから突き合わせる。"
+  },
+  "missionRelease": {
+    "message": "リリース準備"
+  },
+  "missionReleaseDesc": {
+    "message": "範囲を凍結し、成果物を検証し、パケットをまとめ、GO を判断。"
+  },
   "codexTitle": {
     "message": "Codex (ChatGPT)"
   },
@@ -568,8 +610,7 @@
   },
   "kindCodexDry": {
     "message": "codex（ドライ）"
-  }
-,
+  },
   "logFilterAll": {
     "message": "すべて"
   },
@@ -595,37 +636,61 @@
     "message": "一致する記録なし"
   },
   "onbLearnMore": {
-    "message": "\u8a73\u3057\u304f\u306f\u3053\u3061\u3089 \u2014 \u5b89\u5168\u30ec\u30fc\u30eb\u306e\u4ed5\u7d44\u307f"
+    "message": "詳しくはこちら — 安全レールの仕組み"
   },
   "digestTopReason": {
-    "message": "\u4e3b\u306a\u30d6\u30ed\u30c3\u30af\u7406\u7531"
+    "message": "主なブロック理由"
   },
   "digestTopReasonNone": {
-    "message": "\u30d6\u30ed\u30c3\u30af\u306a\u3057"
+    "message": "ブロックなし"
   },
   "digestTrendMore": {
-    "message": "\u2191 \u524d7\u65e5\u9593\u3088\u308a $1"
+    "message": "↑ 前7日間より $1"
   },
   "digestTrendLess": {
-    "message": "\u2193 \u524d7\u65e5\u9593\u3088\u308a $1"
+    "message": "↓ 前7日間より $1"
   },
   "digestTrendSame": {
-    "message": "\u524d7\u65e5\u9593\u3068\u540c\u3058"
+    "message": "前7日間と同じ"
   },
-  "followupSendBlockedAnomaly": { "message": "送信できません: 異常を検知してエンジンが自動停止しました" },
-  "anomalyPauseState": { "message": "$1 まで自動一時停止中 — 通常と異なるクリック動作を検知しました" },
-  "anomalyActiveNote": { "message": "検知機能がエンジンを自動停止しました。時間が経つと自動的に再開します。" },
-  "anomalyEnable": { "message": "異常時の自動一時停止" },
-  "anomalyEnableHint": { "message": "クリック動作に異常（頻度またはトピックの急増）が見られた場合、エンジンを自動停止します。既存の安全機能を弱めることはありません。" },
-  "anomalyRateLabel": { "message": "継続的な頻度（クリック/分）" },
-  "anomalyRateHint": { "message": "5 分間のウィンドウで Allow のクリックがこの頻度を超え続けると一時停止します。" },
-  "anomalyTopicLabel": { "message": "トピック急増ガード" },
-  "anomalyTopicHint": { "message": "10 分間に 1 つのトピックがウィンドウを占めた場合も一時停止します（40 回以上のクリックかつ 70% の割合）。" },
-  "anomalyDurationLabel": { "message": "自動一時停止の時間（分）" },
-  "anomalyDurationHint": { "message": "タイマーが終了するとエンジンは自動的に再開します。" },
-  "kindAnomalyPause": { "message": "自動一時停止（異常）" },
+  "followupSendBlockedAnomaly": {
+    "message": "送信できません: 異常を検知してエンジンが自動停止しました"
+  },
+  "anomalyPauseState": {
+    "message": "$1 まで自動一時停止中 — 通常と異なるクリック動作を検知しました"
+  },
+  "anomalyActiveNote": {
+    "message": "検知機能がエンジンを自動停止しました。時間が経つと自動的に再開します。"
+  },
+  "anomalyEnable": {
+    "message": "異常時の自動一時停止"
+  },
+  "anomalyEnableHint": {
+    "message": "クリック動作に異常（頻度またはトピックの急増）が見られた場合、エンジンを自動停止します。既存の安全機能を弱めることはありません。"
+  },
+  "anomalyRateLabel": {
+    "message": "継続的な頻度（クリック/分）"
+  },
+  "anomalyRateHint": {
+    "message": "5 分間のウィンドウで Allow のクリックがこの頻度を超え続けると一時停止します。"
+  },
+  "anomalyTopicLabel": {
+    "message": "トピック急増ガード"
+  },
+  "anomalyTopicHint": {
+    "message": "10 分間に 1 つのトピックがウィンドウを占めた場合も一時停止します（40 回以上のクリックかつ 70% の割合）。"
+  },
+  "anomalyDurationLabel": {
+    "message": "自動一時停止の時間（分）"
+  },
+  "anomalyDurationHint": {
+    "message": "タイマーが終了するとエンジンは自動的に再開します。"
+  },
+  "kindAnomalyPause": {
+    "message": "自動一時停止（異常）"
+  },
   "digestRecentNote": {
-    "message": "\u76f4\u8fd1\u306e\u30ed\u30b0\u8a18\u9332\u5185"
+    "message": "直近のログ記録内"
   },
   "licenseTitle": {
     "message": "ライセンス"
@@ -698,5 +763,104 @@
   },
   "missionUnavailable": {
     "message": "このステップは利用できません。ミッションは一時停止のままです。"
+  },
+  "kindAsk": {
+    "message": "確認"
+  },
+  "digestAsked": {
+    "message": "確認待ち"
+  },
+  "rulesTitle": {
+    "message": "階層ルール（許可 / 確認 / ブロック）"
+  },
+  "rulesDescription": {
+    "message": "ブロックが最優先。確認はあなたに委ねます。許可は対象を狭めるだけで、緩めることはありません。"
+  },
+  "ruleAdd": {
+    "message": "ルールを追加"
+  },
+  "ruleMoveUp": {
+    "message": "上へ"
+  },
+  "ruleMoveDown": {
+    "message": "下へ"
+  },
+  "ruleEnabled": {
+    "message": "有効"
+  },
+  "ruleDisabled": {
+    "message": "無効"
+  },
+  "ruleKindAllow": {
+    "message": "許可"
+  },
+  "ruleKindAsk": {
+    "message": "確認"
+  },
+  "ruleKindBlock": {
+    "message": "ブロック"
+  },
+  "ruleId": {
+    "message": "階層ルールはまだありません"
+  },
+  "ruleTopics": {
+    "message": "トピック"
+  },
+  "ruleKeywords": {
+    "message": "キーワード"
+  },
+  "ruleNote": {
+    "message": "メモ"
+  },
+  "ruleCancel": {
+    "message": "キャンセル"
+  },
+  "ruleSave": {
+    "message": "保存"
+  },
+  "ruleInvalid": {
+    "message": "無効なルールは拒否されました。"
+  },
+  "ruleImportJson": {
+    "message": "JSON を読み込む"
+  },
+  "ruleExportJson": {
+    "message": "JSON を書き出す"
+  },
+  "ruleImportPreview": {
+    "message": "有効"
+  },
+  "ruleApplyImport": {
+    "message": "適用"
+  },
+  "ruleDryRunLink": {
+    "message": "ドライランを開く"
+  },
+  "ruleDryRunHint": {
+    "message": "ヒント: ルール調整中はドライランを有効に。すべて記録され、クリックは行いません。"
+  },
+  "auditExportJson": {
+    "message": "監査 JSON を書き出す"
+  },
+  "auditExportCsv": {
+    "message": "監査 CSV を書き出す"
+  },
+  "auditWeeklyTitle": {
+    "message": "今週"
+  },
+  "auditWeekClicks": {
+    "message": "クリック"
+  },
+  "auditWeekBlocked": {
+    "message": "ブロック"
+  },
+  "auditWeekAsked": {
+    "message": "確認待ち"
+  },
+  "auditWeekFollowups": {
+    "message": "フォローアップ"
+  },
+  "auditNoData": {
+    "message": "データはまだありません"
   }
 }

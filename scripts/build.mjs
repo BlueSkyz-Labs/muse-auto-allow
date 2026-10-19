@@ -39,6 +39,8 @@ const SHIPPED = [
   'content.js',
   'anomaly.js', // v1.20.0 (G04): the pure detector module (content_scripts: anomaly.js first)
   'playbook.js', // v1.21.0 (G02): the pure token/render module (content_scripts: playbook.js first)
+  'rules.js', // v1.22.0 (W5/F1): the pure three-layer rule engine (content_scripts + popup)
+  'audit.js', // v1.22.0 (W5/F2): the pure audit-export builder (stats + popup)
   'license.js', // v1.21.0 (W4): the dormant offline license core (popup-loaded)
   'license-pubkey.js', // v1.21.0 (W4): committed public-key holder (null until the Owner ceremony)
   'codex.js',
