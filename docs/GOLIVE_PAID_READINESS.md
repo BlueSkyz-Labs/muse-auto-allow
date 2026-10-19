@@ -6,6 +6,21 @@
 > (`SELLER_AUTHORITY` / `PRODUCT_ELIGIBILITY` / Paid-GO are Owner gates). Nothing in this dossier
 > changes extension behavior by itself.
 
+## Cập nhật 2026-10-19 (v1.22.0)
+
+- **W5 xong: F1 (luật ba tầng allow/ask/block) + F2 (xuất audit JSON/CSV + tóm tắt tuần)** — từ
+  tình báo thị trường (`docs/MARKET_INTELLIGENCE_2026-10-19.md`), đã được chủ sở hữu duyệt. Gói
+  v1.22.0 chốt (259.545 B, sha `4da5f060…`), đầy đủ bằng chứng (verify 25/0/0/0 · smoke ok:true ·
+  qa-experience 42/42 · rule-engine-unit 20/20); audit độc lập W5: **0 CRITICAL/HIGH/MEDIUM**.
+- Ý nghĩa PAID: **F2 là hạt giống gói "đội/quản trị"** (xuất audit + tóm tắt tuần là thứ đội/quản lý
+  mua); **F1 là nền G01** (rule engine cấu hình-được, bằng chứng thị trường: Cursor/claude-* hooks).
+  Hai hạng mục này **không đổi Product Truth** — rail an toàn vẫn miễn phí vĩnh viễn; chưa có split
+  PRO nào được kích hoạt (chờ giá/kênh — Owner).
+- Cổng chủ sở hữu không đổi: tải CWS · giá/kênh · nghi thức khoá (khi mở PAID) · nâng pin SGPS.
+- **DEC-016 matrix: aggregate giữ nguyên `PAID_GO_LIVE_NOT_VERIFIED`** (chưa dimension nào đổi trạng
+  thái — đúng, vì mọi thứ còn lại nằm sau cổng Owner). W5 tăng tính sẵn sàng sản phẩm cho các chiều
+  sẽ mở (entitlement/ops/resilience), không tự nâng bất kỳ chiều nào.
+
 ## Cập nhật 2026-10-19 (v1.21.0)
 
 - **W3 (G02 Mission Playbooks) và W4 (lõi giấy phép dormant) đã xong** — toàn bộ catalog được
