@@ -81,3 +81,30 @@ OPEN = chờ vòng sau; REJECT = không làm (kèm lý do).
 - **C-F5**: sắp cụm nút dữ liệu + icon/gạch phân cách.
 - **A-F7**: label "An toàn" mờ + tiêu đề onboarding trùng nút (đổi "Bắt đầu với Chạy thử").
 - **C-F4**: đổi định dạng trục ngày DD/MM.
+
+## Vòng 3 — đã sửa (v1.22.3)
+
+| # | Finding | Xử lý |
+|---|---|---|
+| BUG-1 (HIGH) | Dot trạng thái popup **đảo ngược** (live → vàng, dry/paused/yolo → thiếu cảnh báo) | `renderSafetyStatus` (popup) sửa logic: xanh = live, vàng = dry/paused/yolo; text dry không còn "Đang chạy · Chạy thử" tự mâu thuẫn (dùng banner "Chỉ ghi log") |
+| BUG-2 (HIGH) | Audit JSON **luôn `rules: []`** (projectRules nhận Array, stats truyền object) | stats.js truyền `rules.layers` (array); verify bằng node: file audit có rules đúng |
+| BUG-3 (HIGH) | Chip ✕ topic/keyword **xoá 1 phát** không xác nhận | Arm 5s (✕ → "?" đỏ, tooltip "Bấm lần nữa để xoá") rồi mới xoá |
+| BUG-4 (HIGH) | Quick-add "billing, payment" lưu **1 entry sai** không bao giờ khớp | `addRule` tách dấu phẩy (giới hạn 50), giống form 3 tầng |
+| BUG-5 (HIGH) | Export/Import JSON **chỉ layers** — mất allowTopics/blockKeywords khi migrate | Export schemaVersion 2 đủ 3 khối; Import nhận cả 3, preview đếm, Apply 2 bước ghi đủ |
+| A11Y-1 (HIGH) | Checkbox bật/tắt luật **vô hình** (pattern opacity:0) + focus ring ẩn | CSS override `.lrow input[data-act="en"]` hiển thị |
+| A11Y-2 (HIGH) | 3 nút icon <24px: `.ovclose`, `.froti .rm`, `.item .kopen` | min 24×24 |
+| A11Y-3 (MED) | Pill controls 18.7–21.4px (.pbtn/.langbtn/.safetybtn/.qbtn/.rbtn) | min-height 24px |
+| A11Y-4 (MED) | `#layerKind` không tên; input placeholder-only | aria-label dịch (ariaRuleKind/ariaTopics/ariaKeywords) |
+| A11Y-5 (MED) | Pause/dry/yolo đổi trạng thái không có live region | `#ssText` + `#pstateText` role=status aria-live=polite |
+| A11Y-6 (LOW) | Dot warn light 2.2–2.55:1 | #8a5a10 (≥3:1) |
+| C-1 (MED) | Live không phân biệt bằng mắt trong 5s | `#stateLine` tô nền đỏ nhạt khi live / vàng khi dry (không thêm chiều cao) |
+| C-2 (MED) | Đơn vị ô nhập tràn ở ja/ko/zh/vi/es (`.unit` cứng 18px) | `.unit` auto + min 18px; unitMs ja/ko/zh = "ms", zh /min = "/分" |
+| i18n-1 | `modeSim` "CHƯA BẤM THẬT" gây hiểu nhầm; trùng "Chạy thử" | Chốt "CHẠY THỬ — KHÔNG BẤM GÌ" / "DRY RUN — NOTHING IS CLICKED"; es "SIMULACIÓN — NO SE HACE CLIC" |
+| i18n-2 | `ruleConfirmDelete/Apply` quá dài tràn nút 320px | Rút: "Bấm lần nữa"/"Thay $1 luật? Bấm lại" (en/es/ja/ko/zh tương ứng) |
+| i18n-3 | `tabWord` số ít ghép số nhiều ("2 pestaña") | `tabWordOne` cho n=1; en "tabs"/es "pestañas" cho n>1 |
+| i18n-4 | Đơn vị lặp trong nhãn anomaly ("(lượt bấm/phút)" + "/phút") | Bỏ đơn vị khỏi `anomalyRateLabel`/`anomalyDurationLabel` (giữ ở suffix) |
+| i18n-5 | vi còn "nhấp"/"click"/"Chạm", "từ khóa" lẫn "từ khoá" | Chuẩn hoá "bấm", "từ khoá" (anomalyPauseState, yoloNote/Confirm, followup*, logOpenRules, rulesIgnoredYolo) |
+| i18n-6 | zh "点按" lẫn "点击"; ko "탭" lẫn "누르" | Chuẩn "点击"/"누르세요" |
+| UX-NEW | Thiếu phím tắt dry-run | `Alt+Shift+D` (`toggle-dry-run`) + background handler + i18n `shortcutDryRun` |
+
+**Tổng i18n sau Vòng 3: 313 khoá × 6 locale, parity xanh.**
