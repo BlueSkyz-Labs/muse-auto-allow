@@ -733,8 +733,11 @@
             // encrypt the approval text at rest; on failure keep plaintext (never lose the record)
             try {
               const enc = await encryptCtx(entry.context);
-              if (enc) { entry.ctx = enc; delete entry.context; }
-            } catch { /* keep plaintext */ }
+              if (enc) entry.ctx = enc;
+            } catch { /* ignore */ }
+            // v1.18.0 (CX-03): never persist DOM context as plaintext — a failed encryption
+            // drops the sentence; the 0-plaintext log contract holds in both engines.
+            delete entry.context;
             log.unshift(entry);
             if (item.counts !== false) { // blocked / dry-run / follow-up entries never count as clicks
               count += 1;

@@ -31,6 +31,9 @@ stay manual.
   + the explicit overlay list recorded there. `SGPS:FULL` / `SGPS:Experience` mean: reference
   `C:\Users\thinh\dev\sgps-core` per its `AGENTS.md` read-order. **Never** upgrade the pin, never
   self-declare central `ADOPTED`, never enable Paid GO without an Owner decision.
+- Orchestration driver: the **SGPS FULL Portfolio prompt kit vNext 1.3.1**
+  (`C:\00_AI_PRJ\00_PROMPT\SGPS_FULL_PORTFOLIO_vNext_1.3.1_COMPLETE_WITH_LAUNCHERS\`, provenance
+  verified 33/33) — modes and routing in `docs/SGPS_PROMPT_KIT.md`.
 - Delivery harness + model lanes: skill `autonomous-delivery-harness` (free-tier subagents by
   default; Codex lane `gpt-6-luna` for heavy tasks with the quota probe; vision = `mimo-v2.6-pro`).
 

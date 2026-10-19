@@ -60,6 +60,28 @@ of the artifact gets `http://127.0.0.1/*` appended to `content_scripts[0].matche
 fixture origin — the pristine extraction dir and the shipped manifest stay untouched,
 and the artifact's own bytes are what gets loaded everywhere else.
 
+## Freeze procedure (v1.18.0 freeze)
+
+Same procedure (version `1.18.0`; build → hash → rebuild identical; sidecar `-c`; verify-zip
+19/0/0/0; smoke `ok:true`; attach to the GitHub Release).
+
+## Recorded evidence (v1.18.0 freeze)
+
+- Frozen tree: `extension/manifest.json` `"version": "1.18.0"`; tag `v1.18.0`.
+- Artifact: `dist/muse-auto-allow-v1.18.0.zip` — **213,482 bytes**, **19 entries**; sha256
+  `5cdad3e6e29112bb7f39467a2865accf82d6c036fbecd272e2ab1d006c5f78c9` (sidecar clean);
+  determinism 2× byte-identical; verify-zip 19/0/0/0; smoke exit 0 `"ok": true`.
+- Gates on the frozen tree (2026-10-19, one self-cleaning run, all exit 0): lint 0 (27 checks) ·
+  background-unit 0 · import-security 0 (162) · yolo-ux 0 (5) · e2e 0 · followup-e2e 0 ·
+  mission-e2e 0 · lang-switch-e2e 0 (204×6) · codex-e2e 0 (with the three new auth FORBIDDEN
+  negatives — `forbiddenHit: []`) · bench 0 · QA v1.14.0 8/8 · `qa-experience` **20/20**.
+- Scope: R7 zone separation · store kit refreshed from real captures (stage template + script) ·
+  SGPS prompt-kit vNext 1.3.1 wired (provenance 33/33) · **CX-01..03 security fixes** from the
+  third independent audit (`docs/SECURITY_FINDINGS.md`: CX-02 auth keywords widened + 3
+  FORBIDDEN fixtures; CX-03 unconditional plaintext drop in both engines; CX-01 expand-path
+  hardening + documented residual) · DISCOVERY_FULL catalog landed as a PROPOSAL
+  (`docs/PROPOSAL_CATALOG_2026-10-19.md`, nothing coded).
+
 ## Freeze procedure (v1.17.0 freeze)
 
 Same procedure (version `1.17.0`; build → hash → rebuild identical; sidecar `-c`; verify-zip
