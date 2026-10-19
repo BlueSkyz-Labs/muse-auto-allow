@@ -131,15 +131,22 @@ try {
     check(`C. focus ${file}: :focus-visible rules present (${focus && focus.fv}) + outline:none covered by wrapper-ring`, focus && focus.fv >= 1 && (focus.uncovered || []).length === 0, focus);
   }
 
-  // D. vi locale: no horizontal overflow
-  for (const [file, sid] of Object.entries(sids)) {
-    await evOn(sid)(`new Promise((res) => chrome.storage.local.set({ userLocale: 'vi' }, () => res('ok')))`, true);
-    await sleep(900);
-    if (file === 'popup.html') { await send('Page.reload', {}, sid); await sleep(900); }
-    const ov = await evOn(sid)(`({ bodySW: document.body.scrollWidth, bodyCW: document.body.clientWidth, deSW: document.documentElement.scrollWidth, deCW: document.documentElement.clientWidth, lang: document.documentElement.lang })`);
-    check(`D. vi layout ${file}: no horizontal overflow`, ov && ov.bodySW <= ov.bodyCW + 2 && ov.deSW <= ov.deCW + 2, ov);
+  // D. locale sweep (v1.19.0 S10): every locale loads without overflow and without a clipped control
+  for (const loc of ['vi', 'ja', 'ko', 'zh_CN', 'es', 'en']) {
+    for (const file of ['popup.html', 'stats.html']) {
+      const sid = sids[file];
+      await evOn(sid)(`new Promise((res) => chrome.storage.local.set({ userLocale: ${JSON.stringify(loc)} }, () => res('ok')))`, true);
+      await sleep(500);
+      await send('Page.reload', {}, sid); await sleep(800);
+      const ov = await evOn(sid)(`({
+        bodySW: document.body.scrollWidth, bodyCW: document.body.clientWidth,
+        deSW: document.documentElement.scrollWidth, deCW: document.documentElement.clientWidth,
+        clipped: Array.from(document.querySelectorAll('.btn, .pbtn, .lfchip, .misbtn')).filter((e) => e.offsetWidth > 0 && e.scrollWidth > e.clientWidth + 2).map((e) => e.id || String(e.className)),
+      })`);
+      check(`D. locale ${loc} ${file}: no overflow, no clipped control`, ov && ov.bodySW <= ov.bodyCW + 2 && ov.deSW <= ov.deCW + 2 && Array.isArray(ov.clipped) && ov.clipped.length === 0, ov);
+    }
   }
-  for (const [file, sid] of Object.entries(sids)) await evOn(sid)(`new Promise((res) => chrome.storage.local.set({ userLocale: 'auto' }, () => res('ok')))`, true);
+  for (const [, sid] of Object.entries(sids)) await evOn(sid)(`new Promise((res) => chrome.storage.local.set({ userLocale: 'auto' }, () => res('ok')))`, true);
 
   // E. state as text
   const st = await evOn(sids['popup.html'])(`(() => {
@@ -256,6 +263,33 @@ try {
   })()`);
   check('K. beauty-blind fixes: topics print % and zero KPI cards carry the calm class',
     k && Array.isArray(k.pct) && k.pct.length > 0 && /%$/.test(k.pct[0]) && k.zeros >= 1 && k.total === '8', k);
+
+  // L. log filters + day groups (v1.19.0 S02)
+  const day = (off) => new Date(Date.now() - off * 86400000);
+  const iso = (d, h) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), h, 30, 0).toISOString();
+  const logSeed = [
+    { at: iso(day(0), 9), kind: 'allow', label: 'Alpha Allow' },
+    { at: iso(day(0), 8), kind: 'blocked', label: 'Beta Blocked', blockedReason: 'keyword:test' },
+    { at: iso(day(1), 7), kind: 'allow-dry', label: 'Gamma Dry' },
+  ];
+  const pop = sids['popup.html'];
+  await evOn(pop)(`new Promise((res) => chrome.storage.local.set({ log: ${JSON.stringify(logSeed)} }, () => res('ok')))`, true);
+  await send('Page.reload', {}, pop); await sleep(1000);
+  await evOn(pop)(`(() => { const s = document.getElementById('obSkip'); if (s) s.click(); return 'ok'; })()`); await sleep(400);
+  const l0 = await evOn(pop)(`({ days: document.querySelectorAll('#logList .lday').length, items: document.querySelectorAll('#logList .item').length, filtersShown: !document.getElementById('logFilters').hidden, dayLabels: Array.from(document.querySelectorAll('#logList .lday')).map((e) => e.textContent) })`);
+  check('L1. log day groups + filters bar render', l0 && l0.days === 2 && l0.items === 3 && l0.filtersShown === true, l0);
+  await evOn(pop)(`(() => { document.getElementById('lfBlocked').click(); return 'ok'; })()`);
+  await sleep(200);
+  const l1 = await evOn(pop)(`({ items: document.querySelectorAll('#logList .item').length, txt: (document.getElementById('logList').textContent || '') })`);
+  check('L2. Blocked chip filters to the blocked entry only', l1 && l1.items === 1 && /Beta Blocked/.test(l1.txt), l1);
+  await evOn(pop)(`(() => { document.getElementById('lfAll').click(); const s = document.getElementById('lfSearch'); s.value = 'gamma'; s.dispatchEvent(new Event('input', { bubbles: true })); return 'ok'; })()`);
+  await sleep(200);
+  const l2 = await evOn(pop)(`({ items: document.querySelectorAll('#logList .item').length, txt: (document.getElementById('logList').textContent || '') })`);
+  check('L3. search narrows to the matching entry', l2 && l2.items === 1 && /Gamma/.test(l2.txt), l2);
+  await evOn(pop)(`(() => { const s = document.getElementById('lfSearch'); s.value = 'zzzz'; s.dispatchEvent(new Event('input', { bubbles: true })); return 'ok'; })()`);
+  await sleep(200);
+  const l3 = await evOn(pop)(`({ empty: (document.getElementById('logList').textContent || ''), items: document.querySelectorAll('#logList .item').length })`);
+  check('L4. no-match state shows a non-empty localized empty line (no items)', l3 && l3.items === 0 && (l3.empty || '').trim().length > 2, l3);
 } catch (e) {
   check('X. harness completed without exception', false, String(e && e.message || e));
 } finally {

@@ -569,4 +569,32 @@
   "kindCodexDry": {
     "message": "codex（ドライ）"
   }
+,
+  "logFilterAll": {
+    "message": "すべて"
+  },
+  "logFilterAllow": {
+    "message": "許可済み"
+  },
+  "logFilterBlocked": {
+    "message": "ブロック"
+  },
+  "logFilterDry": {
+    "message": "ログのみ"
+  },
+  "logSearchPlaceholder": {
+    "message": "検索…"
+  },
+  "logToday": {
+    "message": "今日"
+  },
+  "logYesterday": {
+    "message": "昨日"
+  },
+  "logNoMatch": {
+    "message": "一致する記録なし"
+  },
+  "onbLearnMore": {
+    "message": "\u8a73\u3057\u304f\u306f\u3053\u3061\u3089 \u2014 \u5b89\u5168\u30ec\u30fc\u30eb\u306e\u4ed5\u7d44\u307f"
+  }
 }

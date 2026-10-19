@@ -427,22 +427,27 @@ try {
   await fEval("window.__setState('working')");
 
   // ---- C. pauseUntil halts mission sends; clearing resumes ----
+  // LSN-008 class: stop the auto path BEFORE the pause handshake — with a 'working' tab the
+  // automatic mission send can fire in the gap between setState('working') and the pause taking
+  // effect, drifting the step outside the checks' baseline (observed flake in the v1.19.0 battery).
+  await fEval("window.__setState('idle')");
+  await sleep(300);
   await seed({ pauseUntil: Date.now() + 60000 });
   await waitEngine((p) => p.paused === true, 4000, 'paused applied');
-  await fEval("window.__setState('idle')");
+  const stepC0 = (await enginePing()).missionStep; // baseline AFTER the pause holds
   const baseC = (await sentList()).length;
   await sleep(2600);
   check('C. pause halts the automatic mission send', (await sentList()).length === baseC, { base: baseC, now: (await sentList()).length });
   const rC1 = await fixtureMsg({ type: 'followup-send-now' });
   check('C. manual send-now refused while paused (reason "paused")', !!(rC1.resp && rC1.resp.ok === false && rC1.resp.reason === 'paused'), rC1.resp);
-  check('C. a paused/refused send does NOT advance the step', (await enginePing()).missionStep === stepB0, {});
+  check('C. a paused/refused send does NOT advance the step', (await enginePing()).missionStep === stepC0, { stepC0 });
   // Keep the idle auto-path OUT of the resume measurement: if the fixture stays idle, unpausing
   // lets BOTH the automatic send and the manual send fire (two advances). 'working' isolates the
   // manual resume (manual send-now ignores the idle requirement).
   await fEval("window.__setState('working')");
   await seed({ pauseUntil: 0 });
   await waitEngine((p) => p.paused === false, 4000, 'unpaused');
-  const resC = await manualSendAndVerify((p) => p.missionStep === stepB0 + 1, 'C resume');
+  const resC = await manualSendAndVerify((p) => p.missionStep === stepC0 + 1, 'C resume');
   check('C. clearing the pause resumes the mission send (and the verified send advances)', resC.ok, { resp: resC.resp });
 
   // ---- D. dry-run LOGS the step and sends nothing (no advance) ----

@@ -2,9 +2,8 @@
 
 Everything the Chrome Web Store dashboard asks for, ready to paste. Copy fields are
 provided in all six supported languages (en, vi, zh_CN, ja, ko, es). The homepage and
-privacy-policy URLs are filled (verified live 2026-10-12); the only remaining
-`TODO: fill before submit` value is the **support email** — the owner must replace it
-before uploading. The developer/publisher name line is an owner confirmation in the
+privacy-policy URLs are filled (verified live 2026-10-12); the support email is filled (`support@blueskyzlabs.com`, owner-provided
+2026-10-19). The developer/publisher name line is an owner confirmation in the
 dashboard (no repo value to fill).
 
 ---
@@ -22,7 +21,7 @@ dashboard (no repo value to fill).
 | License | MIT © 2026 BlueSkyz Labs |
 | Homepage / support URL | `https://github.com/BlueSkyz-Labs/muse-auto-allow` |
 | Privacy policy URL | `https://blueskyz-labs.github.io/muse-auto-allow/privacy.html` (GitHub Pages copy of `store/PRIVACY.md`; verified live 2026-10-12) |
-| Support email | `TODO: fill before submit` |
+| Support email | `support@blueskyzlabs.com` |
 
 ### Short description (English, ≤132 characters)
 
@@ -655,7 +654,7 @@ own local storage).
 | Field | Value |
 |---|---|
 | Developer / publisher name | BlueSkyz Labs — owner to confirm the exact legal/display name in the dashboard before publishing (no repo value to fill) |
-| Support email | `TODO: fill before submit` |
+| Support email | `support@blueskyzlabs.com` |
 | Support / homepage URL | `https://github.com/BlueSkyz-Labs/muse-auto-allow` |
 | Privacy policy URL | `https://blueskyz-labs.github.io/muse-auto-allow/privacy.html` (hosted from `store/PRIVACY.md`; verified live 2026-10-12) |
 | License | MIT © 2026 BlueSkyz Labs |

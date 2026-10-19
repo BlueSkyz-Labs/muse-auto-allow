@@ -569,4 +569,32 @@
   "kindCodexDry": {
     "message": "codex (thử)"
   }
+,
+  "logFilterAll": {
+    "message": "Tất cả"
+  },
+  "logFilterAllow": {
+    "message": "Đã duyệt"
+  },
+  "logFilterBlocked": {
+    "message": "Đã chặn"
+  },
+  "logFilterDry": {
+    "message": "Chỉ ghi log"
+  },
+  "logSearchPlaceholder": {
+    "message": "Tìm kiếm…"
+  },
+  "logToday": {
+    "message": "Hôm nay"
+  },
+  "logYesterday": {
+    "message": "Hôm qua"
+  },
+  "logNoMatch": {
+    "message": "Không có mục phù hợp"
+  },
+  "onbLearnMore": {
+    "message": "T\u00ecm hi\u1ec3u th\u00eam \u2014 c\u00e1c ch\u1ed1t an to\u00e0n ho\u1ea1t \u0111\u1ed9ng th\u1ebf n\u00e0o"
+  }
 }

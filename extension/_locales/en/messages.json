@@ -569,4 +569,32 @@
   "kindCodexDry": {
     "message": "codex (dry)"
   }
+,
+  "logFilterAll": {
+    "message": "All"
+  },
+  "logFilterAllow": {
+    "message": "Allowed"
+  },
+  "logFilterBlocked": {
+    "message": "Blocked"
+  },
+  "logFilterDry": {
+    "message": "Log-only"
+  },
+  "logSearchPlaceholder": {
+    "message": "Search…"
+  },
+  "logToday": {
+    "message": "Today"
+  },
+  "logYesterday": {
+    "message": "Yesterday"
+  },
+  "logNoMatch": {
+    "message": "No matching entries"
+  },
+  "onbLearnMore": {
+    "message": "Learn more \u2014 how the rails work"
+  }
 }

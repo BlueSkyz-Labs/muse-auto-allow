@@ -24,6 +24,10 @@
 
 ## 2. Monetization options (analysis)
 
+**Owner decision 2026-10-19: option C — freemium PRO with offline license keys** (core + safety
+stay free forever; `docs/LICENSING_DESIGN.md` governs the scheme). Price point and sales channel
+remain Owner-pending. The table below is the original option analysis (kept for context).
+
 | Option | What user buys | Effort | Risk |
 |---|---|---|---|
 | **A. One-time lifetime license key** (recommended candidate) | a key enabling PRO features forever, offline-verifiable | M | key sharing/piracy; no recurring revenue |
