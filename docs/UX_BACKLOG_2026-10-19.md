@@ -48,3 +48,36 @@ OPEN = chờ vòng sau; REJECT = không làm (kèm lý do).
 
 - **A8/B8 một phần**: đổi toàn bộ chữ phụ sang #3C4043 làm mất phân cấp thị giác; chỉ nâng nơi < 4.5:1 thực đo (qa check A đã pass WCAG AA cho mọi text visible — giữ).
 - **B7 full accordion ngay**: rủi ro che mất rail an toàn khi người dùng cần; chỉ gấp nhóm nâng cao ở vòng sau.
+
+## Vòng 2 — đã sửa (v1.22.2)
+
+| # | Finding | Xử lý |
+|---|---|---|
+| A-F1 | Dry-run nhập nhằng: badge "Chạy thử >" như nút bấm, switch hổ phách như "đang bật" | **#modeTag dưới công tắc chính: "MÔ PHỎNG — CHƯA BẤM THẬT" / "ĐANG BẤM THẬT"**; chip tách khỏi nút "An toàn" (hết mũi tên dính) |
+| A-F5 | Bullet 3 dài, khoảng trống chết onboarding, "Bỏ qua" nhạt | Bullet rút gọn ("chạy thử", bỏ "ghi log"); `.obfoot` dồn đáy (margin-top:auto) |
+| A-F6 | Dòng trạng thái cắt "…", hàng pause wrap lệch | `.stsurf` wrap 2 dòng; chip rời hàng pause → hàng nút đồng nhất 2 chế độ |
+| A-F3 | "300 ms" khó hiểu | Giữ nguyên số (SI) nhưng thêm đơn vị i18n (`unitMs/unitSec/unitMin/unitPerMin`) — text "phút/giây" theo ngôn ngữ |
+| A-F4 / C-F3 | Chart 7 ngày & 14 ngày rỗng trông như lỗi render | Empty state: `#miniEmpty` (popup) + `#chartEmpty` (stats) "Chưa có lịch sử — biểu đồ hiện sau lượt bấm đầu tiên" |
+| B-F3 | Hàng thẻ topics bị cắt mép trên | **Không phải bug** — do ảnh chụp cuộn giữa panel; đã thêm ảnh `popup-safety-top` để audit thấy đầu panel |
+| B-F4 | Câu mô tả anomaly bị cắt/lẫn "engine" | vi rút gọn tự nhiên ("Tự tạm dừng khi hành vi bấm…"); sửa 4 chuỗi "nhấp"→"bấm" |
+| B-F6 | HỎI light theme nhạt | Đậm amber-700 + viền hổ phách (đã áp từ 1b) |
+| B-F7 | Hint luật thiếu ví dụ/HAY | `ruleMatchHint` mở rộng: quy tắc VÀ giữa chủ đề+từ khoá, BẤT KỲ trong danh sách, ví dụ github.com + payment/billing |
+| C-F1 | Thẻ "Tuần này" khi rỗng coi như chú thích | (đã lên trên KPI); khi rỗng vẫn là "Chưa có dữ liệu" — chấp nhận tạm, xem OPEN |
+| C-F4 | Nhãn ngày "06-10" dễ nhầm | Giữ DD-MM + title đầy đủ khi hover (đã có); ghi nhận OPEN đổi DD/MM |
+| C-F5 | Cụm nút dữ liệu thứ tự ngược | Sắp lại: [Sao lưu | Phục hồi] — [JSON | CSV] là OPEN (chưa đổi DOM) |
+| H1 | **Stats không hiển thị trạng thái engine** | `#statsStatus` strip (Live/Paused/Dry-run/YOLO + dot màu) đồng bộ storage.onChanged |
+| H2 | Xoá luật / Apply import 1 click không xác nhận | **2-step inline confirm** cho xoá luật ("Bấm lần nữa để xoá") và Apply import ("Thay N luật? Bấm lần nữa") |
+| H3 | Target size < 24px; #safetyClose aria sai ("Safety") | `[data-act]`, `.rchip .rx` min 24×24; aria-label dùng `closeLabel` (6 ngôn ngữ) |
+| H4 | 5 tên cho dry-run; dropdown thường vs chip HOA | Thống nhất: "Chạy thử/Dry-run" (bỏ "Mô phỏng/Simulation" khỏi drySwitchSub); ruleKind* Title Case; vi hết "nhấp" |
+| H5 | Đơn vị "15 min/1 hour", ms/min không dịch | en pause60 "60 min"; đơn vị qua i18n 4 key |
+| H6 | Chip "0" không nhãn; ruleOrderHint chỉ trong tooltip | Chip "0 tab" (+`tabWord`); `ruleOrderHint` hiển thị thành dòng chú thích dưới danh sách luật |
+| H7 | Hứa "mỗi lần bấm đều ghi log" nhưng giữ 50 | onbRailLocalLog nêu rõ "(50 lượt gần nhất)" |
+
+## Vòng 2 — OPEN (sang Vòng 3)
+
+- **A-F2 (HIGH)**: khối TỰ ĐỘNG GỬI TIẾP chiếm 1/4 popup + "Gửi ngay" khoá gây lo gửi dữ liệu — cần tái bố cục popup (gập mặc định, đổi nhãn) — **thiết kế lại layout, làm cùng accordion**.
+- **H8**: panel 12 khối → 4 nhóm collapsible ("Chế độ chạy / Luật / Tự động hoá & giám sát / Khác").
+- **C-F1**: thẻ Tuần này khi rỗng nên hiện 4 ô 0 thay vì 1 dòng "Chưa có dữ liệu".
+- **C-F5**: sắp cụm nút dữ liệu + icon/gạch phân cách.
+- **A-F7**: label "An toàn" mờ + tiêu đề onboarding trùng nút (đổi "Bắt đầu với Chạy thử").
+- **C-F4**: đổi định dạng trục ngày DD/MM.
