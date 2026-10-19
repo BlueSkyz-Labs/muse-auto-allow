@@ -60,6 +60,28 @@ of the artifact gets `http://127.0.0.1/*` appended to `content_scripts[0].matche
 fixture origin — the pristine extraction dir and the shipped manifest stay untouched,
 and the artifact's own bytes are what gets loaded everywhere else.
 
+## Recorded evidence (v1.22.0 freeze)
+
+- Frozen tree: `extension/manifest.json` `"version": "1.22.0"`; tag `v1.22.0`.
+- Artifact: `dist/muse-auto-allow-v1.22.0.zip` — **259,545 bytes**, **25 entries**; sha256
+  `4da5f060578655473301fd983417474aab41db1efe48365bfb68960ff2c932c7` (sidecar
+  `dist/muse-auto-allow-v1.22.0.zip.sha256`); verify-zip **25/0/0/0**; smoke exit 0 `"ok": true`.
+- Entries +2: `rules.js` (luật ba tầng) và `audit.js` (builder xuất audit) — W5/F1+F2.
+- Gates on the frozen tree (2026-10-19, tự dọn Chrome giữa các bước): lint 0 (60 checks / 25 files) ·
+  anomaly-unit 11/0 · mission-playbook-unit 10/0 · license-unit 16/0 · background-unit 36/0 ·
+  import-security 169/0 · yolo-ux-unit 5 checks PASS · **rule-engine-unit 20/20 (NEW)** ·
+  e2e 0 `ok:true` · followup-e2e 0 · mission-e2e 37/0 · lang-switch-e2e 0 (288×6) ·
+  codex-e2e 0 · `qa-experience` **42/42** (+P1–P4: luật ba tầng hiển thị/thêm/xoá + card tuần +
+  builder CSV trong trang + chip ask trong log).
+- Hồi quy bắt trong battery và đã sửa trước freeze: (1) `applyV18UI` đọc `rules.layers` khi
+  `rules === null` (fresh install) → TypeError giết nửa sau boot (banner/digest/onboarding/log im
+  lặng) — sửa bằng chuỗi an toàn `rules && rules.layers`, xác nhận bằng so sánh trực tiếp với bản
+  v1.21.0 trên cùng harness (LSN-014); (2) slice-test yolo-ux cần guard `typeof renderLayers`;
+  (3) regex khóa i18n của lang-switch bắt nhầm `createElement('a')` — đổi sang nháy kép; (4) stats
+  `footrow` tràn ở 200% zoom — thêm `flex-wrap`; (5) CHANGELOG 1.22.0 (gate M3 của background-unit).
+- Not done: the package has **not** been uploaded to the Chrome Web Store; no CWS review, no
+  store publish.
+
 ## Freeze procedure (v1.21.0 freeze)
 
 Same procedure (version `1.21.0`; build → hash → rebuild identical; sidecar `-c`; verify-zip
