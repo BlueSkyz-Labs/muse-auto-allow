@@ -650,5 +650,77 @@
   },
   "digestRecentNote": {
     "message": "among the most recent log entries"
+  },
+  "licenseTitle": {
+    "message": "License"
+  },
+  "licenseFree": {
+    "message": "Free"
+  },
+  "licensePro": {
+    "message": "PRO"
+  },
+  "licenseTokenPlaceholder": {
+    "message": "Paste license token"
+  },
+  "licenseActivate": {
+    "message": "Activate"
+  },
+  "licenseDeactivate": {
+    "message": "Deactivate"
+  },
+  "licenseActivated": {
+    "message": "License activated."
+  },
+  "licenseDormant": {
+    "message": "License activation is not configured yet."
+  },
+  "licenseMalformed": {
+    "message": "This license token is malformed."
+  },
+  "licenseBadSignature": {
+    "message": "This license token could not be verified."
+  },
+  "licenseWrongProduct": {
+    "message": "This license is for a different product."
+  },
+  "licenseExpired": {
+    "message": "This license has expired."
+  },
+  "licenseClockGrace": {
+    "message": "Clock moved backward; temporary verification grace is active."
+  },
+  "licenseStorageError": {
+    "message": "Could not save the license. Try again."
+  },
+  "missionScoped": {
+    "message": "Scoped run"
+  },
+  "missionScopedDesc": {
+    "message": "Run a parameterised playbook on a specific project and branch."
+  },
+  "missionVariables": {
+    "message": "Playbook variables"
+  },
+  "missionPreview": {
+    "message": "Next-step preview"
+  },
+  "missionStart": {
+    "message": "Preview and start"
+  },
+  "missionCancel": {
+    "message": "Cancel"
+  },
+  "missionValueInvalid": {
+    "message": "Enter a valid value; unresolved or unsafe values cannot be sent."
+  },
+  "missionUnknownToken": {
+    "message": "This playbook has an unsupported variable token."
+  },
+  "missionGuardBlocked": {
+    "message": "This playbook guard blocked the step; progress was not changed."
+  },
+  "missionUnavailable": {
+    "message": "The step is unavailable; the mission remains paused."
   }
 }

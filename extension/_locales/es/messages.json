@@ -626,5 +626,77 @@
   "kindAnomalyPause": { "message": "Pausa automática (anomalía)" },
   "digestRecentNote": {
     "message": "entre las entradas de registro m\u00e1s recientes"
+  },
+  "licenseTitle": {
+    "message": "Licencia"
+  },
+  "licenseFree": {
+    "message": "Gratis"
+  },
+  "licensePro": {
+    "message": "PRO"
+  },
+  "licenseTokenPlaceholder": {
+    "message": "Pega el token de licencia"
+  },
+  "licenseActivate": {
+    "message": "Activar"
+  },
+  "licenseDeactivate": {
+    "message": "Desactivar"
+  },
+  "licenseActivated": {
+    "message": "Licencia activada."
+  },
+  "licenseDormant": {
+    "message": "La activación de licencia aún no está configurada."
+  },
+  "licenseMalformed": {
+    "message": "El token de licencia tiene un formato incorrecto."
+  },
+  "licenseBadSignature": {
+    "message": "No se pudo verificar el token de licencia."
+  },
+  "licenseWrongProduct": {
+    "message": "Esta licencia es de otro producto."
+  },
+  "licenseExpired": {
+    "message": "Esta licencia ha caducado."
+  },
+  "licenseClockGrace": {
+    "message": "El reloj retrocedió; hay un periodo de gracia temporal."
+  },
+  "licenseStorageError": {
+    "message": "No se pudo guardar la licencia. Inténtalo de nuevo."
+  },
+  "missionScoped": {
+    "message": "Ejecución acotada"
+  },
+  "missionScopedDesc": {
+    "message": "Ejecuta un playbook con parámetros en un proyecto y una rama concretos."
+  },
+  "missionVariables": {
+    "message": "Variables del playbook"
+  },
+  "missionPreview": {
+    "message": "Vista previa del siguiente paso"
+  },
+  "missionStart": {
+    "message": "Previsualizar y comenzar"
+  },
+  "missionCancel": {
+    "message": "Cancelar"
+  },
+  "missionValueInvalid": {
+    "message": "Introduce un valor válido; los valores sin resolver o inseguros no se pueden enviar."
+  },
+  "missionUnknownToken": {
+    "message": "Este playbook contiene un token de variable no compatible."
+  },
+  "missionGuardBlocked": {
+    "message": "La protección de este playbook bloqueó el paso; el progreso no cambió."
+  },
+  "missionUnavailable": {
+    "message": "El paso no está disponible; la misión permanece en pausa."
   }
 }

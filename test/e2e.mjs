@@ -595,7 +595,7 @@ try {
           bGot.includes('y1') && bGot.includes('y2') && blockedB === blockedA &&
           bClicks.filter((c) => c.deny).length === 0,
     });
-  } catch (e) { yoloCheck.error = e.message; }
+  } catch (e) { yoloCheck.error = e.message; yoloCheck.stack = String((e && e.stack) || '').split('\n').slice(0, 4).join(' | '); } // v1.21.0: capture the failing frame (diagnosis of the yolo-phase stall)
   console.log('yolo-mode phase:', JSON.stringify(yoloCheck));
 
   // ---- stats.html renders (v1.3): KPI + bars + topics with the recorded data ----

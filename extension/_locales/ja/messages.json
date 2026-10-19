@@ -626,5 +626,77 @@
   "kindAnomalyPause": { "message": "自動一時停止（異常）" },
   "digestRecentNote": {
     "message": "\u76f4\u8fd1\u306e\u30ed\u30b0\u8a18\u9332\u5185"
+  },
+  "licenseTitle": {
+    "message": "ライセンス"
+  },
+  "licenseFree": {
+    "message": "無料"
+  },
+  "licensePro": {
+    "message": "PRO"
+  },
+  "licenseTokenPlaceholder": {
+    "message": "ライセンストークンを貼り付け"
+  },
+  "licenseActivate": {
+    "message": "有効化"
+  },
+  "licenseDeactivate": {
+    "message": "無効化"
+  },
+  "licenseActivated": {
+    "message": "ライセンスを有効化しました。"
+  },
+  "licenseDormant": {
+    "message": "ライセンス有効化はまだ設定されていません。"
+  },
+  "licenseMalformed": {
+    "message": "ライセンストークンの形式が正しくありません。"
+  },
+  "licenseBadSignature": {
+    "message": "ライセンストークンを検証できませんでした。"
+  },
+  "licenseWrongProduct": {
+    "message": "このライセンスは別の製品のものです。"
+  },
+  "licenseExpired": {
+    "message": "ライセンスの有効期限が切れています。"
+  },
+  "licenseClockGrace": {
+    "message": "時計が巻き戻りました。一時的な猶予期間が有効です。"
+  },
+  "licenseStorageError": {
+    "message": "ライセンスを保存できませんでした。再試行してください。"
+  },
+  "missionScoped": {
+    "message": "スコープ実行"
+  },
+  "missionScopedDesc": {
+    "message": "特定のプロジェクトとブランチでパラメータ付きプレイブックを実行します。"
+  },
+  "missionVariables": {
+    "message": "プレイブック変数"
+  },
+  "missionPreview": {
+    "message": "次のステップのプレビュー"
+  },
+  "missionStart": {
+    "message": "プレビューして開始"
+  },
+  "missionCancel": {
+    "message": "キャンセル"
+  },
+  "missionValueInvalid": {
+    "message": "有効な値を入力してください。未解決または安全でない値は送信できません。"
+  },
+  "missionUnknownToken": {
+    "message": "このプレイブックには未対応の変数トークンがあります。"
+  },
+  "missionGuardBlocked": {
+    "message": "プレイブックのガードがこのステップをブロックしました。進行状況は変わりません。"
+  },
+  "missionUnavailable": {
+    "message": "このステップは利用できません。ミッションは一時停止のままです。"
   }
 }

@@ -38,6 +38,9 @@ const SHIPPED = [
   'manifest.json',
   'content.js',
   'anomaly.js', // v1.20.0 (G04): the pure detector module (content_scripts: anomaly.js first)
+  'playbook.js', // v1.21.0 (G02): the pure token/render module (content_scripts: playbook.js first)
+  'license.js', // v1.21.0 (W4): the dormant offline license core (popup-loaded)
+  'license-pubkey.js', // v1.21.0 (W4): committed public-key holder (null until the Owner ceremony)
   'codex.js',
   'background.js',
   'popup.html',

@@ -257,6 +257,42 @@ try {
   findings.push(`SEED lockstep scan failed: ${e.message}`);
 }
 
+// 7. license guards (v1.21.0 / W4) — the committed public key must stay null until the Owner's
+//    key ceremony, and no EC public JWK literal may ever appear in extension sources or locale
+//    JSON: fixture keys belong under test/ only and must never reach the release artifact.
+try {
+  checked++;
+  const pubSrc = fs.readFileSync(path.join(EXT, 'license-pubkey.js'), 'utf8');
+  if (!/var\s+MAA_LICENSE_PUBKEY\s*=\s*null\s*;/.test(pubSrc)) {
+    findings.push('LICENSE-PUBKEY-DORMANT: extension/license-pubkey.js must hold "var MAA_LICENSE_PUBKEY = null;" until the Owner key ceremony');
+  }
+  const jwkRe = /"kty"\s*:\s*"EC"|"crv"\s*:\s*"P-256"/;
+  // audit W4-4: cũng chặn JWK nhúng dạng chuỗi base64 (giải mã ra 'kty'/'crv'/'x'/'y')
+  const B64_RE = /[A-Za-z0-9+/_-]{40,}={0,2}/g;
+  for (const f of files.filter((f) => SRC_EXTS.some((x) => f.endsWith(x)) || f.endsWith('.json'))) {
+    checked++;
+    const rel = path.relative(ROOT, f).replace(/\\/g, '/');
+    const text = fs.readFileSync(f, 'utf8');
+    if (jwkRe.test(text)) {
+      findings.push(`LICENSE-TEST-KEY-NOT-IN-RELEASE: ${rel} contains an EC public JWK literal (fixture keys belong under test/ only)`);
+      continue;
+    }
+    // audit W4-4: thử giải mã mọi chuỗi base64/base64url dài và tìm vật liệu khoá
+    let hit = null;
+    for (const seg of text.match(B64_RE) || []) {
+      try {
+        const dec = Buffer.from(seg.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8');
+        if (/"kty"|"crv"|"P-256"/.test(dec)) { hit = seg.slice(0, 24); break; }
+      } catch { /* not base64 */ }
+    }
+    if (hit) {
+      findings.push(`LICENSE-TEST-KEY-NOT-IN-RELEASE: ${rel} carries base64-encoded key material (${hit}...) — keys belong under test/ only`);
+    }
+  }
+} catch (e) {
+  findings.push(`LICENSE guards scan failed: ${e.message}`);
+}
+
 // summary
 if (findings.length) {
   console.error(`lint: ${findings.length} finding(s)\n` + findings.map((f) => '  - ' + f).join('\n'));

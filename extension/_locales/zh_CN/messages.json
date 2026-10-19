@@ -626,5 +626,77 @@
   "kindAnomalyPause": { "message": "自动暂停（异常）" },
   "digestRecentNote": {
     "message": "\u57fa\u4e8e\u6700\u8fd1\u7684\u65e5\u5fd7\u8bb0\u5f55"
+  },
+  "licenseTitle": {
+    "message": "许可证"
+  },
+  "licenseFree": {
+    "message": "免费"
+  },
+  "licensePro": {
+    "message": "PRO"
+  },
+  "licenseTokenPlaceholder": {
+    "message": "粘贴许可证令牌"
+  },
+  "licenseActivate": {
+    "message": "激活"
+  },
+  "licenseDeactivate": {
+    "message": "停用"
+  },
+  "licenseActivated": {
+    "message": "许可证已激活。"
+  },
+  "licenseDormant": {
+    "message": "尚未配置许可证激活。"
+  },
+  "licenseMalformed": {
+    "message": "许可证令牌格式不正确。"
+  },
+  "licenseBadSignature": {
+    "message": "无法验证许可证令牌。"
+  },
+  "licenseWrongProduct": {
+    "message": "此许可证属于其他产品。"
+  },
+  "licenseExpired": {
+    "message": "许可证已过期。"
+  },
+  "licenseClockGrace": {
+    "message": "时钟回拨；临时验证宽限期已生效。"
+  },
+  "licenseStorageError": {
+    "message": "无法保存许可证，请重试。"
+  },
+  "missionScoped": {
+    "message": "限定范围运行"
+  },
+  "missionScopedDesc": {
+    "message": "在指定项目和分支上运行带参数的剧本。"
+  },
+  "missionVariables": {
+    "message": "剧本变量"
+  },
+  "missionPreview": {
+    "message": "下一步预览"
+  },
+  "missionStart": {
+    "message": "预览并开始"
+  },
+  "missionCancel": {
+    "message": "取消"
+  },
+  "missionValueInvalid": {
+    "message": "请输入有效值；未解析或不安全的值无法发送。"
+  },
+  "missionUnknownToken": {
+    "message": "此剧本包含不受支持的变量令牌。"
+  },
+  "missionGuardBlocked": {
+    "message": "此剧本的安全防护阻止了该步骤；进度未改变。"
+  },
+  "missionUnavailable": {
+    "message": "该步骤不可用；任务保持暂停。"
   }
 }

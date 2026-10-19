@@ -626,5 +626,77 @@
   "kindAnomalyPause": { "message": "자동 일시중지(이상 동작)" },
   "digestRecentNote": {
     "message": "\ucd5c\uadfc \ub85c\uadf8 \ud56d\ubaa9 \uae30\uc900"
+  },
+  "licenseTitle": {
+    "message": "라이선스"
+  },
+  "licenseFree": {
+    "message": "무료"
+  },
+  "licensePro": {
+    "message": "PRO"
+  },
+  "licenseTokenPlaceholder": {
+    "message": "라이선스 토큰 붙여넣기"
+  },
+  "licenseActivate": {
+    "message": "활성화"
+  },
+  "licenseDeactivate": {
+    "message": "비활성화"
+  },
+  "licenseActivated": {
+    "message": "라이선스가 활성화되었습니다."
+  },
+  "licenseDormant": {
+    "message": "라이선스 활성화가 아직 구성되지 않았습니다."
+  },
+  "licenseMalformed": {
+    "message": "라이선스 토큰 형식이 올바르지 않습니다."
+  },
+  "licenseBadSignature": {
+    "message": "라이선스 토큰을 검증할 수 없습니다."
+  },
+  "licenseWrongProduct": {
+    "message": "이 라이선스는 다른 제품용입니다."
+  },
+  "licenseExpired": {
+    "message": "라이선스가 만료되었습니다."
+  },
+  "licenseClockGrace": {
+    "message": "시계가 뒤로 이동했습니다. 임시 유예가 적용됩니다."
+  },
+  "licenseStorageError": {
+    "message": "라이선스를 저장할 수 없습니다. 다시 시도하세요."
+  },
+  "missionScoped": {
+    "message": "범위 실행"
+  },
+  "missionScopedDesc": {
+    "message": "특정 프로젝트와 브랜치에서 매개변수화된 플레이북을 실행합니다."
+  },
+  "missionVariables": {
+    "message": "플레이북 변수"
+  },
+  "missionPreview": {
+    "message": "다음 단계 미리보기"
+  },
+  "missionStart": {
+    "message": "미리보고 시작"
+  },
+  "missionCancel": {
+    "message": "취소"
+  },
+  "missionValueInvalid": {
+    "message": "유효한 값을 입력하세요. 미해결되거나 안전하지 않은 값은 전송할 수 없습니다."
+  },
+  "missionUnknownToken": {
+    "message": "이 플레이북에는 지원되지 않는 변수 토큰이 있습니다."
+  },
+  "missionGuardBlocked": {
+    "message": "플레이북 가드가 이 단계를 차단했습니다. 진행 상황은 변경되지 않았습니다."
+  },
+  "missionUnavailable": {
+    "message": "이 단계를 사용할 수 없습니다. 미션은 일시 중지 상태로 유지됩니다."
   }
 }

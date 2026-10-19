@@ -50,10 +50,10 @@
       }
     },
     {
-      "name": "C. focus popup.html: :focus-visible rules present (7) + outline:none covered by wrapper-ring",
+      "name": "C. focus popup.html: :focus-visible rules present (9) + outline:none covered by wrapper-ring",
       "ok": true,
       "detail": {
-        "fv": 7,
+        "fv": 9,
         "outlineNone": 1,
         "focusWithin": 1,
         "uncovered": []
@@ -383,6 +383,24 @@
         "delta": "↑ 5 so với 7 ngày trước",
         "sw": 290,
         "cw": 290
+      }
+    },
+    {
+      "name": "N1. license UI: chip Free + ô token + nút Kích hoạt hiện diện",
+      "ok": true,
+      "detail": {
+        "chip": "Miễn phí",
+        "hasInput": true,
+        "hasAct": true
+      }
+    },
+    {
+      "name": "N2. dormant: Kích hoạt báo chưa cấu hình, ô nhập bị xoá, chip vẫn Free",
+      "ok": true,
+      "detail": {
+        "st": "Tính năng kích hoạt bản quyền chưa được cấu hình.",
+        "inputCleared": true,
+        "chip": "Miễn phí"
       }
     }
   ],

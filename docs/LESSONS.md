@@ -117,3 +117,29 @@ threshold = rateMaxPerMin × rateWindowMs / 60000) and left the topic rule to th
 Tuning an e2e threshold must start from: the module's hard constants, the smallest sample the
 rule accepts, and the engine's observed slowest cadence — never the ideal cadence.
 **Guard:** G04-1..6 green in a full 113-check run; anomaly-unit pins the topic semantics.
+
+## LSN-muse-auto-allow-012 — đừng tự tay mở đường tự động trong bài kiểm thử, và chờ lượt gửi lắng trước khi đo mốc
+
+**Ngày:** 2026-10-19 · **Phát hiện bởi:** đợt kiểm thử v1.21.0 (mission-e2e khối C đỏ 2 lần chạy liên tiếp)
+**Bài học:** hai dạng đua thời điểm chồng nhau. (1) Khối C tự gọi chế độ "rảnh" trước khi đặt tạm
+dừng — mà đường gửi tự động chỉ chạy khi tab rảnh, nên chính thao tác đó mở một nhịp gửi tự động
+đúng lúc lấy mốc; mốc bước bị trôi và cả hai kiểm tra liền kề đỏ dù sản phẩm đúng. (2) Lượt gửi
+"đã thử" của chặng trước có thể được xác minh MUỘN, ngay sau khi chặng sau đặt lại bước, làm bước
+nhảy đúng lúc đo. Cách chữa tận gốc: giữ tab ở trạng thái "đang làm việc" suốt khối tạm dừng, mỗi
+lần đo mốc/gửi đều chờ `followup.sending === false` (hàm `waitQuiet`), thêm một khoảng lắng 1,5 giây
+sau khi đặt lại bước, và so mốc TRƯỚC/SAU quanh hành động thay vì so với giá trị tuyệt đối.
+**Guard:** mission-e2e 37/0 (khối C tất định; G02-C so `stepBefore` với `stepAfter`).
+
+## LSN-muse-auto-allow-013 — bài học từ audit độc lập W4 (điều kiện cấp quyền, trạng thái UI, phạm vi cổng lint)
+
+**Ngày:** 2026-10-19 · **Phát hiện bởi:** audit độc lập sau khi ráp W4 (3 phát hiện MEDIUM + 1 LOW)
+**Bài học:** ba mẫu lỗi đáng nhớ. (1) Chữ ký hợp lệ KHÔNG đủ: allowlist sku mà quên allowlist `tier`
+thì token ký với tier lạ vẫn được cấp PRO — mọi trường tham gia quyết định quyền phải có allowlist
+riêng. (2) Trạng thái UI phải về mặc định AN TOÀN trước mọi await: chip giữ "PRO" từ lần render
+trước khi lượt xác minh mới đang chờ/lỗi là hiển thị sai quyền — đặt về "Free" trước, nâng lên sau
+khi xác minh xong. (3) Cổng lint theo mẫu văn bản phải được kiểm chứng bằng đột biến Ở CẢ biến thể
+mã hoá: chặn JWK literal mà bỏ qua JWK base64 là cổng nửa vời. Kèm một chi tiết vận hành: mốc
+chống lùi đồng hồ chỉ nên ghi khi lệch > ngưỡng (60 giây) để tránh storage.onChanged quay vòng render.
+**Guard:** `license-unit` L4b (tier lạ, chữ ký hợp lệ → từ chối) · renderLicense đặt Free trước await ·
+lint `LICENSE-TEST-KEY-NOT-IN-RELEASE` mở rộng quét base64 (đột biến trực tiếp: chèn → đỏ, gỡ → xanh) ·
+`import-security` biên token 2048/2049 khớp `license.js`.

@@ -28,8 +28,10 @@ dimensions with the model-C evidence.
 - **W2 ✅ v1.20.0** (2026-10-19) — G04 anomaly auto-pause + G07 daily briefing shipped;
   anomaly-unit 11/11 (mutation-falsified), followup-e2e 113/0 (G04-1..6 + G07), QA 35/35;
   artifact `225,747 B / 20 entries / c0454021…41ef9`.
-- **W3 ⏳** G02 mission playbooks — next.
-- **W4 ⏳** dormant license core (plan landed: `docs/W4_LICENSE_IMPL_PLAN.md`).
+- **W3 ✅ v1.21.0** (2026-10-19) — G02 Mission Playbooks (playbook.js 10/10, mission-e2e 37/0,
+  255 khóa × 6).
+- **W4 ✅ v1.21.0** (2026-10-19) — lõi giấy phép dormant (license-unit 15/15; cổng lint đã
+  kiểm chứng bằng đột biến; khóa thật vẫn chờ nghi thức của chủ sở hữu).
 
 ## Task board (W1 detail)
 
