@@ -42,10 +42,10 @@ ws.onmessage = (ev) => { let m; try { m = JSON.parse(ev.data); } catch { return;
 const send = (method, params = {}, sid) => new Promise((resolve, reject) => { const id = ++seq; pending.set(id, { resolve, reject }); const m = { id, method, params }; if (sid) m.sessionId = sid; ws.send(JSON.stringify(m)); setTimeout(() => { if (pending.has(id)) { pending.delete(id); reject(new Error(method + ' timeout')); } }, 30000); });
 
 const stages = [
-  { out: 'screenshot1.png', q: 'shots/popup-live-dark.png', w: 400, title: 'Approve Muse\u2019s asks, hands-free.', sub: 'Pause, dry-run, keyword blocks and an anomaly guard \u2014 every approval stays on this machine.' }, // v1.21.0 refresh
+  { out: 'screenshot1.png', q: 'shots/popup-live-dark.png', w: 400, title: 'Approve Muse\u2019s asks, hands-free.', sub: 'Pause, dry-run, layered rules and an anomaly guard \u2014 every approval stays on this machine.' }, // v1.22.0 refresh
   { out: 'screenshot2-stats.png', q: 'shots/stats-dark.png', w: 1000, title: 'Your approvals, measured.', sub: 'Local-only statistics: a 14-day trend, topic mix, and honest import/export — dates in your own language.' },
   { out: 'screenshot3-popup.png', q: 'shots/popup-live-dark.png', w: 400, title: 'Auto-click Allow, with a seatbelt.', sub: 'Never clicks Deny. Explicit pause controls. Local-only, no telemetry, six languages.' },
-  { out: 'screenshot5-safety.png', q: 'shots/popup-safety-dark.png', w: 400, title: 'Every rail in one place.', sub: 'Dry-run, YOLO with a two-step arm, keyword and connector blocks, anomaly auto-pause, offline license — and nothing leaves your browser.' },
+  { out: 'screenshot5-safety.png', q: 'shots/popup-safety-dark.png', w: 400, title: 'Every rail in one place.', sub: 'Dry-run, YOLO with a two-step arm, layered allow/ask/block rules, connector blocks, anomaly auto-pause, audit export — and nothing leaves your browser.' },
 ];
 
 try {

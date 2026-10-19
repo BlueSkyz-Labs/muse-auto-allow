@@ -47,7 +47,7 @@ const scheme = async (sid, v) => { await send('Emulation.setEmulatedMedia', { fe
 
 // --- popup: dry (fresh boot, onboarding open) ---
 const popup = await mk('popup.html');
-await ev(popup, `new Promise((res) => chrome.storage.local.set({ userLocale: 'vi' }, () => res('ok')))`, true);
+await ev(popup, `new Promise((res) => chrome.storage.local.set({ userLocale: 'vi', rules: { allowTopics: [], blockKeywords: ['delete', 'payment', 'transfer', 'billing'], layers: [ { id: 'block-money', kind: 'block', match: { keywords: ['payment', 'billing', 'transfer'] } }, { id: 'ask-purchase', kind: 'ask', match: { topics: ['purchase'] } }, { id: 'allow-repo', kind: 'allow', match: { topics: ['github.com'] } } ] } }, () => res('ok')))`, true);
 await sleep(300);
 await send('Page.reload', {}, popup); await sleep(1200);
 await scheme(popup, 'dark');  await shot(popup, 'popup-onboarding-dark', 400, 640);
@@ -68,11 +68,11 @@ await scheme(popup, 'light'); await shot(popup, 'popup-live-light', 400, 640);
 // --- v1.21.0: Safety panel (anomaly guard + license) + mission playbook config preview ---
 await ev(popup, `(() => { const b = document.getElementById('safetyBtn'); if (b) b.click(); return 'ok'; })()`);
 await sleep(500);
-// v1.21.0: cuộn xuống cuối bảng An toàn để khung ảnh trưng được Anomaly guard + License
-await ev(popup, `(() => { const o = document.querySelector('#safetyPanel .ovbody'); if (o) o.scrollTop = o.scrollHeight; return 'ok'; })()`);
+// v1.22.0: trưng khối LUẬT BA TẦNG (mới W5) — scroll tới #layersGroup (thấy bảng luật + phần dưới)
+await ev(popup, `(() => { const o = document.querySelector('#safetyPanel .ovbody'); const g = document.getElementById('layersGroup'); if (o && g) o.scrollTop = Math.max(0, g.offsetTop - 80); return 'ok'; })()`);
 await sleep(250);
 await scheme(popup, 'dark');  await shot(popup, 'popup-safety-dark', 400, 640);
-await ev(popup, `(() => { const o = document.querySelector('#safetyPanel .ovbody'); if (o) o.scrollTop = o.scrollHeight; return 'ok'; })()`);
+await ev(popup, `(() => { const o = document.querySelector('#safetyPanel .ovbody'); const g = document.getElementById('layersGroup'); if (o && g) o.scrollTop = Math.max(0, g.offsetTop - 80); return 'ok'; })()`);
 await scheme(popup, 'light'); await shot(popup, 'popup-safety-light', 400, 640);
 await ev(popup, `(() => { const c = document.getElementById('safetyClose'); if (c) c.click(); return 'ok'; })()`);
 await sleep(300);
