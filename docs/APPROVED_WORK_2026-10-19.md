@@ -21,6 +21,16 @@ PILOT/VALIDATE/DEFER items stay untouchable until a separate Owner decision.
 After W1: publish checklist for CWS (owner upload). After W4: PAID_READINESS re-audit of the 15
 dimensions with the model-C evidence.
 
+## Status log
+
+- **W1 ✅ v1.19.0** (2026-10-19) — S02/S03/S04/S07/S08/S10 shipped; QA 34/34; artifact
+  `216,228 B / 19 entries / 4221e521…cc13f`; PR #15.
+- **W2 ✅ v1.20.0** (2026-10-19) — G04 anomaly auto-pause + G07 daily briefing shipped;
+  anomaly-unit 11/11 (mutation-falsified), followup-e2e 113/0 (G04-1..6 + G07), QA 35/35;
+  artifact `225,747 B / 20 entries / c0454021…41ef9`.
+- **W3 ⏳** G02 mission playbooks — next.
+- **W4 ⏳** dormant license core (plan landed: `docs/W4_LICENSE_IMPL_PLAN.md`).
+
 ## Task board (W1 detail)
 
 - [x] S02 log: day groups + kind chips + search shipped; QA L1-L4 machine-checked (ISO-timestamp bug caught pre-freeze)

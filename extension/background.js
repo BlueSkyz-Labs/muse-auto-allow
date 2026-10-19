@@ -37,7 +37,8 @@ const DIGEST_ICON = 'icons/icon128.png';
 // v1.10.0: codexEnabled (the Codex/ChatGPT feature switch) joins the subset — it is an
 // explicit user choice, like yoloMode, and only travels while syncSettings is opted in.
 const SYNC_SUBSET = ['enabled', 'minDelayMs', 'dryRun', 'yoloMode', 'allowOnceMode', 'codexEnabled', 'rules',
-  'followupEnabled', 'followupPrompt', 'followupPrompts', 'followupChips', 'followupSmart', 'followupSchedule'];
+  'followupEnabled', 'followupPrompt', 'followupPrompts', 'followupChips', 'followupSmart', 'followupSchedule',
+  'anomaly']; // v1.20.0 (G04) - rides the opt-in sync subset
 const SYNC_ITEM_MAX_BYTES = 8192; // chrome.storage.sync QUOTA_BYTES_PER_ITEM — BYTES (UTF-8), not code units
 
 // Surface worker errors in the console instead of silent promise deaths (debuggability;
@@ -100,6 +101,23 @@ function nudge(tabId) {
 }
 
 // Badge = today's click count (cleared when zero); a paused engine shows '||' instead.
+// v1.20.0 (G04): one notification when the pause came from the anomaly detector. The marker is
+// written in the SAME storage.set as pauseUntil, so a matching marker proves the origin; a
+// manual pause (no marker) stays silent. Notifications must never break the pause path.
+function notifyAnomalyPause(untilRaw) {
+  const until = Number(untilRaw);
+  if (!Number.isFinite(until) || until <= Date.now()) return;
+  chrome.storage.local.get({ anomalyLastPause: null }, (s) => {
+    const m = s && s.anomalyLastPause;
+    if (!m || Number(m.until) !== until) return;
+    try {
+      chrome.notifications.create('maa-anomaly-pause', {
+        type: 'basic', iconUrl: DIGEST_ICON, title: 'muse-auto-allow',
+        message: 'Auto-paused until ' + new Date(until).toLocaleString() + ' - unusual click activity (' + String(m.rule || 'anomaly') + ').',
+      }, () => { void chrome.runtime.lastError; });
+    } catch { /* a notification failure must never break the pause path */ }
+  });
+}
 function updateBadge() {
   try {
     chrome.storage.local.get({ stats: null, pauseUntil: 0 }, (s) => {
@@ -305,6 +323,7 @@ chrome.storage.onChanged.addListener((ch, area) => {
   if (area && area !== 'local') return; // sync echoes must never loop back into sync
   if (ch.stats || ch.clickCount || ch.pauseUntil) updateBadge();
   if (ch.pauseUntil) schedulePauseBadgeRefresh();
+  if (ch.pauseUntil) notifyAnomalyPause(ch.pauseUntil.newValue); // v1.20.0 (G04)
   if (ch.syncSettings && ch.syncSettings.newValue === true) pushAllToSync();
   mirrorToSync(ch);
 });

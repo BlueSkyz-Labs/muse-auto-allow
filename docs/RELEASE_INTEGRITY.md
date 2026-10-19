@@ -60,6 +60,38 @@ of the artifact gets `http://127.0.0.1/*` appended to `content_scripts[0].matche
 fixture origin — the pristine extraction dir and the shipped manifest stay untouched,
 and the artifact's own bytes are what gets loaded everywhere else.
 
+## Freeze procedure (v1.20.0 freeze)
+
+Same procedure (version `1.20.0`; build → hash → rebuild identical; sidecar `-c`; verify-zip
+20/0/0/0 — the 20th entry is the new `anomaly.js`; smoke `ok:true`; attach to the GitHub Release).
+Note: `scripts/build.mjs` carries a SHIPPED allowlist; the new module required an explicit entry
+(the build refuses unexpected files by design).
+
+## Recorded evidence (v1.20.0 freeze)
+
+- Frozen tree: `extension/manifest.json` `"version": "1.20.0"`; tag `v1.20.0`.
+- Artifact: `dist/muse-auto-allow-v1.20.0.zip` — **225,747 bytes**, **20 entries**; sha256
+  `c0454021e0ed88627b26de88757c741e6ea031247db2b088ba5a3ced97241ef9` (sidecar clean);
+  determinism 2× byte-identical; verify-zip 20/0/0/0; smoke exit 0 `"ok": true`.
+- Gates (2026-10-19, self-cleaning runs): lint 29 checks / 20 files 0 · **anomaly-unit 11/11 NEW**
+  (mutation-falsified) · background-unit 0 · import-security 0 · yolo-ux 0 · e2e 0 ·
+  mission-e2e 0 · lang-switch-e2e 0 (231×6) · codex-e2e 0 · bench 0 · QA v1.14.0 8/8 ·
+  `qa-experience` **35/35**.
+- **followup-e2e** required two test-side fixes after the first battery run (the PRODUCT path was
+  firing correctly: the marker showed `rate` fired at exactly count 5/threshold 5 with a 15-minute
+  pause): (a) **LSN-010** — the log is encrypted at rest, so check 2 now pins kind/reason/ctx-shape
+  + the unencrypted marker rule instead of grepping plaintext; (b) **LSN-011** — the phase was
+  retuned to the RATE rule at 5 clicks/60 s (the topic rule refuses below a fixed window-total
+  floor of 30 and the fixture's engine cadence is ~1 click/5 s). After the fixes:
+  **113 checks / 0 failed**. Two unrelated runs aborted on transient `Runtime.evaluate` stalls
+  (the known flake class); a stalled suite is rerun once before being treated as red — the rerun
+  was fully green, and the battery's own run of followup-e2e was the red one quoted above.
+- Scope: W2 of the Owner-approved catalog — **G04 anomaly auto-pause** (pure `anomaly.js` detector:
+  RATE 150/5 min, TOPIC 40 + 70% share /10 min, 100-click floor; ONE-write pause + marker;
+  new kind/reason `anomaly-pause`; fail-closed settings; Safety-sheet guard groups; can only ADD a
+  pause, never touch a cap) and **G07 daily briefing** (top block reason + 7-day trend inside the
+  existing digest). i18n **231 keys × 6**. Fixture gains an on-demand 45-card spike family.
+
 ## Freeze procedure (v1.19.0 freeze)
 
 Same procedure (version `1.19.0`; build → hash → rebuild identical; sidecar `-c`; verify-zip

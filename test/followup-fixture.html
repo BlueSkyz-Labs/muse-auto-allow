@@ -199,6 +199,10 @@
   <button type="button" id="sendBtn" aria-label="Send message">Send</button>
 </div>
 
+<!-- v1.20.0 (G04): the anomaly burst family. Cards are CREATED on demand by
+     window.__setAnomaly('spike') so no other phase or suite ever sees them. -->
+<div id="spikeHost"></div>
+
 <script>
 window.__sent = [];            // { text, t, via } — one entry per submitted message
 window.__inputs = [];          // input events seen on the composer (React-safe typing probe)
@@ -265,6 +269,34 @@ window.__setV18 = function (mode) {
   set('v18PrefLegacy', mode === 'prefLegacy');
   set('v18Pause', mode === 'pause');
 };
+// v1.20.0 (G04): anomaly burst — 45 identical approval cards about "Repository spike-repo".
+// Created on demand so every other phase/suite is unaffected; each Allow records into
+// __cardClicks like the v18 family (Deny records too, so a stray deny click is auditable).
+window.__setAnomaly = function (mode) {
+  var hostEl = document.getElementById('spikeHost');
+  if (!hostEl) return;
+  hostEl.innerHTML = '';
+  if (mode !== 'spike') return;
+  for (var i = 0; i < 45; i++) {
+    var card = document.createElement('div');
+    card.className = 'card';
+    card.setAttribute('data-testid', 'hatch-inline-approval-card');
+    var para = document.createElement('p');
+    para.textContent = 'Allow Muse to perform this action on your GitHub account? Action Pull Repository spike-repo';
+    var row = document.createElement('div');
+    row.className = 'row';
+    var allow = document.createElement('button');
+    allow.type = 'button'; allow.className = 'allow'; allow.textContent = 'Allow';
+    allow.addEventListener('click', function () { window.__cardClicks.push({ n: 'spike-allow', t: Date.now() }); });
+    var deny = document.createElement('button');
+    deny.type = 'button'; deny.className = 'deny'; deny.textContent = 'Deny';
+    deny.addEventListener('click', function () { window.__cardClicks.push({ n: 'spike-deny', t: Date.now() }); });
+    row.appendChild(allow); row.appendChild(deny);
+    card.appendChild(para); card.appendChild(row);
+    hostEl.appendChild(card);
+  }
+};
+
 // error surface for followupSmart.errorRecovery
 window.__setError = function (text) {
   var el = document.getElementById('errBox');

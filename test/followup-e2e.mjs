@@ -1337,6 +1337,61 @@ try {
   const g7 = await pEval(`({ hidden: document.getElementById('digest').hidden, top: (document.getElementById('dTopReason').textContent || ''), trend: (document.getElementById('dTrend').textContent || ''), delta: (document.getElementById('dTrendDelta').textContent || '') })`);
   check('G07 briefing. #digest shows counters + top reason + 7-day trend',
     !!g7 && g7.hidden === false && /keyword:banana \(2\)/.test(g7.top) && g7.trend === '7' && /4/.test(g7.delta), g7);
+
+  // ---- v1.20.0 (G04): anomaly auto-pause — the burst trips the detector, the engine halts, and
+  // ---- the follow-up path maps the pause to the NEW reason. The suite drives the RATE rule
+  // ---- (threshold = rateMaxPerMin x rateWindowMs / 60000 = 5 clicks in 60 s); the TOPIC rule's
+  // ---- semantics (40/50 share 0.8 fires, 0.5 silent, the fixed window-total floor of 30) are
+  // ---- unit-tested against the shipped module in test/anomaly-unit.mjs.
+  await fEval("window.__setV18('off')");
+  await seed({ enabled: true, minDelayMs: 0, dryRun: false, pauseUntil: 0, anomalyLastPause: null,
+    followupEnabled: true, followupPrompt: 'G04 probe — continue where you left off',
+    anomaly: { enabled: true, minSample: 3, rateMaxPerMin: 5, rateWindowMs: 60000, pauseMs: 900000 } });
+  await fEval('location.reload()');
+  await sleep(1800); // fresh page = fresh engine windows (allowClicks/topicClicks)
+  await fEval("window.__setAnomaly('spike')");
+  let g4store = null;
+  const g4deadline = Date.now() + 90000;
+  while (Date.now() < g4deadline) {
+    const st = await popStore(['pauseUntil', 'anomalyLastPause', 'log']);
+    if (((Number(st && st.pauseUntil) || 0) > Date.now() + 60000)) { g4store = st; break; }
+    await sleep(2000);
+  }
+  const g4until = (Number(g4store && g4store.pauseUntil) || 0);
+  check('G04-1. the burst trips the detector and auto-pauses the engine (~15 min ahead)',
+    g4until > Date.now() + 60000, { until: g4until, marker: g4store && g4store.anomalyLastPause });
+  const g4log = (g4store && Array.isArray(g4store.log)) ? g4store.log : [];
+  const g4entry = g4log.find((e) => e && e.kind === 'anomaly-pause');
+  // The log is encrypted at rest (V4-5): the plaintext context lives inside entry.ctx (ct/iv)
+  // or, in a legacy plaintext shape, in entry.context — accept either, but pin the kind+reason
+  // and the UNENCRYPTED marker rule.
+  const g4ctxOk = !!g4entry && (typeof g4entry.context === 'string'
+    ? /(rate:|topic:)/.test(g4entry.context)
+    : !!(g4entry.ctx && typeof g4entry.ctx.ct === 'string'));
+  const g4marker = g4store && g4store.anomalyLastPause;
+  check('G04-2. the auto-pause is logged (kind/reason anomaly-pause, context stored, marker rule)',
+    !!g4entry && g4entry.kind === 'anomaly-pause' && g4entry.blockedReason === 'anomaly-pause' && g4ctxOk
+    && !!g4marker && (g4marker.rule === 'rate' || g4marker.rule === 'topic'),
+    { entry: g4entry || null, marker: g4marker || null });
+  const clicks0 = await fJSON('window.__cardClicks.length');
+  await sleep(3500);
+  const clicks1 = await fJSON('window.__cardClicks.length');
+  check('G04-3. while auto-paused the engine clicks nothing (burst frozen)',
+    clicks0 === clicks1 && clicks0 >= 5, { before: clicks0, after: clicks1 });
+  try { await send('Page.reload', {}, popSession); } catch { /* ignore */ }
+  await sleep(900);
+  const g4pop = await pEval(`({ noteHidden: document.getElementById('anomalyNote') ? document.getElementById('anomalyNote').hidden : null, groupHidden: document.getElementById('pauseActive').hidden, state: (document.getElementById('pstateText').textContent || '') })`);
+  check('G04-4. popup shows the anomaly pause state + note',
+    !!g4pop && g4pop.groupHidden === false && g4pop.noteHidden === false && /(unusual|anomaly|auto)/i.test(g4pop.state), g4pop);
+  const g4send = await fixtureMsg({ type: 'followup-send-now' });
+  check('G04-5. send-now during the auto-pause maps to reason anomaly-pause',
+    !!(g4send.resp && g4send.resp.ok === false && g4send.resp.reason === 'anomaly-pause'), g4send.resp);
+  await seed({ anomaly: { enabled: false }, pauseUntil: 0, anomalyLastPause: null });
+  await sleep(4000);
+  const clicks2 = await fJSON('window.__cardClicks.length');
+  const st2 = await popStore(['pauseUntil', 'anomalyLastPause']);
+  check('G04-6. disabled guard: the burst resumes and nothing re-pauses',
+    clicks2 > clicks1 && (Number(st2 && st2.pauseUntil) || 0) === 0, { after: clicks2, pauseUntil: st2 && st2.pauseUntil });
   results.v18 = { dryEntry, blEntry, bananaEntry, topicBadEntry, badge, visState, counters: dg, applied: v18Applied };
 
   // ---- fixture-side evidence + hygiene ----

@@ -90,7 +90,9 @@ const KIND_KEY = { allow: 'kindAllow', expand: 'kindExpand', 'open-panel': 'kind
   mission: 'kindMission', 'mission-dry': 'kindMissionDry',
   // v1.10.0 Codex (chatgpt.com) kinds + their dry-run twin (one shared '(dry)' label)
   'codex-allow': 'kindCodexAllow', 'codex-expand': 'kindCodexExpand', 'codex-open-panel': 'kindCodexOpenPanel',
-  'codex-allow-dry': 'kindCodexDry', 'codex-expand-dry': 'kindCodexDry', 'codex-open-panel-dry': 'kindCodexDry' };
+  'codex-allow-dry': 'kindCodexDry', 'codex-expand-dry': 'kindCodexDry', 'codex-open-panel-dry': 'kindCodexDry',
+  // v1.20.0 (G04): the anomaly auto-pause log entry
+  'anomaly-pause': 'kindAnomalyPause' };
 const kindLabel = (k) => t(KIND_KEY[k] || '', k);
 // v1.8.0: chip class per kind — the dry variants share one quiet tint, 'blocked' keeps its
 // own, a follow-up entry reads like an allow entry (the label already says 'follow-up')
@@ -103,6 +105,8 @@ function kindClass(k) {
   if (k === 'codex-open-panel') return 'open-panel';
   if (String(k).endsWith('-dry')) return 'dry';
   if (k === 'followup') return 'allow';
+  // v1.20.0 (G04): the auto-pause entry reads like a blocked/safety entry
+  if (k === 'anomaly-pause') return 'blocked';
   return k;
 }
 
@@ -756,6 +760,7 @@ function refresh() {
     followupChips: null, followupPrompts: [], followupRotateIdx: 0, followupAdvancedOpen: false,
     pauseUntil: 0, dryRun: false, yoloMode: false, allowOnceMode: false, rules: null, followupSmart: null, followupSchedule: null,
     syncSettings: false, onboarded: false, digestCounters: null, lastDigestAt: 0,
+    anomaly: null, anomalyLastPause: null, // v1.20.0 (G04)
     missionEnabled: false, mission: null, codexEnabled: false }, (s) => {
     $('enabled').checked = s.enabled !== false;
     $('delay').value = s.minDelayMs ?? 300;
@@ -820,6 +825,7 @@ const clampHour = (v, d) => {
 const hhmm = (ms) => { const d = new Date(Number(ms) || 0); return pad2(d.getHours()) + ':' + pad2(d.getMinutes()); };
 
 const v18 = { pauseUntil: 0, dryRun: false, yoloMode: false, allowOnce: false, codexEnabled: false, syncSettings: false, onboarded: false, lastDigestAt: 0,
+              anomaly: null, anomalyLastPause: null, // v1.20.0 (G04)
               smart: { stuckMin: 10, errorRecovery: false },
               schedule: { enabled: false, start: 8, end: 18, onlyActiveTab: false },
               counters: {}, rules: { topics: [], keywords: [], keywordsSeeded: true } };
@@ -869,10 +875,19 @@ function renderPause() {
   const idle = $('pauseIdle'), act = $('pauseActive');
   if (idle) idle.hidden = paused;
   if (act) act.hidden = !paused;
+  // v1.20.0 (G04): an auto-pause carries the anomaly marker (anomalyLastPause.until
+  // matches pauseUntil) — say so plainly instead of the generic manual-pause line.
+  const marker = v18.anomalyLastPause;
+  const until = v18.pauseUntil;
+  const anomalyPause = !!(paused && marker && Number(marker.until) === Number(until));
   if (paused) {
     const tx = $('pstateText');
-    if (tx) tx.textContent = t('pauseStateUntil', 'Paused until $1', [hhmm(v18.pauseUntil)]);
+    if (tx) tx.textContent = anomalyPause
+      ? t('anomalyPauseState', 'Auto-paused until $1 — unusual click activity detected', [localTime(until)])
+      : t('pauseStateUntil', 'Paused until $1', [hhmm(v18.pauseUntil)]);
   }
+  const an = $('anomalyNote');
+  if (an) an.hidden = !anomalyPause; // hidden in every other case (incl. a manual pause)
   if (pauseTimer) { clearTimeout(pauseTimer); pauseTimer = null; }
   if (paused) {
     // flip back the moment the pause expires while the popup stays open
@@ -998,6 +1013,28 @@ function writeSmart(patch) {
 function renderSync() {
   const el = $('syncSet');
   if (el) el.checked = v18.syncSettings === true;
+}
+// ---- v1.20.0 (G04): anomaly auto-pause settings -------------------------------------
+// One switch governs BOTH detector rules (sustained rate + topic spike); the popup
+// writes only the three UI-owned keys, merged over the raw stored object so the
+// detector-owned extras (rateWindowMs / topicWindowMs / topicCountMin /
+// topicShareMin / minSample) survive a UI write.
+function renderAnomaly() {
+  const a = v18.anomaly;
+  const en = $('anomalyEnable');
+  if (en) en.checked = !a || a.enabled !== false; // absent = on (the detector default)
+  const rate = $('anomalyRate');
+  if (rate && document.activeElement !== rate) rate.value = String(Number(a && a.rateMaxPerMin) || 30);
+  const dur = $('anomalyDur');
+  if (dur && document.activeElement !== dur) dur.value = String(Math.round((Number(a && a.pauseMs) || 900000) / 60000));
+}
+function writeAnomaly(patch) {
+  try {
+    chrome.storage.local.get({ anomaly: null }, (s) => {
+      const cur = (s.anomaly && typeof s.anomaly === 'object') ? s.anomaly : {};
+      chrome.storage.local.set({ anomaly: Object.assign({}, cur, patch) });
+    });
+  } catch { /* ignore */ }
 }
 
 // ---- 'While you were away' digest (digestCounters + lastDigestAt) --------------------
@@ -1155,7 +1192,7 @@ function setSafety(open) {
   const b = $('safetyBtn');
   if (b) b.setAttribute('aria-expanded', safetyOpen ? 'true' : 'false');
   if (safetyOpen) {
-    renderRules(); renderSchedule(); renderSmart(); renderSync();
+    renderRules(); renderSchedule(); renderSmart(); renderSync(); renderAnomaly(); // v1.20.0 (G04)
     const dr = $('dryRun'); if (dr) dr.checked = v18.dryRun === true;
     const ym = $('yoloMode'); if (ym) ym.checked = v18.yoloMode === true;
     const ao = $('allowOnce'); if (ao) ao.checked = v18.allowOnce === true;
@@ -1239,6 +1276,8 @@ function applyV18UI(s) {
   v18.lastDigestAt = Number(s.lastDigestAt) || 0;
   v18.log = Array.isArray(s.log) ? s.log : [];           // v1.20.0 (G07)
   v18.stats = s.stats && typeof s.stats === 'object' ? s.stats : null;
+  v18.anomaly = (s.anomaly && typeof s.anomaly === 'object') ? s.anomaly : null; // v1.20.0 (G04)
+  v18.anomalyLastPause = (s.anomalyLastPause && typeof s.anomalyLastPause === 'object') ? s.anomalyLastPause : null;
   const rules = s.rules === null || s.rules === undefined ? null : asObj(s.rules);
   const hasKw = !!(rules && Array.isArray(rules.blockKeywords));
   v18.rules.topics = cleanList(rules && rules.allowTopics);
@@ -1256,6 +1295,7 @@ function applyV18UI(s) {
   renderSchedule();
   renderSmart();
   renderSync();
+  renderAnomaly(); // v1.20.0 (G04)
   renderOnboard();
   if (safetyOpen) {
     // Sync/import/another popup can change settings while this sheet is open.
@@ -1264,6 +1304,7 @@ function applyV18UI(s) {
     const ym = $('yoloMode'); if (ym && !yoloArmed) ym.checked = v18.yoloMode;
     const ao = $('allowOnce'); if (ao) ao.checked = v18.allowOnce;
     renderRules();
+    renderAnomaly(); // v1.20.0 (G04)
   }
 }
 
@@ -1702,6 +1743,7 @@ const SEND_BLOCKED_KEY = {
   'sending': ['followupSendBlockedSending', 'A follow-up is already being sent'],
   'disabled': ['followupSendNowHint', 'Enable Auto follow-up first'],
   'paused': ['followupSendBlockedPaused', "Couldn't send — automation is paused"],
+  'anomaly-pause': ['followupSendBlockedAnomaly', 'Send refused: the engine auto-paused (anomaly)'], // v1.20.0 (G04)
   'schedule': ['followupSendBlockedSchedule', "Couldn't send — outside the follow-up hours"],
   'dead': ['followupSendBlockedDead', "Couldn't send — the Muse tab is not responding"],
   'submit-failed': ['followupSendBlockedSubmit', "Couldn't send — Muse didn't accept the message"], // v1.13.0 (C4-F): both submit strategies failed after typing
@@ -1849,6 +1891,18 @@ $('stuckMin').addEventListener('change', () => {
   writeSmart({ stuckMin: v });
 });
 $('errRec').addEventListener('change', () => writeSmart({ errorRecovery: $('errRec').checked }));
+// v1.20.0 (G04): anomaly guard — every change writes ONE merged object, clamped, never NaN
+$('anomalyEnable').addEventListener('change', () => { writeAnomaly({ enabled: $('anomalyEnable').checked }); });
+$('anomalyRate').addEventListener('change', () => {
+  const v = Math.max(1, Math.min(120, Math.round(Number($('anomalyRate').value) || 30)));
+  $('anomalyRate').value = v;
+  writeAnomaly({ rateMaxPerMin: v });
+});
+$('anomalyDur').addEventListener('change', () => {
+  const v = Math.max(1, Math.min(120, Math.round(Number($('anomalyDur').value) || 15)));
+  $('anomalyDur').value = v;
+  writeAnomaly({ pauseMs: v * 60000 });
+});
 // onboarding wizard
 $('obPrimary').addEventListener('click', obPrimary);
 $('obBack').addEventListener('click', () => { obStep = Math.max(0, obStep - 1); renderOnboard(); });

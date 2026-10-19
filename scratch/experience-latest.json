@@ -372,6 +372,18 @@
         "empty": "Không có mục phù hợp",
         "items": 0
       }
+    },
+    {
+      "name": "M. G07 briefing: card visible, text carries the signal, fits the surface",
+      "ok": true,
+      "detail": {
+        "hidden": false,
+        "top": "keyword:banana (1)",
+        "trend": "5",
+        "delta": "↑ 5 so với 7 ngày trước",
+        "sw": 290,
+        "cw": 290
+      }
     }
   ],
   "failed": 0

@@ -296,6 +296,9 @@
   "followupSendBlockedSubmit": {
     "message": "Couldn't send — Muse didn't accept the message"
   },
+  "followupSendBlockedAnomaly": {
+    "message": "Send refused: the engine auto-paused (anomaly)"
+  },
   "followupRotateStarterConfirm": {
     "message": "Replace your $1 saved combos? Tap again"
   },
@@ -322,6 +325,12 @@
   },
   "pauseStateUntil": {
     "message": "Paused until $1"
+  },
+  "anomalyPauseState": {
+    "message": "Auto-paused until $1 — unusual click activity detected"
+  },
+  "anomalyActiveNote": {
+    "message": "The detector paused the engine by itself; it resumes automatically."
   },
   "dryRunTitle": {
     "message": "Dry-run (log only)"
@@ -431,6 +440,30 @@
   "syncNote": {
     "message": "Uses Chrome Sync (8 KB per-item limit). Lists larger than the limit stay on this device; local settings always win."
   },
+  "anomalyEnable": {
+    "message": "Anomaly auto-pause"
+  },
+  "anomalyEnableHint": {
+    "message": "Pause the engine by itself when click behaviour looks abnormal (rate or topic spike). It never weakens any rail."
+  },
+  "anomalyRateLabel": {
+    "message": "Sustained rate (clicks/min)"
+  },
+  "anomalyRateHint": {
+    "message": "Pauses when allow-clicks stay above this rate over a 5-minute window."
+  },
+  "anomalyTopicLabel": {
+    "message": "Topic spike guard"
+  },
+  "anomalyTopicHint": {
+    "message": "Also pauses when one topic takes over the window (40+ clicks and 70% share in 10 minutes)."
+  },
+  "anomalyDurationLabel": {
+    "message": "Auto-pause duration (minutes)"
+  },
+  "anomalyDurationHint": {
+    "message": "The engine resumes by itself when the timer ends."
+  },
   "digestTitle": {
     "message": "While you were away"
   },
@@ -490,6 +523,9 @@
   },
   "kindBlocked": {
     "message": "blocked"
+  },
+  "kindAnomalyPause": {
+    "message": "Auto-pause (anomaly)"
   },
   "kindFollowup": {
     "message": "follow-up"
