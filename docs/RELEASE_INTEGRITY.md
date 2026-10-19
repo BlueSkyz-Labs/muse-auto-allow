@@ -60,6 +60,22 @@ of the artifact gets `http://127.0.0.1/*` appended to `content_scripts[0].matche
 fixture origin — the pristine extraction dir and the shipped manifest stay untouched,
 and the artifact's own bytes are what gets loaded everywhere else.
 
+## Recorded evidence (v1.22.3 freeze)
+
+- Frozen tree: `extension/manifest.json` `"version": "1.22.3"`; tag `v1.22.3`.
+- Artifact: `dist/muse-auto-allow-v1.22.3.zip` — **267,354 bytes**, **25 entries**; sha256
+  `74c54fa6a31fd8c4bd8cd84ef06220e53a27f9dc7e63c4046541f66ebeb8b3a0` (sidecar); verify-zip
+  **25/0/0/0**; smoke exit 0 `"ok": true`.
+- Phạm vi: **UX customer-centric 3 vòng** (23+20+20 findings; 4 audit song song mỗi vòng, gồm
+  heuristic Nielsen/WCAG và a11y chuyên sâu), i18n **313 khoá × 6 locale**, phím tắt mới
+  `Alt+Shift+D` (dry-run). Bug thật đã sửa: dot trạng thái đảo ngược; audit JSON `rules: []`;
+  chip ✕ xoá 1 phát; quick-add dấu phẩy; export/import rules thiếu allowTopics/blockKeywords;
+  checkbox luật vô hình; 3 nút icon <24px; `.unit` tràn 5 locale.
+- Gates on the frozen tree: lint 0 (60 checks) · yolo-ux-unit 5 · rule-engine-unit 20/20 ·
+  import-security 169/0 · e2e `ok:true` · followup-e2e 0 · mission-e2e 0 ·
+  lang-switch-e2e 0 (313×6) · codex-e2e 0 · `qa-experience` **42/42**.
+- Not done: no Chrome Web Store upload; no CWS review; no store publish.
+
 ## Recorded evidence (v1.22.0 freeze)
 
 - Frozen tree: `extension/manifest.json` `"version": "1.22.0"`; tag `v1.22.0`.

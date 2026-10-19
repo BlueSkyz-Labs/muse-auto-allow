@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.22.3
+- **UX customer-centric vòng 1–3 (23+20+20 findings, 4 audit song song/vòng + heuristic + a11y).**
+  - **Vòng 1**: onboarding 3 bullet trấn an (chỉ Allow · log trên máy · bắt đầu chạy thử) + nút
+    "Bật tự động bấm"; dry-run đọc như mô phỏng; YOLO banner cảnh báo + xác nhận "sẽ tắt Chạy thử";
+    status strip + nút Tạm dừng 15′ trong panel An toàn; anomaly guard dời lên trước lịch; stats card
+    "Tuần này" lên dưới KPI; digest "Xu hướng 7 ngày" + ngày theo ngôn ngữ đã chọn.
+  - **Vòng 2**: tag **CHẠY THỬ — KHÔNG BẤM GÌ** dưới công tắc chính; chip trạng thái engine trên stats;
+    xoá luật/Apply import **2 bước**; target 24×24 + `closeLabel` aria; đơn vị i18n; empty-state chart;
+    chip "N tab"; ghi chú thứ tự luật hiển thị.
+  - **Vòng 3 (bug thật)**: dot trạng thái popup hết đảo ngược (xanh=live, vàng=dry/paused/YOLO);
+    **audit JSON hết rỗng rules** (projectRules nhận array); chip ✕ topic/keyword arm 5s trước khi xoá;
+    quick-add "billing, payment" tách dấu phẩy; **export/import rules schemaVersion 2 đủ 3 khối**
+    (allowTopics + blockKeywords + layers) — hết mất dữ liệu khi migrate; checkbox bật/tắt luật hiện hình;
+    3 nút icon <24px + pill controls lên 24px; aria-label cho form luật; live region cho pause/dry/YOLO;
+    stateLine tô màu theo chế độ (live đỏ nhạt / dry vàng); `.unit` không còn tràn ở ja/ko/zh/vi/es;
+    **phím tắt mới `Alt+Shift+D`** bật/tắt chạy thử.
+  - **i18n**: 313 khoá × 6 locale (parity xanh); chuẩn hoá "bấm/từ khoá", modeSim, confirm strings ngắn,
+    `tabWordOne`, bỏ đơn vị lặp trong nhãn anomaly, zh 点击, ko 누르세요, es clic.
+  - **Kiểm thử**: battery 9 suite + qa-experience **42/42** xanh trên cây đóng băng.
+
 ## 1.22.0
 - **W5 shipped (F1 + F2 từ tình báo thị trường, đã được chủ sở hữu duyệt): luật ba tầng + xuất audit.**
   - **F1 — Luật ba tầng (allow / ask / block).** Mô-đun thuần mới `extension/rules.js` (`MuseRules`:

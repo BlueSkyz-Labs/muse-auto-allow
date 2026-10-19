@@ -450,7 +450,7 @@
     "message": "ブロック"
   },
   "onbStep1Title": {
-    "message": "自動クリックをオンにする"
+    "message": "Allow の自動クリック"
   },
   "onbStep1Body": {
     "message": "Muse が承認を求めたら、拡張機能が代わりに Allow をクリックします。いつでも一時停止できます。"
@@ -669,7 +669,7 @@
     "message": "クリック動作に異常（頻度またはトピックの急増）が見られた場合、エンジンを自動停止します。既存の安全機能を弱めることはありません。"
   },
   "anomalyRateLabel": {
-    "message": "継続的な頻度（クリック/分）"
+    "message": "継続的な頻度（クリック）"
   },
   "anomalyRateHint": {
     "message": "5 分間のウィンドウで Allow のクリックがこの頻度を超え続けると一時停止します。"
@@ -681,7 +681,7 @@
     "message": "10 分間に 1 つのトピックがウィンドウを占めた場合も一時停止します（40 回以上のクリックかつ 70% の割合）。"
   },
   "anomalyDurationLabel": {
-    "message": "自動一時停止の時間（分）"
+    "message": "自動一時停止の時間"
   },
   "anomalyDurationHint": {
     "message": "タイマーが終了するとエンジンは自動的に再開します。"
@@ -891,16 +891,16 @@
     "message": "YOLO がオン — キーワードと階層ルールは適用されません"
   },
   "modeSim": {
-    "message": "シミュレーション — 実際にはクリックしません"
+    "message": "ドライラン — クリックしません"
   },
   "modeLive": {
     "message": "ライブ — クリック中"
   },
   "ruleConfirmDelete": {
-    "message": "もう一度押すと削除"
+    "message": "もう一度押す"
   },
   "ruleConfirmApply": {
-    "message": "$1 件のルールを置き換えますか？もう一度押す"
+    "message": "$1 件を置き換え？もう一度押す"
   },
   "tabWord": {
     "message": "タブ"
@@ -909,7 +909,7 @@
     "message": "閉じる"
   },
   "unitMs": {
-    "message": "ミリ秒"
+    "message": "ms"
   },
   "unitSec": {
     "message": "秒"
@@ -922,5 +922,20 @@
   },
   "chartEmpty": {
     "message": "履歴はまだありません — 最初のクリック後に表示されます"
+  },
+  "tabWordOne": {
+    "message": "タブ"
+  },
+  "ariaRuleKind": {
+    "message": "ルールの種類"
+  },
+  "ariaTopics": {
+    "message": "トピック"
+  },
+  "ariaKeywords": {
+    "message": "キーワード"
+  },
+  "shortcutDryRun": {
+    "message": "ドライランを切り替え"
   }
 }

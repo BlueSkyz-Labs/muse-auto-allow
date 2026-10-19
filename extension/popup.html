@@ -98,7 +98,7 @@
                    font: inherit; font-size: 15px; line-height: 1.15; font-weight: 600; color: var(--ink); text-align: right; font-variant-numeric: tabular-nums; }
   .numwrap input:focus-visible { outline: none; }
   .numwrap:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
-  .numwrap .unit { flex: 0 0 18px; font-size: 11px; color: var(--muted); }
+  .numwrap .unit { flex: 0 0 auto; min-width: 18px; font-size: 11px; color: var(--muted); }
   .field > label { flex: 1 1 auto; min-width: 0; }
   .muted { color: var(--muted); }
   .note { font-size: 11px; }
@@ -206,7 +206,7 @@
   /* neutral affordances are outlined, not filled (spec §3 #3) */
   .qbtn { font: inherit; font-size: 10.5px; line-height: 1.4; background: transparent; color: var(--ink);
           border: 1px solid var(--stroke); border-radius: 999px; padding: 2px 7px; cursor: pointer; white-space: nowrap;
-          transition: background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out); }
+          transition: background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out); ; min-height: 24px; }
   .qbtn:hover { background: var(--fill); border-color: var(--stroke-hover); }
   .qbtn.on { background: var(--accent-tint); border-color: var(--accent-line); color: var(--accent-text); font-weight: 500; }
   .flibbtn { display: flex; align-items: center; gap: 6px; width: 100%; box-sizing: border-box; font: inherit;
@@ -287,7 +287,7 @@
                 background: var(--accent-tint); border: 1px solid var(--accent-line); border-radius: 999px; padding: 0 6px; }
   .froti .txt { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11.5px; }
   .froti .rm { flex: 0 0 auto; font: inherit; font-size: 11px; line-height: 1.3; background: var(--fill); color: var(--muted);
-               border: 0; border-radius: 999px; padding: 1px 8px; cursor: pointer; }
+               border: 0; border-radius: 999px; padding: 1px 8px; cursor: pointer; ; min-width: 24px; min-height: 24px; }
   .froti .rm:hover { color: var(--ink); }
   .log { margin-top: 3px; border-top: 1px solid var(--divide); padding-top: 5px; min-height: 0; box-sizing: border-box;
          overflow: auto; overscroll-behavior: contain; flex: 0 1 auto; }
@@ -297,6 +297,8 @@
   .item:last-child { border-bottom: 0; }
   /* v1.11.0 (G01): the effective-state line — sticky inside the log's scroll area, so it
      costs the popup no height; the log absorbs it (the shipped ≤600px discipline). */
+  .stateline.mode-live { background: rgba(194,38,63,.08); border-radius: 8px; }
+  .stateline.mode-dry { background: rgba(214,150,20,.10); border-radius: 8px; }
   .stateline { display: flex; align-items: center; gap: 4px; padding: 5px 8px 4px; font-size: 11px;
     line-height: 1.35; color: var(--muted); border-bottom: 1px solid var(--divide); }
   .stateline .stok { color: var(--ink); font-weight: 600; flex: none; }
@@ -305,7 +307,7 @@
     cursor: pointer; text-decoration: underline; flex: none; }
   /* v1.11.0 (G07): the blocked-entry deep link into the Safety keyword rules */
   .item .kopen { margin-left: auto; display: inline-flex; align-items: center; background: none; border: 0;
-    padding: 0 0 0 4px; cursor: pointer; color: var(--muted); }
+    padding: 0 0 0 4px; cursor: pointer; color: var(--muted); ; min-width: 24px; min-height: 24px; }
   .item .kopen:hover { color: var(--ink); }
   .item .kopen:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
   /* v1.12.0 (C3-4): the standing-grant mark — quiet lock glyph after the kind chip (inline, zero height) */
@@ -380,13 +382,13 @@
   /* one row: pause control (idle pills / paused state) left, Safety & Control entry right */
   .ctlbar { display: flex; align-items: center; gap: 6px; margin: 0 0 3px; min-width: 0; }
   .pgroup { display: inline-flex; align-items: center; gap: 4px; min-width: 0; flex-wrap: wrap; row-gap: 4px; }
-  .pbtn { max-width: 100%; text-overflow: clip; } /* v1.22.1 UX: labels may wrap instead of clipping mid-word */
+  .pbtn { max-width: 100%; text-overflow: clip; ; min-height: 24px; } /* v1.22.1 UX: labels may wrap instead of clipping mid-word */
   .plabel { flex: none; font-size: 11.5px; }
   .sstatus { display: flex; align-items: center; gap: 8px; padding: 6px 8px; margin: 0 0 8px;
              border: 1px solid var(--stroke); border-radius: 9px; background: var(--fill); font-size: 11px; }
   .sstatus #ssText { flex: 1; min-width: 0; font-weight: 500; color: var(--ink); }
   .sdot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-state); flex: none; }
-  .sdot.warn { background: #d69614; }
+  .sdot.warn { background: #8a5a10; } /* v1.22.2: >=3:1 on the light fill */
   .ywarn { padding: 6px 9px; margin: 0 0 8px; border-radius: 9px; font-size: 11px; line-height: 1.4;
            background: rgba(194,38,63,.12); color: #a51e35; border: 1px solid rgba(194,38,63,.30); }
   @media (prefers-color-scheme: dark) { .ywarn { background: rgba(255,130,150,.14); color: #ff9db0; border-color: rgba(255,130,150,.32); } }
@@ -406,7 +408,7 @@
   .anomaly-note { font-size: 10.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .safetybtn { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; flex: none; font: inherit;
                font-size: 11.5px; background: none; border: 0; color: var(--muted); cursor: pointer; padding: 2px 0; white-space: nowrap;
-               border-left: 1px solid var(--divide); padding-left: 9px; } /* v1.18.0 (R7): the entry marks its own zone — not a pause action */
+               border-left: 1px solid var(--divide); padding-left: 9px; ; min-height: 24px; } /* v1.18.0 (R7): the entry marks its own zone — not a pause action */
   .safetybtn .gearsvg { width: 11px; height: 11px; flex: none; opacity: .85; }
   .safetybtn:hover { color: var(--ink); }
   .safetybtn .chev { transform: rotate(-90deg); }
@@ -447,7 +449,7 @@
   .ovhead { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; flex: none; }
   .ovhead h2 { font-size: 13.5px; font-weight: 500; margin: 0; letter-spacing: -0.01em; }
   .ovclose { margin-left: auto; flex: none; font: inherit; font-size: 12px; line-height: 1.3; background: transparent;
-             color: var(--muted); border: 1px solid var(--stroke); border-radius: 999px; padding: 2px 9px; cursor: pointer; }
+             color: var(--muted); border: 1px solid var(--stroke); border-radius: 999px; padding: 2px 9px; cursor: pointer; ; min-width: 24px; min-height: 24px; }
   .ovclose:hover { color: var(--ink); background: var(--fill); }
   .ovbody { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
   /* position:relative keeps the hidden 1x1 checkbox inputs (absolute, shipped pattern)
@@ -472,6 +474,9 @@
   .lrow .lkind.ask { color: #8a5a10; background: rgba(214,150,20,.12); border-color: rgba(214,150,20,.42); }
   .lrow .ltxt { flex: 1; min-width: 0; font-size: 11px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .lrow .lx { flex: none; }
+  /* v1.22.2 UX (Vòng 3): the global input[type=checkbox]{opacity:0} pattern hid the
+     enabled-toggle of every rule row (and its focus ring). */
+  .lrow input[type=checkbox][data-act="en"] { opacity: 1; position: static; width: auto; height: auto; margin: 0; }
   .lrow [data-act] { min-width: 24px; min-height: 24px; font: inherit; font-size: 11px; background: transparent; border: 1px solid var(--stroke);
                      border-radius: 6px; color: var(--muted); cursor: pointer; padding: 0 5px; line-height: 1.5; }
   .lrow [data-act]:hover { color: var(--ink); border-color: var(--stroke-hover); }
@@ -493,6 +498,7 @@
   .rchip .rx { flex: none; min-width: 24px; min-height: 24px; font: inherit; font-size: 10px; line-height: 1.3; background: none; border: 0; color: var(--muted);
                cursor: pointer; padding: 0 4px; border-radius: 999px; }
   .rchip .rx:hover { color: var(--ink); background: var(--fill); }
+  .rchip .rx.arm { color: #a51e35; border: 1px solid rgba(194,38,63,.45); border-radius: 6px; padding: 0 4px; background: rgba(194,38,63,.08); }
   .rempty { font-size: 11px; color: var(--muted); padding: 2px 0; }
   .radd { display: flex; align-items: center; gap: 5px; margin-top: 5px; flex-wrap: wrap; }
   .rin { flex: 1 1 100px; min-width: 0; box-sizing: border-box; background: var(--fill); color: var(--ink);
@@ -507,7 +513,7 @@
   .schonly input:checked + .track .knob { transform: translateX(13px); }
   .rbtn { font: inherit; font-size: 11px; line-height: 1.4; background: transparent; color: var(--ink);
           border: 1px solid var(--stroke); border-radius: 999px; padding: 2px 9px; cursor: pointer; white-space: nowrap;
-          transition: background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out); }
+          transition: background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out); ; min-height: 24px; }
   .rbtn:hover { background: var(--fill); border-color: var(--stroke-hover); }
   .rbtn.armed { background: var(--accent-tint); border-color: var(--accent-line); color: var(--accent-text); font-weight: 500; }
   /* onboarding wizard: one card, three steps, no heavy motion */
@@ -551,7 +557,7 @@
   .langbtn { display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: 11px;
              line-height: 1.4; background: transparent; color: var(--ink); border: 1px solid var(--stroke);
              border-radius: 999px; padding: 2px 6px; cursor: pointer; white-space: nowrap;
-             transition: background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out); }
+             transition: background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out); ; min-height: 24px; }
   .langbtn:hover { background: var(--fill); border-color: var(--stroke-hover); }
   .langbtn .chev { color: var(--muted); }
   .langmenu { position: absolute; right: 0; top: calc(100% + 4px); z-index: 20; min-width: 156px;
@@ -647,7 +653,7 @@
       <button type="button" class="pbtn" id="ptom" data-i18n="pauseTomorrow">Tomorrow</button>
     </span>
     <span class="pgroup" id="pauseActive" hidden>
-      <span class="pstate" id="pstateText"></span>
+      <span class="pstate" id="pstateText" role="status" aria-live="polite"></span>
       <span class="anomaly-note" id="anomalyNote" hidden data-i18n="anomalyActiveNote">The detector paused the engine by itself; it resumes automatically.</span>
       <button type="button" class="pbtn resume" id="presume" data-i18n="pauseResume">Resume</button>
     </span>
@@ -821,7 +827,7 @@
       <!-- v1.22.1 UX (Vòng 1): status strip + one-tap pause; YOLO warning banner -->
       <div class="sstatus" id="safetyStatus">
         <span class="sdot" id="ssDot" aria-hidden="true"></span>
-        <span id="ssText">Live</span>
+        <span id="ssText" role="status" aria-live="polite">Live</span>
         <button type="button" class="pbtn" id="ssPause" data-i18n="pause15">15 min</button>
       </div>
       <div class="ywarn" id="yoloWarn" hidden><span data-i18n="yoloWarn">YOLO is on — keyword and layered rules are not enforced</span></div>

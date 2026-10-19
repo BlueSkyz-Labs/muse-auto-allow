@@ -163,6 +163,18 @@ function togglePause() {
   } catch { /* ignore */ }
 }
 
+// Alt+Shift+D (v1.22.2 UX): flip dry-run from anywhere — the safest switch gets the shortest reach.
+// Never silently turns live: enabling dry-run is always safe; turning live is the user's explicit
+// second press after seeing the state line, exactly like the popup toggle.
+function toggleDryRun() {
+  try {
+    chrome.storage.local.get({ dryRun: false }, (s) => {
+      try { chrome.storage.local.set({ dryRun: s.dryRun !== true }); } catch { /* ignore */ }
+      updateBadge();
+    });
+  } catch { /* ignore */ }
+}
+
 // Alt+Shift+F: trigger the content script's followup-send-now path on the ACTIVE muse.ai tab.
 function sendFollowupNow() {
   try {
@@ -299,6 +311,7 @@ try {
   chrome.commands.onCommand.addListener((cmd) => {
     if (cmd === 'toggle-pause') togglePause();
     else if (cmd === 'send-followup') sendFollowupNow();
+    else if (cmd === 'toggle-dry-run') toggleDryRun(); // v1.22.2 UX (Vòng 3): one shortcut for the safest switch
   });
 } catch { /* commands API unavailable in this context */ }
 

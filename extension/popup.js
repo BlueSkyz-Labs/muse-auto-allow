@@ -66,7 +66,10 @@ function applyI18n() {
   try { document.documentElement.lang = userLocale === 'auto' ? (chrome.i18n.getUILanguage() || 'en') : userLocale.replace('_', '-'); } catch { /* keep */ }
   // v1.8.0 — aria labels / titles that are not plain textContent
   const aria = (id, key, fb) => { const el = $(id); if (el) el.setAttribute('aria-label', t(key, fb)); };
-  aria('safetyClose', 'closeLabel', 'Close'); // v1.22.2 UX: was labelled 'Safety' (wrong name)
+  aria('safetyClose', 'closeLabel', 'Close');
+  aria('layerKind', 'ariaRuleKind', 'Rule type'); // v1.22.2 UX (Vòng 3): the layer form had no accessible names
+  aria('layerTopics', 'ariaTopics', 'Topics');
+  aria('layerKeywords', 'ariaKeywords', 'Keywords'); // v1.22.2 UX: was labelled 'Safety' (wrong name)
   aria('missionClose', 'closeLabel', 'Close');
   aria('schStart', 'scheduleStart', 'Start hour');
   aria('schEnd', 'scheduleEnd', 'End hour');
@@ -724,7 +727,7 @@ function refreshMuseStat() {
       const full = n > 0
         ? (n === 1 ? t('museTabsFoundOne', '1 muse.ai tab open') : t('museTabsFound', '$1 muse.ai tabs open', [String(n)]))
         : t('museTabsNone', 'No muse.ai tab found');
-      tx.textContent = n > 0 ? (n + ' ' + t('tabWord', 'tab')) : '0'; // v1.22.2 UX: label says what is counted; zero stays compact
+      tx.textContent = n > 1 ? (n + ' ' + t('tabWord', 'tabs')) : n === 1 ? ('1 ' + t('tabWordOne', 'tab')) : '0'; // v1.22.2 UX: label + plural; zero stays compact
       el.title = full; // full text on hover
       el.setAttribute('aria-label', full);
       el.classList.toggle('on', n > 0);
@@ -1004,7 +1007,8 @@ function addLayerFromInputs() {
 }
 function layerExportJson() {
   try {
-    const blob = new Blob([JSON.stringify({ app: 'muse-auto-allow', kind: 'rules', schemaVersion: 1, layers: v18.rules.layers || [] }, null, 2)], { type: 'application/json' });
+    // v1.22.2 UX (Vòng 3): the file now round-trips ALL rules (chips + layers), schemaVersion 2.
+    const blob = new Blob([JSON.stringify({ app: 'muse-auto-allow', kind: 'rules', schemaVersion: 2, allowTopics: v18.rules.topics || [], blockKeywords: v18.rules.keywords || [], layers: v18.rules.layers || [] }, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -1014,19 +1018,32 @@ function layerExportJson() {
   } catch { /* ignore */ }
 }
 let pendingLayers = null; // chỉ áp sau khi người dùng bấm Apply (validate + preview trước)
+let pendingExtra = null; // {topics?, keywords?} từ file schemaVersion 2
 function layerImportCheck() {
   const ta = $('layerImport');
   const raw = ta ? String(ta.value || '') : '';
-  let parsed = null;
-  try { const j = JSON.parse(raw); parsed = Array.isArray(j) ? j : (j && Array.isArray(j.layers) ? j.layers : null); } catch { parsed = null; }
+  let parsed = null, extra = null;
+  try {
+    const j = JSON.parse(raw);
+    if (Array.isArray(j)) parsed = j;
+    else if (j && typeof j === 'object') {
+      parsed = Array.isArray(j.layers) ? j.layers : [];
+      if (Array.isArray(j.allowTopics) || Array.isArray(j.blockKeywords)) {
+        extra = { topics: cleanList(j.allowTopics), keywords: cleanList(j.blockKeywords) };
+      }
+    }
+  } catch { parsed = null; }
   const san = (parsed && typeof MuseRules !== 'undefined' && MuseRules) ? MuseRules.sanitize(parsed) : { ok: false, layers: [] };
   const apply = $('layerImportApply');
-  if (san.ok) {
+  if (san.ok && (parsed || extra)) {
     pendingLayers = san.layers;
+    pendingExtra = extra; // v1.22.2 UX (Vòng 3): optional chip lists from a schemaVersion-2 file
     if (apply) apply.disabled = false;
-    layersNote(t('ruleImportPreview', 'Valid') + ': ' + san.layers.length + ' ✓');
+    const counts = [san.layers.length + ' rules'];
+    if (extra) counts.push((extra.topics || []).length + ' topics', (extra.keywords || []).length + ' keywords');
+    layersNote(t('ruleImportPreview', 'Valid') + ': ' + counts.join(' · ') + ' ✓');
   } else {
-    pendingLayers = null;
+    pendingLayers = null; pendingExtra = null;
     if (apply) apply.disabled = true;
     layersNote(t('ruleInvalid', 'Invalid JSON — nothing was changed.'));
   }
@@ -1036,9 +1053,16 @@ function addRule(kind) {
   if (!inp) return;
   const v = String(inp.value || '').trim();
   if (!v) { inp.focus(); return; }
+  // v1.22.2 UX (Vòng 3): comma-separated quick-add used to store ONE bogus entry
+  // ('billing, payment') that could never match — split it like the layered form does.
+  const parts = v.split(',').map((x) => x.trim()).filter(Boolean);
   inp.value = '';
-  if (kind === 'topic') writeRules(v18.rules.topics.concat([v]), v18.rules.keywords);
-  else writeRules(v18.rules.topics, v18.rules.keywords.concat([v]));
+  const cur = kind === 'topic' ? v18.rules.topics : v18.rules.keywords;
+  const room = Math.max(0, RULES_MAX_ITEMS - cur.length);
+  const add = parts.slice(0, room);
+  if (!add.length) { inp.focus(); return; }
+  if (kind === 'topic') writeRules(v18.rules.topics.concat(add), v18.rules.keywords);
+  else writeRules(v18.rules.topics, v18.rules.keywords.concat(add));
   inp.focus();
 }
 function removeRule(kind, i) {
@@ -1255,11 +1279,16 @@ function renderSafetyStatus() {
   const el = $('ssText');
   if (!el) return;
   const dry = v18.dryRun === true, yolo = v18.yoloMode === true, paused = pausedNow();
-  const parts = [paused ? t('pauseLabel', 'Paused') : t('stateLive', 'Live')];
-  if (dry) parts.push(t('dryRunChip', 'Dry-run'));
+  // v1.22.2 UX (Vòng 3): the dot was INVERTED (yellow while live) and dry-run read as
+  // "running — Allow only · Dry-run". One truth: live=x=dry/paused/yolo get the warning tint.
+  const parts = [];
+  if (paused) parts.push(t('pauseLabel', 'Paused'));
+  else if (dry) parts.push(t('dryRunBanner', 'Logging only — nothing will be clicked'));
+  else parts.push(t('stateLive', 'Live'));
+  if (dry && !paused) parts.push(t('dryRunChip', 'Dry-run'));
   if (yolo) parts.push(t('yoloChip', 'YOLO'));
   el.textContent = parts.join(' · ');
-  const dot = $('ssDot'); if (dot) dot.classList.toggle('warn', yolo || (!dry && !paused));
+  const dot = $('ssDot'); if (dot) dot.classList.toggle('warn', yolo || dry || paused);
 }
 function renderDry() {
   const db = $('dryBand');
@@ -1287,6 +1316,10 @@ function renderDry() {
   renderYoloNote();
   renderLogTop();
   renderSafetyStatus(); // v1.22.1 UX (Vòng 1)
+  try {
+    const sl = $('stateLine');
+    if (sl) { sl.classList.toggle('mode-dry', v18.dryRun === true); sl.classList.toggle('mode-live', v18.dryRun !== true && !pausedNow()); }
+  } catch { /* ignore */ }
 }
 // v1.11.0 (G01): one always-visible effective-state line, rendered inside the sticky
 // #logTop band — it costs the popup no height (the band lives inside the log's scroll
@@ -1581,7 +1614,17 @@ async function applyLocale(lang) {
       setTimeout(() => { if (app.dataset.armed === '1') { app.dataset.armed = ''; app.textContent = t('ruleApplyImport', 'Apply'); } }, 6000);
       return;
     }
-    writeLayers(pendingLayers);
+    if (pendingExtra) {
+      const tp = pendingExtra.topics ? pendingExtra.topics : v18.rules.topics;
+      const kw = pendingExtra.keywords ? pendingExtra.keywords : v18.rules.keywords;
+      v18.rules.topics = cleanList(tp); v18.rules.keywords = cleanList(kw);
+      v18.rules.keywordsSeeded = false;
+      try { chrome.storage.local.set({ rules: { allowTopics: v18.rules.topics.slice(), blockKeywords: v18.rules.keywords.slice(), layers: pendingLayers.slice() } }); } catch { /* ignore */ }
+      renderRules();
+      pendingExtra = null;
+    } else {
+      writeLayers(pendingLayers);
+    }
     pendingLayers = null; app.disabled = true; app.dataset.armed = '';
     app.textContent = t('ruleApplyImport', 'Apply');
     layersNote(t('ruleApplyImport', 'Applied') + ' ✓');
@@ -2072,8 +2115,19 @@ $('kwReset').addEventListener('click', () => {
   kwResetDisarm();
   writeRules(v18.rules.topics, SEED_BLOCK.slice()); // back to the shipped seed list
 });
-$('topicsList').addEventListener('click', (e) => { const b = e.target.closest('[data-k]'); if (b) removeRule(b.dataset.k, Number(b.dataset.i)); });
-$('kwList').addEventListener('click', (e) => { const b = e.target.closest('[data-k]'); if (b) removeRule(b.dataset.k, Number(b.dataset.i)); });
+// v1.22.2 UX (Vòng 3): a one-tap ✕ on a guard chip could silently remove a safety rule.
+// Arm on the first tap (5 s), remove on the second — same pattern as the keyword reset.
+function chipArm(b) {
+  if (b.dataset.armed === '1') return true;
+  b.dataset.armed = '1';
+  b.classList.add('arm');
+  b.textContent = '?';
+  b.title = t('ruleConfirmDelete', 'Tap again to delete');
+  setTimeout(() => { if (b.dataset.armed === '1') { b.dataset.armed = ''; b.classList.remove('arm'); b.innerHTML = '&#10005;'; b.removeAttribute('title'); } }, 5000);
+  return false;
+}
+$('topicsList').addEventListener('click', (e) => { const b = e.target.closest('[data-k]'); if (b && chipArm(b)) removeRule(b.dataset.k, Number(b.dataset.i)); });
+$('kwList').addEventListener('click', (e) => { const b = e.target.closest('[data-k]'); if (b && chipArm(b)) removeRule(b.dataset.k, Number(b.dataset.i)); });
 $('topicInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addRule('topic'); } });
 $('kwInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addRule('kw'); } });
 $('dryRun').addEventListener('change', () => { try { chrome.storage.local.set({ dryRun: $('dryRun').checked }); } catch { /* ignore */ } });

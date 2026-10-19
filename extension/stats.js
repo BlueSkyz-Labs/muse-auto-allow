@@ -205,8 +205,11 @@ async function renderEngineStatus() {
   try {
     const s = await chrome.storage.local.get({ pauseUntil: 0, dryRun: false, yoloMode: false, enabled: true });
     const paused = Date.now() < (Number(s.pauseUntil) || 0);
-    const parts = [paused ? t('pauseLabel', 'Paused') : t('stateLive', 'Live')];
-    if (s.dryRun === true) parts.push(t('dryRunChip', 'Dry-run'));
+    const parts = [];
+    if (paused) parts.push(t('pauseLabel', 'Paused'));
+    else if (s.dryRun === true) parts.push(t('dryRunBanner', 'Logging only — nothing will be clicked'));
+    else parts.push(t('stateLive', 'Live'));
+    if (s.dryRun === true && !paused) parts.push(t('dryRunChip', 'Dry-run'));
     if (s.yoloMode === true) parts.push(t('yoloChip', 'YOLO'));
     if (s.enabled === false) parts.push(t('stateOff', 'Off'));
     el.textContent = parts.join(' · ');
@@ -265,7 +268,9 @@ async function auditExport(kind) {
     const built = MuseAudit.buildJson({
       version: chrome.runtime.getManifest().version,
       generatedAt: new Date().toISOString(),
-      rules: s.rules || {},
+      // v1.22.2 UX (Vòng 3) — BUG FIX: projectRules() in audit.js accepts an ARRAY; passing the
+      // rules object made every exported audit carry rules:[] (rule:<id> reasons unreadable).
+      rules: (s.rules && Array.isArray(s.rules.layers)) ? s.rules.layers : [],
       counters: s.digestCounters || {},
       byDay: (s.stats && s.stats.byDay) || null,
       log,
@@ -281,8 +286,7 @@ async function renderAuditWeek() {
     const s = await chrome.storage.local.get({ stats: null, digestCounters: null });
     const w = MuseAudit.weeklySummary(s.digestCounters || {}, (s.stats && s.stats.byDay) || null, new Date());
     el.hidden = false;
-    const n = (Number(w.week) || 0) + (Number(w.blocked) || 0) + (Number(w.asked) || 0);
-    if (!n) { body.innerHTML = '<div class="rempty">' + t('auditNoData', 'No data yet') + '</div>'; return; }
+    // v1.22.2 UX (Vòng 3): the four numbers always render — an empty card looked like a stray caption.
     body.innerHTML =
       '<span>' + t('auditWeekClicks', 'clicks') + ': <b>' + (Number(w.week) || 0) + '</b></span> ' +
       '<span>' + t('auditWeekBlocked', 'blocked') + ': <b>' + (Number(w.blocked) || 0) + '</b></span> ' +

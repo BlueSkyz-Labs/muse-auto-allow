@@ -450,7 +450,7 @@
     "message": "bloqueados"
   },
   "onbStep1Title": {
-    "message": "Activar el clic automático"
+    "message": "Clic automático en Allow"
   },
   "onbStep1Body": {
     "message": "Cuando Muse pida una aprobación, la extensión pulsará Allow por ti: puedes pausarla en cualquier momento."
@@ -669,7 +669,7 @@
     "message": "Pausa el motor automáticamente si el comportamiento de los clics parece anómalo (ritmo o concentración en un tema). Nunca debilita ninguna protección."
   },
   "anomalyRateLabel": {
-    "message": "Ritmo sostenido (clics/min)"
+    "message": "Ritmo sostenido (clics)"
   },
   "anomalyRateHint": {
     "message": "Pausa si los clics en Allow superan este ritmo durante una ventana de 5 minutos."
@@ -681,7 +681,7 @@
     "message": "También pausa si un tema domina la ventana (40 o más clics y una cuota del 70 % en 10 minutos)."
   },
   "anomalyDurationLabel": {
-    "message": "Duración de la pausa automática (minutos)"
+    "message": "Duración de la pausa automática"
   },
   "anomalyDurationHint": {
     "message": "El motor se reanuda automáticamente al terminar el temporizador."
@@ -891,19 +891,19 @@
     "message": "YOLO está activo: las palabras clave y las reglas por capas no se aplican"
   },
   "modeSim": {
-    "message": "SIMULACIÓN: SIN PULSAR"
+    "message": "SIMULACIÓN — NO SE HACE CLIC"
   },
   "modeLive": {
     "message": "EN VIVO: PULSANDO"
   },
   "ruleConfirmDelete": {
-    "message": "Toca otra vez para eliminar"
+    "message": "Toca otra vez"
   },
   "ruleConfirmApply": {
-    "message": "¿Reemplazar $1 reglas? Toca otra vez"
+    "message": "¿Reemplazar $1? Toca otra vez"
   },
   "tabWord": {
-    "message": "pestaña"
+    "message": "pestañas"
   },
   "closeLabel": {
     "message": "Cerrar"
@@ -922,5 +922,20 @@
   },
   "chartEmpty": {
     "message": "Aún no hay historial: el gráfico aparece tras el primer clic"
+  },
+  "tabWordOne": {
+    "message": "pestaña"
+  },
+  "ariaRuleKind": {
+    "message": "Tipo de regla"
+  },
+  "ariaTopics": {
+    "message": "Temas"
+  },
+  "ariaKeywords": {
+    "message": "Palabras clave"
+  },
+  "shortcutDryRun": {
+    "message": "Alternar prueba (solo registro)"
   }
 }

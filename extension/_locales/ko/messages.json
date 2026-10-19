@@ -297,7 +297,7 @@
     "message": "보낼 수 없음 — Muse가 메시지를 받지 않았습니다"
   },
   "followupRotateStarterConfirm": {
-    "message": "저장된 조합 $1개를 교체할까요? 다시 탭하세요"
+    "message": "저장된 조합 $1개를 바꿀까요? 다시 누르세요"
   },
   "pauseLabel": {
     "message": "일시정지"
@@ -450,7 +450,7 @@
     "message": "차단"
   },
   "onbStep1Title": {
-    "message": "자동 클릭 켜기"
+    "message": "Allow 자동 클릭"
   },
   "onbStep1Body": {
     "message": "Muse가 승인을 요청하면 확장 프로그램이 대신 Allow를 클릭합니다. 언제든 일시정지할 수 있습니다."
@@ -669,7 +669,7 @@
     "message": "클릭 동작이 비정상적으로 보이면(속도 또는 주제 급증) 엔진을 자동으로 일시중지합니다. 어떤 안전 장치도 약화하지 않습니다."
   },
   "anomalyRateLabel": {
-    "message": "지속 속도(클릭/분)"
+    "message": "지속 속도(클릭)"
   },
   "anomalyRateHint": {
     "message": "5분 동안 Allow 클릭이 이 속도를 계속 초과하면 일시중지합니다."
@@ -681,7 +681,7 @@
     "message": "10분 동안 한 주제가 창을 지배하는 경우에도 일시중지합니다(40회 이상 클릭 및 70% 점유율)."
   },
   "anomalyDurationLabel": {
-    "message": "자동 일시중지 시간(분)"
+    "message": "자동 일시중지 시간"
   },
   "anomalyDurationHint": {
     "message": "타이머가 끝나면 엔진이 자동으로 다시 시작됩니다."
@@ -891,16 +891,16 @@
     "message": "YOLO가 켜져 있습니다 — 키워드와 단계별 규칙이 적용되지 않습니다"
   },
   "modeSim": {
-    "message": "시뮬레이션 — 실제 클릭 없음"
+    "message": "드라이런 — 클릭하지 않습니다"
   },
   "modeLive": {
     "message": "실시간 — 클릭 중"
   },
   "ruleConfirmDelete": {
-    "message": "다시 누르면 삭제"
+    "message": "다시 누르기"
   },
   "ruleConfirmApply": {
-    "message": "규칙 $1개를 바꿀까요? 다시 누르세요"
+    "message": "규칙 $1개 교체? 다시 누르세요"
   },
   "tabWord": {
     "message": "탭"
@@ -909,7 +909,7 @@
     "message": "닫기"
   },
   "unitMs": {
-    "message": "밀리초"
+    "message": "ms"
   },
   "unitSec": {
     "message": "초"
@@ -922,5 +922,20 @@
   },
   "chartEmpty": {
     "message": "기록이 없습니다 — 첫 클릭 후 차트가 표시됩니다"
+  },
+  "tabWordOne": {
+    "message": "탭"
+  },
+  "ariaRuleKind": {
+    "message": "규칙 유형"
+  },
+  "ariaTopics": {
+    "message": "주제"
+  },
+  "ariaKeywords": {
+    "message": "키워드"
+  },
+  "shortcutDryRun": {
+    "message": "드라이런 전환"
   }
 }

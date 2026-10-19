@@ -66,7 +66,7 @@
     "message": "YOLO — bỏ qua danh sách từ khoá"
   },
   "logOpenRules": {
-    "message": "Mở luật từ khóa"
+    "message": "Mở luật từ khoá"
   },
   "logOpenTopics": {
     "message": "Mở danh sách chủ đề cho phép"
@@ -186,7 +186,7 @@
     "message": "Thư viện câu lệnh"
   },
   "followupCombineHint": {
-    "message": "Chạm vào câu lệnh để ghép — nối theo thứ tự trong thư viện"
+    "message": "Bấm vào câu lệnh để ghép — nối theo thứ tự trong thư viện."
   },
   "followupPreview": {
     "message": "Xem trước"
@@ -297,7 +297,7 @@
     "message": "Không gửi được — Muse không nhận thao tác gửi"
   },
   "followupRotateStarterConfirm": {
-    "message": "Thay thế $1 combo đã lưu? Chạm lần nữa"
+    "message": "Thay thế $1 combo đã lưu? Bấm lần nữa"
   },
   "pauseLabel": {
     "message": "Tạm dừng"
@@ -339,16 +339,16 @@
     "message": "YOLO — duyệt tất cả"
   },
   "yoloNote": {
-    "message": "Bỏ qua chặn từ khóa, click cả quyền vĩnh viễn, tốc độ nhanh nhất. Không bao giờ click Deny; connector vẫn thủ công."
+    "message": "Bỏ qua chặn từ khoá, bấm cả quyền vĩnh viễn, tốc độ nhanh nhất. Không bao giờ bấm Deny; connector vẫn thủ công."
   },
   "yoloConfirm": {
-    "message": "Bật YOLO? Card bị chặn bởi từ khóa hoặc chỉ có quyền vĩnh viễn sẽ được click tự động. Gạt lại công tắc lần nữa để xác nhận."
+    "message": "Bấm Allow sẽ được tự động, kể cả quyền vĩnh viễn. Bấm lần nữa để xác nhận."
   },
   "yoloChip": {
     "message": "YOLO"
   },
   "rulesIgnoredYolo": {
-    "message": "YOLO đang bật — các luật chủ đề và từ khóa vẫn được lưu nhưng không có hiệu lực. Tắt YOLO để áp dụng lại."
+    "message": "YOLO đang bật — các luật chủ đề và từ khoá vẫn được lưu nhưng không có hiệu lực. Tắt YOLO để áp dụng lại."
   },
   "yoloDormant": {
     "message": "Đã cấu hình YOLO nhưng đang bật Chạy thử: không tự động bấm chấp thuận. Tắt Chạy thử để YOLO hoạt động thực tế."
@@ -450,7 +450,7 @@
     "message": "bị chặn"
   },
   "onbStep1Title": {
-    "message": "Bật tự động bấm"
+    "message": "Tự động bấm Allow"
   },
   "onbStep1Body": {
     "message": "Khi Muse xin phê duyệt, tiện ích bấm Allow thay bạn — bạn có thể tạm dừng bất cứ lúc nào."
@@ -657,7 +657,7 @@
     "message": "Không thể gửi: engine tự động tạm dừng do bất thường"
   },
   "anomalyPauseState": {
-    "message": "Tự động tạm dừng đến $1 — phát hiện hoạt động nhấp bất thường"
+    "message": "Tự động tạm dừng đến $1 — phát hiện hoạt động bấm bất thường"
   },
   "anomalyActiveNote": {
     "message": "Bộ phát hiện đã tự tạm dừng engine; hệ thống sẽ tự tiếp tục."
@@ -669,7 +669,7 @@
     "message": "Tự tạm dừng khi hành vi bấm có vẻ bất thường (tần suất hoặc đột biến chủ đề). Không bao giờ làm yếu bất kỳ rail an toàn nào."
   },
   "anomalyRateLabel": {
-    "message": "Tốc độ bấm duy trì (lượt bấm/phút)"
+    "message": "Tốc độ bấm duy trì (lượt bấm)"
   },
   "anomalyRateHint": {
     "message": "Tạm dừng khi số lượt bấm Allow duy trì trên mức này trong cửa sổ 5 phút."
@@ -681,7 +681,7 @@
     "message": "Cũng tạm dừng khi một chủ đề chiếm phần lớn cửa sổ (40+ lượt bấm và 70% tỷ lệ trong 10 phút)."
   },
   "anomalyDurationLabel": {
-    "message": "Thời lượng tự tạm dừng (phút)"
+    "message": "Thời lượng tự tạm dừng"
   },
   "anomalyDurationHint": {
     "message": "Engine sẽ tự tiếp tục khi hết thời gian."
@@ -891,16 +891,16 @@
     "message": "YOLO đang bật — từ khoá và luật ba tầng không được áp dụng"
   },
   "modeSim": {
-    "message": "MÔ PHỎNG — CHƯA BẤM THẬT"
+    "message": "CHẠY THỬ — KHÔNG BẤM GÌ"
   },
   "modeLive": {
     "message": "ĐANG BẤM THẬT"
   },
   "ruleConfirmDelete": {
-    "message": "Bấm lần nữa để xoá"
+    "message": "Bấm lần nữa"
   },
   "ruleConfirmApply": {
-    "message": "Thay $1 luật? Bấm lần nữa"
+    "message": "Thay $1 luật? Bấm lại"
   },
   "tabWord": {
     "message": "tab"
@@ -922,5 +922,20 @@
   },
   "chartEmpty": {
     "message": "Chưa có lịch sử — biểu đồ hiện sau lượt bấm đầu tiên"
+  },
+  "tabWordOne": {
+    "message": "tab"
+  },
+  "ariaRuleKind": {
+    "message": "Loại luật"
+  },
+  "ariaTopics": {
+    "message": "Chủ đề"
+  },
+  "ariaKeywords": {
+    "message": "Từ khoá"
+  },
+  "shortcutDryRun": {
+    "message": "Bật/tắt chạy thử (chỉ ghi log)"
   }
 }

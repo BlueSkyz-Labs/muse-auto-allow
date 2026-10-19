@@ -447,7 +447,7 @@
     "message": "Pause the engine by itself when click behaviour looks abnormal (rate or topic spike). It never weakens any rail."
   },
   "anomalyRateLabel": {
-    "message": "Sustained rate (clicks/min)"
+    "message": "Sustained rate (clicks)"
   },
   "anomalyRateHint": {
     "message": "Pauses when allow-clicks stay above this rate over a 5-minute window."
@@ -459,7 +459,7 @@
     "message": "Also pauses when one topic takes over the window (40+ clicks and 70% share in 10 minutes)."
   },
   "anomalyDurationLabel": {
-    "message": "Auto-pause duration (minutes)"
+    "message": "Auto-pause duration"
   },
   "anomalyDurationHint": {
     "message": "The engine resumes by itself when the timer ends."
@@ -483,7 +483,7 @@
     "message": "blocked"
   },
   "onbStep1Title": {
-    "message": "Turn on auto-click"
+    "message": "Auto-click Allow"
   },
   "onbStep1Body": {
     "message": "When Muse asks for approval, the extension clicks Allow for you — you can pause it any time."
@@ -891,19 +891,19 @@
     "message": "YOLO is on — keyword and layered rules are not enforced"
   },
   "modeSim": {
-    "message": "SIMULATION — NOT CLICKING"
+    "message": "DRY RUN — NOTHING IS CLICKED"
   },
   "modeLive": {
     "message": "LIVE — CLICKING"
   },
   "ruleConfirmDelete": {
-    "message": "Tap again to delete"
+    "message": "Tap again"
   },
   "ruleConfirmApply": {
-    "message": "Replace $1 rules? Tap again"
+    "message": "Replace $1? Tap again"
   },
   "tabWord": {
-    "message": "tab"
+    "message": "tabs"
   },
   "closeLabel": {
     "message": "Close"
@@ -922,5 +922,20 @@
   },
   "chartEmpty": {
     "message": "No history yet — the chart appears after the first click"
+  },
+  "tabWordOne": {
+    "message": "tab"
+  },
+  "ariaRuleKind": {
+    "message": "Rule type"
+  },
+  "ariaTopics": {
+    "message": "Topics"
+  },
+  "ariaKeywords": {
+    "message": "Keywords"
+  },
+  "shortcutDryRun": {
+    "message": "Toggle dry-run (log only)"
   }
 }

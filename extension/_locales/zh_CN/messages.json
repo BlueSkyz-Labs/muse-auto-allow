@@ -186,7 +186,7 @@
     "message": "短语库"
   },
   "followupCombineHint": {
-    "message": "点按短语即可组合 — 按库中顺序拼接"
+    "message": "点击短语即可组合 — 按库中顺序拼接。"
   },
   "followupPreview": {
     "message": "预览"
@@ -297,7 +297,7 @@
     "message": "无法发送——Muse 未接受该消息"
   },
   "followupRotateStarterConfirm": {
-    "message": "替换已保存的 $1 个组合？再次点按"
+    "message": "替换已保存的 $1 个组合？再次点击"
   },
   "pauseLabel": {
     "message": "暂停"
@@ -450,7 +450,7 @@
     "message": "次拦截"
   },
   "onbStep1Title": {
-    "message": "开启自动点击"
+    "message": "自动点击 Allow"
   },
   "onbStep1Body": {
     "message": "当 Muse 请求批准时，扩展会替你点击 Allow——你可以随时暂停。"
@@ -669,7 +669,7 @@
     "message": "点击行为异常（频率过高或主题突增）时自动暂停引擎。不会削弱任何安全保护。"
   },
   "anomalyRateLabel": {
-    "message": "持续点击频率（次/分钟）"
+    "message": "持续点击频率（次）"
   },
   "anomalyRateHint": {
     "message": "在 5 分钟窗口内，Allow 点击持续超过此频率时暂停。"
@@ -681,7 +681,7 @@
     "message": "如果一个主题在 10 分钟窗口内占据主导地位，也会暂停（至少 40 次点击且占比 70%）。"
   },
   "anomalyDurationLabel": {
-    "message": "自动暂停时长（分钟）"
+    "message": "自动暂停时长"
   },
   "anomalyDurationHint": {
     "message": "计时结束后引擎会自动恢复。"
@@ -891,16 +891,16 @@
     "message": "YOLO 已开启——关键词与分层规则不生效"
   },
   "modeSim": {
-    "message": "模拟——未实际点击"
+    "message": "试运行——不会点击"
   },
   "modeLive": {
     "message": "实时——正在点击"
   },
   "ruleConfirmDelete": {
-    "message": "再次点击以删除"
+    "message": "再次点击"
   },
   "ruleConfirmApply": {
-    "message": "替换 $1 条规则？再次点击"
+    "message": "替换 $1 条？再次点击"
   },
   "tabWord": {
     "message": "标签页"
@@ -909,7 +909,7 @@
     "message": "关闭"
   },
   "unitMs": {
-    "message": "毫秒"
+    "message": "ms"
   },
   "unitSec": {
     "message": "秒"
@@ -918,9 +918,24 @@
     "message": "分钟"
   },
   "unitPerMin": {
-    "message": "/分钟"
+    "message": "/分"
   },
   "chartEmpty": {
     "message": "暂无记录——首次点击后显示图表"
+  },
+  "tabWordOne": {
+    "message": "标签页"
+  },
+  "ariaRuleKind": {
+    "message": "规则类型"
+  },
+  "ariaTopics": {
+    "message": "主题"
+  },
+  "ariaKeywords": {
+    "message": "关键词"
+  },
+  "shortcutDryRun": {
+    "message": "切换试运行（仅记录）"
   }
 }
