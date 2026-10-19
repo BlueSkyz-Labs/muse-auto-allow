@@ -74,3 +74,24 @@ probe is code under test: confirm the emulated state (`matchMedia` loop), verify
 the real DOM, and re-derive before filing anything as a product defect.
 **Guard:** `qa-experience` v2 confirms the scheme before every contrast read, understands the
 wrapper-ring pattern, and reads `#dryBand`/`#stateLine` — the corrected pass is 11/11.
+
+## LSN-muse-auto-allow-008 — tests must baseline AFTER the state transfer, not around it
+
+**Date:** 2026-10-19 · **Found by:** the v1.19.0 battery (mission-e2e check C red)
+**Lesson:** with a 'working' tab the automatic mission send can fire in the gap between
+`setState('working')` and the pause actually applying — so a step baseline read before that
+handshake drifts, and both "no advance while paused" and "resume advances by one" fail even
+though the product behaved correctly (the paused path held in the same run). When a test
+measures a transition (pause/resume, enable/disable), stop the interfering path first and take
+the baseline only after the new state is confirmed applied.
+**Guard:** `test/mission-e2e.mjs` C block: idle → pause → wait `paused` → baseline `stepC0` →
+pause-holds → refused-while-paused → resume must land on exactly `stepC0 + 1` (2 green runs).
+
+## LSN-muse-auto-allow-009 — parse timestamps, never coerce them
+
+**Date:** 2026-10-19 · **Found by:** the new qa-experience L1 check on the first S02 build
+**Lesson:** log entries carry `at` as an ISO string; the new day-group code computed the day key
+via `Number(e.at)` → `NaN` → every entry collapsed under one bogus 1970 header. The check caught
+it before the freeze (L1 asserted 2 group headers, got 1). Date fields from storage are data —
+parse with `new Date(value)` plus an `isNaN` guard, never numeric coercion.
+**Guard:** `qa-experience` L1–L4 (day groups, chip filter, search, localized no-match state).

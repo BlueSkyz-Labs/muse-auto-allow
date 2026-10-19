@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.19.0
+- **W1 (approved catalog — APPROVE_NOW set) shipped.** Owner-approved 2026-10-19: G02, G04, G07, S02, S03, S04, S07, S08, S10 (board: `docs/APPROVED_WORK_2026-10-19.md`).
+  - **S02 — log readability (new).** The popup log gains kind chips (All / Allowed / Blocked / Log-only), a search field, and day-group headers (Today / Yesterday / locale date), all inside the free height budget; re-paints are instant from the decrypted cache (200 scanned, 50 rendered). Machine-checked: QA v1.19 L1–L4 (day groups, chip filter, search, localized no-match state). A real bug was caught pre-freeze: ISO-string timestamps were being coerced with `Number()` (all entries collapsed under one bogus day header) — fixed to `new Date(e.at)` with a NaN guard.
+  - **S03 — micro-interactions.** Quiet press feedback on the new chips and the compact controls (item fade-in and count pop already shipped); reduced-motion still honored (instrument check B).
+  - **S04 — typography.** Font stacks extended with "Noto Sans" + CJK variants for consistent fallbacks; tabular numerals were already applied to every counter (audited).
+  - **S07 — onboarding.** The consent step now carries a "Learn more — how the rails work" link (repo README, new tab); the "what it will do" demo list already shipped at v1.11.0.
+  - **S08 — keyboard.** Audited: the extension already ships commands (`Alt+Shift+P` pause, `Alt+Shift+F` follow-up, unit-tested) and the QA keyboard traversal (focus trap + full reachability) passes; no new code needed.
+  - **S10 — i18n sweep (evidence).** The experience instrument's locale sweep now loads BOTH surfaces in all 6 locales and asserts no horizontal overflow and no clipped control (12 checks) — full evidence instead of a partial vi-only check.
+- **i18n**: 213 keys × 6 locales (+9: log filter/search/day keys, onboarding link).
+- **Proof**: _freeze pending_ (see `docs/RELEASE_INTEGRITY.md`).
+
 ## 1.18.0
 - **R7 — the Safety entry marks its own zone.** A hairline divider + a gear glyph separate the Safety & Control entry from the pause quick-pills, so a navigation affordance no longer reads as part of the pause action row (the last beauty-blind finding). Verified with the experience instrument (`vi` + 200%-zoom, no overflow) and 20/20 checks.
 - **Store kit refreshed from REAL captures.** New `scripts/capture-store-shots.mjs` + `store/stage.html` compose truthful 1280×800 stage screenshots from the extension's own captures: `screenshot2-stats.png`, `screenshot3-popup.png`, `screenshot5-safety.png` regenerated (verified visually: real UI, readable copy, no glitches). `store/LISTING.md` version/package fields updated to 1.18.0.

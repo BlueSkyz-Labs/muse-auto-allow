@@ -51,7 +51,7 @@
   }
   body { width: 320px; max-height: 600px; box-sizing: border-box; margin: 0; padding: 8px 14px 6px;
          background: var(--bg); color: var(--ink); display: flex; flex-direction: column; position: relative;
-         font: 13px/1.5 "Optimistic", "optimisticAI", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+         font: 13px/1.5 "Optimistic", "optimisticAI", -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", "Noto Sans SC", "Noto Sans JP", "Noto Sans KR", system-ui, Arial, sans-serif; }
   body > * { flex: 0 0 auto; }
   .head { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
   .head > svg { width: 24px; height: 24px; border-radius: 7px; display: block; flex: none;
@@ -337,6 +337,21 @@
     .k-dry { background: rgba(10,92,224,.18); color: #8ab8ff; }
   }
   .empty { color: var(--muted); padding: 10px 0 6px; } /* v1.16.0 (R1): the empty line no longer reads as a continuation of the sticky state band */
+  /* v1.19.0 (S02): log filters + day-group headers */
+  .logfilters { display: flex; align-items: center; gap: 6px; padding: 3px 2px 5px; }
+  .lfchips { display: flex; gap: 4px; flex: none; }
+  .lfchip { font: inherit; font-size: 10.5px; line-height: 1.6; padding: 0 7px; border-radius: 999px;
+            border: 1px solid var(--stroke); background: transparent; color: var(--muted);
+            cursor: pointer; white-space: nowrap; }
+  .lfchip.on { background: var(--accent-tint); border-color: var(--accent-line); color: var(--accent-text); font-weight: 500; }
+  .lfchip:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+  .lfchip:active { background: var(--fill-hover); }
+  .misbtn:active, .safetybtn:active { opacity: .8; } /* v1.19.0 (S03): quiet press feedback */
+  .lfsearch { flex: 1; min-width: 0; font: inherit; font-size: 11px; padding: 1px 8px; border-radius: 999px;
+              border: 1px solid var(--stroke); background: var(--fill); color: var(--ink); }
+  .lfsearch:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+  .lday { font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+          color: var(--muted); padding: 7px 4px 3px; border-bottom: 1px solid var(--divide); }
   .foot { margin: 7px 0 0; border-top: 1px solid var(--divide); padding-top: 7px; justify-content: space-between; }
   .foot .note { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   ::-webkit-scrollbar { width: 5px; height: 5px; }
@@ -449,6 +464,10 @@
   .obstate { align-self: flex-start; box-sizing: border-box; border-radius: 10px; padding: 1px 8px;
              margin: 0 0 6px; font-size: 10.5px; line-height: 1.4;
              background: rgba(243,217,180,.35); border: 1px solid rgba(243,217,180,.9); color: #7a5a20; }
+  .obmore { margin: 2px 0 8px; font-size: 12px; }
+  .obmore a { color: var(--accent-text); text-decoration: none; }
+  .obmore a:hover { text-decoration: underline; }
+  .obmore a:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; border-radius: 4px; }
   .obconsent { font-size: 11px; line-height: 1.45; color: var(--muted); margin: 0 0 8px; }
   @media (prefers-color-scheme: dark) {
     .obstate { background: rgba(243,217,180,.14); border-color: rgba(243,217,180,.34); color: #e8c98a; }
@@ -668,6 +687,16 @@
         </div>
       </div>
     </div>
+    <!-- v1.19.0 (S02): log filters + day groups — kind chips and a search field above the list -->
+    <div class="logfilters" id="logFilters" hidden>
+      <div class="lfchips">
+        <button type="button" class="lfchip on" id="lfAll" data-f="all" data-i18n="logFilterAll">All</button>
+        <button type="button" class="lfchip" id="lfAllow" data-f="allow" data-i18n="logFilterAllow">Allowed</button>
+        <button type="button" class="lfchip" id="lfBlocked" data-f="blocked" data-i18n="logFilterBlocked">Blocked</button>
+        <button type="button" class="lfchip" id="lfDry" data-f="dry" data-i18n="logFilterDry">Log-only</button>
+      </div>
+      <input type="search" id="lfSearch" class="lfsearch" autocomplete="off" data-i18n-ph="logSearchPlaceholder" placeholder="Search…">
+    </div>
     <div id="logList"></div>
   </div>
   <div class="row foot"><span class="note muted" data-i18n="onlyMuse">Works on muse.ai and chatgpt.com</span><button class="btn ghost" id="openstats" data-i18n="statsOpen">Statistics</button></div>
@@ -782,6 +811,7 @@
            renderOnboard() owns the visibility. -->
       <div class="obstate" id="obDryState" hidden><span data-i18n="dryRunBanner">Logging only — nothing will be clicked</span></div>
       <p class="obconsent" id="obConsent" data-i18n="onbConsent" hidden>This tool grants approvals in your name — you stay responsible for what your agent does.</p>
+      <p class="obmore" hidden id="obMore"><a id="obLearnMore" href="https://github.com/BlueSkyz-Labs/muse-auto-allow#readme" target="_blank" rel="noopener" data-i18n="onbLearnMore">Learn more — how the rails work</a></p>
       <ul class="obdemo" id="obDemo" hidden>
         <li data-i18n="onbDemoClick">Clicks Allow when Muse shows a clear approval pair</li>
         <li data-i18n="onbDemoBlock">Skips anything matching your keyword block-list (delete, deploy, …)</li>

@@ -552,13 +552,41 @@ function localFull(iso) {
   try { const d = new Date(iso); return isNaN(d.getTime()) ? '' : d.toLocaleString(); } catch { return ''; }
 }
 let renderSeq = 0;
-async function renderLog(log) {
-  const seq = ++renderSeq;
-  const sane = (Array.isArray(log) ? log : []).filter((e) => e && typeof e === 'object'); // V4-3: junk entries never crash the render
-  const items = await Promise.all(sane.slice(0, 50).map(async (e) => ({ e, plain: await decCtx(e) })));
-  if (seq !== renderSeq) return; // a newer render superseded this one
-  $('logList').innerHTML = items.length
-    ? items.map(({ e, plain }) => {
+// v1.19.0 (S02): filters (kind chips + search) + day-group headers. The decrypted entries are
+// cached so re-paints are instant; 200 scanned entries, 50 rendered.
+let logItems = [];
+let logFilter = { kind: 'all', q: '' };
+const LF_MATCH = {
+  all: () => true,
+  allow: (k) => k === 'allow' || k === 'mission' || k === 'follow-up',
+  blocked: (k) => k === 'blocked',
+  dry: (k) => k === 'dry' || /-dry$/.test(k),
+};
+function effLang() { try { return (typeof manualMsgs !== 'undefined' && manualMsgs) ? manualLocale : (chrome.i18n.getUILanguage() || 'en'); } catch { return 'en'; } }
+function dayLabelOf(at) {
+  const d = new Date(at); // ISO string or epoch ms — logs carry ISO
+  if (isNaN(d.getTime())) return '';
+  const now = new Date();
+  const startOf = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const diff = Math.round((startOf(now) - startOf(d)) / 86400000);
+  if (diff === 0) return t('logToday', 'Today');
+  if (diff === 1) return t('logYesterday', 'Yesterday');
+  try { return new Intl.DateTimeFormat(effLang(), { day: '2-digit', month: '2-digit' }).format(d); } catch { return pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1); }
+}
+function paintLog() {
+  const filters = $('logFilters');
+  if (filters) filters.hidden = logItems.length === 0;
+  const q = logFilter.q.trim().toLowerCase();
+  const match = LF_MATCH[logFilter.kind] || LF_MATCH.all;
+  const shown = logItems.filter(({ e, plain }) => match(String(e.kind || 'allow')) && (!q || (String(e.label || '') + ' ' + String(plain || '')).toLowerCase().includes(q)));
+  if (!shown.length) {
+    $('logList').innerHTML = '<div class="empty">' + esc(logItems.length ? t('logNoMatch', 'No matching entries') : t('noClicks', 'No clicks yet')) + '</div>';
+    return;
+  }
+  let lastDay = null;
+  $('logList').innerHTML = shown.slice(0, 50).map(({ e, plain }) => {
+        const dk = dayKeyOf(new Date(e.at || 0));
+        const hdr = dk === lastDay ? '' : (lastDay = dk, '<div class="lday" role="heading" aria-level="3">' + esc(dayLabelOf(e.at)) + '</div>');
         const k = e.kind || 'allow';
         const kCls = kindClass(k); // v1.8.0: review-bar shares open-panel; the dry variants share one tint
         const kLbl = kindLabel(k);
@@ -611,11 +639,18 @@ async function renderLog(log) {
         const sMark = e.standing === true
           ? '<span class="smark" role="img" aria-label="' + esc(t('logStanding', 'Granted standing access')) + '" title="' + esc(t('logStanding', 'Granted standing access')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke-width="2.6" stroke-linecap="round"/><rect x="6" y="10" width="12" height="9" rx="2" fill="none" stroke-width="2.6"/></svg></span>'
           : '';
-        return '<div class="item"><span class="t" title="' + esc(localFull(e.at)) + '">' + esc(localTime(e.at)) + '</span>' +
+        return hdr + '<div class="item"><span class="t" title="' + esc(localFull(e.at)) + '">' + esc(localTime(e.at)) + '</span>' +
           '<div class="top"><span class="k k-' + esc(kCls) + '"' + (kTitle ? ' title="' + esc(kTitle) + '"' : '') + kAria + '>' + esc(kLbl) + kVis + '</span>' + sMark + mTitle + kOpen + '</div>' +
           '<div class="c" title="' + esc(cTitle) + '">' + esc(ctxS) + '</div></div>';
-      }).join('')
-    : '<div class="empty">' + esc(t('noClicks', 'No clicks yet')) + '</div>';
+      }).join('');
+}
+async function renderLog(log) {
+  const seq = ++renderSeq;
+  const sane = (Array.isArray(log) ? log : []).filter((e) => e && typeof e === 'object'); // V4-3: junk entries never crash the render
+  const items = await Promise.all(sane.slice(0, 200).map(async (e) => ({ e, plain: await decCtx(e) })));
+  if (seq !== renderSeq) return; // a newer render superseded this one
+  logItems = items; // v1.19.0 (S02): cached for instant filter re-paints
+  paintLog();
 }
 
 let lastCount = null;
@@ -1124,6 +1159,7 @@ function renderOnboard() {
   // clicking is on — so it can never claim 'nothing will be clicked' while the engine clicks)
   const st = $('obDryState'); if (st) st.hidden = !(obStep === 1 && v18.dryRun === true);
   const cs = $('obConsent'); if (cs) cs.hidden = obStep !== 1;
+  const mo = $('obMore'); if (mo) mo.hidden = obStep !== 1; // v1.19.0 (S07): the rails explainer rides the consent step
   const dm = $('obDemo'); if (dm) dm.hidden = obStep !== 1; // v1.11.0 (G03): the static "what it would do" list
   const q = $('obQuick'); if (q) q.hidden = obStep !== 2;
   const bk = $('obBack'); if (bk) bk.hidden = obStep === 0;
@@ -1693,6 +1729,15 @@ function openSafetyGroup(groupId, inputId) {
     const inp = $(inputId); if (inp) inp.focus({ preventScroll: true });
   });
 }
+// v1.19.0 (S02): log kind chips + search re-paint from the cached decrypted entries
+for (const chip of document.querySelectorAll('.lfchip')) {
+  chip.addEventListener('click', () => {
+    logFilter.kind = chip.dataset.f || 'all';
+    document.querySelectorAll('.lfchip').forEach((c) => c.classList.toggle('on', c === chip));
+    paintLog();
+  });
+}
+$('lfSearch').addEventListener('input', () => { logFilter.q = $('lfSearch').value || ''; paintLog(); });
 $('logList').addEventListener('click', (e) => {
   const b = e.target && e.target.closest ? e.target.closest('.kopen') : null;
   if (b) {

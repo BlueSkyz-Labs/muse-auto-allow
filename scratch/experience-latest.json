@@ -50,10 +50,10 @@
       }
     },
     {
-      "name": "C. focus popup.html: :focus-visible rules present (4) + outline:none covered by wrapper-ring",
+      "name": "C. focus popup.html: :focus-visible rules present (7) + outline:none covered by wrapper-ring",
       "ok": true,
       "detail": {
-        "fv": 4,
+        "fv": 7,
         "outlineNone": 1,
         "focusWithin": 1,
         "uncovered": []
@@ -70,25 +70,135 @@
       }
     },
     {
-      "name": "D. vi layout popup.html: no horizontal overflow",
+      "name": "D. locale vi popup.html: no overflow, no clipped control",
       "ok": true,
       "detail": {
         "bodySW": 320,
         "bodyCW": 320,
         "deSW": 1400,
         "deCW": 1400,
-        "lang": "vi"
+        "clipped": []
       }
     },
     {
-      "name": "D. vi layout stats.html: no horizontal overflow",
+      "name": "D. locale vi stats.html: no overflow, no clipped control",
       "ok": true,
       "detail": {
         "bodySW": 1390,
         "bodyCW": 1390,
         "deSW": 1390,
         "deCW": 1390,
-        "lang": "vi"
+        "clipped": []
+      }
+    },
+    {
+      "name": "D. locale ja popup.html: no overflow, no clipped control",
+      "ok": true,
+      "detail": {
+        "bodySW": 320,
+        "bodyCW": 320,
+        "deSW": 1400,
+        "deCW": 1400,
+        "clipped": []
+      }
+    },
+    {
+      "name": "D. locale ja stats.html: no overflow, no clipped control",
+      "ok": true,
+      "detail": {
+        "bodySW": 1390,
+        "bodyCW": 1390,
+        "deSW": 1390,
+        "deCW": 1390,
+        "clipped": []
+      }
+    },
+    {
+      "name": "D. locale ko popup.html: no overflow, no clipped control",
+      "ok": true,
+      "detail": {
+        "bodySW": 320,
+        "bodyCW": 320,
+        "deSW": 1400,
+        "deCW": 1400,
+        "clipped": []
+      }
+    },
+    {
+      "name": "D. locale ko stats.html: no overflow, no clipped control",
+      "ok": true,
+      "detail": {
+        "bodySW": 1390,
+        "bodyCW": 1390,
+        "deSW": 1390,
+        "deCW": 1390,
+        "clipped": []
+      }
+    },
+    {
+      "name": "D. locale zh_CN popup.html: no overflow, no clipped control",
+      "ok": true,
+      "detail": {
+        "bodySW": 320,
+        "bodyCW": 320,
+        "deSW": 1400,
+        "deCW": 1400,
+        "clipped": []
+      }
+    },
+    {
+      "name": "D. locale zh_CN stats.html: no overflow, no clipped control",
+      "ok": true,
+      "detail": {
+        "bodySW": 1390,
+        "bodyCW": 1390,
+        "deSW": 1390,
+        "deCW": 1390,
+        "clipped": []
+      }
+    },
+    {
+      "name": "D. locale es popup.html: no overflow, no clipped control",
+      "ok": true,
+      "detail": {
+        "bodySW": 320,
+        "bodyCW": 320,
+        "deSW": 1400,
+        "deCW": 1400,
+        "clipped": []
+      }
+    },
+    {
+      "name": "D. locale es stats.html: no overflow, no clipped control",
+      "ok": true,
+      "detail": {
+        "bodySW": 1390,
+        "bodyCW": 1390,
+        "deSW": 1390,
+        "deCW": 1390,
+        "clipped": []
+      }
+    },
+    {
+      "name": "D. locale en popup.html: no overflow, no clipped control",
+      "ok": true,
+      "detail": {
+        "bodySW": 320,
+        "bodyCW": 320,
+        "deSW": 1400,
+        "deCW": 1400,
+        "clipped": []
+      }
+    },
+    {
+      "name": "D. locale en stats.html: no overflow, no clipped control",
+      "ok": true,
+      "detail": {
+        "bodySW": 1390,
+        "bodyCW": 1390,
+        "deSW": 1390,
+        "deCW": 1390,
+        "clipped": []
       }
     },
     {
@@ -224,6 +334,43 @@
         ],
         "zeros": 3,
         "total": "8"
+      }
+    },
+    {
+      "name": "L1. log day groups + filters bar render",
+      "ok": true,
+      "detail": {
+        "days": 2,
+        "items": 3,
+        "filtersShown": true,
+        "dayLabels": [
+          "Hôm nay",
+          "Hôm qua"
+        ]
+      }
+    },
+    {
+      "name": "L2. Blocked chip filters to the blocked entry only",
+      "ok": true,
+      "detail": {
+        "items": 1,
+        "txt": "Hôm nay08:30:00bị chặn · keyword:testBeta Blocked"
+      }
+    },
+    {
+      "name": "L3. search narrows to the matching entry",
+      "ok": true,
+      "detail": {
+        "items": 1,
+        "txt": "Hôm qua07:30:00duyệt (thử)Gamma Dry"
+      }
+    },
+    {
+      "name": "L4. no-match state shows a non-empty localized empty line (no items)",
+      "ok": true,
+      "detail": {
+        "empty": "Không có mục phù hợp",
+        "items": 0
       }
     }
   ],

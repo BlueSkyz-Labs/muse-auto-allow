@@ -60,6 +60,33 @@ of the artifact gets `http://127.0.0.1/*` appended to `content_scripts[0].matche
 fixture origin — the pristine extraction dir and the shipped manifest stay untouched,
 and the artifact's own bytes are what gets loaded everywhere else.
 
+## Freeze procedure (v1.19.0 freeze)
+
+Same procedure (version `1.19.0`; build → hash → rebuild identical; sidecar `-c`; verify-zip
+19/0/0/0; smoke `ok:true`; attach to the GitHub Release).
+
+## Recorded evidence (v1.19.0 freeze)
+
+- Frozen tree: `extension/manifest.json` `"version": "1.19.0"`; tag `v1.19.0`.
+- Artifact: `dist/muse-auto-allow-v1.19.0.zip` — **216,228 bytes**, **19 entries**; sha256
+  `4221e521c3f053ea05f39391a7260770bef8e94de9b0ad96b0d877d3da3cc13f` (sidecar clean);
+  determinism 2× byte-identical; verify-zip 19/0/0/0; smoke exit 0 `"ok": true`.
+- Gates on the frozen tree (2026-10-19, one self-cleaning run): lint 0 (27 checks) ·
+  background-unit 0 · import-security 0 (162) · yolo-ux 0 (5) · e2e 0 · followup-e2e 0 ·
+  lang-switch-e2e 0 (213×6) · codex-e2e 0 · bench 0 · QA v1.14.0 8/8 · `qa-experience` **34/34**
+  (was 20 — S10 locale sweep ×12 + the S02 log-filter checks L1–L4).
+- **mission-e2e** needed a test-side fix before it was green: check C raced the auto path (with a
+  'working' tab the automatic mission send could fire in the gap between `setState('working')`
+  and the pause taking effect, drifting the step baseline). The paused product path itself held
+  ("pause halts the automatic mission send" + "refused while paused" were green in the failing
+  run). Fixed test-side (idle first; baseline taken AFTER the pause holds) → **2 consecutive
+  green runs** recorded before this entry (LSN-008).
+- Scope: W1 of the Owner-approved catalog (`docs/APPROVED_WORK_2026-10-19.md`): S02 log kind
+  chips + search + day-group headers (**a real ISO-coercion defect caught by the new checks
+  pre-freeze** — LSN-009), S03 press feedback, S04 font-stack fallbacks, S07 consent-step
+  learn-more link, S08 audited (commands already shipped + tested), S10 six-locale overflow
+  sweep on both surfaces. i18n **213 keys × 6 locales**.
+
 ## Freeze procedure (v1.18.0 freeze)
 
 Same procedure (version `1.18.0`; build → hash → rebuild identical; sidecar `-c`; verify-zip
