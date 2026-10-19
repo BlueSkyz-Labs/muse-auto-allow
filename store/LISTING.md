@@ -659,8 +659,8 @@ own local storage).
 | Privacy policy URL | `https://blueskyz-labs.github.io/muse-auto-allow/privacy.html` (hosted from `store/PRIVACY.md`; verified live 2026-10-12) |
 | License | MIT © 2026 BlueSkyz Labs |
 
-Before clicking **Submit for review**, replace the one remaining `TODO: fill before
-submit` marker (the support email) and confirm the publisher display name in the
-dashboard. The homepage and privacy-policy URLs are already filled and verified live.
+Before clicking **Submit for review**: all repo-side values are filled (support email
+`support@blueskyzlabs.com` included); the only in-dashboard confirmation left is the publisher
+display name. The homepage and privacy-policy URLs are already filled and verified live.
 The Chrome Web Store will not accept a listing without a valid privacy policy URL and a
 working support contact once any data-practices disclosure is present.
