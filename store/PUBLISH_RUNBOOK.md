@@ -4,7 +4,7 @@ Step-by-step launch and update procedure. Steps marked **[MANUAL/owner]** requir
 with the Google account and payment; everything else can be done from the repo.
 
 **One-line flow:** register developer account → `node scripts/build.mjs` +
-`python scripts/verify-zip.py` → upload `dist/muse-auto-allow-v1.13.0.zip` → fill every
+`python scripts/verify-zip.py` → upload `dist/muse-auto-allow-v1.22.0.zip` → fill every
 dashboard tab → submit → wait for review → publish → for updates: bump version →
 rebuild + verify zip → upload → resubmit.
 
@@ -30,7 +30,7 @@ rebuild + verify zip → upload → resubmit.
 
 ## Step 2 — Build, verify, and upload the package
 
-1. Confirm the version in `extension/manifest.json` is correct (currently `1.13.0`).
+1. Confirm the version in `extension/manifest.json` is correct (currently `1.22.0`).
 2. **Lint gate (mandatory, zero-dependency).** Run from the repo root:
 
    ```bash
@@ -49,7 +49,7 @@ rebuild + verify zip → upload → resubmit.
    node scripts/build.mjs
    ```
 
-   Output: `dist/muse-auto-allow-v1.13.0.zip` with `manifest.json` at the **zip root**
+   Output: `dist/muse-auto-allow-v1.22.0.zip` with `manifest.json` at the **zip root**
    (not nested inside a folder). The build fails closed if the zip does not mirror the
    whole `extension/` tree (exit 3 = file missing from the zip, exit 4 = unexpected file
    in the zip).
@@ -61,11 +61,11 @@ rebuild + verify zip → upload → resubmit.
 
    It checks every zip entry against the on-disk file (sha-identical bytes) and exits
    non-zero on any mismatch, missing file, or extra file. Expected output for this
-   release: `muse-auto-allow-v1.13.0.zip: 19 matched, 0 mismatched, 0 disk-only, 0
+   release: `muse-auto-allow-v1.22.0.zip: 25 matched, 0 mismatched, 0 disk-only, 0
    zip-only` and exit 0. **Do not upload a zip that fails this check.**
 5. In the Developer Dashboard, click **New item** (first release) or open the existing
    item (for updates).
-6. **Upload** `dist/muse-auto-allow-v1.13.0.zip`.
+6. **Upload** `dist/muse-auto-allow-v1.22.0.zip`.
 7. Wait for the dashboard to parse the manifest. It will read the name/description from
    `__MSG_*__` keys resolved against `_locales/en/messages.json`; verify the default
    locale resolves cleanly (no blank name).
@@ -239,6 +239,14 @@ Work through all tabs before submitting; an incomplete listing cannot be submitt
       `aaaa3fd2ef899d28d1220637e0d1fc9674058d4b723171ca1a9c473f83b63ad2`; deterministic
       rebuild byte-identical; `smoke-zip.mjs` 20/20 — `ok: true`). Re-run both immediately
       before the CWS upload.
+- [x] `node scripts/build.mjs` **and** `python scripts/verify-zip.py` both exit 0 at the
+      v1.22.0 freeze (verify-zip **25 matched / 0 mismatched / 0 disk-only / 0 zip-only**;
+      artifact `dist/muse-auto-allow-v1.22.0.zip` — **259,545 bytes, 25 entries**, sha256
+      `4da5f060578655473301fd983417474aab41db1efe48365bfb68960ff2c932c7`; `smoke-zip.mjs`
+      `ok: true`). Re-run both immediately before the CWS upload. Store captures refreshed at
+      this freeze: `screenshot1/2/3/5` re-shot from the v1.22.0 tree (Safety shows the layered
+      allow/ask/block rules; the Statistics capture carries the real local data), all five
+      assets 1280×800 by PNG header; `LISTING.md` version 1.22.0 + what's-new (1.19–1.22).
 - [x] `store/LISTING.md` reflects v1.10.1 (version/package references, all six short
       descriptions naming both scopes — recounted ≤132 — and **all six** detailed copies
       covering the Codex switch; the v1.10.0 "localized bodies" open sub-item was closed
