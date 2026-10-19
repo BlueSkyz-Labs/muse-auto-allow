@@ -318,6 +318,7 @@ try {
   await evOn(pop)(`new Promise((res) => chrome.storage.local.set({ rules: { allowTopics: [], blockKeywords: ['zzz-keep'], layers: [ { id: 'ask-test', kind: 'ask', match: { topics: ['test-topic'] } } ] }, digestCounters: { clicks: 3, followups: 1, blocked: 1, asked: 2 }, log: [ { at: new Date().toISOString(), kind: 'ask', label: 'Ask Card', blockedReason: 'ask' }, { at: new Date().toISOString(), kind: 'allow', label: 'Ok Card' } ] }, () => res('ok')))`, true);
   await send('Page.reload', {}, pop); await sleep(1000);
   await evOn(pop)(`(() => { const s = document.getElementById('obSkip'); if (s) s.click(); return 'ok'; })()`); await sleep(300);
+  await evOn(pop)(`(() => { try { setSafety(true); } catch (e) { return 'ERR ' + e.message; } return 'ok'; })()`); await sleep(300); // the layers list renders while the Safety sheet is open
   const p1 = await evOn(pop)(`({ rows: document.querySelectorAll('#layersList .lrow').length, kind: (document.querySelector('#layersList .lkind') || {}).textContent, asked: (document.getElementById('dAsked') || {}).textContent, chip: document.querySelectorAll('#logList .k-ask').length })`);
   check('P1. layers card renders stored rule (kind ask) + digest asks counter + ask chip in log', !!p1 && p1.rows === 1 && p1.kind === 'ask' && p1.asked === '2' && p1.chip >= 1, p1);
   await evOn(pop)(`(() => { const k = document.getElementById('layerKind'); k.value = 'block'; const t = document.getElementById('layerTopics'); t.value = 'demo-x'; document.getElementById('layerAdd').click(); return 'ok'; })()`);

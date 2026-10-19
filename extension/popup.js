@@ -1424,7 +1424,7 @@ function applyV18UI(s) {
   v18.rules.topics = cleanList(rules && rules.allowTopics);
   // absent blockKeywords = the engine's shipped seed list (shown pre-loaded, not written)
   v18.rules.keywords = hasKw ? cleanList(rules.blockKeywords) : SEED_BLOCK.slice();
-  const rawLayers = Array.isArray(rules.layers) ? rules.layers : [];
+  const rawLayers = Array.isArray(rules && rules.layers) ? rules.layers : []; // v1.22.0 (W5/F1) — rules can be null on a fresh install
   const lay = (typeof MuseRules !== 'undefined' && MuseRules) ? MuseRules.sanitize(rawLayers) : null;
   v18.rules.layers = lay && lay.ok ? lay.layers : []; // v1.22.0 (W5/F1)
   v18.rules.keywordsSeeded = !hasKw;
