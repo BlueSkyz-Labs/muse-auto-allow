@@ -17,9 +17,18 @@ PILOT/VALIDATE/DEFER items stay untouchable until a separate Owner decision.
 | **W2** | G04, G07 | Safety + oversight features: anomaly auto-pause; daily briefing card | v1.20.0 |
 | **W3** | G02 | Mission Playbooks (extend Missions: variables + per-playbook guards) | v1.21.0 |
 | **W4** | license core per `docs/LICENSING_DESIGN.md` | Offline ES256 verification module + activation UI — ships **dormant** (no public key → inert); real key ceremony + PRO split + price stay Owner gates | v1.22.0 |
+| **W5** | F1 + F2 (market-intelligence findings, Owner-approved 2026-10-19) | **F1** rule engine 3 tầng (allow/ask/block) — nâng G01: bảng rule trong Safety + nhập/xuất JSON + preview qua dry-run · **F2** xuất audit (JSON/CSV log đã giải mã + tóm tắt tuần) | v1.22.0 |
 
 After W1: publish checklist for CWS (owner upload). After W4: PAID_READINESS re-audit of the 15
 dimensions with the model-C evidence.
+
+## Market-intelligence findings — quyết định của chủ sở hữu (2026-10-19)
+
+Nguồn: `docs/MARKET_INTELLIGENCE_2026-10-19.md` (11 đối thủ, ma trận điểm, trending).
+- **F1 (P0) + F2 (P0): ĐÃ DUYỆT → W5/v1.22.0** (rule engine 3 tầng nâng G01 + xuất audit).
+- F3 (học từ phê duyệt), F4 (risk level + review hộp), F5 (injection screen): chờ vào **W6 dạng pilot**
+  sau khi có người dùng thật (đo false-positive) — chưa duyệt thực hiện.
+- F6 (takeover), F7 (đa nền tảng), F8 (sync rule cho đội): P2 — chưa duyệt.
 
 ## Status log
 
