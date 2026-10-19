@@ -42,3 +42,14 @@ CLOSED`. Baseline for the first register entry: engine shipped since v1.10.0.
 | Fix | v1.18.0: `if (enc) entry.ctx = enc;` then **unconditional** `delete entry.context;` in content.js and codex.js. A failed encryption drops the sentence (label/kind/reason stay). |
 | Negative test | The store contract is asserted by `codex-e2e` (0 plaintext entries) and the encrypted-log checks in the battery. |
 | State | SOURCE_FIXED (v1.18.0) → VERIFIED by the battery; runtime closure = shipped artifact. |
+
+## W5 audit record (v1.22.0, 2026-10-19) — độc lập, read-only
+
+**Phạm vi:** rules.js · audit.js · wiring content/popup/stats · spec W5 · i18n mới.
+**Kết quả: 0 CRITICAL / 0 HIGH / 0 MEDIUM.** Các bất biến được xác nhận lại bằng chứng dòng:
+- decide() D1–D6 giữ nguyên tắc *chỉ thu hẹp*; connector/auth screens fail-closed (CONNECTOR_WORD_RE/CONNECT_BTN_RE) và bất khả xâm phạm bởi luật; never-Deny + cấm Allow đơn lẻ giữ nguyên cấu trúc (DENY_RE neo toàn nhãn + deny phải cùng container).
+- sanitize() chống prototype-key (BAD_KEYS + hasOwnProperty), cắt giới hạn 50/50/64 — unit 9–12,18 xanh.
+- Audit export allowlist-only; containsForbidden chặn license/cryptKeyRaw/token/iv/ct; CSV BOM + escaping đúng — unit 14–16 xanh.
+- renderLayers escape MỌI dữ liệu người dùng qua esc() (kiểm chứng bằng mắt, không có đường innerHTML thô).
+**1 INFO (không phải lỗ hổng):** child audit chỉ chạy rule-engine-unit nên ghi "import merge ordering của stats.js chưa được test phủ" — thực tế path này đã được `test/import-security.mjs` phủ trong battery chuẩn (169/169 xanh, gồm SA-1/merge sub-key).
+**Phương pháp:** audit độc lập bởi mô hình khác (mimo-v2.6-pro), đọc mã + chạy node --check toàn bộ 11 script + unit được phép; kết quả được cha kiểm chứng lại 2 điểm còn nghi bằng mắt.
