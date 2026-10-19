@@ -52,3 +52,14 @@ Nguồn: `docs/MARKET_INTELLIGENCE_2026-10-19.md` (11 đối thủ, ma trận đ
 - [x] S10 i18n sweep: instrument D now sweeps all 6 locales on both surfaces (no overflow / no clipped control)
 - [x] tests: QA v1.19 grows to 34 checks (L1-L4, locale sweep); battery + freeze + release v1.19.0
 - [x] W5 F1+F2 shipped **v1.22.0** (freeze 2026-10-19): zip 259,545 B / 25 entries / sha256 `4da5f060…c932c7`; verify-zip 25/0/0/0; smoke `ok:true`; rule-engine-unit 20/20; battery đầy đủ xanh; qa-experience 42/42; hồi quy null-chain bắt + sửa trước freeze (LSN-014)
+
+## Wave A — SGPS v1.5 prompt-02 UX (Owner duyệt "theo khuyến nghị", 2026-10-19)
+
+Duyệt: **G1, G2, G3, G4, G6, G10, S1, S2, S4** (Wave A trong `docs/UX_SGPS_V15_REPORT_2026-10-19.md`).
+Thực thi theo prompt 02 contract: wave nhỏ → test → rendered verification → evidence; không dừng
+khi còn approved executable. Wave B/C chưa duyệt.
+
+| ID | Trạng thái |
+|---|---|
+| S2 · S4 · G10 · G6 | đang triển khai |
+| G1 · G3 · G4 · G2 · S1 | đang triển khai |
