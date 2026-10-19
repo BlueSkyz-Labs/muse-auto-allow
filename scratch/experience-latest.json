@@ -386,6 +386,13 @@
       }
     },
     {
+      "name": "O. không nút nào bị cắt chữ ở locale vi (scrollWidth <= clientWidth)",
+      "ok": true,
+      "detail": {
+        "clipped": []
+      }
+    },
+    {
       "name": "N1. license UI: chip Free + ô token + nút Kích hoạt hiện diện",
       "ok": true,
       "detail": {

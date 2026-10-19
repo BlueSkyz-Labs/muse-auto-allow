@@ -298,6 +298,14 @@ try {
   const m = await evOn(pop)(`({ hidden: document.getElementById('digest').hidden, top: (document.getElementById('dTopReason').textContent || ''), trend: (document.getElementById('dTrend').textContent || ''), delta: (document.getElementById('dTrendDelta').textContent || ''), sw: document.getElementById('digest').scrollWidth, cw: document.getElementById('digest').clientWidth })`);
   check('M. G07 briefing: card visible, text carries the signal, fits the surface', !!m && m.hidden === false && /banana \(1\)/.test(m.top) && m.trend === '5' && (m.delta || '').length > 2 && m.sw <= m.cw + 2, m);
 
+  // O. quét TOÀN BỘ nút hiển thị trong popup: không nút nào bị cắt chữ (scrollWidth > clientWidth)
+  // (kiểm chứng nghi vấn từ soi ảnh cửa hàng: nút tạm dừng ở locale vi trông như bị ellipsis)
+  await evOn(pop)(`new Promise((res) => chrome.storage.local.set({ userLocale: 'vi' }, () => res('ok')))`, true);
+  await send('Page.reload', {}, pop); await sleep(900);
+  await evOn(pop)(`(() => { const s = document.getElementById('obSkip'); if (s) s.click(); return 'ok'; })()`); await sleep(300);
+  const o1 = await evOn(pop)(`Array.from(document.querySelectorAll('button')).filter((b) => b.offsetParent !== null && b.scrollWidth > b.clientWidth + 2).map((b) => (b.id || b.className) + ':' + (b.textContent || '').trim().slice(0, 24))`);
+  check('O. không nút nào bị cắt chữ ở locale vi (scrollWidth <= clientWidth)', Array.isArray(o1) && o1.length === 0, { clipped: o1 });
+
   // N. W4 license UI (v1.21.0): dormant mặc định — chip Free, nút Kích hoạt hiện thông báo dormant
   const n0 = await evOn(pop)(`({ chip: (document.getElementById('licTier').textContent || ''), hasInput: !!document.getElementById('licToken'), hasAct: !!document.getElementById('licActivate') })`);
   check('N1. license UI: chip Free + ô token + nút Kích hoạt hiện diện', !!n0 && /(Free|Miễn phí)/.test(n0.chip) && n0.hasInput === true && n0.hasAct === true, n0);

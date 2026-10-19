@@ -11,7 +11,7 @@ const REPO = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace
 const SHOTS_IN = path.join(REPO, 'scratch', 'shots');
 const SHOTS_OUT = path.join(REPO, 'store', 'shots');
 fs.mkdirSync(SHOTS_OUT, { recursive: true });
-const need = ['popup-live-dark.png', 'popup-onboarding-dark.png', 'stats-dark.png'];
+const need = ['popup-live-dark.png', 'popup-onboarding-dark.png', 'popup-safety-dark.png', 'stats-dark.png']; // v1.21.0: + safety
 for (const f of need) {
   const src = path.join(SHOTS_IN, f);
   if (!fs.existsSync(src)) { console.error('MISSING input shot:', src, '— run scripts/capture-shots.mjs first'); process.exit(2); }
@@ -42,9 +42,10 @@ ws.onmessage = (ev) => { let m; try { m = JSON.parse(ev.data); } catch { return;
 const send = (method, params = {}, sid) => new Promise((resolve, reject) => { const id = ++seq; pending.set(id, { resolve, reject }); const m = { id, method, params }; if (sid) m.sessionId = sid; ws.send(JSON.stringify(m)); setTimeout(() => { if (pending.has(id)) { pending.delete(id); reject(new Error(method + ' timeout')); } }, 30000); });
 
 const stages = [
+  { out: 'screenshot1.png', q: 'shots/popup-live-dark.png', w: 400, title: 'Approve Muse\u2019s asks, hands-free.', sub: 'Pause, dry-run, keyword blocks and an anomaly guard \u2014 every approval stays on this machine.' }, // v1.21.0 refresh
   { out: 'screenshot2-stats.png', q: 'shots/stats-dark.png', w: 1000, title: 'Your approvals, measured.', sub: 'Local-only statistics: a 14-day trend, topic mix, and honest import/export — dates in your own language.' },
   { out: 'screenshot3-popup.png', q: 'shots/popup-live-dark.png', w: 400, title: 'Auto-click Allow, with a seatbelt.', sub: 'Never clicks Deny. Explicit pause controls. Local-only, no telemetry, six languages.' },
-  { out: 'screenshot5-safety.png', q: 'shots/popup-onboarding-dark.png', w: 400, title: 'Logging-only until you say go.', sub: 'Fresh installs detect and log only. A 3-step first run states the consent line and turns live clicking on in one tap.' },
+  { out: 'screenshot5-safety.png', q: 'shots/popup-safety-dark.png', w: 400, title: 'Every rail in one place.', sub: 'Dry-run, YOLO with a two-step arm, keyword and connector blocks, anomaly auto-pause, offline license — and nothing leaves your browser.' },
 ];
 
 try {

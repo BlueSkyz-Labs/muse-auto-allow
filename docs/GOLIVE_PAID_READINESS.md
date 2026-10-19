@@ -6,6 +6,17 @@
 > (`SELLER_AUTHORITY` / `PRODUCT_ELIGIBILITY` / Paid-GO are Owner gates). Nothing in this dossier
 > changes extension behavior by itself.
 
+## Cập nhật 2026-10-19 (v1.21.0)
+
+- **W3 (G02 Mission Playbooks) và W4 (lõi giấy phép dormant) đã xong** — toàn bộ catalog được
+  duyệt (W1→W4) hoàn tất; gói v1.21.0 đã chốt (245.614 B, sha `2afe1f06…`), phát hành kèm bằng chứng.
+- Chiều PAID tiến thêm: mô-đun giấy phép ngoại tuyến đã sẵn sàng nhưng **vẫn dormant** — chờ
+  nghi thức khoá + giá/kênh (Owner). Cổng lint "khoá không lọt bản phát hành" đã được kiểm chứng
+  bằng đột biến (literal + base64).
+- Store kit đã đồng bộ v1.21.0: 4/5 ảnh cửa hàng làm mới từ UI thật (khung Safety trưng anomaly
+  guard + license), LISTING v1.21.0 + mục "What's new (1.19–1.21)".
+- Còn lại là **cổng chủ sở hữu**: tải CWS · giá/kênh · nghi thức khoá (khi mở PAID) · nâng pin SGPS.
+
 ## 1. Grounded facts (E0 — desk research, verifiable)
 
 1. **Chrome Web Store payments are dead and cannot be used.** Google deprecated CWS payments in

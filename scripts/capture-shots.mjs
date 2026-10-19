@@ -65,6 +65,23 @@ await sleep(500);
 await scheme(popup, 'dark');  await shot(popup, 'popup-live-dark', 400, 640);
 await scheme(popup, 'light'); await shot(popup, 'popup-live-light', 400, 640);
 
+// --- v1.21.0: Safety panel (anomaly guard + license) + mission playbook config preview ---
+await ev(popup, `(() => { const b = document.getElementById('safetyBtn'); if (b) b.click(); return 'ok'; })()`);
+await sleep(500);
+// v1.21.0: cuộn xuống cuối bảng An toàn để khung ảnh trưng được Anomaly guard + License
+await ev(popup, `(() => { const o = document.querySelector('#safetyPanel .ovbody'); if (o) o.scrollTop = o.scrollHeight; return 'ok'; })()`);
+await sleep(250);
+await scheme(popup, 'dark');  await shot(popup, 'popup-safety-dark', 400, 640);
+await ev(popup, `(() => { const o = document.querySelector('#safetyPanel .ovbody'); if (o) o.scrollTop = o.scrollHeight; return 'ok'; })()`);
+await scheme(popup, 'light'); await shot(popup, 'popup-safety-light', 400, 640);
+await ev(popup, `(() => { const c = document.getElementById('safetyClose'); if (c) c.click(); return 'ok'; })()`);
+await sleep(300);
+await ev(popup, `(() => { const b = document.getElementById('misbtn'); if (b) b.click(); return 'ok'; })()`);
+await sleep(400);
+await ev(popup, `(() => { const rows = document.querySelectorAll('#misList [data-mid]'); for (const r of rows) if (r.dataset.mid === 'scoped-run') r.click(); return 'ok'; })()`);
+await sleep(400);
+await scheme(popup, 'dark');  await shot(popup, 'popup-playbook-dark', 400, 640);
+
 // --- stats with data ---
 const stats = await mk('stats.html');
 const d1 = new Date(); const d2 = new Date(Date.now() - 26 * 3600e3);

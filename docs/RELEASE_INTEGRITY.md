@@ -75,8 +75,8 @@ Same procedure (version `1.21.0`; build → hash → rebuild identical; sidecar 
   anomaly-unit 11 · **mission-playbook-unit 10 (NEW)** · **license-unit 16 (NEW, +L4b)** ·
   background-unit 0 (+L1 license scripts are popup-local) · import-security **169/0** (+13 W4/
   mirror) · yolo-ux 0 · e2e 0 `ok:true` · followup-e2e 113/0 · mission-e2e **37/0** (+G02-A..E) ·
-  lang-switch 255×6 · codex-e2e · bench · QA v1.14.0 8/8 · `qa-experience` **37/37** (+N1/N2
-  license-dormant UI checks).
+  lang-switch 255×6 · codex-e2e · bench · QA v1.14.0 8/8 · `qa-experience` **38/38** (+N1/N2
+  license-dormant UI checks, +O full-button clipped-text sweep at locale vi).
 - **Independent audit round (MAKER≠JUDGE)**: three read-only subagent audits (G02 / W4 / an e2e
   stall diagnosis) returned 6 findings, all fixed before freeze — W4-1 tier allowlist (+L4b
   test), W4-2 chip reset before await, W4-3 monotonic `lastSeenAt` (60 s write threshold), W4-4

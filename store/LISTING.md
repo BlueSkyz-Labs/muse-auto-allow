@@ -15,7 +15,7 @@ dashboard (no repo value to fill).
 | Item name | **Muse Auto-Allow** |
 | Category | **Productivity** |
 | Default language | English (en) |
-| Version | 1.18.0 |
+| Version | 1.21.0 |
 | Manifest version | Manifest V3 |
 | Extension package | `dist/muse-auto-allow-v1.18.0.zip` |
 | License | MIT © 2026 BlueSkyz Labs |
@@ -628,7 +628,7 @@ The dashboard requires these images. Provide them at the exact sizes below.
 | Asset | Requirement | Source in this repo | Status |
 |---|---|---|---|
 | Extension icon | 128×128 px PNG | `extension/icons/icon128.png` | ✅ present |
-| Screenshots | 1280×800 px PNG (up to 5) | `store/screenshot1.png` (live runtime capture), `store/screenshot2-stats.png` (Statistics), `store/screenshot3-popup.png` (popup on stage), `store/screenshot4-overview.png` (designed overview), `store/screenshot5-safety.png` (first-run safety step: logging-only statement, consent line, one-tap live clicking) | ✅ 5 present, all verified 1280×800 |
+| Screenshots | 1280×800 px PNG (up to 5) | `store/screenshot1.png` (live runtime capture, v1.21.0), `store/screenshot2-stats.png` (Statistics), `store/screenshot3-popup.png` (popup on stage), `store/screenshot4-overview.png` (designed overview), `store/screenshot5-safety.png` (Safety & Control panel: anomaly auto-pause + license, v1.21.0) | ✅ 5 present, all verified 1280×800 |
 | Small promo tile | 440×280 px PNG | `store/promo440x280.png` | ✅ present (verified 440×280) |
 | Marquee promo tile | 1400×560 px (optional) | `store/marquee1400x560.png` | ✅ present (verified 1400×560) |
 
@@ -643,6 +643,12 @@ Chrome from the package), the five 1280×800 screenshots, the 440×280 promo til
 Screenshot guidance (verify before submit that the uploaded images match these sizes): show the real Muse approval card with the extension's popup open
 (click counter + log visible). Do **not** use a mockup that implies the extension does
 anything beyond its single purpose, and do not put misleading wording in the image.
+**What's new (1.19–1.21):** screened log with day groups, filters and search · an anomaly
+guard that pauses the engine by itself on a sustained rate or a topic spike (it can only ADD a
+pause) · a daily briefing in the popup (top block reason + 7-day trend) · **Mission Playbooks**:
+parameterised, previewed playbook runs (`{{project}}`/`{{branch}}`) with per-playbook narrowing
+guards · an **offline license** block (inert until activation; no network verification).
+
 A second image (`store/screenshot2-stats.png`, 1280x800) shows the Statistics page with
 real chart data; it must stay a truthful capture (the numbers come from the extension's
 own local storage).
