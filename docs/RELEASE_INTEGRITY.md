@@ -60,6 +60,41 @@ of the artifact gets `http://127.0.0.1/*` appended to `content_scripts[0].matche
 fixture origin — the pristine extraction dir and the shipped manifest stay untouched,
 and the artifact's own bytes are what gets loaded everywhere else.
 
+## Freeze procedure (v1.21.0 freeze)
+
+Same procedure (version `1.21.0`; build → hash → rebuild identical; sidecar `-c`; verify-zip
+23/0/0/0 — entries +3: `playbook.js`, `license.js`, `license-pubkey.js`; smoke `ok:true`).
+
+## Recorded evidence (v1.21.0 freeze)
+
+- Frozen tree: `extension/manifest.json` `"version": "1.21.0"`; tag `v1.21.0`.
+- Artifact: `dist/muse-auto-allow-v1.21.0.zip` — **245,614 bytes**, **23 entries**; sha256
+  `2afe1f0616a3bbe430109627505b23189b57756814bc003e4c68e683a440a7b5` (sidecar clean);
+  determinism 2× byte-identical; verify-zip 23/0/0/0; smoke exit 0 `"ok": true`.
+- Gates on the frozen tree (2026-10-19, self-cleaning runs): lint 0 (54 checks / 23 files) ·
+  anomaly-unit 11 · **mission-playbook-unit 10 (NEW)** · **license-unit 16 (NEW, +L4b)** ·
+  background-unit 0 (+L1 license scripts are popup-local) · import-security **169/0** (+13 W4/
+  mirror) · yolo-ux 0 · e2e 0 `ok:true` · followup-e2e 113/0 · mission-e2e **37/0** (+G02-A..E) ·
+  lang-switch 255×6 · codex-e2e · bench · QA v1.14.0 8/8 · `qa-experience` **37/37** (+N1/N2
+  license-dormant UI checks).
+- **Independent audit round (MAKER≠JUDGE)**: three read-only subagent audits (G02 / W4 / an e2e
+  stall diagnosis) returned 6 findings, all fixed before freeze — W4-1 tier allowlist (+L4b
+  test), W4-2 chip reset before await, W4-3 monotonic `lastSeenAt` (60 s write threshold), W4-4
+  lint now also catches base64-encoded JWK material (mutation-verified both ways), W4-5 restore
+  token cap synced to 2048 (+2049 boundary test), G02-1 popup connector-lite screen — LSN-013.
+- **Honesty notes**: the first battery wave showed 2 red units, both fixed at the root — the
+  import-security engine-reader slice list lacked the G02 helpers (ReferenceError), and
+  mission-e2e's C block armed the auto path by itself and baselined during an in-flight
+  verification (LSN-012). `test/e2e.mjs` stalled twice on machine load (`Runtime.evaluate`
+  timeouts, a known flake class; one uptime left a stray Chrome that denied CDP to a follow-on
+  suite) — the clean re-run is green `ok:true`; a diagnostic stack capture was added and new
+  popup listeners got null-guards per the audit.
+- Scope: W3 G02 Mission Playbooks (`playbook.js` pure module, `scoped-run` with
+  `{{project}}`/`{{branch}}`, validated values + fail-closed storage, per-playbook narrowing
+  guards, config sheet with live preview) and W4 the dormant offline license core
+  (`license.js` ES256 + `license-pubkey.js` null until the Owner ceremony, Safety-sheet block,
+  backup round-trip + preserve-on-absent, two mutation-verified lint gates).
+
 ## Freeze procedure (v1.20.0 freeze)
 
 Same procedure (version `1.20.0`; build → hash → rebuild identical; sidecar `-c`; verify-zip

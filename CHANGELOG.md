@@ -1,5 +1,33 @@
 # Changelog
 
+## 1.21.0
+- **W3 + W4 của catalog đã duyệt shipped: G02 Mission Playbooks + lõi giấy phép ngoại tuyến (dormant).**
+  - **G02 — Playbooks có biến.** Mô-đun thuần mới `extension/playbook.js` (declare/parseTokens/
+    validateValue/mergeValues/render; thay thế bằng callback nghĩa đen; đếm điểm mã; đóng an toàn).
+    Playbook thứ 5 `scoped-run` với `{{project}}`/`{{branch}}` + metadata `vars`/`guards`; 4 playbook
+    cũ giữ nguyên từng byte. Động cơ render bước bằng giá trị đã kiểm, lưu `mission.values` (một lượt
+    ghi nguyên tử khi bắt đầu), **đóng an toàn** khi giá trị sai (xoá nhiệm vụ, không gửi), màn hình
+    từ khoá + kết nối/credential ở cả lúc nạp và lúc gửi, chốt an toàn theo playbook chỉ **thu hẹp**
+    (từ chối trước khi gõ, không đẩy bước; lý do `mission-guard`), nhiệm vụ không render được thì
+    **không bao giờ** thay bằng câu xoay vòng (`mission-unavailable`). Tuỳ biến cục bộ
+    `missionPlaybooks` (sửa mặc định/chốt theo id đã phát hành; sanitize chặt). Popup: khối cấu hình
+    (ô biến + **xem trước bước kế tiếp** aria-live + Bắt đầu/Huỷ; nút Bắt đầu chỉ bật khi mọi giá trị
+    hợp lệ).
+  - **W4 — Giấy phép ngoại tuyến (dormant).** `extension/license.js` (WebCrypto ES256; xác minh
+    ngoại tuyến; 0 log chứa token) + `extension/license-pubkey.js` (khóa `null` cho tới nghi thức
+    của chủ sở hữu). Popup có khối License trong bảng An toàn (ô dán token luôn bị xoá sau thử).
+    Sao lưu chỉ mang token đúng dạng + bị chặn kích thước; trường giả bị bỏ; bản sao lưu không có
+    license **không xoá** giấy phép đang lưu. Hai cổng lint mới (dormant + chặn JWK trong bản phát
+    hành) đã kiểm chứng bằng đột biến trực tiếp.
+  - **Kiểm thử**: `mission-playbook-unit` **10/10 mới**, `license-unit` **15/15 mới**,
+    `import-security` **168/0** (+12), `background-unit` +L1, `mission-e2e` **37/0** (+G02-A..E),
+    `qa-experience` 35/35, `lang-switch` **255 khóa × 6**. Ghi chú trung thực: 2 chỗ đỏ của lượt
+    chạy đầu đã sửa tận gốc (lát cắt engine thiếu hàm G02; khối C của mission-e2e tự mở đường gửi
+    tự động + đo mốc khi lượt xác minh còn bay — LSN-012); `e2e` treo 2 lần do tải máy/Chrome sót,
+    lượt chạy sạch xanh `ok:true`.
+- **i18n**: 255 khóa × 6 (+24).
+- **Bằng chứng chốt gói**: xem `docs/RELEASE_INTEGRITY.md` (mục v1.21.0).
+
 ## 1.20.0
 - **W2 of the Owner-approved catalog shipped: G04 (anomaly auto-pause) + G07 (daily briefing).** Board: `docs/APPROVED_WORK_2026-10-19.md`; specs `docs/G04_ANOMALY_PAUSE_SPEC.md`, `docs/G07_BRIEFING_SPEC.md` (independent subagent work, verified here).
   - **G04 — anomaly auto-pause (new engine + UI).** A PURE detector module `extension/anomaly.js` (no DOM, no chrome API, no clock — `evaluate(win, now)` only) rides the existing sweep: RATE = allow-clicks in a 5-minute window ≥ 30/min sustained (150); TOPIC = one topic ≥ 40 clicks and ≥ 70% share over 10 minutes (fixed window-total floor of 30); ≥ 100 total clicks before any rule. On fire it writes `pauseUntil` + an `anomalyLastPause` marker in ONE `storage.set`, logs kind/reason **`anomaly-pause`** (context `rate:…`/`topic:spike-…`), shows the badge/notification path, and maps the follow-up refusal to the new reason `anomaly-pause` (a manual pause still reads `paused`). It can only ever ADD a pause — never touch a cap (30/min, dedup, cooldown untouched); fail-closed on malformed settings/state (per-field defaults; a throwing detector disables itself in-page). Safety sheet gains an Anomaly guard group (enable, sustained rate, duration) that writes only its three keys.

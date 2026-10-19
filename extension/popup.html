@@ -429,6 +429,13 @@
   .rgroup { margin: 8px 0 0; border-top: 1px solid var(--divide); padding-top: 6px; position: relative; }
   .rgroup:first-child { margin-top: 0; border-top: 0; padding-top: 0; }
   .rlabel { font-weight: 500; }
+.mpreview { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 11px; line-height: 1.45;
+             color: var(--muted); background: var(--panel); border: 1px solid var(--stroke);
+             border-radius: 8px; padding: 4px 8px; max-height: 108px; overflow: auto; }
+  #misVariables .row { align-items: center; }
+  #misVariables input[type="text"] { flex: 1; min-width: 0; font: inherit; font-size: 12px; padding: 2px 8px;
+             border-radius: 8px; border: 1px solid var(--stroke); background: var(--fill); color: var(--ink); }
+  #misVariables input[type="text"]:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
 .licchip { font-size: 10.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase;
             color: var(--accent-text); background: var(--accent-tint); border: 1px solid var(--accent-line);
             border-radius: 999px; padding: 0 6px; }
@@ -743,6 +750,20 @@
         <div class="rlabel" data-i18n="missionChoose">Choose a mission</div>
         <div class="mislist" id="misList" role="radiogroup" aria-label="Missions"></div>
       </div>
+      <!-- v1.21.0 (G02): playbook variables + next-step preview (only for playbooks that
+           declare variables; Start is disabled until every value validates). -->
+      <div class="rgroup" id="misConfig" hidden>
+        <div class="rlabel" id="misConfigTitle"></div>
+        <div class="rlabel" data-i18n="missionVariables">Playbook variables</div>
+        <div id="misVariables"></div>
+        <div class="rlabel" data-i18n="missionPreview">Next-step preview</div>
+        <div class="mpreview" id="misPreview" aria-live="polite" aria-atomic="true"></div>
+        <div class="misnote" id="misValidation" role="status"></div>
+        <div class="misacts">
+          <button type="button" class="btn" id="misStart" data-i18n="missionStart">Preview and start</button>
+          <button type="button" class="rbtn" id="misCancel" data-i18n="missionCancel">Cancel</button>
+        </div>
+      </div>
       <div class="mislast muted" id="misLast" hidden></div>
     </div>
   </div>
@@ -879,6 +900,7 @@
       </div>
     </div>
   </div>
+  <script src="playbook.js"></script>
   <script src="license-pubkey.js"></script>
   <script src="license.js"></script>
   <script src="popup.js"></script>

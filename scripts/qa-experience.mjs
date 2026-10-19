@@ -297,6 +297,14 @@ try {
   await send('Page.reload', {}, pop); await sleep(1000);
   const m = await evOn(pop)(`({ hidden: document.getElementById('digest').hidden, top: (document.getElementById('dTopReason').textContent || ''), trend: (document.getElementById('dTrend').textContent || ''), delta: (document.getElementById('dTrendDelta').textContent || ''), sw: document.getElementById('digest').scrollWidth, cw: document.getElementById('digest').clientWidth })`);
   check('M. G07 briefing: card visible, text carries the signal, fits the surface', !!m && m.hidden === false && /banana \(1\)/.test(m.top) && m.trend === '5' && (m.delta || '').length > 2 && m.sw <= m.cw + 2, m);
+
+  // N. W4 license UI (v1.21.0): dormant mặc định — chip Free, nút Kích hoạt hiện thông báo dormant
+  const n0 = await evOn(pop)(`({ chip: (document.getElementById('licTier').textContent || ''), hasInput: !!document.getElementById('licToken'), hasAct: !!document.getElementById('licActivate') })`);
+  check('N1. license UI: chip Free + ô token + nút Kích hoạt hiện diện', !!n0 && /(Free|Miễn phí)/.test(n0.chip) && n0.hasInput === true && n0.hasAct === true, n0);
+  await evOn(pop)(`(() => { const i = document.getElementById('licToken'); i.value = 'MAA1.eyJhIjoxfQ.c2ln'; document.getElementById('licActivate').click(); return 'ok'; })()`);
+  await sleep(500);
+  const n1 = await evOn(pop)(`({ st: (document.getElementById('licenseStatus').textContent || ''), inputCleared: document.getElementById('licToken').value === '', chip: (document.getElementById('licTier').textContent || '') })`);
+  check('N2. dormant: Kích hoạt báo chưa cấu hình, ô nhập bị xoá, chip vẫn Free', !!n1 && /(not configured|chưa được cấu hình)/i.test(n1.st) && n1.inputCleared === true && /(Free|Miễn phí)/.test(n1.chip), n1);
 } catch (e) {
   check('X. harness completed without exception', false, String(e && e.message || e));
 } finally {

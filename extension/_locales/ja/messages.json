@@ -668,5 +668,35 @@
   },
   "licenseStorageError": {
     "message": "ライセンスを保存できませんでした。再試行してください。"
+  },
+  "missionScoped": {
+    "message": "スコープ実行"
+  },
+  "missionScopedDesc": {
+    "message": "特定のプロジェクトとブランチでパラメータ付きプレイブックを実行します。"
+  },
+  "missionVariables": {
+    "message": "プレイブック変数"
+  },
+  "missionPreview": {
+    "message": "次のステップのプレビュー"
+  },
+  "missionStart": {
+    "message": "プレビューして開始"
+  },
+  "missionCancel": {
+    "message": "キャンセル"
+  },
+  "missionValueInvalid": {
+    "message": "有効な値を入力してください。未解決または安全でない値は送信できません。"
+  },
+  "missionUnknownToken": {
+    "message": "このプレイブックには未対応の変数トークンがあります。"
+  },
+  "missionGuardBlocked": {
+    "message": "プレイブックのガードがこのステップをブロックしました。進行状況は変わりません。"
+  },
+  "missionUnavailable": {
+    "message": "このステップは利用できません。ミッションは一時停止のままです。"
   }
 }

@@ -285,7 +285,7 @@ const LOCALE_IDS = ['en', 'vi', 'zh_CN', 'ja', 'ko', 'es'];
 // MISSION_CORPUS (every entry is under MISSION_MAX_STEPS_PER_MISSION = 12) and popup.js
 // MISSION_META. A stored `mission` is adopted ONLY for an id in this table — an unknown or
 // foreign id yields NO mission, exactly as the engine's own sanitizeMission fails closed.
-const MISSION_STEPS = { 'golive-ready': 6, 'audit-only': 4, 'fix-findings': 4, 'release-prep': 4 };
+const MISSION_STEPS = { 'golive-ready': 6, 'audit-only': 4, 'fix-findings': 4, 'scoped-run': 3, 'release-prep': 4 };
 const MISSION_MAX_STEPS_PER_MISSION = 12;
 const MISSION_MAX_CYCLES = 3;
 // content.js sanitizeMission(m): a shipped id, step/cycles clamped to the engine's caps and
@@ -313,7 +313,7 @@ const sanitizeBackup = (d) => {
   // forged tier/lastSeenAt claims are dropped; the getter re-verifies against the committed key.
   if (d.license && typeof d.license === 'object' && !Array.isArray(d.license)) {
     const t0 = d.license.token;
-    if (typeof t0 === 'string' && t0.length > 0 && t0.length <= 4096 && /^MAA1\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(t0)) {
+    if (typeof t0 === 'string' && t0.length > 0 && t0.length <= 2048 && /^MAA1\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(t0)) {
       const lic = { token: t0 };
       const ex = d.license.exp;
       if (typeof ex === 'number' && isFinite(ex)) lic.exp = ex; else lic.exp = null;

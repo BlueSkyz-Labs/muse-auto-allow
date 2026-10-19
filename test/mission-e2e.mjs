@@ -116,7 +116,7 @@ function preflight(dir) {
   return {
     corpusFound: found, ids, stepCount, flagged,
     controlPositive: ctlPos, controlNegative: ctlNeg,
-    ok: found && ids.length === 4 && flagged.length === 0 && ctlPos >= 1 && ctlNeg === 0,
+    ok: found && ids.length === 5 && flagged.length === 0 && ctlPos >= 1 && ctlNeg === 0,
   };
 }
 
@@ -279,6 +279,10 @@ async function popStore(keys) {
   const out = await pEval(`new Promise((res) => chrome.storage.local.get(${JSON.stringify(keys)}, (s) => res(JSON.stringify(s))))`, true);
   try { return JSON.parse(out); } catch { return null; }
 }
+// LSN-008 (v1.21.0): the status ping exposes followup.sending — every baseline/send below first
+// waits until no send is in flight, so a still-verifying send can never drift a step mid-check.
+async function waitQuiet(ms = 8000) { return waitEngine((p) => p.sending !== true, ms, 'send quiet'); }
+
 async function fixtureMsg(message) {
   const out = await pEval(`new Promise((res) => {
     chrome.tabs.query({ url: ['http://127.0.0.1/*'] }, (tabs) => {
@@ -321,7 +325,7 @@ const pre = preflight(EXT_DIR);
 console.log('preflight:', JSON.stringify(pre));
 
 try {
-  check('pre. shipped corpus found with 4 missions by id', pre.corpusFound && JSON.stringify(pre.ids) === JSON.stringify(['golive-ready', 'audit-only', 'fix-findings', 'release-prep']), { ids: pre.ids });
+  check('pre. shipped corpus found with 5 missions by id', pre.corpusFound && JSON.stringify(pre.ids) === JSON.stringify(['golive-ready', 'audit-only', 'fix-findings', 'scoped-run', 'release-prep']), { ids: pre.ids });
   check('pre. corpus safety scan: no destructive pattern / secret / URL in any shipped step', pre.flagged.length === 0, { flagged: pre.flagged, steps: pre.stepCount });
   check('pre. safety scanner DISCRIMINATES (positive control flags, negative control passes)',
     pre.controlPositive >= 1 && pre.controlNegative === 0, { controlPositive: pre.controlPositive, controlNegative: pre.controlNegative });
@@ -361,7 +365,7 @@ try {
     !!(pingP && pingP.missionEnabled === true && pingP.missionId === 'golive-ready' && pingP.missionStep === 0 &&
        pingP.missionCycles === 0 && pingP.missionSteps === 6 && pingP.missionActive === true),
     pingP && { enabled: pingP.missionEnabled, id: pingP.missionId, step: pingP.missionStep, cycles: pingP.missionCycles, steps: pingP.missionSteps, active: pingP.missionActive });
-  check('P. status ping lists the 4 shipped mission ids', !!(pingP && Array.isArray(pingP.missions) && pingP.missions.length === 4 && pingP.missions.includes('golive-ready')), pingP && pingP.missions);
+  check('P. status ping lists the 5 shipped mission ids', !!(pingP && Array.isArray(pingP.missions) && pingP.missions.length === 5 && pingP.missions.includes('golive-ready') && pingP.missions.includes('scoped-run')), pingP && pingP.missions);
   check('P. status ping exposes the CURRENT step text (step 0)', !!(pingP && pingP.missionStepText === GOLIVE[0]), { got: pingP && String(pingP.missionStepText).slice(0, 60), want: GOLIVE[0].slice(0, 60) });
 
   // ---- A. idle send = current step; advance only on a verified send ----
@@ -427,13 +431,13 @@ try {
   await fEval("window.__setState('working')");
 
   // ---- C. pauseUntil halts mission sends; clearing resumes ----
-  // LSN-008 class: stop the auto path BEFORE the pause handshake — with a 'working' tab the
-  // automatic mission send can fire in the gap between setState('working') and the pause taking
-  // effect, drifting the step outside the checks' baseline (observed flake in the v1.19.0 battery).
-  await fEval("window.__setState('idle')");
-  await sleep(300);
+  // LSN-008: the auto path only sends when the tab is IDLE, so the state must stay 'working'
+  // through this block (an idle handshake ARMED the auto send for one tick and drifted the step
+  // baseline — observed flake in the v1.21.0 battery); the baseline also waits until no send is
+  // in flight (followup.sending === false).
   await seed({ pauseUntil: Date.now() + 60000 });
   await waitEngine((p) => p.paused === true, 4000, 'paused applied');
+  await waitQuiet();
   const stepC0 = (await enginePing()).missionStep; // baseline AFTER the pause holds
   const baseC = (await sentList()).length;
   await sleep(2600);
@@ -444,9 +448,10 @@ try {
   // Keep the idle auto-path OUT of the resume measurement: if the fixture stays idle, unpausing
   // lets BOTH the automatic send and the manual send fire (two advances). 'working' isolates the
   // manual resume (manual send-now ignores the idle requirement).
-  await fEval("window.__setState('working')");
+  await fEval("window.__setState('working')"); // keep the auto path OFF (it sends only when idle)
   await seed({ pauseUntil: 0 });
   await waitEngine((p) => p.paused === false, 4000, 'unpaused');
+  await waitQuiet();
   const resC = await manualSendAndVerify((p) => p.missionStep === stepC0 + 1, 'C resume');
   check('C. clearing the pause resumes the mission send (and the verified send advances)', resC.ok, { resp: resC.resp });
 
@@ -535,6 +540,62 @@ try {
 
   // ---- z. fixture sanity ----
   const fxErrors = (await fJSON('window.__errors')) || [];
+  // ---- v1.21.0 (G02). playbook variables + guards: defaults, run values, guard refusal, fail-closed
+  await fEval("window.__setState('working')");
+  await fEval("window.__setApproval(false)");
+  await seed({ pauseUntil: 0, dryRun: false, followupEnabled: true, missionEnabled: true, missionPlaybooks: null,
+    mission: { id: 'scoped-run', step: 0, cycles: 0, startedAt: Date.now(), lastSentAt: 0 } });
+  await waitEngine((p) => p.missionId === 'scoped-run' && p.missionEnabled === true, 8000, 'scoped-run applied');
+  await waitQuiet();
+  const rG0 = await fixtureMsg({ type: 'followup-send-now' });
+  const sentG0 = await sentList();
+  const lastG0 = sentG0[sentG0.length - 1];
+  check('G02-A. a scoped-run WITHOUT stored values sends the shipped DEFAULTS (never the token)',
+    !!(rG0.resp && rG0.resp.ok === true) && !!lastG0 && /this project/.test(lastG0.text) && /main/.test(lastG0.text) && !/\{\{/.test(lastG0.text),
+    { resp: rG0.resp, last: lastG0 && lastG0.text && lastG0.text.slice(0, 120) });
+
+  await seed({ mission: { id: 'scoped-run', step: 1, cycles: 0, startedAt: Date.now(), lastSentAt: 0, values: { project: 'alpha-repo', branch: 'g2-branch' } } });
+  await waitEngine((p) => p.missionStep === 1, 8000, 'values run applied');
+  await waitQuiet();
+  const rG1 = await fixtureMsg({ type: 'followup-send-now' });
+  const sentG1 = await sentList();
+  const lastG1 = sentG1[sentG1.length - 1];
+  check('G02-B. the typed step carries the RUN VALUES (never the token)',
+    !!(rG1.resp && rG1.resp.ok === true) && !!lastG1 && /alpha-repo/.test(lastG1.text) && /g2-branch/.test(lastG1.text) && !/\{\{/.test(lastG1.text),
+    { resp: rG1.resp, last: lastG1 && lastG1.text && lastG1.text.slice(0, 120) });
+
+  await seed({ missionPlaybooks: { 'scoped-run': { guards: { extraBlockedKeywords: ['zzz-guard'] } } },
+    mission: { id: 'scoped-run', step: 0, cycles: 0, startedAt: Date.now(), lastSentAt: 0, values: { project: 'zzz-guard', branch: 'main' } } });
+  await waitEngine((p) => p.missionStep === 0, 8000, 'guard run applied');
+  await waitQuiet();
+  await sleep(1500); // a previous leg's verified advance can land late — settle before the baseline
+  const stepBeforeG2 = (await enginePing()).missionStep;
+  const typedBefore = (await sentList()).length;
+  await waitQuiet();
+  const rG2 = await fixtureMsg({ type: 'followup-send-now' });
+  const typedAfter = (await sentList()).length;
+  const pingG2 = await enginePing();
+  check('G02-C. the per-playbook guard refuses BEFORE typing and the step does not advance',
+    !!(rG2.resp && rG2.resp.ok === false && rG2.resp.reason === 'mission-guard') && typedAfter === typedBefore && pingG2.missionStep === stepBeforeG2,
+    { resp: rG2.resp, typedBefore, typedAfter, stepBefore: stepBeforeG2, stepAfter: pingG2 && pingG2.missionStep });
+
+  await seed({ missionPlaybooks: null, mission: { id: 'scoped-run', step: 0, cycles: 0, startedAt: Date.now(), lastSentAt: 0, values: { project: 'bad\u0007value', branch: 'main' } } });
+  await sleep(1200);
+  const pingG3 = await enginePing();
+  check('G02-D. invalid stored values clear the mission (fail closed, nothing runs)',
+    !!(pingG3 && pingG3.missionId === ''), { ping: pingG3 && { id: pingG3.missionId } });
+
+  try { await send('Page.reload', {}, popSession); } catch { /* ignore */ }
+  await sleep(900);
+  await pEval(`(() => { const b = document.getElementById('misbtn'); if (b) b.click(); return 'ok'; })()`);
+  await sleep(300);
+  await pEval(`(() => { const rows = document.querySelectorAll('#misList [data-mid]'); for (const r of rows) if (r.dataset.mid === 'scoped-run') r.click(); return 'ok'; })()`);
+  await sleep(400);
+  const cfgG = await pEval(`({ open: !document.getElementById('misConfig').hidden, inputs: document.querySelectorAll('#misVariables input[data-var]').length, prev: (document.getElementById('misPreview').textContent || '') })`);
+  check('G02-E. the mission sheet config renders the variables + a rendered preview',
+    !!cfgG && cfgG.open === true && cfgG.inputs === 2 && /this project/.test(cfgG.prev) && !/\{\{/.test(cfgG.prev),
+    { open: cfgG && cfgG.open, inputs: cfgG && cfgG.inputs, prev: cfgG && cfgG.prev && cfgG.prev.slice(0, 100) });
+
   check('z. fixture page saw no JS errors', fxErrors.length === 0, { fxErrors });
 
   results.checks = checks;

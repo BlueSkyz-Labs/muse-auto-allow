@@ -668,5 +668,35 @@
   },
   "licenseStorageError": {
     "message": "Không lưu được bản quyền. Thử lại."
+  },
+  "missionScoped": {
+    "message": "Chạy theo phạm vi"
+  },
+  "missionScopedDesc": {
+    "message": "Chạy playbook có tham số trên một dự án và nhánh cụ thể."
+  },
+  "missionVariables": {
+    "message": "Biến của playbook"
+  },
+  "missionPreview": {
+    "message": "Xem trước bước kế tiếp"
+  },
+  "missionStart": {
+    "message": "Xem trước và bắt đầu"
+  },
+  "missionCancel": {
+    "message": "Huỷ"
+  },
+  "missionValueInvalid": {
+    "message": "Nhập giá trị hợp lệ; giá trị chưa giải quyết hoặc không an toàn sẽ không được gửi."
+  },
+  "missionUnknownToken": {
+    "message": "Playbook này chứa token biến không được hỗ trợ."
+  },
+  "missionGuardBlocked": {
+    "message": "Chốt an toàn của playbook đã chặn bước này; tiến độ giữ nguyên."
+  },
+  "missionUnavailable": {
+    "message": "Bước này không khả dụng; nhiệm vụ vẫn tạm dừng."
   }
 }

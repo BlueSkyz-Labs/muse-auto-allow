@@ -150,12 +150,17 @@ async function main() {
     { v3 });
 
   // ================= L4 — tampered payload rejected =================
-  const tamperedPayload = await signToken(payload({ tier: 'basic' }));
+  // Một payload segment KHÁC nhưng vẫn hợp lệ, ghép với chữ ký của token gốc => sai chữ ký.
+  const tamperedPayload = await signToken(payload({ sub: 'someone-else' }));
   const tamperedParts = tamperedPayload.split('.');
-  // Keep the original signature but substitute a different, still-valid JSON payload segment.
   const v4 = await L.verifyToken('MAA1.' + tamperedParts[1] + '.' + seg[2], DEV_PUBLIC_JWK, NOW_MS, 0);
   check('L4 tampered payload rejected. a valid but altered payload segment with the original signature => {ok:false, code:"bad_signature"}',
     !!v4 && v4.ok === false && v4.plan === 'free' && v4.code === 'bad_signature', { v4 });
+  // L4b (audit W4-1): chữ ký HỢP LỆ nhưng tier ngoài allowlist đã phát hành => từ chối, không PRO.
+  const wrongTier = await signToken(payload({ tier: 'basic' }));
+  const v4b = await L.verifyToken(wrongTier, DEV_PUBLIC_JWK, NOW_MS, 0);
+  check('L4b unseen tier with a VALID signature is refused (no PRO): {ok:false, code:"malformed"}',
+    !!v4b && v4b.ok === false && v4b.plan === 'free' && v4b.code === 'malformed', { v4b });
 
   // ================= L5 — wrong key rejected =================
   const v5 = await L.verifyToken(good, OTHER_PUBLIC_JWK, NOW_MS, 0);

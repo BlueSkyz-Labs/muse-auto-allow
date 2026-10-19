@@ -187,6 +187,14 @@ const ENGINE_SRC = [
   sliceLine(engineSrc, 'const MISSION_MAX_CYCLES'),
   sliceLine(engineSrc, 'const missionById'),
   sliceLine(engineSrc, 'const missionStepsOf'),
+  // v1.21.0 (G02): the playbook meta layer sanitizeMission now depends on
+  sliceLine(engineSrc, 'const missionPlaybooksMeta'),
+  sliceFn(engineSrc, 'buildMissionMeta'),
+  'buildMissionMeta();',
+  sliceLine(engineSrc, 'let playbookOverrides'),
+  sliceFn(engineSrc, 'applyPlaybookOverrides'),
+  sliceFn(engineSrc, 'missionMetaFor'),
+  sliceFn(engineSrc, 'missionValuesScreen'),
   sliceBlock(engineSrc, 'const mission = {', '{', '}'),
   sliceFn(engineSrc, 'sanitizeMission'),
   sliceFn(engineSrc, 'applyMissionSettings'),
@@ -381,6 +389,8 @@ async function main() {
     && !('tier' in l1.license) && !('lastSeenAt' in l1.license), { lic: l1 && l1.license });
   const l2 = T.sanitizeBackup({ license: { token: 'x'.repeat(5000) } });
   check('W4 license: oversized token dropped', !l2 || !('license' in l2), { sanitized: l2 ? Object.keys(l2) : null });
+  const l2b = T.sanitizeBackup({ license: { token: 'MAA1.' + 'a'.repeat(2043) + '.' + 'b' } }); // tổng 2050 ký tự → quá trần 2048
+  check('W4 license: token ngay trên trần 2048 bị loại (khớp license.js)', !l2b || !('license' in l2b), { sanitized: l2b ? Object.keys(l2b) : null });
   const l3 = T.sanitizeBackup({ license: { token: 42 } });
   check('W4 license: non-string token dropped', !l3 || !('license' in l3), { sanitized: l3 ? Object.keys(l3) : null });
   const l4 = T.sanitizeBackup({ license: { token: 'not-a-token' } });
@@ -609,7 +619,7 @@ async function main() {
     while ((mm = re.exec(corpusBlock[1]))) corpusMap[mm[1]] = (mm[2].match(/^\s*'/gm) || []).length;
   }
   check('F-V19-1 mirror: stats.js MISSION_STEPS === content.js MISSION_CORPUS ids + step counts',
-    Object.keys(corpusMap).length === 4 && JSON.stringify(corpusMap) === JSON.stringify(T.MISSION_STEPS || null), { corpus: corpusMap, stats: T.MISSION_STEPS });
+    Object.keys(corpusMap).length === 5 && JSON.stringify(corpusMap) === JSON.stringify(T.MISSION_STEPS || null), { corpus: corpusMap, stats: T.MISSION_STEPS }); // v1.21.0 (G02): 5 shipped playbooks
   // Mirror guard (F-V19-6): stats.js LOCALE_IDS must equal the SHIPPED locale set — the
   // extension/_locales directory set AND popup.js's own LOCALE_IDS — not a hardcoded literal. A
   // literal pinned only one direction: shipping a 7th locale left the guard GREEN while

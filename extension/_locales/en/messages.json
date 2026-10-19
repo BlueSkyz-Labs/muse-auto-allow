@@ -692,5 +692,35 @@
   },
   "licenseStorageError": {
     "message": "Could not save the license. Try again."
+  },
+  "missionScoped": {
+    "message": "Scoped run"
+  },
+  "missionScopedDesc": {
+    "message": "Run a parameterised playbook on a specific project and branch."
+  },
+  "missionVariables": {
+    "message": "Playbook variables"
+  },
+  "missionPreview": {
+    "message": "Next-step preview"
+  },
+  "missionStart": {
+    "message": "Preview and start"
+  },
+  "missionCancel": {
+    "message": "Cancel"
+  },
+  "missionValueInvalid": {
+    "message": "Enter a valid value; unresolved or unsafe values cannot be sent."
+  },
+  "missionUnknownToken": {
+    "message": "This playbook has an unsupported variable token."
+  },
+  "missionGuardBlocked": {
+    "message": "This playbook guard blocked the step; progress was not changed."
+  },
+  "missionUnavailable": {
+    "message": "The step is unavailable; the mission remains paused."
   }
 }

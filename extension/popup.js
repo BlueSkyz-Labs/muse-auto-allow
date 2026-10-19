@@ -1056,17 +1056,25 @@ async function renderLicense() {
   const chip = $('licTier'), st = $('licenseStatus');
   const key = licKey();
   const rec = v18.license;
-  let tier = 'free';
+  // audit W4-2: chip về Free TRƯỚC mọi await — không bao giờ giữ trạng thái PRO cũ khi đang chờ/lỗi.
+  if (chip) chip.textContent = t('licenseFree', 'Free');
   if (rec && typeof rec.token === 'string' && rec.token && key && typeof MuseLicense !== 'undefined' && MuseLicense) {
     try {
-      const v = await MuseLicense.verifyToken(rec.token, key, Date.now(), Number(rec.lastSeenAt) || 0);
-      if (v && v.ok) { tier = 'pro'; if (st) st.textContent = t('licenseActivated', 'License activated.'); }
-      else if (st) st.textContent = licCodeMsg(v && v.code);
-    } catch { /* a verifier error keeps the free tier (fail closed) */ }
+      const nowMs = Date.now();
+      const v = await MuseLicense.verifyToken(rec.token, key, nowMs, Number(rec.lastSeenAt) || 0);
+      if (v && v.ok) {
+        if (chip) chip.textContent = t('licensePro', 'PRO');
+        if (st) st.textContent = t('licenseActivated', 'License activated.');
+        // audit W4-3: mốc chống lùi đồng hồ được cập nhật ĐƠN ĐIỆU khi dùng; chỉ ghi khi lệch > 60s
+        // để storage.onChanged không quay vòng renderLicense vô hạn.
+        if (nowMs - (Number(rec.lastSeenAt) || 0) > 60000) {
+          try { chrome.storage.local.set({ license: Object.assign({}, rec, { lastSeenAt: nowMs }) }); } catch { /* ignore */ }
+        }
+      } else if (st) st.textContent = licCodeMsg(v && v.code);
+    } catch { /* lỗi bộ xác minh giữ nguyên Free (đóng an toàn) */ }
   } else if (st && !rec) {
     st.textContent = key ? '' : t('licenseDormant', 'License activation is not configured yet.');
   }
-  if (chip) chip.textContent = tier === 'pro' ? t('licensePro', 'PRO') : t('licenseFree', 'Free');
 }
 function licDeactivate() {
   try {
@@ -1474,6 +1482,7 @@ const MISSION_META = [
   { id: 'audit-only', nameKey: 'missionAudit', descKey: 'missionAuditDesc', steps: 4 },
   { id: 'fix-findings', nameKey: 'missionFix', descKey: 'missionFixDesc', steps: 4 },
   { id: 'release-prep', nameKey: 'missionRelease', descKey: 'missionReleaseDesc', steps: 4 },
+  { id: 'scoped-run', nameKey: 'missionScoped', descKey: 'missionScopedDesc', steps: 3, vars: { project: 'this project', branch: 'main' }, firstRaw: 'SCOPED RUN S1 — Work only inside {{project}} on branch {{branch}}. Read its source of truth first and treat its decisions as binding; write no code yet — close this step with the execution contract.' }, // v1.21.0 (G02) (firstRaw stays in lockstep with MISSION_CORPUS step 1 — locked by mission-e2e)
 ];
 const MISSION_BY_ID = new Map(MISSION_META.map((m) => [m.id, m]));
 const missionStepsOfId = (id) => { const m = MISSION_BY_ID.get(id); return m ? m.steps : 0; };
@@ -1789,6 +1798,8 @@ const SEND_BLOCKED_KEY = {
   'disabled': ['followupSendNowHint', 'Enable Auto follow-up first'],
   'paused': ['followupSendBlockedPaused', "Couldn't send — automation is paused"],
   'anomaly-pause': ['followupSendBlockedAnomaly', 'Send refused: the engine auto-paused (anomaly)'], // v1.20.0 (G04)
+  'mission-guard': ['missionGuardBlocked', 'This playbook guard blocked the step; progress was not changed.'], // v1.21.0 (G02)
+  'mission-unavailable': ['missionUnavailable', 'The step is unavailable; the mission remains paused.'], // v1.21.0 (G02)
   'schedule': ['followupSendBlockedSchedule', "Couldn't send — outside the follow-up hours"],
   'dead': ['followupSendBlockedDead', "Couldn't send — the Muse tab is not responding"],
   'submit-failed': ['followupSendBlockedSubmit', "Couldn't send — Muse didn't accept the message"], // v1.13.0 (C4-F): both submit strategies failed after typing
@@ -1938,7 +1949,7 @@ $('stuckMin').addEventListener('change', () => {
 $('errRec').addEventListener('change', () => writeSmart({ errorRecovery: $('errRec').checked }));
 // v1.20.0 (G04): anomaly guard — every change writes ONE merged object, clamped, never NaN
 // v1.21.0 (W4): license activation — always clears the field, never stores a bad token.
-$('licActivate').addEventListener('click', async () => {
+async function licActivateFromInput() {
   const inp = $('licToken'), st = $('licenseStatus');
   const raw = inp ? String(inp.value || '').trim() : '';
   if (inp) inp.value = '';
@@ -1956,8 +1967,8 @@ $('licActivate').addEventListener('click', async () => {
       renderLicense();
     });
   } catch { if (st) st.textContent = t('licenseStorageError', 'Could not save the license. Try again.'); }
-});
-$('licDeactivate').addEventListener('click', licDeactivate);
+}
+const __licA = $('licActivate'); if (__licA) __licA.addEventListener('click', licActivateFromInput);const __licD = $('licDeactivate'); if (__licD) __licD.addEventListener('click', licDeactivate);
 $('anomalyEnable').addEventListener('change', () => { writeAnomaly({ enabled: $('anomalyEnable').checked }); });
 $('anomalyRate').addEventListener('change', () => {
   const v = Math.max(1, Math.min(120, Math.round(Number($('anomalyRate').value) || 30)));
@@ -1990,8 +2001,93 @@ $('missionEnabled').addEventListener('change', () => {
 });
 // selecting a mission STARTS it: write the frozen `mission` object (step 0 / cycle 0) AND switch
 // `missionEnabled` on, so the very next idle send carries that mission's first step.
-$('misList').addEventListener('click', (e) => {
+// ---- v1.21.0 (G02): playbook configuration — variables + preview + explicit Start ----------------
+let misConfigId = ''; // playbook being configured ('' = the config panel is closed)
+function misMetaOf(id) { return MISSION_META.find((m) => m.id === id) || null; }
+function misRenderPreview() {
+  const meta = misMetaOf(misConfigId);
+  const prev = $('misPreview'), val = $('misValidation'), start = $('misStart');
+  if (!meta || !prev) return { ok: false };
+  const vals = {};
+  let firstBad = null;
+  if (meta.vars) {
+    for (const name of Object.keys(meta.vars)) {
+      const inp = document.querySelector('#misVariables input[data-var="' + name + '"]');
+      const raw = inp ? String(inp.value || '') : '';
+      const v = (typeof MusePlaybook !== 'undefined' && MusePlaybook) ? MusePlaybook.validateValue(raw) : { ok: false, code: 'no-module' };
+      if (!v.ok) { firstBad = firstBad || inp; vals[name] = ''; continue; }
+      // the popup screens with the SAME keyword list the user sees; the engine re-screens with
+      // its full keyword + connector screens on load and before every send (fail closed).
+      // audit G02-1: connector-lite — mirrors content.js CONNECTOR_WORD_RE/TOKEN_WORDING_RE so a
+      // value the engine would refuse never shows a green preview here.
+      const low = v.value.toLowerCase();
+      const kws = (v18.rules && Array.isArray(v18.rules.keywords)) ? v18.rules.keywords : [];
+      const CONNECTOR_LITE = /\b(connectors?|authorize|authorization|sign\s+in|log\s+in|oauth|api\s+key|access\s+token|personal\s+access\s+token|bearer\s+(key|token)|paste\s+(the\s+|your\s+)?token)\b/i;
+      if (kws.some((k) => k && low.includes(String(k).toLowerCase())) || CONNECTOR_LITE.test(v.value)) { firstBad = firstBad || inp; vals[name] = ''; continue; }
+      vals[name] = v.value;
+    }
+  }
+  // preview = the playbook's FIRST step rendered with the current values
+  const rawFirst = meta.firstRaw || '';
+  let okAll = true, rendered = '';
+  if (meta.vars) {
+    if (typeof MusePlaybook === 'undefined' || !MusePlaybook) { okAll = false; }
+    else {
+      const r = MusePlaybook.render(rawFirst, vals);
+      okAll = r.ok; rendered = r.ok ? r.text : '';
+    }
+  } else { rendered = rawFirst; }
+  if (prev) prev.textContent = okAll ? rendered : (rendered || rawFirst);
+  if (val) val.textContent = okAll ? '' : t('missionValueInvalid', 'Enter a valid value; unresolved or unsafe values cannot be sent.');
+  if (start) start.disabled = !okAll;
+  if (!okAll && firstBad) firstBad.setAttribute('aria-invalid', 'true');
+  return { ok: okAll, vals, firstBad };
+}
+function misOpenConfig(id) {
+  const meta = misMetaOf(id);
+  if (!meta || !meta.vars) return false;
+  misConfigId = id;
+  const box = $('misVariables');
+  if (box) {
+    box.innerHTML = Object.keys(meta.vars).map((name) =>
+      '<div class="row"><label class="muted" for="misVar_' + esc(name) + '">' + esc(name) + '</label>' +
+      '<input type="text" id="misVar_' + esc(name) + '" data-var="' + esc(name) + '" autocomplete="off" spellcheck="false" value="' + esc(meta.vars[name]) + '"></div>').join('');
+  }
+  const cfg = $('misConfig');
+  if (cfg) cfg.hidden = false;
+  const title = $('misConfigTitle');
+  if (title) title.textContent = t(meta.nameKey, meta.id);
+  misRenderPreview();
+  const first = box && box.querySelector('input');
+  if (first) first.focus({ preventScroll: true });
+  return true;
+}
+function misCloseConfig() {
+  misConfigId = '';
+  const cfg = $('misConfig');
+  if (cfg) cfg.hidden = true;
+}
+function misStartRun() {
+  const r = misRenderPreview();
+  if (!r || !r.ok || !misConfigId) return;
+  try {
+    // ONE atomic write: enabling the mission + storing the validated run snapshot together.
+    chrome.storage.local.set({ missionEnabled: true, mission: { id: misConfigId, step: 0, cycles: 0, startedAt: Date.now(), lastSentAt: 0, values: r.vals, playbookVersion: 1 } });
+    misCloseConfig();
+  } catch { /* ignore */ }
+}
+if (typeof document !== 'undefined') {
+  const cfgBox = $('misVariables');
+  if (cfgBox) cfgBox.addEventListener('input', () => { misRenderPreview(); });
+  const bStart = $('misStart');
+  if (bStart) bStart.addEventListener('click', misStartRun);
+  const bCancel = $('misCancel');
+  if (bCancel) bCancel.addEventListener('click', misCloseConfig);
+}
+const __misL = $('misList'); if (__misL) __misL.addEventListener('click', (e) => {
   const b = e.target.closest('[data-mid]');
+  // v1.21.0 (G02): a playbook that declares variables opens the configuration + preview first
+  if (b) { const mm = misMetaOf(b.dataset.mid); if (mm && mm.vars && misOpenConfig(mm.id)) return; }
   if (!b || !MISSION_BY_ID.has(b.dataset.mid)) return;
   misSendNote('');
   try { chrome.storage.local.set({ missionEnabled: true, mission: { id: b.dataset.mid, step: 0, cycles: 0, startedAt: Date.now(), lastSentAt: 0 } }); } catch { /* ignore */ }

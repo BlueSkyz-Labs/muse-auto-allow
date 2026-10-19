@@ -43,6 +43,7 @@
     DORMANT: 'dormant',       // no key configured -> inert free, by design
   });
   var SKU_ALLOWED = Object.freeze(['maa-pro']);
+  var TIER_ALLOWED = Object.freeze(['pro']); // v1.21.0 (audit W4-1): allowlist tier
 
   var TE = (typeof TextEncoder === 'function') ? new TextEncoder() : null;
   var TD = (typeof TextDecoder === 'function') ? new TextDecoder('utf-8', { fatal: true }) : null;
@@ -166,6 +167,7 @@
     if (payload.v !== 1) return false;
     if (typeof payload.sku !== 'string' || payload.sku.length === 0 || payload.sku.length > 64) return false;
     if (typeof payload.tier !== 'string' || payload.tier.length === 0 || payload.tier.length > 64) return false;
+    if (TIER_ALLOWED.indexOf(payload.tier) === -1) return false; // v1.21.0 (audit W4-1): chỉ tier đã phát hành mới được cấp quyền
     if (payload.iat !== undefined && !isFiniteInteger(payload.iat)) return false;
     if (!(payload.exp === null || payload.exp === undefined || isFiniteInteger(payload.exp))) return false;
     if (payload.sub !== undefined) {

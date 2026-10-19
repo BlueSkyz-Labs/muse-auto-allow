@@ -951,6 +951,17 @@
       ],
     },
     {
+      id: 'scoped-run',
+      title: 'SCOPED RUN — {{project}} @ {{branch}}',
+      vars: { project: { def: 'this project' }, branch: { def: 'main' } },
+      guards: { extraBlockedKeywords: [], pauseWhenUnavailable: true },
+      steps: [
+        'SCOPED RUN S1 — Work only inside {{project}} on branch {{branch}}. Read its source of truth first and treat its decisions as binding; write no code yet — close this step with the execution contract.',
+        'SCOPED RUN S2 — Take the next approved item in {{project}} (branch {{branch}}) and finish it end-to-end: implement, test, and show the real command output as evidence.',
+        'SCOPED RUN S3 — Verify {{project}} on {{branch}} still passes every gate, then land the change under the repository rules and report the evidence only.',
+      ],
+    },
+    {
       id: 'release-prep',
       title: 'RELEASE PREP',
       steps: [
@@ -978,27 +989,125 @@
     startedAt: 0,
     lastSentAt: 0,    // last VERIFIED mission send (observability)
     completedId: '',  // last completed mission id (observability for the popup/tests)
+    values: null,     // v1.21.0 (G02): validated per-run variable snapshot (null = none declared)
     lastResult: null,
   };
+  // ---- v1.21.0 (G02): playbook variables + per-playbook guards (metadata-driven, fail-closed) ----
+  const missionPlaybooksMeta = Object.create(null); // id -> { varNames, defaults, guards }
+  (function buildMissionMeta() {
+    if (typeof MusePlaybook === 'undefined' || !MusePlaybook) return; // pure module must load first
+    for (const m of MISSION_CORPUS) {
+      const vars = m && m.vars && typeof m.vars === 'object' ? m.vars : null;
+      if (!vars) continue;
+      const dec = MusePlaybook.declare(Object.keys(vars));
+      if (!dec.ok) continue; // invalid shipped metadata: the playbook simply carries no variables
+      const defaults = {};
+      let bad = false;
+      for (const n of dec.names) {
+        const dv = MusePlaybook.validateValue(vars[n] && typeof vars[n] === 'object' ? vars[n].def : undefined);
+        if (!dv.ok) { bad = true; break; }
+        defaults[n] = dv.value;
+      }
+      if (bad) continue;
+      const g = m.guards && typeof m.guards === 'object' ? m.guards : {};
+      const gkw = Array.isArray(g.extraBlockedKeywords)
+        ? g.extraBlockedKeywords.filter((k) => typeof k === 'string' && k.length >= 1 && k.length <= 40).slice(0, 20)
+        : [];
+      missionPlaybooksMeta[m.id] = { varNames: dec.names, defaults, guards: { extraBlockedKeywords: gkw, pauseWhenUnavailable: g.pauseWhenUnavailable === true } };
+    }
+  })();
+  // Optional per-playbook overrides (edited defaults + guards), keyed by SHIPPED id only.
+  // Strict sanitize; guards can only NARROW (add keywords / enable the pause), never widen.
+  let playbookOverrides = Object.create(null);
+  function applyPlaybookOverrides(raw) {
+    playbookOverrides = Object.create(null);
+    const o = asObj(raw);
+    for (const id of Object.keys(o)) {
+      const base = missionPlaybooksMeta[id];
+      if (!base) continue; // unknown id: ignored
+      const rec = asObj(o[id]);
+      const out = {};
+      if (base.varNames.length && rec.vars && typeof rec.vars === 'object') {
+        const vv = {};
+        for (const n of base.varNames) { if (typeof rec.vars[n] === 'string') vv[n] = rec.vars[n]; }
+        if (Object.keys(vv).length) out.vars = vv;
+      }
+      if (rec.guards && typeof rec.guards === 'object') {
+        const gk = Array.isArray(rec.guards.extraBlockedKeywords)
+          ? rec.guards.extraBlockedKeywords.filter((k) => typeof k === 'string' && k.length >= 1 && k.length <= 40).slice(0, 20) : [];
+        const g = {};
+        if (gk.length) g.extraBlockedKeywords = gk;
+        if (rec.guards.pauseWhenUnavailable === true) g.pauseWhenUnavailable = true;
+        if (Object.keys(g).length) out.guards = g;
+      }
+      if (Object.keys(out).length) playbookOverrides[id] = out;
+    }
+  }
+  // Effective meta = shipped merged with the override; bad override values fall back to shipped.
+  function missionMetaFor(id) {
+    const base = missionPlaybooksMeta[id];
+    if (!base) return null;
+    const ov = playbookOverrides[id];
+    if (!ov) return base;
+    const defaults = Object.assign({}, base.defaults);
+    if (ov.vars && typeof MusePlaybook !== 'undefined' && MusePlaybook) {
+      const mv = MusePlaybook.mergeValues(base.varNames, base.defaults, ov.vars);
+      if (mv.ok) Object.assign(defaults, mv.values); // invalid edits keep the shipped defaults
+    }
+    const guards = { extraBlockedKeywords: base.guards.extraBlockedKeywords.slice(), pauseWhenUnavailable: base.guards.pauseWhenUnavailable };
+    if (ov.guards) {
+      guards.extraBlockedKeywords = guards.extraBlockedKeywords.concat(ov.guards.extraBlockedKeywords || []).slice(0, 20);
+      if (ov.guards.pauseWhenUnavailable === true) guards.pauseWhenUnavailable = true;
+    }
+    return { varNames: base.varNames, defaults, guards };
+  }
+  // Danger screen for variable VALUES (spec: values reuse the keyword + connector/credential screens).
+  function missionValuesScreen(values) {
+    if (!values) return true; // no declared variables = nothing to screen
+    const kw = Array.isArray(v18.blockKeywords) ? v18.blockKeywords : [];
+    for (const name of Object.keys(values)) {
+      const v = String(values[name] || '');
+      if (!v) return false;
+      const low = v.toLowerCase();
+      for (const k of kw) { if (k && low.includes(String(k).toLowerCase())) return false; }
+      if (CONNECTOR_WORD_RE.test(v) || TOKEN_WORDING_RE.test(v)) return false;
+    }
+    return true;
+  }
+  // Render the CURRENT step with the validated run values; unknown tokens / bad values fail closed.
+  function missionRenderStep() {
+    const steps = missionStepsOf(mission.id);
+    if (!steps.length) return { ok: false, code: 'no-steps' };
+    const raw = String(steps[Math.min(mission.step, steps.length - 1)] || '');
+    const meta = missionMetaFor(mission.id);
+    if (!meta || !meta.varNames.length) {
+      return /\{\{|\}\}/.test(raw) ? { ok: false, code: 'token-unknown' } : { ok: true, text: raw };
+    }
+    if (typeof MusePlaybook === 'undefined' || !MusePlaybook) return { ok: false, code: 'no-renderer' };
+    return MusePlaybook.render(raw, mission.values || meta.defaults);
+  }
   const missionActive = () => mission.enabled && !!mission.id && !!missionById(mission.id);
   const missionCycleNo = () => mission.cycles + 1; // 1-based number of the current cycle
   const missionStepText = () => {
-    const steps = missionStepsOf(mission.id);
-    if (!steps.length) return '';
-    return String(steps[Math.min(mission.step, steps.length - 1)] || '');
+    const r = missionRenderStep(); // v1.21.0 (G02): '' on any render/validation failure (fail closed)
+    return r.ok ? r.text : '';
   };
   // The override a mission send passes to followupAttempt: the CURRENT step, tagged so the
   // verifier advances the MISSION (never the phrase rotation) and logs kind 'mission'.
   function missionSendOverride() {
     if (!missionActive()) return null;
-    const text = missionStepText();
-    if (!text) return null;
-    return { text, source: 'mission', mission: { id: mission.id, step: mission.step, cycle: missionCycleNo() } };
+    const r = missionRenderStep();
+    if (!r.ok || !missionValuesScreen(mission.values)) {
+      // v1.21.0 (G02): the step cannot be rendered with valid values — never substitute the
+      // rotation phrase; the mission stays exactly where it is (pauseWhenUnavailable semantics).
+      return { unavailable: true, mission: { id: mission.id, step: mission.step, cycle: missionCycleNo() } };
+    }
+    return { text: r.text, source: 'mission', mission: { id: mission.id, step: mission.step, cycle: missionCycleNo() } };
   }
   function persistMission() {
     try {
       if (!mission.id) chrome.storage.local.remove('mission');
-      else chrome.storage.local.set({ mission: { id: mission.id, step: mission.step, cycles: mission.cycles, startedAt: mission.startedAt, lastSentAt: mission.lastSentAt } });
+      else chrome.storage.local.set({ mission: Object.assign({ id: mission.id, step: mission.step, cycles: mission.cycles, startedAt: mission.startedAt, lastSentAt: mission.lastSentAt }, mission.values ? { values: mission.values, playbookVersion: 1 } : {}) });
     } catch { /* ignore */ }
   }
   // Advance ONLY on a verified send — the exact mirror of advanceFollowupRotation(). Logs the
@@ -1028,7 +1137,7 @@
     const id = mission.id;
     const cycles = mission.cycles;
     mission.completedId = id;
-    mission.id = ''; mission.step = 0; mission.cycles = 0; mission.startedAt = 0; mission.lastSentAt = 0;
+    mission.id = ''; mission.step = 0; mission.cycles = 0; mission.startedAt = 0; mission.lastSentAt = 0; mission.values = null;
     try { chrome.storage.local.remove('mission'); } catch { /* ignore */ }
     const entry = { at: new Date().toISOString(), kind: 'mission', label: 'mission',
                     context: ('mission complete: ' + id + ' (' + cycles + ' cycles)').slice(0, 240),
@@ -1047,15 +1156,27 @@
     const cy0 = Number(o.cycles); const cycles = Number.isInteger(cy0) && cy0 > 0 ? Math.min(cy0, MISSION_MAX_CYCLES) : 0;
     const s0 = Number(o.startedAt); const startedAt = Number.isFinite(s0) && s0 > 0 ? s0 : Date.now();
     const l0 = Number(o.lastSentAt); const lastSentAt = Number.isFinite(l0) && l0 > 0 ? l0 : 0;
-    return { id, step, cycles, startedAt, lastSentAt };
+    // v1.21.0 (G02): validate the run values against the declared names + defaults; ANY invalid
+    // value clears the mission entirely (fail closed — never send with unresolved tokens).
+    const meta = missionMetaFor(id);
+    let values = null;
+    if (meta && meta.varNames.length) {
+      if (typeof MusePlaybook === 'undefined' || !MusePlaybook) return null;
+      const mv = MusePlaybook.mergeValues(meta.varNames, meta.defaults, asObj(o.values));
+      if (!mv.ok) return null;
+      if (!missionValuesScreen(mv.values)) return null;
+      values = mv.values;
+    }
+    return { id, step, cycles, startedAt, lastSentAt, values };
   }
   function applyMissionSettings(s) {
     if (!s || typeof s !== 'object') return;
     if ('missionEnabled' in s) mission.enabled = s.missionEnabled === true;
+    if ('missionPlaybooks' in s) applyPlaybookOverrides(s.missionPlaybooks); // v1.21.0 (G02)
     if ('mission' in s) {
       const m = sanitizeMission(s.mission);
-      if (m) { mission.id = m.id; mission.step = m.step; mission.cycles = m.cycles; mission.startedAt = m.startedAt; mission.lastSentAt = m.lastSentAt; }
-      else { mission.id = ''; mission.step = 0; mission.cycles = 0; mission.startedAt = 0; mission.lastSentAt = 0; }
+      if (m) { mission.id = m.id; mission.step = m.step; mission.cycles = m.cycles; mission.startedAt = m.startedAt; mission.lastSentAt = m.lastSentAt; mission.values = m.values || null; }
+      else { mission.id = ''; mission.step = 0; mission.cycles = 0; mission.startedAt = 0; mission.lastSentAt = 0; mission.values = null; }
     }
   }
 
@@ -1393,6 +1514,7 @@
     if (!followupEligible(now)) return;
     // v1.9.0 mission precedence: an ACTIVE mission takes precedence over the rotating phrases.
     const mis = missionSendOverride();
+    if (mis && mis.unavailable) return; // v1.21.0 (G02): mission active but not renderable — never substitute the rotation
     if (mis) { followupAttempt(false, mis); return; }
     followupAttempt(false);
   }
@@ -1415,6 +1537,16 @@
     const override = opts && typeof opts.text === 'string' && opts.text.trim() ? opts.text.trim() : '';
     const text = override || followupActiveText(); // rotation item when a list is stored, else the single prompt
     if (!text) return { ok: false, reason: 'no-prompt' };
+    // v1.21.0 (G02): per-playbook guard — refuse BEFORE typing when the final text carries an
+    // extra blocked keyword; the mission step never advances on a refusal.
+    if (opts && opts.mission) {
+      const gm = missionMetaFor(opts.mission.id);
+      const gkw = gm && gm.guards ? gm.guards.extraBlockedKeywords : [];
+      if (gkw.length) {
+        const lowT = text.toLowerCase();
+        for (const k of gkw) { if (lowT.indexOf(String(k).toLowerCase()) !== -1) return { ok: false, reason: 'mission-guard' }; }
+      }
+    }
     const now = Date.now();
     const source = (opts && opts.source) || (manual ? 'manual' : 'auto');
     if (v18.dryRun) {
@@ -1525,7 +1657,7 @@
         // v1.9.0: the manual 'send now' path respects the SAME rules — it sends the CURRENT
         // mission step (and advances only on a verified send) when a mission is active.
         const mov = missionSendOverride();
-        const r = mov ? followupAttempt(true, mov) : followupAttempt(true);
+        const r = mov ? (mov.unavailable ? { ok: false, reason: 'mission-unavailable' } : followupAttempt(true, mov)) : followupAttempt(true);
         try { sendResponse(Object.assign({ state: followup.state, lastSentAt: followup.lastSentAt || null }, r)); } catch { /* ignore */ }
         return;
       }
@@ -1701,7 +1833,7 @@
     chrome.storage.local.get(FOLLOWUP_DEFAULTS, (f) => { applyFollowupSettings(f); followupTick(); });
     // v1.8.0 frozen settings (pause / dry-run / rules / smart follow-up / schedule)
     // + v1.9.0 mission settings (missionEnabled / mission{id,step,cycles,startedAt,lastSentAt})
-    chrome.storage.local.get({ pauseUntil: 0, dryRun: false, yoloMode: false, allowOnceMode: false, rules: {}, followupSmart: {}, followupSchedule: {}, missionEnabled: false, mission: null, anomaly: null, anomalyLastPause: null },
+    chrome.storage.local.get({ pauseUntil: 0, dryRun: false, yoloMode: false, allowOnceMode: false, rules: {}, followupSmart: {}, followupSchedule: {}, missionEnabled: false, mission: null, anomaly: null, anomalyLastPause: null, missionPlaybooks: null },
       (s) => { applyV18Settings(s); applyMissionSettings(s); publishFlags(); v18Ready = true; if (enabledReady) sweep('init'); }); // v1.13.0 (C4-B): sweep only once BOTH reads landed — the hardcoded enabled:true default must never outrun a stored kill-switch
     chrome.storage.onChanged.addListener((ch) => {
       // A key REMOVED from storage (newValue === undefined) resets to that key's shipped DEFAULT —
@@ -1711,6 +1843,7 @@
       if (ch.enabled) state.enabled = removed(ch.enabled) ? DEFAULT.enabled : !!ch.enabled.newValue;
       if (ch.anomaly) anomaly = (typeof MuseAnomaly !== 'undefined' && MuseAnomaly) ? MuseAnomaly.sanitize(removed(ch.anomaly) ? null : ch.anomaly.newValue) : anomaly; // v1.20.0 (G04)
       if (ch.anomalyLastPause) { const m = removed(ch.anomalyLastPause) ? null : ch.anomalyLastPause.newValue; anomalyLastPause = (m && typeof m === 'object') ? m : null; }
+      if (ch.missionPlaybooks) applyPlaybookOverrides(removed(ch.missionPlaybooks) ? null : ch.missionPlaybooks.newValue); // v1.21.0 (G02)
       if (ch.minDelayMs) {
         if (removed(ch.minDelayMs)) state.minDelayMs = DEFAULT.minDelayMs;
         else { const n = Number(ch.minDelayMs.newValue); if (Number.isFinite(n) && n >= 0) state.minDelayMs = n; }
