@@ -99,13 +99,13 @@
     "message": "$1 pestañas de muse.ai abiertas"
   },
   "museTabsNone": {
-    "message": "No se encontró ninguna pestaña de muse.ai"
+    "message": "Aún no hay una pestaña de Muse abierta: abre muse.ai para que la extensión funcione"
   },
   "onlyMuse": {
     "message": "Funciona en muse.ai y chatgpt.com"
   },
   "last7": {
-    "message": "Últimos 7 días"
+    "message": "Tendencia de 7 días"
   },
   "last14d": {
     "message": "Últimos 14 días"
@@ -123,10 +123,10 @@
     "message": "1 pestaña de muse.ai abierta"
   },
   "exportData": {
-    "message": "Exportar datos"
+    "message": "Copia de seguridad"
   },
   "importData": {
-    "message": "Importar datos"
+    "message": "Restaurar datos"
   },
   "importConfirm": {
     "message": "¿Restaurar esta copia? El historial y las estadísticas se reemplazan por los de la copia; los ajustes que no estén en el archivo conservan su valor actual."
@@ -453,10 +453,10 @@
     "message": "Activar el clic automático"
   },
   "onbStep1Body": {
-    "message": "Muse pide aprobación a menudo. Deja que la extensión pulse Allow por ti: puedes pausarla cuando quieras."
+    "message": "Cuando Muse pida una aprobación, la extensión pulsará Allow por ti: puedes pausarla en cualquier momento."
   },
   "onbEnable": {
-    "message": "Activar"
+    "message": "Activar clic automático"
   },
   "onbStep2Title": {
     "message": "Empiezas en modo solo registro"
@@ -768,13 +768,13 @@
     "message": "Preguntar"
   },
   "digestAsked": {
-    "message": "por revisar"
+    "message": "preguntas"
   },
   "rulesTitle": {
     "message": "Reglas por capas (permitir / preguntar / bloquear)"
   },
   "rulesDescription": {
-    "message": "Bloquear gana siempre. Preguntar deja la tarjeta en tus manos. Permitir solo restringe, nunca amplía."
+    "message": "Bloquear gana siempre. Preguntar deja la decisión en tus manos. Permitir solo restringe, nunca amplía."
   },
   "ruleAdd": {
     "message": "Añadir regla"
@@ -855,12 +855,39 @@
     "message": "bloqueados"
   },
   "auditWeekAsked": {
-    "message": "por revisar"
+    "message": "preguntas"
   },
   "auditWeekFollowups": {
     "message": "seguimientos"
   },
   "auditNoData": {
     "message": "Aún no hay datos"
+  },
+  "onbRailNoDeny": {
+    "message": "Solo pulsa Allow, nunca Denegar"
+  },
+  "onbRailLocalLog": {
+    "message": "Cada clic queda registrado en este equipo"
+  },
+  "onbRailDryFirst": {
+    "message": "Empieza en modo solo registro (prueba): no se pulsa nada hasta que lo actives"
+  },
+  "ruleMatchHint": {
+    "message": "Una regla = los temas + palabras clave de una fila; si defines ambos, la tarjeta debe coincidir con ambos."
+  },
+  "ruleOrderHint": {
+    "message": "El orden solo importa dentro de la misma capa: bloquear siempre gana"
+  },
+  "scheduleOnlyActiveHint": {
+    "message": "Enviar solo mientras la pestaña de Muse esté abierta"
+  },
+  "drySwitchSub": {
+    "message": "Simulación: no se pulsa nada"
+  },
+  "yoloDryWarn": {
+    "message": "Activar YOLO también desactiva la prueba."
+  },
+  "yoloWarn": {
+    "message": "YOLO está activo: las palabras clave y las reglas por capas no se aplican"
   }
 }

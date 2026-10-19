@@ -81,6 +81,10 @@
   .track { width: 38px; height: 22px; border-radius: 999px; background: var(--fill); position: relative;
            box-shadow: inset 0 0 0 1px var(--stroke); transition: background var(--dur-2) var(--ease-out); flex: 0 0 auto; }
   input:checked + .track { background: var(--accent-state); box-shadow: none; }
+  /* v1.22.1 UX (Vòng 1): dry-run reads as SIMULATION at a glance, not as "on" */
+  body.dry input:checked + .track { background: #b7791f; }
+  body.dry .sw input:checked + .track .knob { background: #fff8ec; }
+  #drySub { margin-top: 2px; color: #8a5a10; font-weight: 500; }
   .knob { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff;
           transition: transform var(--dur-2) var(--ease-out); box-shadow: 0 1px 2px rgba(23,24,28,.30), 0 0 0 1px rgba(23,24,28,.05); }
   input:checked + .track .knob { transform: translateX(16px); }
@@ -375,10 +379,22 @@
      ====================================================================== */
   /* one row: pause control (idle pills / paused state) left, Safety & Control entry right */
   .ctlbar { display: flex; align-items: center; gap: 6px; margin: 0 0 3px; min-width: 0; }
-  .pgroup { display: inline-flex; align-items: center; gap: 4px; min-width: 0; overflow: hidden; }
+  .pgroup { display: inline-flex; align-items: center; gap: 4px; min-width: 0; flex-wrap: wrap; row-gap: 4px; }
+  .pbtn { max-width: 100%; text-overflow: clip; } /* v1.22.1 UX: labels may wrap instead of clipping mid-word */
   .plabel { flex: none; font-size: 11.5px; }
+  .sstatus { display: flex; align-items: center; gap: 8px; padding: 6px 8px; margin: 0 0 8px;
+             border: 1px solid var(--stroke); border-radius: 9px; background: var(--fill); font-size: 11px; }
+  .sstatus #ssText { flex: 1; min-width: 0; font-weight: 500; color: var(--ink); }
+  .sdot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-state); flex: none; }
+  .sdot.warn { background: #d69614; }
+  .ywarn { padding: 6px 9px; margin: 0 0 8px; border-radius: 9px; font-size: 11px; line-height: 1.4;
+           background: rgba(194,38,63,.12); color: #a51e35; border: 1px solid rgba(194,38,63,.30); }
+  @media (prefers-color-scheme: dark) { .ywarn { background: rgba(255,130,150,.14); color: #ff9db0; border-color: rgba(255,130,150,.32); } }
+  .obrails { margin: 10px 0 2px; padding: 0; list-style: none; display: grid; gap: 5px; }
+  .obrails li { position: relative; padding-left: 16px; font-size: 11px; line-height: 1.45; color: var(--ink); }
+  .obrails li::before { content: "✓"; position: absolute; left: 0; top: 0; color: var(--accent-text); font-weight: 600; }
   .pbtn { font: inherit; font-size: 11px; line-height: 1.4; background: transparent; color: var(--ink);
-          border: 1px solid var(--stroke); border-radius: 999px; padding: 2px 8px; cursor: pointer; white-space: nowrap;
+          border: 1px solid var(--stroke); border-radius: 999px; padding: 2px 8px; cursor: pointer; white-space: nowrap; text-overflow: ellipsis;
           transition: background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out); }
   .pbtn:hover { background: var(--fill); border-color: var(--stroke-hover); }
   .pbtn.resume { background: var(--accent-tint); border-color: var(--accent-line); color: var(--accent-text); font-weight: 500; }
@@ -396,6 +412,7 @@
   .safetybtn .chev { transform: rotate(-90deg); }
   .schip { font-size: 10px; font-weight: 500; background: var(--accent-tint); color: var(--accent-text);
            border: 1px solid var(--accent-line); border-radius: 999px; padding: 0 6px; }
+  .schip.warn { background: rgba(214,150,20,.16); color: #8a5a10; border-color: rgba(214,150,20,.48); } /* v1.22.1 UX: YOLO reads as a warning state */
   /* dry-run banner + digest: inside #logTop, sticky at the top of the log's scroll area */
   .logtop { position: sticky; top: 0; z-index: 2; background: var(--bg); }
   .dryband { display: flex; align-items: center; box-sizing: border-box; border-radius: 10px;
@@ -442,7 +459,8 @@
                  border-radius: 999px; padding: 0 6px; border: 1px solid var(--stroke); color: var(--muted); }
   .lrow .lkind.allow { color: var(--accent-text); border-color: var(--accent-line); background: var(--accent-tint); }
   .lrow .lkind.block { color: #a51e35; background: rgba(194,38,63,.10); border-color: rgba(194,38,63,.35); }
-  .lrow .ltxt { flex: 1; min-width: 0; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lrow .lkind.ask { color: #8a5a10; background: rgba(214,150,20,.12); border-color: rgba(214,150,20,.42); }
+  .lrow .ltxt { flex: 1; min-width: 0; font-size: 11px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .lrow .lx { flex: none; }
   .lrow [data-act] { font: inherit; font-size: 11px; background: transparent; border: 1px solid var(--stroke);
                      border-radius: 6px; color: var(--muted); cursor: pointer; padding: 0 5px; line-height: 1.5; }
@@ -787,13 +805,22 @@
     <div class="ovhead"><h2 id="safetyH" data-i18n="safetyTitle">Safety &amp; Control</h2>
       <button type="button" class="ovclose" id="safetyClose">&#10005;</button></div>
     <div class="ovbody">
+      <!-- v1.22.1 UX (Vòng 1): status strip + one-tap pause; YOLO warning banner -->
+      <div class="sstatus" id="safetyStatus">
+        <span class="sdot" id="ssDot" aria-hidden="true"></span>
+        <span id="ssText">Live</span>
+        <button type="button" class="pbtn" id="ssPause" data-i18n="pause15">15 min</button>
+      </div>
+      <div class="ywarn" id="yoloWarn" hidden><span data-i18n="yoloWarn">YOLO is on — keyword and layered rules are not enforced</span></div>
       <div class="rgroup">
         <label class="sw"><input type="checkbox" id="dryRun"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="dryRunTitle">Dry-run (log only)</span></label>
+        <div class="rnote" id="drySub" hidden data-i18n="drySwitchSub">Simulation — nothing is clicked</div>
         <div class="rnote" data-i18n="dryRunNote">Detect and log exactly as usual — nothing is clicked and no follow-up is sent.</div>
       </div>
       <div class="rgroup">
         <label class="sw"><input type="checkbox" id="yoloMode"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="yoloTitle">YOLO — approve everything</span></label>
         <div class="rnote" id="yoloNote" role="status" aria-live="polite" data-i18n="yoloNote">Skips keyword blocks, clicks standing grants, fastest pace. Deny is never clicked; connectors stay manual.</div>
+        <div class="rnote" data-i18n="yoloDryWarn">Turning YOLO on also turns Dry-run off.</div>
       </div>
       <!-- v1.10.0 — the Codex (ChatGPT) feature switch: a separate opt-in engine for
            chatgpt.com (off by default). Lives here (like YOLO) because this panel is a
@@ -844,6 +871,7 @@
           <input type="text" id="layerKeywords" class="licinput" placeholder="keywords: x, y" data-i18n-ph="ruleKeywords">
           <button type="button" class="btn" id="layerAdd" data-i18n="ruleAdd">Add rule</button>
         </div>
+        <div class="rnote" data-i18n="ruleMatchHint">One rule = the topics + keywords on one row; when both are set, the card must match both.</div>
         <div class="row licro">
           <button type="button" class="btn" id="layerExport" data-i18n="ruleExportJson">Export JSON</button>
           <button type="button" class="rbtn" id="layerImportOpen" data-i18n="ruleImportJson">Import JSON</button>
@@ -858,6 +886,24 @@
         <div class="misnote" id="layerNote" role="status"></div>
         <div class="rnote" data-i18n="ruleDryRunHint">Tip: keep Dry-run on while you tune the rules — everything is logged and nothing is clicked.</div>
       </div>
+      <!-- v1.20.0 (G04) — Anomaly guard: the engine pauses itself when click behaviour
+           looks abnormal. ONE switch governs both rules (sustained rate + topic
+           spike); the detector only ADDS pauses — it never weakens any rail. -->
+      <div class="rgroup" id="anomalyGroup">
+        <label class="sw"><input type="checkbox" id="anomalyEnable"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="anomalyEnable">Anomaly auto-pause</span></label>
+        <div class="rnote" data-i18n="anomalyEnableHint">Pause the engine by itself when click behaviour looks abnormal (rate or topic spike). It never weakens any rail.</div>
+        <div class="row field fset">
+          <label class="muted" for="anomalyRate" data-i18n="anomalyRateLabel">Sustained rate (clicks/min)</label>
+          <span class="numwrap"><input type="number" id="anomalyRate" min="1" max="120" step="1"><span class="unit muted">/min</span></span>
+        </div>
+        <div class="rnote muted" data-i18n="anomalyRateHint">Pauses when allow-clicks stay above this rate over a 5-minute window.</div>
+        <div class="rnote"><span class="rlabel" data-i18n="anomalyTopicLabel">Topic spike guard</span> — <span data-i18n="anomalyTopicHint">Also pauses when one topic takes over the window (40+ clicks and 70% share in 10 minutes).</span></div>
+        <div class="row field fset">
+          <label class="muted" for="anomalyDur" data-i18n="anomalyDurationLabel">Auto-pause duration (minutes)</label>
+          <span class="numwrap"><input type="number" id="anomalyDur" min="1" max="120" step="1"><span class="unit muted">min</span></span>
+        </div>
+        <div class="rnote muted" data-i18n="anomalyDurationHint">The engine resumes by itself when the timer ends.</div>
+      </div>
 <div class="rgroup">
         <label class="sw"><input type="checkbox" id="schEnabled"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="scheduleTitle">Follow-up only during hours</span></label>
         <div class="rnote" data-i18n="scheduleNote">Sends are skipped outside this local-time window (overnight windows wrap around).</div>
@@ -867,6 +913,7 @@
           <select class="sel hsel" id="schEnd"></select>
           <label class="sw schonly"><input type="checkbox" id="schActive"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="scheduleOnlyActive">Active tab only</span></label>
         </div>
+        <div class="rnote" data-i18n="scheduleOnlyActiveHint">Only send while the Muse tab is open</div>
       </div>
       <div class="rgroup">
         <div class="rlabel" data-i18n="smartTitle">Stuck &amp; error recovery</div>
@@ -894,24 +941,7 @@
         </div>
         <div class="rnote" id="licenseStatus" role="status" aria-live="polite" aria-atomic="true"></div>
       </div>
-      <!-- v1.20.0 (G04) — Anomaly guard: the engine pauses itself when click behaviour
-           looks abnormal. ONE switch governs both rules (sustained rate + topic
-           spike); the detector only ADDS pauses — it never weakens any rail. -->
-      <div class="rgroup">
-        <label class="sw"><input type="checkbox" id="anomalyEnable"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="anomalyEnable">Anomaly auto-pause</span></label>
-        <div class="rnote" data-i18n="anomalyEnableHint">Pause the engine by itself when click behaviour looks abnormal (rate or topic spike). It never weakens any rail.</div>
-        <div class="row field fset">
-          <label class="muted" for="anomalyRate" data-i18n="anomalyRateLabel">Sustained rate (clicks/min)</label>
-          <span class="numwrap"><input type="number" id="anomalyRate" min="1" max="120" step="1"><span class="unit muted">/min</span></span>
-        </div>
-        <div class="rnote muted" data-i18n="anomalyRateHint">Pauses when allow-clicks stay above this rate over a 5-minute window.</div>
-        <div class="rnote"><span class="rlabel" data-i18n="anomalyTopicLabel">Topic spike guard</span> — <span data-i18n="anomalyTopicHint">Also pauses when one topic takes over the window (40+ clicks and 70% share in 10 minutes).</span></div>
-        <div class="row field fset">
-          <label class="muted" for="anomalyDur" data-i18n="anomalyDurationLabel">Auto-pause duration (minutes)</label>
-          <span class="numwrap"><input type="number" id="anomalyDur" min="1" max="120" step="1"><span class="unit muted">min</span></span>
-        </div>
-        <div class="rnote muted" data-i18n="anomalyDurationHint">The engine resumes by itself when the timer ends.</div>
-      </div>
+
     </div>
   </div>
 
@@ -921,6 +951,11 @@
       <div class="obdots"><span class="obdot" data-s="0"></span><span class="obdot" data-s="1"></span><span class="obdot" data-s="2"></span><span class="obstep" id="obStep"></span></div>
       <h2 class="obtitle" id="obTitle"></h2>
       <p class="obbody" id="obBody"></p>
+      <ul class="obrails" id="obRails" hidden>
+        <li data-i18n="onbRailNoDeny">Only clicks Allow — never Deny</li>
+        <li data-i18n="onbRailLocalLog">Every click is logged on this device</li>
+        <li data-i18n="onbRailDryFirst">Starts in logging-only (dry-run) mode — nothing is clicked until you turn it on</li>
+      </ul>
       <!-- v1.9.3 — the dry-run step states the fresh-install default plainly: the LIVE
            logging-only state (the shipped dryRunBanner string, shown while dryRun === true)
            and the one informed-consent line (onbConsent, all 6 locales). Step 2 only —

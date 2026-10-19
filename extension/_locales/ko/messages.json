@@ -99,13 +99,13 @@
     "message": "muse.ai 탭 $1개 열림"
   },
   "museTabsNone": {
-    "message": "muse.ai 탭을 찾을 수 없음"
+    "message": "아직 Muse 탭이 열려 있지 않습니다 — 확장 프로그램이 작동하려면 muse.ai를 여세요"
   },
   "onlyMuse": {
     "message": "muse.ai 및 chatgpt.com에서 동작합니다"
   },
   "last7": {
-    "message": "최근 7일"
+    "message": "7일 추세"
   },
   "last14d": {
     "message": "최근 14일"
@@ -123,10 +123,10 @@
     "message": "muse.ai 탭 1개 열림"
   },
   "exportData": {
-    "message": "데이터 내보내기"
+    "message": "데이터 백업"
   },
   "importData": {
-    "message": "데이터 가져오기"
+    "message": "데이터 복원"
   },
   "importConfirm": {
     "message": "이 백업을 복원할까요? 기록과 통계는 백업의 내용으로 대체되고, 파일에 없는 설정은 현재 값이 유지됩니다."
@@ -453,10 +453,10 @@
     "message": "자동 클릭 켜기"
   },
   "onbStep1Body": {
-    "message": "Muse는 자주 승인을 요청합니다. 확장 프로그램이 대신 Allow를 클릭하게 하세요 — 언제든 일시정지할 수 있습니다."
+    "message": "Muse가 승인을 요청하면 확장 프로그램이 대신 Allow를 클릭합니다. 언제든 일시정지할 수 있습니다."
   },
   "onbEnable": {
-    "message": "켜기"
+    "message": "자동 클릭 켜기"
   },
   "onbStep2Title": {
     "message": "기록 전용 모드로 시작합니다"
@@ -774,7 +774,7 @@
     "message": "단계별 규칙(허용 / 확인 / 차단)"
   },
   "rulesDescription": {
-    "message": "차단이 우선합니다. 확인은 직접 처리하라는 뜻입니다. 허용은 범위를 좁힐 뿐 넓히지 않습니다."
+    "message": "차단이 우선합니다. 확인은 사용자에게 맡깁니다. 허용은 범위를 좁힐 뿐 넓히지 않습니다."
   },
   "ruleAdd": {
     "message": "규칙 추가"
@@ -862,5 +862,32 @@
   },
   "auditNoData": {
     "message": "아직 데이터가 없습니다"
+  },
+  "onbRailNoDeny": {
+    "message": "Allow만 클릭 — 거부는 누르지 않습니다"
+  },
+  "onbRailLocalLog": {
+    "message": "모든 클릭은 이 기기에 기록됩니다"
+  },
+  "onbRailDryFirst": {
+    "message": "기록 전용(드라이런) 모드로 시작 — 켜기 전에는 아무것도 클릭하지 않습니다"
+  },
+  "ruleMatchHint": {
+    "message": "규칙 하나 = 같은 줄의 주제 + 키워드. 둘 다 입력하면 카드가 둘 다 일치해야 합니다."
+  },
+  "ruleOrderHint": {
+    "message": "순서는 같은 단계 안에서만 의미가 있습니다 — 차단이 항상 우선"
+  },
+  "scheduleOnlyActiveHint": {
+    "message": "Muse 탭이 열려 있을 때만 전송"
+  },
+  "drySwitchSub": {
+    "message": "시뮬레이션 — 클릭하지 않습니다"
+  },
+  "yoloDryWarn": {
+    "message": "YOLO를 켜면 드라이런도 꺼집니다."
+  },
+  "yoloWarn": {
+    "message": "YOLO가 켜져 있습니다 — 키워드와 단계별 규칙이 적용되지 않습니다"
   }
 }

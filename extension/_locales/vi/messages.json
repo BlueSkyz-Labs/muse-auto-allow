@@ -15,7 +15,7 @@
     "message": "Đã bấm"
   },
   "noClicks": {
-    "message": "Chưa bấm lần nào"
+    "message": "Chưa có lượt bấm nào"
   },
   "kindAllow": {
     "message": "duyệt"
@@ -66,7 +66,7 @@
     "message": "YOLO — bỏ qua danh sách từ khoá"
   },
   "logOpenRules": {
-    "message": "Mở quy tắc từ khoá"
+    "message": "Mở luật từ khóa"
   },
   "logOpenTopics": {
     "message": "Mở danh sách chủ đề cho phép"
@@ -99,13 +99,13 @@
     "message": "$1 tab muse.ai đang mở"
   },
   "museTabsNone": {
-    "message": "Không tìm thấy tab muse.ai nào"
+    "message": "Chưa thấy tab Muse mở — mở muse.ai để tiện ích chạy"
   },
   "onlyMuse": {
     "message": "Hoạt động trên muse.ai và chatgpt.com"
   },
   "last7": {
-    "message": "7 ngày gần nhất"
+    "message": "Xu hướng 7 ngày"
   },
   "last14d": {
     "message": "14 ngày gần nhất"
@@ -123,10 +123,10 @@
     "message": "1 tab muse.ai đang mở"
   },
   "exportData": {
-    "message": "Xuất dữ liệu"
+    "message": "Sao lưu dữ liệu"
   },
   "importData": {
-    "message": "Nhập dữ liệu"
+    "message": "Phục hồi dữ liệu"
   },
   "importConfirm": {
     "message": "Khôi phục bản sao lưu? Nhật ký và thống kê sẽ thay bằng dữ liệu trong tệp; các cài đặt không có trong tệp vẫn giữ nguyên giá trị hiện tại."
@@ -309,7 +309,7 @@
     "message": "1 giờ"
   },
   "pauseTomorrow": {
-    "message": "Ngày mai"
+    "message": "Mai"
   },
   "pauseTomorrowTitle": {
     "message": "Tạm dừng đến ngày mai"
@@ -348,7 +348,7 @@
     "message": "YOLO"
   },
   "rulesIgnoredYolo": {
-    "message": "YOLO đang bật — các quy tắc chủ đề và từ khóa vẫn được lưu nhưng không có hiệu lực. Tắt YOLO để áp dụng lại."
+    "message": "YOLO đang bật — các luật chủ đề và từ khóa vẫn được lưu nhưng không có hiệu lực. Tắt YOLO để áp dụng lại."
   },
   "yoloDormant": {
     "message": "Đã cấu hình YOLO nhưng đang bật Chạy thử: không tự động bấm chấp thuận. Tắt Chạy thử để YOLO hoạt động thực tế."
@@ -405,7 +405,7 @@
     "message": "Xoá"
   },
   "scheduleTitle": {
-    "message": "Chỉ nhắc trong khung giờ"
+    "message": "Chỉ gửi follow-up trong khung giờ"
   },
   "scheduleNote": {
     "message": "Ngoài khung giờ địa phương này sẽ không gửi (khung qua đêm vẫn hoạt động)."
@@ -453,10 +453,10 @@
     "message": "Bật tự động bấm"
   },
   "onbStep1Body": {
-    "message": "Muse hỏi phê duyệt khá thường xuyên. Hãy để tiện ích bấm Allow thay bạn — bạn có thể tạm dừng bất cứ lúc nào."
+    "message": "Khi Muse xin phê duyệt, tiện ích bấm Allow thay bạn — bạn có thể tạm dừng bất cứ lúc nào."
   },
   "onbEnable": {
-    "message": "Bật"
+    "message": "Bật tự động bấm"
   },
   "onbStep2Title": {
     "message": "Khởi đầu ở chế độ chỉ ghi log"
@@ -768,13 +768,13 @@
     "message": "Hỏi"
   },
   "digestAsked": {
-    "message": "chờ bạn"
+    "message": "lượt hỏi"
   },
   "rulesTitle": {
     "message": "Luật ba tầng (cho phép / hỏi / chặn)"
   },
   "rulesDescription": {
-    "message": "Chặn thắng mọi tầng. Hỏi nghĩa là để bạn tự xử lý. Cho phép chỉ thu hẹp — không bao giờ nới rộng."
+    "message": "Chặn luôn được ưu tiên. Hỏi là để bạn tự quyết. Cho phép chỉ thu hẹp — không bao giờ nới rộng."
   },
   "ruleAdd": {
     "message": "Thêm luật"
@@ -840,10 +840,10 @@
     "message": "Mẹo: bật chạy thử khi chỉnh luật — mọi thứ được ghi log, không bấm gì cả."
   },
   "auditExportJson": {
-    "message": "Xuất audit JSON"
+    "message": "Xuất báo cáo JSON"
   },
   "auditExportCsv": {
-    "message": "Xuất audit CSV"
+    "message": "Xuất báo cáo CSV"
   },
   "auditWeeklyTitle": {
     "message": "Tuần này"
@@ -855,12 +855,39 @@
     "message": "bị chặn"
   },
   "auditWeekAsked": {
-    "message": "chờ bạn"
+    "message": "lượt hỏi"
   },
   "auditWeekFollowups": {
     "message": "nhắc tiếp"
   },
   "auditNoData": {
     "message": "Chưa có dữ liệu"
+  },
+  "onbRailNoDeny": {
+    "message": "Chỉ bấm Allow — không bao giờ bấm Deny/Từ chối"
+  },
+  "onbRailLocalLog": {
+    "message": "Mỗi lần bấm đều được ghi log trên máy bạn"
+  },
+  "onbRailDryFirst": {
+    "message": "Bắt đầu ở chế độ Chạy thử (chỉ ghi log, chưa bấm thật)"
+  },
+  "ruleMatchHint": {
+    "message": "Một luật = các chủ đề + từ khoá trong cùng dòng; nhập cả hai thì thẻ phải khớp cả hai."
+  },
+  "ruleOrderHint": {
+    "message": "Thứ tự chỉ có ý nghĩa trong cùng tầng — Chặn luôn thắng"
+  },
+  "scheduleOnlyActiveHint": {
+    "message": "Chỉ gửi khi tab Muse đang mở"
+  },
+  "drySwitchSub": {
+    "message": "Mô phỏng — không bấm gì"
+  },
+  "yoloDryWarn": {
+    "message": "Bật YOLO cũng sẽ tắt Chạy thử."
+  },
+  "yoloWarn": {
+    "message": "YOLO đang bật — từ khoá và luật ba tầng không được áp dụng"
   }
 }

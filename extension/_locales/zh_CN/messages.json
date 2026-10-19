@@ -99,13 +99,13 @@
     "message": "已打开 $1 个 muse.ai 标签页"
   },
   "museTabsNone": {
-    "message": "未发现 muse.ai 标签页"
+    "message": "尚未打开 Muse 标签页——请打开 muse.ai 以便扩展运行"
   },
   "onlyMuse": {
     "message": "在 muse.ai 和 chatgpt.com 上运行"
   },
   "last7": {
-    "message": "最近 7 天"
+    "message": "7 天趋势"
   },
   "last14d": {
     "message": "最近 14 天"
@@ -123,10 +123,10 @@
     "message": "已打开 1 个 muse.ai 标签页"
   },
   "exportData": {
-    "message": "导出数据"
+    "message": "备份数据"
   },
   "importData": {
-    "message": "导入数据"
+    "message": "恢复数据"
   },
   "importConfirm": {
     "message": "恢复此备份？历史记录和统计数据将由备份内容替换；文件中没有的设置将保持当前值。"
@@ -453,10 +453,10 @@
     "message": "开启自动点击"
   },
   "onbStep1Body": {
-    "message": "Muse 经常请求审批。让扩展替你点击 Allow——你随时可以暂停。"
+    "message": "当 Muse 请求批准时，扩展会替你点击 Allow——你可以随时暂停。"
   },
   "onbEnable": {
-    "message": "开启"
+    "message": "开启自动点击"
   },
   "onbStep2Title": {
     "message": "以仅记录模式开始"
@@ -771,10 +771,10 @@
     "message": "待确认"
   },
   "rulesTitle": {
-    "message": "分层规则（允许 / 询问 / 阻止）"
+    "message": "分层规则（允许 / 询问 / 拦截）"
   },
   "rulesDescription": {
-    "message": "阻止优先于一切。询问表示由你处理。允许只会收窄范围——绝不会放宽。"
+    "message": "拦截优先于一切。询问则由你自行处理。允许只会收窄范围——绝不会放宽。"
   },
   "ruleAdd": {
     "message": "添加规则"
@@ -798,7 +798,7 @@
     "message": "询问"
   },
   "ruleKindBlock": {
-    "message": "阻止"
+    "message": "拦截"
   },
   "ruleId": {
     "message": "尚无分层规则"
@@ -852,7 +852,7 @@
     "message": "点击"
   },
   "auditWeekBlocked": {
-    "message": "已阻止"
+    "message": "已拦截"
   },
   "auditWeekAsked": {
     "message": "待确认"
@@ -862,5 +862,32 @@
   },
   "auditNoData": {
     "message": "暂无数据"
+  },
+  "onbRailNoDeny": {
+    "message": "只点击 Allow——绝不点击拒绝"
+  },
+  "onbRailLocalLog": {
+    "message": "每次点击都记录在本机日志中"
+  },
+  "onbRailDryFirst": {
+    "message": "以仅记录（试运行）模式开始——在你开启前不会点击"
+  },
+  "ruleMatchHint": {
+    "message": "一条规则 = 同一行中的主题 + 关键词；两者都填时，卡片必须同时匹配。"
+  },
+  "ruleOrderHint": {
+    "message": "顺序只在同一层内有意义——拦截总是优先"
+  },
+  "scheduleOnlyActiveHint": {
+    "message": "仅在 Muse 标签页打开时发送"
+  },
+  "drySwitchSub": {
+    "message": "模拟——不会点击"
+  },
+  "yoloDryWarn": {
+    "message": "开启 YOLO 会同时关闭试运行。"
+  },
+  "yoloWarn": {
+    "message": "YOLO 已开启——关键词与分层规则不生效"
   }
 }

@@ -99,13 +99,13 @@
     "message": "muse.ai タブ $1 件が開いています"
   },
   "museTabsNone": {
-    "message": "muse.ai タブが見つかりません"
+    "message": "Muse タブがまだ開いていません — 拡張機能を動かすには muse.ai を開いてください"
   },
   "onlyMuse": {
     "message": "muse.ai と chatgpt.com で動作します"
   },
   "last7": {
-    "message": "直近 7 日間"
+    "message": "7 日間の傾向"
   },
   "last14d": {
     "message": "直近 14 日間"
@@ -123,10 +123,10 @@
     "message": "muse.ai タブ 1 件が開いています"
   },
   "exportData": {
-    "message": "データをエクスポート"
+    "message": "データをバックアップ"
   },
   "importData": {
-    "message": "データをインポート"
+    "message": "データを復元"
   },
   "importConfirm": {
     "message": "このバックアップを復元しますか？履歴と統計はバックアップの内容に置き換わり、ファイルにない設定は現在の値を保ちます。"
@@ -453,10 +453,10 @@
     "message": "自動クリックをオンにする"
   },
   "onbStep1Body": {
-    "message": "Muse はよく承認を求めます。拡張機能に Allow を任せましょう — いつでも一時停止できます。"
+    "message": "Muse が承認を求めたら、拡張機能が代わりに Allow をクリックします。いつでも一時停止できます。"
   },
   "onbEnable": {
-    "message": "オンにする"
+    "message": "自動クリックをオン"
   },
   "onbStep2Title": {
     "message": "記録のみモードで始まります"
@@ -862,5 +862,32 @@
   },
   "auditNoData": {
     "message": "データはまだありません"
+  },
+  "onbRailNoDeny": {
+    "message": "Allow のみクリック — 拒否は押しません"
+  },
+  "onbRailLocalLog": {
+    "message": "クリックはすべてこの端末に記録されます"
+  },
+  "onbRailDryFirst": {
+    "message": "まず記録のみ（ドライラン）で開始——有効にするまでクリックしません"
+  },
+  "ruleMatchHint": {
+    "message": "1 つのルール = 同じ行のトピック + キーワード。両方入れた場合はカードが両方に一致する必要があります。"
+  },
+  "ruleOrderHint": {
+    "message": "順序は同じ層の中で意味を持ちます — ブロックが常に優先"
+  },
+  "scheduleOnlyActiveHint": {
+    "message": "Muse タブが開いているときだけ送信"
+  },
+  "drySwitchSub": {
+    "message": "シミュレーション — クリックしません"
+  },
+  "yoloDryWarn": {
+    "message": "YOLO をオンにするとドライランもオフになります。"
+  },
+  "yoloWarn": {
+    "message": "YOLO がオン — キーワードと階層ルールは適用されません"
   }
 }

@@ -675,7 +675,7 @@ function renderMini(byDay, now) {
   // Uses the locale's short weekday ("Sat Sun Mon …" — unambiguous at this size);
   // narrow when the short form is multi-word (vi "Thứ 6" -> "T6").
   let lang = 'en';
-  try { lang = chrome.i18n.getUILanguage() || 'en'; } catch { /* keep */ }
+  try { lang = effLang() || 'en'; } catch { /* keep */ } // v1.22.1 UX: honor the in-app language choice, not just the browser UI locale
   const fmt = (d, o) => { try { return d.toLocaleDateString(lang, o); } catch { return ''; } };
   const dayLabel = (d) => { const sh = fmt(d, { weekday: 'short' }); return sh.includes(' ') ? fmt(d, { weekday: 'narrow' }) : sh; };
   const W = 292, H = 46, gap = 4, base = 36, top = 12;
@@ -941,6 +941,7 @@ function writeRules(topics, keywords) {
   renderRules();
 }
 // ---- v1.22.0 (W5/F1): layered rules (allow/ask/block) — CHỈ thu hẹp ----------------------
+const RULE_KIND_KEY = { allow: 'ruleKindAllow', ask: 'ruleKindAsk', block: 'ruleKindBlock' }; // v1.22.1 UX
 function layerDesc(r) {
   const tps = (r.match && Array.isArray(r.match.topics)) ? r.match.topics : [];
   const kws = (r.match && Array.isArray(r.match.keywords)) ? r.match.keywords : [];
@@ -957,11 +958,11 @@ function renderLayers() {
   box.innerHTML = layers.length
     ? layers.map((r, i) =>
       '<div class="lrow" data-lid="' + esc(r.id) + '">' +
-      '<span class="lkind ' + esc(r.kind) + '">' + esc(r.kind) + '</span>' +
+      '<span class="lkind ' + esc(r.kind) + '" data-kind="' + esc(r.kind) + '">' + esc(t(RULE_KIND_KEY[r.kind] || r.kind, r.kind)) + '</span>' +
       '<span class="ltxt" title="' + esc(layerDesc(r)) + '">' + esc(layerDesc(r)) + '</span>' +
       '<input type="checkbox" data-act="en"' + (r.enabled !== false ? ' checked' : '') + (ignored ? ' disabled' : '') + ' aria-label="' + esc(t('ruleEnabled', 'enabled')) + '">' +
-      '<button type="button" data-act="up" aria-label="' + esc(t('ruleMoveUp', 'Move up')) + '">&#8593;</button>' +
-      '<button type="button" data-act="dn" aria-label="' + esc(t('ruleMoveDown', 'Move down')) + '">&#8595;</button>' +
+      '<button type="button" data-act="up" title="' + esc(t('ruleOrderHint', 'Order only matters within the same layer — block always wins')) + '" aria-label="' + esc(t('ruleMoveUp', 'Move up')) + '">&#8593;</button>' +
+      '<button type="button" data-act="dn" title="' + esc(t('ruleOrderHint', 'Order only matters within the same layer — block always wins')) + '" aria-label="' + esc(t('ruleMoveDown', 'Move down')) + '">&#8595;</button>' +
       '<button type="button" data-act="del" class="lx" aria-label="' + esc(t('rulesRemove', 'Remove')) + '">&#10005;</button>' +
       (ignored ? '<span class="ltxt" style="flex:none;color:var(--amber)">YOLO</span>' : '') +
       '</div>').join('')
@@ -1239,14 +1240,28 @@ function renderDigest() {
 }
 function renderYoloNote() {
   const note = $('yoloNote');
+  const yw = $('yoloWarn'); if (yw) yw.hidden = v18.yoloMode !== true; // v1.22.1 UX (Vòng 1): the risky state is a banner, not just a chip
+  renderSafetyStatus();
   if (!note || yoloArmed) return; // never hide an armed two-step confirmation
   note.textContent = v18.yoloMode && v18.dryRun
     ? t('yoloDormant', 'YOLO is configured but Dry-run is on: no approvals are clicked. Turn off Dry-run to resume live YOLO approvals.')
     : t('yoloNote', 'Skips keyword blocks, clicks standing grants, fastest pace. Deny is never clicked; connectors stay manual.');
 }
+function renderSafetyStatus() {
+  const el = $('ssText');
+  if (!el) return;
+  const dry = v18.dryRun === true, yolo = v18.yoloMode === true, paused = pausedNow();
+  const parts = [paused ? t('pauseLabel', 'Paused') : t('stateLive', 'Live')];
+  if (dry) parts.push(t('dryRunChip', 'Dry-run'));
+  if (yolo) parts.push(t('yoloChip', 'YOLO'));
+  el.textContent = parts.join(' · ');
+  const dot = $('ssDot'); if (dot) dot.classList.toggle('warn', yolo || (!dry && !paused));
+}
 function renderDry() {
   const db = $('dryBand');
   if (db) db.hidden = v18.dryRun !== true;
+  try { if (typeof document !== 'undefined' && document.body && document.body.classList) document.body.classList.toggle('dry', v18.dryRun === true); } catch { /* vm sandboxes have no DOM */ } // v1.22.1 UX: simulation reads differently from live
+  const dsub = $('drySub'); if (dsub) dsub.hidden = v18.dryRun !== true;
   const chip = $('safetyChip');
   if (chip) {
     const yolo = v18.yoloMode === true;
@@ -1256,9 +1271,11 @@ function renderDry() {
     if (v18.dryRun === true) chip.textContent = t('dryRunChip', 'Dry-run');
     else if (yolo) chip.textContent = t('yoloChip', 'YOLO');
     else if (codexOn) chip.textContent = t('codexChip', 'Codex');
+    chip.classList.toggle('warn', yolo && v18.dryRun !== true); // v1.22.1 UX: warning tint while YOLO is the effective mode
   }
   renderYoloNote();
   renderLogTop();
+  renderSafetyStatus(); // v1.22.1 UX (Vòng 1)
 }
 // v1.11.0 (G01): one always-visible effective-state line, rendered inside the sticky
 // #logTop band — it costs the popup no height (the band lives inside the log's scroll
@@ -1379,6 +1396,7 @@ function renderOnboard() {
   const cs = $('obConsent'); if (cs) cs.hidden = obStep !== 1;
   const mo = $('obMore'); if (mo) mo.hidden = obStep !== 1; // v1.19.0 (S07): the rails explainer rides the consent step
   const dm = $('obDemo'); if (dm) dm.hidden = obStep !== 1; // v1.11.0 (G03): the static "what it would do" list
+  const rl = $('obRails'); if (rl) rl.hidden = obStep !== 0; // v1.22.1 UX: three reassurance bullets on the first step
   const q = $('obQuick'); if (q) q.hidden = obStep !== 2;
   const bk = $('obBack'); if (bk) bk.hidden = obStep === 0;
   const sc = $('obStep'); if (sc) sc.textContent = t('onbStepCount', 'Step $1 of $2', [String(obStep + 1), '3']);
@@ -1573,6 +1591,7 @@ async function applyLocale(lang) {
     writeLayers(layers);
   });
 })();
+const __ssPause = $('ssPause'); if (__ssPause) __ssPause.addEventListener('click', () => { setPause(Date.now() + PAUSE_15M); renderPause(); renderSafetyStatus(); }); // v1.22.1 UX (Vòng 1)
 $('langBtn').addEventListener('click', (e) => { e.stopPropagation(); if (langOpen) closeLangMenu(true); else openLangMenu(true); });
 // one document-level handler serves the button AND the open menu (keydown bubbles)
 document.addEventListener('keydown', (e) => {

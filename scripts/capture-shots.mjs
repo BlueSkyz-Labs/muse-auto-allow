@@ -86,7 +86,7 @@ await scheme(popup, 'dark');  await shot(popup, 'popup-playbook-dark', 400, 640)
 const stats = await mk('stats.html');
 const d1 = new Date(); const d2 = new Date(Date.now() - 26 * 3600e3);
 const key = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-await ev(stats, `new Promise((res) => chrome.storage.local.set({ stats: { byDay: { ${JSON.stringify(key(d1))}: 6, ${JSON.stringify(key(d2))}: 9, ${JSON.stringify(key(new Date(Date.now() - 50 * 3600e3)))}: 4, ${JSON.stringify(key(new Date(Date.now() - 74 * 3600e3)))}: 1 }, byMonth: {}, byYear: {}, byTopic: { 'github.com': 12, repo: 3 } }, clickCount: 15 }, () => res('ok')))`, true);
+await ev(stats, `new Promise((res) => chrome.storage.local.set({ stats: { byDay: { ${JSON.stringify(key(d1))}: 6, ${JSON.stringify(key(d2))}: 5, ${JSON.stringify(key(new Date(Date.now() - 50 * 3600e3)))}: 3, ${JSON.stringify(key(new Date(Date.now() - 74 * 3600e3)))}: 1 }, byMonth: { ${mk}: 15 }, byYear: { ${JSON.stringify(String(new Date().getFullYear()))}: 15 }, byTopic: { 'docs.muse.ai': 12, 'github.com': 3 } }, clickCount: 15 }, () => res('ok')))`, true);
 await send('Page.reload', {}, stats); await sleep(1200);
 await scheme(stats, 'dark');  await shot(stats, 'stats-dark', 960, 820);
 await scheme(stats, 'light'); await shot(stats, 'stats-light', 960, 820);

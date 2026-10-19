@@ -99,13 +99,13 @@
     "message": "$1 muse.ai tabs open"
   },
   "museTabsNone": {
-    "message": "No muse.ai tab found"
+    "message": "No Muse tab open yet — open muse.ai so the extension can run"
   },
   "onlyMuse": {
     "message": "Works on muse.ai and chatgpt.com"
   },
   "last7": {
-    "message": "Last 7 days"
+    "message": "7-day trend"
   },
   "last14d": {
     "message": "Last 14 days"
@@ -123,10 +123,10 @@
     "message": "1 muse.ai tab open"
   },
   "exportData": {
-    "message": "Export data"
+    "message": "Back up data"
   },
   "importData": {
-    "message": "Import data"
+    "message": "Restore data"
   },
   "importConfirm": {
     "message": "Restore this backup? History and statistics are replaced by the backup's; settings not in the file keep their current values."
@@ -486,10 +486,10 @@
     "message": "Turn on auto-click"
   },
   "onbStep1Body": {
-    "message": "Muse asks for approval often. Let the extension click Allow for you — you can pause it any time."
+    "message": "When Muse asks for approval, the extension clicks Allow for you — you can pause it any time."
   },
   "onbEnable": {
-    "message": "Turn on"
+    "message": "Turn on auto-click"
   },
   "onbStep2Title": {
     "message": "You start in logging-only mode"
@@ -862,5 +862,32 @@
   },
   "auditNoData": {
     "message": "No data yet"
+  },
+  "onbRailNoDeny": {
+    "message": "Only clicks Allow — never Deny"
+  },
+  "onbRailLocalLog": {
+    "message": "Every click is logged on this device"
+  },
+  "onbRailDryFirst": {
+    "message": "Starts in logging-only (dry-run) mode — nothing is clicked until you turn it on"
+  },
+  "ruleMatchHint": {
+    "message": "One rule = the topics + keywords on one row; when both are set, the card must match both."
+  },
+  "ruleOrderHint": {
+    "message": "Order only matters within the same layer — block always wins"
+  },
+  "scheduleOnlyActiveHint": {
+    "message": "Only send while the Muse tab is open"
+  },
+  "drySwitchSub": {
+    "message": "Simulation — nothing is clicked"
+  },
+  "yoloDryWarn": {
+    "message": "Turning YOLO on also turns Dry-run off."
+  },
+  "yoloWarn": {
+    "message": "YOLO is on — keyword and layered rules are not enforced"
   }
 }

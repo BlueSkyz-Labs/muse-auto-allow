@@ -319,11 +319,11 @@ try {
   await send('Page.reload', {}, pop); await sleep(1000);
   await evOn(pop)(`(() => { const s = document.getElementById('obSkip'); if (s) s.click(); return 'ok'; })()`); await sleep(300);
   await evOn(pop)(`(() => { try { setSafety(true); } catch (e) { return 'ERR ' + e.message; } return 'ok'; })()`); await sleep(300); // the layers list renders while the Safety sheet is open
-  const p1 = await evOn(pop)(`({ rows: document.querySelectorAll('#layersList .lrow').length, kind: (document.querySelector('#layersList .lkind') || {}).textContent, asked: (document.getElementById('dAsked') || {}).textContent, chip: document.querySelectorAll('#logList .k-ask').length })`);
+  const p1 = await evOn(pop)(`({ rows: document.querySelectorAll('#layersList .lrow').length, kind: ((document.querySelector('#layersList .lkind') || {}).dataset || {}).kind, asked: (document.getElementById('dAsked') || {}).textContent, chip: document.querySelectorAll('#logList .k-ask').length })`);
   check('P1. layers card renders stored rule (kind ask) + digest asks counter + ask chip in log', !!p1 && p1.rows === 1 && p1.kind === 'ask' && p1.asked === '2' && p1.chip >= 1, p1);
   await evOn(pop)(`(() => { const k = document.getElementById('layerKind'); k.value = 'block'; const t = document.getElementById('layerTopics'); t.value = 'demo-x'; document.getElementById('layerAdd').click(); return 'ok'; })()`);
   await sleep(300);
-  const p2 = await evOn(pop)(`({ rows: document.querySelectorAll('#layersList .lrow').length, kinds: Array.from(document.querySelectorAll('#layersList .lkind')).map((e) => e.textContent) })`);
+  const p2 = await evOn(pop)(`({ rows: document.querySelectorAll('#layersList .lrow').length, kinds: Array.from(document.querySelectorAll('#layersList .lkind')).map((e) => (e.dataset || {}).kind) })`);
   check('P2. add-rule writes a new block row through the UI', !!p2 && p2.rows === 2 && p2.kinds.indexOf('block') >= 0, p2);
   await evOn(pop)(`(() => { const rows = document.querySelectorAll('#layersList .lrow'); rows[rows.length - 1].querySelector('[data-act="del"]').click(); return 'ok'; })()`);
   await sleep(300);
