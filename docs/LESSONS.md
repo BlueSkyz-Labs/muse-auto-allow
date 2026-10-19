@@ -95,3 +95,25 @@ via `Number(e.at)` → `NaN` → every entry collapsed under one bogus 1970 head
 it before the freeze (L1 asserted 2 group headers, got 1). Date fields from storage are data —
 parse with `new Date(value)` plus an `isNaN` guard, never numeric coercion.
 **Guard:** `qa-experience` L1–L4 (day groups, chip filter, search, localized no-match state).
+
+## LSN-muse-auto-allow-010 — the log is encrypted at rest; assert its shape, not its plaintext
+
+**Date:** 2026-10-19 · **Found by:** G04 e2e check 2 (first red run, entry present but "no context")
+**Lesson:** log entries carry their context as an encrypted `{ct, iv}` object (V4-5 at-rest
+encryption); the popup decrypts via `decCtx`. An e2e that greps the raw `entry.context` for
+plaintext fails even though the product wrote it correctly. Assert the STABLE surface —
+`kind`, `blockedReason`, the `{ct,iv}` shape, and the UNENCRYPTED marker (`anomalyLastPause`)
+— and let the popup-rendered checks prove the decrypted path.
+**Guard:** followup-e2e G04-2 (kind/reason/ctx-shape/marker.rule) + G04-4 (popup shows the
+decrypted state line).
+
+## LSN-muse-auto-allow-011 — e2e thresholds must fit the FIXED constants and the real pacing
+
+**Date:** 2026-10-19 · **Found by:** G04 e2e check 1 (first red run — detector never fired)
+**Lesson:** the topic rule refuses to engage below a fixed window-total floor of 30, and under
+the fixture the engine clicked roughly one card per ~5 s — so a phase tuned to 12 topic clicks
+never fired and could never be green. Retuned the phase to the RATE rule (5 clicks per 60 s,
+threshold = rateMaxPerMin × rateWindowMs / 60000) and left the topic rule to the unit suite.
+Tuning an e2e threshold must start from: the module's hard constants, the smallest sample the
+rule accepts, and the engine's observed slowest cadence — never the ideal cadence.
+**Guard:** G04-1..6 green in a full 113-check run; anomaly-unit pins the topic semantics.

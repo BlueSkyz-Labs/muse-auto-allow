@@ -596,5 +596,35 @@
   },
   "onbLearnMore": {
     "message": "M\u00e1s informaci\u00f3n: c\u00f3mo funcionan las protecciones"
+  },
+  "digestTopReason": {
+    "message": "Motivo de bloqueo principal"
+  },
+  "digestTopReasonNone": {
+    "message": "sin bloqueos"
+  },
+  "digestTrendMore": {
+    "message": "\u2191 $1 frente a los 7 d\u00edas anteriores"
+  },
+  "digestTrendLess": {
+    "message": "\u2193 $1 frente a los 7 d\u00edas anteriores"
+  },
+  "digestTrendSame": {
+    "message": "igual que los 7 d\u00edas anteriores"
+  },
+  "followupSendBlockedAnomaly": { "message": "Envío rechazado: el motor se pausó automáticamente (anomalía)" },
+  "anomalyPauseState": { "message": "Pausa automática hasta $1 — se detectó actividad de clics inusual" },
+  "anomalyActiveNote": { "message": "El detector pausó el motor; se reanudará automáticamente." },
+  "anomalyEnable": { "message": "Pausa automática por anomalías" },
+  "anomalyEnableHint": { "message": "Pausa el motor automáticamente si el comportamiento de los clics parece anómalo (ritmo o concentración en un tema). Nunca debilita ninguna protección." },
+  "anomalyRateLabel": { "message": "Ritmo sostenido (clics/min)" },
+  "anomalyRateHint": { "message": "Pausa si los clics en Allow superan este ritmo durante una ventana de 5 minutos." },
+  "anomalyTopicLabel": { "message": "Protección ante picos por tema" },
+  "anomalyTopicHint": { "message": "También pausa si un tema domina la ventana (40 o más clics y una cuota del 70 % en 10 minutos)." },
+  "anomalyDurationLabel": { "message": "Duración de la pausa automática (minutos)" },
+  "anomalyDurationHint": { "message": "El motor se reanuda automáticamente al terminar el temporizador." },
+  "kindAnomalyPause": { "message": "Pausa automática (anomalía)" },
+  "digestRecentNote": {
+    "message": "entre las entradas de registro m\u00e1s recientes"
   }
 }

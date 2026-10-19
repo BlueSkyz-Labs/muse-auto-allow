@@ -596,5 +596,35 @@
   },
   "onbLearnMore": {
     "message": "T\u00ecm hi\u1ec3u th\u00eam \u2014 c\u00e1c ch\u1ed1t an to\u00e0n ho\u1ea1t \u0111\u1ed9ng th\u1ebf n\u00e0o"
+  },
+  "digestTopReason": {
+    "message": "L\u00fd do ch\u1eb7n h\u00e0ng \u0111\u1ea7u"
+  },
+  "digestTopReasonNone": {
+    "message": "kh\u00f4ng c\u00f3 l\u1ea7n ch\u1eb7n n\u00e0o"
+  },
+  "digestTrendMore": {
+    "message": "\u2191 $1 so v\u1edbi 7 ng\u00e0y tr\u01b0\u1edbc"
+  },
+  "digestTrendLess": {
+    "message": "\u2193 $1 so v\u1edbi 7 ng\u00e0y tr\u01b0\u1edbc"
+  },
+  "digestTrendSame": {
+    "message": "b\u1eb1ng 7 ng\u00e0y tr\u01b0\u1edbc"
+  },
+  "followupSendBlockedAnomaly": { "message": "Không thể gửi: engine tự động tạm dừng do bất thường" },
+  "anomalyPauseState": { "message": "Tự động tạm dừng đến $1 — phát hiện hoạt động nhấp bất thường" },
+  "anomalyActiveNote": { "message": "Bộ phát hiện đã tự tạm dừng engine; hệ thống sẽ tự tiếp tục." },
+  "anomalyEnable": { "message": "Tự động tạm dừng khi có bất thường" },
+  "anomalyEnableHint": { "message": "Tự tạm dừng engine khi hành vi nhấp có vẻ bất thường (tần suất hoặc đột biến chủ đề). Không làm suy yếu bất kỳ lớp bảo vệ nào." },
+  "anomalyRateLabel": { "message": "Tần suất duy trì (lượt nhấp/phút)" },
+  "anomalyRateHint": { "message": "Tạm dừng khi lượt nhấp Allow duy trì trên ngưỡng này trong cửa sổ 5 phút." },
+  "anomalyTopicLabel": { "message": "Bảo vệ khi chủ đề tăng đột biến" },
+  "anomalyTopicHint": { "message": "Cũng tạm dừng khi một chủ đề chiếm ưu thế trong cửa sổ 10 phút (từ 40 lượt nhấp và chiếm 70%)." },
+  "anomalyDurationLabel": { "message": "Thời lượng tự tạm dừng (phút)" },
+  "anomalyDurationHint": { "message": "Engine sẽ tự tiếp tục khi hết thời gian." },
+  "kindAnomalyPause": { "message": "Tự tạm dừng (bất thường)" },
+  "digestRecentNote": {
+    "message": "trong c\u00e1c m\u1ee5c log g\u1ea7n nh\u1ea5t"
   }
 }

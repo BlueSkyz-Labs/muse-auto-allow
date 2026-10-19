@@ -158,6 +158,15 @@
   const recentAllowKeys = new Map(); // allow fingerprint -> ts (re-render dedup)
   const auxClicks = []; // timestamps of expand/open-panel clicks (rate cap)
   const allowClicks = []; // timestamps of allow clicks (global ceiling)
+
+  // ---- v1.20.0 (G04): anomaly auto-pause --------------------------------------------------
+  // The detector can only ever ADD a pause (never touch a cap). All state is page-local except
+  // the pause itself + its marker, which persist so the reason mapping survives a reload.
+  let anomaly = null;            // sanitized MuseAnomaly settings (defaults once the boot read lands)
+  let anomalyLatchUntil = 0;     // no re-evaluation before this ts (guards against a re-fire loop)
+  let anomalyDead = false;       // a throwing detector stays disabled for this page (fail closed)
+  let anomalyLastPause = null;   // last auto-pause marker (mirrors storage)
+  const topicClicks = new Map(); // topic -> number[] timestamps (allow-clicks, G04 topic window)
   // ---- v1.8.0 frozen settings (contracts: docs/ENGINE_V18.md) ----
   const BLOCK_SEED = ['delete', 'remove', 'drop', 'wipe', 'format', 'billing', 'payment', 'invoice',
     'pay', 'transfer', 'refund', 'production', 'deploy', 'revoke', 'rm -rf', 'sudo',
@@ -427,6 +436,8 @@
     if ('dryRun' in s) v18.dryRun = s.dryRun === true;
     if ('yoloMode' in s) v18.yoloMode = s.yoloMode === true;
     if ('allowOnceMode' in s) v18.allowOnceMode = s.allowOnceMode === true;
+    if ('anomaly' in s) anomaly = (typeof MuseAnomaly !== 'undefined' && MuseAnomaly) ? MuseAnomaly.sanitize(s.anomaly) : anomaly;
+    if ('anomalyLastPause' in s) anomalyLastPause = (s.anomalyLastPause && typeof s.anomalyLastPause === 'object') ? s.anomalyLastPause : null;
     if ('rules' in s) {
       const rules = asObj(s.rules);
       if ('allowTopics' in rules) v18.allowTopics = sanitizeList(rules.allowTopics, TOPIC_MAX, TOPIC_LEN) || [];
@@ -803,6 +814,7 @@
     if (kind === 'allow') {
       markAllowFp(allowFp(btn, ctx !== undefined ? ctx : (card ? contextText(card) : '')));
       allowClicks.push(state.lastClickAt);
+      noteAnomalyAllow(ctx !== undefined ? ctx : (card ? contextText(card) : '')); // v1.20.0 (G04)
       // one allow click per card/pair scope (v1.8.0) — but a DRY run must not consume the
       // card, so the mark is only placed when a real click happened
       if (card && !isDry) allowDoneCards.add(card);
@@ -1393,7 +1405,7 @@
   function followupAttempt(manual, opts) {
     if (!alive()) { stopForever(); return { ok: false, reason: 'dead' }; }
     if (!followup.enabled) return { ok: false, reason: 'disabled' };
-    if (paused()) return { ok: false, reason: 'paused' };
+    if (paused()) return { ok: false, reason: pauseReason() }; // v1.20.0 (G04): 'anomaly-pause' when the auto-pause marker matches
     if (!scheduleAllows()) return { ok: false, reason: 'schedule' };
     if (followup.sending) return { ok: false, reason: 'sending' };
     if (approvalPresent()) return { ok: false, reason: 'approval-present' };
@@ -1564,6 +1576,47 @@
     followup.sending = false;
   }
 
+  // ---- v1.20.0 (G04): anomaly detector ------------------------------------------------------
+  function noteAnomalyAllow(text) {
+    try {
+      const topic = extractTopic(String(text || '')) || '';
+      if (!topic) return;
+      let arr = topicClicks.get(topic);
+      if (!arr) { arr = []; topicClicks.set(topic, arr); }
+      arr.push(Date.now());
+      if (topicClicks.size > 64) topicClicks.delete(topicClicks.keys().next().value);
+    } catch { /* the detector must never break the click path */ }
+  }
+  function anomalyFire(now, verdict) {
+    anomalyLatchUntil = now + anomaly.pauseMs;
+    const until = anomalyLatchUntil;
+    const ctx = verdict.rule === 'rate'
+      ? 'rate:' + Math.round(verdict.detail.count) + '/' + Math.round(anomaly.rateWindowMs / 60000) + 'min'
+      : 'topic:spike-' + verdict.topic + ' ' + verdict.detail.topicCount + '/' + Math.round(anomaly.topicWindowMs / 60000) + 'min';
+    const entry = { at: new Date().toISOString(), kind: 'anomaly-pause', label: 'Auto-pause (anomaly)', blockedReason: 'anomaly-pause', context: ctx };
+    try { state.lastResult = entry; recordClick(entry, ctx, false); } catch { /* logging must not break the pause */ }
+    anomalyLastPause = { firedAt: now, until: until, rule: verdict.rule, detail: verdict.detail };
+    v18.pauseUntil = until;
+    try {
+      chrome.storage.local.set({ pauseUntil: until, anomalyLastPause: anomalyLastPause });
+    } catch { /* quota failure: the in-page latch still holds the pause-open window */ }
+    console.warn('[muse-auto-allow] anomaly auto-pause (' + verdict.rule + ') until ' + new Date(until).toISOString());
+  }
+  function checkAnomaly(now) {
+    if (anomalyDead || !anomaly || typeof MuseAnomaly === 'undefined' || !MuseAnomaly) return;
+    if (v18.dryRun) return; // dry-run is a deliberate no-click mode - the detector stays out of it
+    if (now < anomalyLatchUntil) return;
+    if ((state.clickCount || 0) < anomaly.minSample) return;
+    let verdict = null;
+    try {
+      verdict = MuseAnomaly.evaluate({ settings: anomaly, allowTs: allowClicks, topics: topicClicks, totalClicks: state.clickCount || 0 }, now);
+    } catch { anomalyDead = true; console.warn('[muse-auto-allow] anomaly detector disabled (evaluate error)'); return; } // fail closed
+    if (verdict) anomalyFire(now, verdict);
+  }
+  function pauseReason() {
+    return (anomalyLastPause && Number(anomalyLastPause.until) === Number(v18.pauseUntil)) ? 'anomaly-pause' : 'paused';
+  }
+
   function sweep(reason) {
     if (!alive()) { stopForever(); return; }
     if (!v18Ready) return; // v1.9.3 boot gate: never sweep before the v18 settings are applied
@@ -1571,6 +1624,7 @@
     if (!state.enabled) return;
     if (paused()) return; // v1.8.0 pause: every click path (A–E) is halted until pauseUntil passes
     const now = Date.now();
+    checkAnomaly(now); // v1.20.0 (G04): the detector rides the same tick, only when unpaused
     const minDelay = v18.yoloMode ? Math.min(state.minDelayMs, YOLO_MIN_DELAY_MS) : state.minDelayMs;
     if (now - state.lastClickAt < minDelay) {
       // Keep the queue moving at the configured pace instead of waiting for the next
@@ -1647,7 +1701,7 @@
     chrome.storage.local.get(FOLLOWUP_DEFAULTS, (f) => { applyFollowupSettings(f); followupTick(); });
     // v1.8.0 frozen settings (pause / dry-run / rules / smart follow-up / schedule)
     // + v1.9.0 mission settings (missionEnabled / mission{id,step,cycles,startedAt,lastSentAt})
-    chrome.storage.local.get({ pauseUntil: 0, dryRun: false, yoloMode: false, allowOnceMode: false, rules: {}, followupSmart: {}, followupSchedule: {}, missionEnabled: false, mission: null },
+    chrome.storage.local.get({ pauseUntil: 0, dryRun: false, yoloMode: false, allowOnceMode: false, rules: {}, followupSmart: {}, followupSchedule: {}, missionEnabled: false, mission: null, anomaly: null, anomalyLastPause: null },
       (s) => { applyV18Settings(s); applyMissionSettings(s); publishFlags(); v18Ready = true; if (enabledReady) sweep('init'); }); // v1.13.0 (C4-B): sweep only once BOTH reads landed — the hardcoded enabled:true default must never outrun a stored kill-switch
     chrome.storage.onChanged.addListener((ch) => {
       // A key REMOVED from storage (newValue === undefined) resets to that key's shipped DEFAULT —
@@ -1655,6 +1709,8 @@
       // closed schedule kept refusing every send with reason 'schedule'.
       const removed = (c) => !c || c.newValue === undefined;
       if (ch.enabled) state.enabled = removed(ch.enabled) ? DEFAULT.enabled : !!ch.enabled.newValue;
+      if (ch.anomaly) anomaly = (typeof MuseAnomaly !== 'undefined' && MuseAnomaly) ? MuseAnomaly.sanitize(removed(ch.anomaly) ? null : ch.anomaly.newValue) : anomaly; // v1.20.0 (G04)
+      if (ch.anomalyLastPause) { const m = removed(ch.anomalyLastPause) ? null : ch.anomalyLastPause.newValue; anomalyLastPause = (m && typeof m === 'object') ? m : null; }
       if (ch.minDelayMs) {
         if (removed(ch.minDelayMs)) state.minDelayMs = DEFAULT.minDelayMs;
         else { const n = Number(ch.minDelayMs.newValue); if (Number.isFinite(n) && n >= 0) state.minDelayMs = n; }

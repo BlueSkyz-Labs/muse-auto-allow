@@ -37,6 +37,7 @@ const EXT = path.join(ROOT, 'extension');
 const SHIPPED = [
   'manifest.json',
   'content.js',
+  'anomaly.js', // v1.20.0 (G04): the pure detector module (content_scripts: anomaly.js first)
   'codex.js',
   'background.js',
   'popup.html',
