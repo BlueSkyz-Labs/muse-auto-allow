@@ -828,3 +828,14 @@ Run from the repo root during the freeze, tree stable, editing lanes stopped.
 - `smoke-zip.mjs`: exit 0, `"ok": true`, 20/20 checks true against the extracted
   artifact (sidecar match, CRC extraction, fixture click paths, popup boot, storage
   read-back).
+
+## Recorded evidence (v1.22.5 freeze)
+
+- Frozen tree: `extension/manifest.json` `"version": "1.22.5"`; tag `v1.22.5` (`7e09640`).
+- Artifact: `dist/muse-auto-allow-v1.22.5.zip` — **278,758 bytes**, **27 entries**; sha256
+  `4f606b990e0472bffe8247e7d137a5ae99b6576b61b615a10109cd0d9a0d02b7`; verify-zip **27/0/0/0**;
+  smoke exit 0 `"ok": true`.
+- Scope: rounds 1–3 of the 30-round auto loop (SGPS prompt-02) — 22 UX/a11y/content fixes, new
+  `test/a11y-audit.mjs`, popup 594px, i18n 346×6.
+- Gates: battery **13/13 suites** including the a11y probe (12/12).
+- Not done: no Chrome Web Store upload; no CWS review; no store publish.
