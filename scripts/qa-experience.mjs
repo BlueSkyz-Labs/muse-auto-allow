@@ -58,6 +58,10 @@ const CONTRAST_JS = `(() => {
     if (!(el.offsetWidth > 0 && el.offsetHeight > 0)) continue;
     const direct = Array.from(el.childNodes).some((n) => n.nodeType === 3 && n.textContent.trim().length > 1);
     if (!direct) continue;
+    // R9: WCAG 1.4.3 exempts disabled controls and hidden/aria-hidden subtrees — the old probe
+    // counted a disabled primary button and an off-screen sheet title as failures.
+    if (el.disabled === true || el.closest('[hidden]') || el.closest('[aria-hidden="true"]')) continue;
+    if (getComputedStyle(el).visibility === 'hidden') continue;
     const cs = getComputedStyle(el); const fg = parse(cs.color); if (!fg || fg.a < 0.5) continue;
     const size = parseFloat(cs.fontSize); const bold = Number(cs.fontWeight) >= 700;
     const large = size >= 24 || (bold && size >= 18.66);
