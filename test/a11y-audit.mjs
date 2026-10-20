@@ -52,7 +52,9 @@ const PROBE = `JSON.stringify((() => {
   const name = (el) => (el.getAttribute('aria-label') || el.getAttribute('title') || (el.textContent || '').trim() || el.getAttribute('data-i18n') || '').trim();
   document.querySelectorAll('button, a[href], select, input[type=checkbox], input[type=number], input[type=text], input[type=password], textarea').forEach((el) => {
     if (!vis(el)) return;
-    const r = el.getBoundingClientRect();
+    // a visually hidden input inside a label: the label is the real pointer target
+    const box = (el.tagName === 'INPUT' && el.closest('label')) || el;
+    const r = box.getBoundingClientRect();
     if (r.width < 23.5 || r.height < 23.5) out.targets.push({ id: el.id || el.className || el.tagName, w: Math.round(r.width), h: Math.round(r.height) });
     if ((el.tagName === 'BUTTON' || el.tagName === 'A') && !name(el)) out.unnamed.push(el.id || el.className || el.tagName);
     if (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') {

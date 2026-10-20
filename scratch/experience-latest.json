@@ -50,10 +50,10 @@
       }
     },
     {
-      "name": "C. focus popup.html: :focus-visible rules present (9) + outline:none covered by wrapper-ring",
+      "name": "C. focus popup.html: :focus-visible rules present (10) + outline:none covered by wrapper-ring",
       "ok": true,
       "detail": {
-        "fv": 9,
+        "fv": 10,
         "outlineNone": 1,
         "focusWithin": 1,
         "uncovered": []
@@ -84,10 +84,10 @@
       "name": "D. locale vi stats.html: no overflow, no clipped control",
       "ok": true,
       "detail": {
-        "bodySW": 1390,
-        "bodyCW": 1390,
-        "deSW": 1390,
-        "deCW": 1390,
+        "bodySW": 1400,
+        "bodyCW": 1400,
+        "deSW": 1400,
+        "deCW": 1400,
         "clipped": []
       }
     },
@@ -106,10 +106,10 @@
       "name": "D. locale ja stats.html: no overflow, no clipped control",
       "ok": true,
       "detail": {
-        "bodySW": 1390,
-        "bodyCW": 1390,
-        "deSW": 1390,
-        "deCW": 1390,
+        "bodySW": 1400,
+        "bodyCW": 1400,
+        "deSW": 1400,
+        "deCW": 1400,
         "clipped": []
       }
     },
@@ -128,10 +128,10 @@
       "name": "D. locale ko stats.html: no overflow, no clipped control",
       "ok": true,
       "detail": {
-        "bodySW": 1390,
-        "bodyCW": 1390,
-        "deSW": 1390,
-        "deCW": 1390,
+        "bodySW": 1400,
+        "bodyCW": 1400,
+        "deSW": 1400,
+        "deCW": 1400,
         "clipped": []
       }
     },
@@ -150,10 +150,10 @@
       "name": "D. locale zh_CN stats.html: no overflow, no clipped control",
       "ok": true,
       "detail": {
-        "bodySW": 1390,
-        "bodyCW": 1390,
-        "deSW": 1390,
-        "deCW": 1390,
+        "bodySW": 1400,
+        "bodyCW": 1400,
+        "deSW": 1400,
+        "deCW": 1400,
         "clipped": []
       }
     },
@@ -172,10 +172,10 @@
       "name": "D. locale es stats.html: no overflow, no clipped control",
       "ok": true,
       "detail": {
-        "bodySW": 1390,
-        "bodyCW": 1390,
-        "deSW": 1390,
-        "deCW": 1390,
+        "bodySW": 1400,
+        "bodyCW": 1400,
+        "deSW": 1400,
+        "deCW": 1400,
         "clipped": []
       }
     },
@@ -194,10 +194,10 @@
       "name": "D. locale en stats.html: no overflow, no clipped control",
       "ok": true,
       "detail": {
-        "bodySW": 1390,
-        "bodyCW": 1390,
-        "deSW": 1390,
-        "deCW": 1390,
+        "bodySW": 1400,
+        "bodyCW": 1400,
+        "deSW": 1400,
+        "deCW": 1400,
         "clipped": []
       }
     },
@@ -242,10 +242,10 @@
       }
     },
     {
-      "name": "G2. keyboard: Tab reaches the controls (10/10 unique) and does not trap",
+      "name": "G2. keyboard: Tab reaches the controls (11/12 unique) and does not trap",
       "ok": true,
       "detail": {
-        "total": 10,
+        "total": 12,
         "uniq": [
           "langBtn",
           "p15",
@@ -253,7 +253,8 @@
           "ptom",
           "safetyBtn",
           "enabled",
-          "delay",
+          "pbtn preset",
+          "pbtn preset on",
           "misbtn",
           "followupEnabled",
           "openstats"
@@ -263,7 +264,7 @@
           "ptom",
           "safetyBtn",
           "enabled",
-          "delay"
+          "pbtn preset"
         ]
       }
     },
@@ -306,21 +307,21 @@
       "ok": true,
       "detail": {
         "en": [
-          "10/06",
           "10/07",
           "10/08",
           "10/09",
           "10/10",
-          "10/11"
+          "10/11",
+          "10/12"
         ],
         "enEff": "en",
         "vi": [
-          "06-10",
           "07-10",
           "08-10",
           "09-10",
           "10-10",
-          "11-10"
+          "11-10",
+          "12-10"
         ],
         "viEff": "vi"
       }
@@ -332,7 +333,7 @@
         "pct": [
           "100%"
         ],
-        "zeros": 3,
+        "zeros": 2,
         "total": "8"
       }
     },
@@ -442,13 +443,13 @@
       }
     },
     {
-      "name": "P4. audit buttons present, weekly card renders clicks, CSV builder reachable in the page",
+      "name": "P4. audit buttons present, weekly card renders its counters, CSV builder reachable in the page",
       "ok": true,
       "detail": {
         "hasJson": true,
         "hasCsv": true,
         "weekHidden": false,
-        "body": "lượt bấm: 4 bị chặn: 1 chờ bạn: 1 nhắc tiếp: 1",
+        "body": "bị chặn: 1 lượt hỏi: 1 nhắc tiếp: 1",
         "csv": true
       }
     }
