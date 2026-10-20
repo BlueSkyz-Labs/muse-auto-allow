@@ -339,7 +339,7 @@
     "message": "YOLO — aprobar todo"
   },
   "yoloNote": {
-    "message": "Omite el bloqueo por palabras clave, pulsa concesiones permanentes, ritmo máximo. Nunca pulsa Deny; los conectores siguen siendo manuales."
+    "message": "Omite los bloqueos por palabra clave y pulsa permisos permanentes. Nunca pulsa Deny."
   },
   "yoloConfirm": {
     "message": "¿Activar YOLO? Las tarjetas bloqueadas por palabras clave o con solo concesión permanente se pulsarán automáticamente. Toca el interruptor otra vez para confirmar."
@@ -1033,5 +1033,8 @@
   },
   "trustRailStandYolo": {
     "message": "Permisos permanentes: se pulsan (YOLO)"
+  },
+  "auditWeekEmpty": {
+    "message": "Sin bloqueos ni consultas esta semana"
   }
 }

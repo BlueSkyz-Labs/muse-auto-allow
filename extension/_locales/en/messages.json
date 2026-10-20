@@ -348,7 +348,7 @@
     "message": "YOLO — approve everything"
   },
   "yoloNote": {
-    "message": "Skips keyword blocks, clicks standing grants, fastest pace. Deny is never clicked; connectors stay manual."
+    "message": "Skips keyword blocks and clicks standing grants. Deny is never clicked."
   },
   "yoloConfirm": {
     "message": "Turn on YOLO? Cards blocked by keywords or offering only standing grants will now be clicked. Tap the switch again to confirm."
@@ -1033,5 +1033,8 @@
   },
   "trustRailStandYolo": {
     "message": "Standing grants: clicked (YOLO)"
+  },
+  "auditWeekEmpty": {
+    "message": "No blocks or asks this week"
   }
 }

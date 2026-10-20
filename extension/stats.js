@@ -289,10 +289,12 @@ async function renderAuditWeek() {
     el.hidden = false;
     // v1.22.2 UX (Vòng 3): the four numbers always render — an empty card looked like a stray caption.
     body.innerHTML =
-      // R1: the weekly click count already lives in the KPI card — the card keeps the extras
-      '<span>' + t('auditWeekBlocked', 'blocked') + ': <b>' + (Number(w.blocked) || 0) + '</b></span> ' +
-      '<span>' + t('auditWeekAsked', 'asks') + ': <b>' + (Number(w.asked) || 0) + '</b></span> ' +
-      '<span>' + t('auditWeekFollowups', 'follow-ups') + ': <b>' + (Number(w.followups) || 0) + '</b></span>';
+      // R3: an all-zero row reads as a broken widget — say it in words instead
+      (Number(w.blocked) || 0) + (Number(w.asked) || 0) + (Number(w.followups) || 0) === 0
+        ? '<span class="wempty">' + t('auditWeekEmpty', 'No blocks or asks this week') + '</span>'
+        : '<span>' + t('auditWeekBlocked', 'blocked') + ': <b>' + (Number(w.blocked) || 0) + '</b></span> ' +
+          '<span>' + t('auditWeekAsked', 'asks') + ': <b>' + (Number(w.asked) || 0) + '</b></span> ' +
+          '<span>' + t('auditWeekFollowups', 'follow-ups') + ': <b>' + (Number(w.followups) || 0) + '</b></span>';
   } catch { /* ignore */ }
 }
 $('auditJson').addEventListener('click', () => { auditExport('json'); });

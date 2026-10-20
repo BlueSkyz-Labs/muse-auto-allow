@@ -1,6 +1,21 @@
 # Changelog
 
-## 1.22.4 — Wave A (SGPS prompt-02, owner-approved)
+## 1.22.5 — rounds 1–3 (SGPS prompt-02, auto-merge an toàn)
+- **Round 1 (14 fix)**: `.obfoot` CSS rule thật sự bị gãy (`{` thừa) → footer onboarding hết lơ lửng;
+  KPI "Tháng này" bỏ (luôn trùng Tổng); trust rails thành 3 chip rời (hết wrap giữa từ "thủ|công");
+  nút pause đổi thành "⏸ Tạm dừng 15′"; dòng phụ status strip lên `--ink-2` (≥4.5:1); hàng
+  Đã bấm/Hôm nay chia đôi đều; banner CHẠY THỬ đậm hơn; **`accOpen` vào snapshot refresh** (trạng thái
+  accordion được nhớ thật); **refresh token** chống snapshot cũ đè UI mới; preview follow-up 1 dòng
+  (popup **594px**); rút 2 chuỗi es; timeout mission 6→12s (hết flake).
+- **Round 2 (a11y)**: `label.sw` + `.misbtn` đạt 24px; thêm `test/a11y-audit.mjs` — probe DOM thật
+  trên popup + stats: **12/12** (target 24px, icon-only có tên, control có nhãn, không tabindex dương,
+  dialog có role/aria-modal, live region tồn tại).
+- **Round 3 (6 fix)**: chip "Chạy thử" hết bị bóp thành 2 dòng; onboarding dồn khối giữa (hết trống đáy);
+  vạch chia stats đúng 50%; card Tuần này có empty state thay "0, 0, 0"; simulator dời lên đầu nhóm Luật;
+  yoloNote ngắn lại; "Về mặc định" rời khỏi cụm Thêm.
+- i18n **346 keys × 6 locale**; battery **13/13** (thêm a11y-audit).
+
+## 1.22.4 — Wave A (SGPS prompt-02, owner-approved) — Wave A (SGPS prompt-02, owner-approved)
 - **G3 Rule Simulator** (`extension/rulesim.js`, pure): type a sample card + optional topic and
   see exactly what the shipped engine would do (block / ask / click), which rule matched, and the
   D1→D6 path — the preview calls `MuseRules.decide()` itself, so it cannot drift.

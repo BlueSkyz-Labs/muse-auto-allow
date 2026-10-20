@@ -339,7 +339,7 @@
     "message": "YOLO — duyệt tất cả"
   },
   "yoloNote": {
-    "message": "Bỏ qua chặn từ khoá, bấm cả quyền vĩnh viễn, tốc độ nhanh nhất. Không bao giờ bấm Deny; connector vẫn thủ công."
+    "message": "Bỏ qua chặn từ khoá, bấm cả quyền vĩnh viễn. Không bao giờ bấm Deny."
   },
   "yoloConfirm": {
     "message": "Bấm Allow sẽ được tự động, kể cả quyền vĩnh viễn. Bấm lần nữa để xác nhận."
@@ -1033,5 +1033,8 @@
   },
   "trustRailStandYolo": {
     "message": "Quyền vĩnh viễn: được bấm (YOLO)"
+  },
+  "auditWeekEmpty": {
+    "message": "Tuần này chưa có lần chặn hay lượt hỏi nào"
   }
 }

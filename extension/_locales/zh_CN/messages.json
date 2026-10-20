@@ -339,7 +339,7 @@
     "message": "YOLO — 全部批准"
   },
   "yoloNote": {
-    "message": "跳过关键词拦截，点击长期授权，速度最快。绝不点击 Deny；连接器保持手动。"
+    "message": "跳过关键词拦截，也会点击永久授权。从不点击 Deny。"
   },
   "yoloConfirm": {
     "message": "开启 YOLO？被关键词拦截或仅提供长期授权的卡片将被自动点击。再次拨动开关以确认。"
@@ -1033,5 +1033,8 @@
   },
   "trustRailStandYolo": {
     "message": "永久授权：会点击（YOLO）"
+  },
+  "auditWeekEmpty": {
+    "message": "本周没有拦截或询问"
   }
 }

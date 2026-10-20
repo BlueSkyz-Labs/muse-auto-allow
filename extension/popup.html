@@ -106,7 +106,7 @@
             font-variant-numeric: tabular-nums; }
   b.count.pop { transform: scale(1.15); }
   .stats { display: flex; align-items: baseline; gap: 0; margin: 2px 0; } /* R1: equal halves, divider at 50% */
-  .stat { display: flex; align-items: baseline; gap: 6px; min-width: 0; flex: 1 1 0; }
+  .stat { display: flex; align-items: baseline; gap: 6px; min-width: 0; flex: 1 1 0; box-sizing: border-box; } /* R3: border-left lands at 50% */
   .stat .muted { font-size: 11px; font-weight: 500; letter-spacing: .01em; }
   .stat + .stat { border-left: 1px solid var(--divide); padding-left: 12px; }
   .mini { margin-top: 2px; }
@@ -446,7 +446,7 @@
   .safetybtn:hover { color: var(--ink); }
   .safetybtn .chev { transform: rotate(-90deg); }
   .schip { font-size: 10px; font-weight: 500; background: var(--accent-tint); color: var(--accent-text);
-           border: 1px solid var(--accent-line); border-radius: 999px; padding: 0 6px; }
+           border: 1px solid var(--accent-line); border-radius: 999px; padding: 0 6px; white-space: nowrap; flex: none; } /* R3: the "Chạy thử" chip was being squeezed into two lines */
   .schip.warn { background: rgba(214,150,20,.16); color: #8a5a10; border-color: rgba(214,150,20,.48); }
   @media (prefers-color-scheme: dark) { .schip.warn { background: rgba(242,180,53,.16); color: #f2b435; border-color: rgba(242,180,53,.45); } } /* v1.22.2: AA contrast in dark */ /* v1.22.1 UX: YOLO reads as a warning state */
   .modetag { display: inline-block; margin: 5px 0 2px 26px; font-size: 10px; font-weight: 600; letter-spacing: .05em;
@@ -550,7 +550,7 @@
   .rbtn:hover { background: var(--fill); border-color: var(--stroke-hover); }
   .rbtn.armed { background: var(--accent-tint); border-color: var(--accent-line); color: var(--accent-text); font-weight: 500; }
   /* onboarding wizard: one card, three steps, no heavy motion */
-  .obcard { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+  .obcard { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: center; padding-bottom: 10px; } /* R3: content sits as one centred stack */
   .obdots { display: flex; align-items: center; gap: 5px; margin-bottom: 6px; flex: none; }
   .obdot { width: 18px; height: 3px; border-radius: 999px; background: var(--fill); }
   .obdot.on { background: var(--accent-state); }
@@ -917,8 +917,8 @@
         <div class="rnote" id="keywordsNote" data-i18n="keywordsNote">A card containing any of these words is never clicked — it is logged as blocked instead.</div>
         <div class="rlist" id="kwList"></div>
         <div class="radd"><input class="rin" id="kwInput" maxlength="64" placeholder="Add a keyword…" data-i18n-ph="keywordsPlaceholder">
-          <button type="button" class="rbtn" id="kwAdd" data-i18n="rulesAdd">Add</button>
-          <button type="button" class="rbtn" id="kwReset" data-i18n="keywordsReset">Reset to defaults</button></div>
+          <button type="button" class="rbtn" id="kwAdd" data-i18n="rulesAdd">Add</button></div>
+        <div class="row licro kwreset"><button type="button" class="rbtn" id="kwReset" data-i18n="keywordsReset">Reset to defaults</button></div>
       </div>
             <!-- v1.22.0 (W5/F1) — Luật ba tầng (allow/ask/block): CHỈ thu hẹp — block thắng, ask =
            để người dùng tự xử lý, allow hoạt động như danh sách cho phép bổ sung. Các screen
@@ -927,6 +927,16 @@
         <div class="rlabel" data-i18n="rulesTitle">Layered rules (allow / ask / block)</div>
         <div class="rnote" data-i18n="rulesDescription">Block wins over everything. Ask leaves the card to you. Allow narrows what may be clicked — it never widens anything.</div>
         <div class="rnote" data-i18n="ruleOrderHint">Order only matters within the same layer — block always wins</div>
+        <!-- v1.22.4 (G3): simulate a card against the saved rules before saving a new one -->
+        <div class="rowsim">
+          <div class="rlabel" data-i18n="simTitle">Try a sample card</div>
+          <div class="row field fset">
+            <input type="text" id="simTopic" class="licinput" maxlength="64" style="flex:0 0 96px" placeholder="topic" data-i18n-ph="simTopicPlaceholder">
+            <input type="text" id="simText" class="licinput" maxlength="500" placeholder="card text" data-i18n-ph="simPlaceholder">
+            <button type="button" class="btn" id="simRun" data-i18n="simRun">Test</button>
+          </div>
+          <div class="simout" id="simOut" role="status" aria-live="polite"></div>
+        </div>
         <div id="layersList"></div>
         <div class="row field fset">
           <select id="layerKind" class="licinput" style="flex:0 0 auto; width:86px">
@@ -953,16 +963,7 @@
           </div>
         </div>
         <div class="misnote" id="layerNote" role="status"></div>
-        <!-- v1.22.4 (G3): simulate a card against the saved rules before saving a new one -->
-        <div class="rowsim">
-          <div class="rlabel" data-i18n="simTitle">Try a sample card</div>
-          <div class="row field fset">
-            <input type="text" id="simTopic" class="licinput" maxlength="64" style="flex:0 0 96px" placeholder="topic" data-i18n-ph="simTopicPlaceholder">
-            <input type="text" id="simText" class="licinput" maxlength="500" placeholder="card text" data-i18n-ph="simPlaceholder">
-            <button type="button" class="btn" id="simRun" data-i18n="simRun">Test</button>
-          </div>
-          <div class="simout" id="simOut" role="status" aria-live="polite"></div>
-        </div>
+
         <div class="rnote" data-i18n="ruleDryRunHint">Tip: keep Dry-run on while you tune the rules — everything is logged and nothing is clicked.</div>
       </div>
       </details>
