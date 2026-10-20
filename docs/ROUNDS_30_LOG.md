@@ -9,4 +9,5 @@ Quy tắc: xem `docs/ROUNDS_30_PLAN.md`. Mỗi vòng một dòng; battery đỏ 
 | 2 | 02 | a11y/WCAG 2.2 AA (probe DOM thật) | 1 | `misbtn` 19px · `label.sw` target thật 1×1 | `test/a11y-audit.mjs` **12/12** (T1–T6) | MERGED (00a825f) |
 | 3 | 02 | verify ảnh Round 1 + panel/stats sau fix | 6 verify (4 pass) + 5 mới | chip `Chạy thử` bị bóp wrap 2 dòng · onboarding còn trống đáy (dồn giữa) · vạch chia lệch 6px · card tuần toàn 0 · simulator dưới fold · yoloNote dày · "Về mặc định" cạnh "Thêm" | battery 13 suite | FIXED — battery xác minh |
 | 4 | 02+07 | docs/store truth + first-5s + natural flow | 7 docs + 10 vision (4 thật) | store kit/runbook/listing về v1.22.5 · README privacy qualifier (sync opt-in) · coverage 5 surfaces · Wave A shipped · tooltip i18n · chatgpt.com (Codex) | audit text 141s + 2 vision 452s | MERGED (5ad579c, 4468d30) |
-| 5-6 | 02 | power-user efficiency + empty/error states | (đang chạy) | — | — | AUDIT RUNNING |
+| 5-6 | 02 | power-user + empty/error | 10 vision (6 thật) | Alt+Shift+A master toggle · state line "Đang chờ tab Muse" + nút Mở muse.ai · banner dry có "Bật bấm thật" 2 bước · chart mốc 0 · card tuần nói rõ metric | battery 10/13 + 3 rerun xanh (flake máy bận) | SHIPPED v1.22.6 (88a3f1d) |
+| 7-8 | 02 | design-system consistency + native i18n + microcopy | (đang chạy) | — | — | AUDIT RUNNING |

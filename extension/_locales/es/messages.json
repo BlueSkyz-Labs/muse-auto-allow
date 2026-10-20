@@ -18,7 +18,7 @@
     "message": "Aún no hay clics"
   },
   "kindAllow": {
-    "message": "permitir"
+    "message": "Allow"
   },
   "kindExpand": {
     "message": "expandir"
@@ -57,7 +57,7 @@
     "message": "Top 12 de $1 temas · proporción de $2 clics"
   },
   "stateOff": {
-    "message": "Apagado — no se pulsa nada"
+    "message": "Desactivado — no se hace clic en nada"
   },
   "stateLive": {
     "message": "Activo — solo pulsa Allow"
@@ -75,7 +75,7 @@
     "message": "Acceso permanente concedido"
   },
   "onbDemoClick": {
-    "message": "Pulsa Allow cuando Muse muestra un par de aprobación claro"
+    "message": "Hace clic en Allow cuando Muse muestra claramente el par de aprobación"
   },
   "onbDemoBlock": {
     "message": "Omite lo que coincida con tu lista de palabras bloqueadas (delete, deploy…)"
@@ -405,7 +405,7 @@
     "message": "Quitar"
   },
   "scheduleTitle": {
-    "message": "Seguimiento solo por horas"
+    "message": "Seguimiento solo en el horario establecido"
   },
   "scheduleNote": {
     "message": "No se envía fuera de esta franja horaria local (las franjas nocturnas se ajustan)."

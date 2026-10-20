@@ -78,7 +78,7 @@
     "message": "Bấm Allow khi Muse hiện cặp phê duyệt rõ ràng"
   },
   "onbDemoBlock": {
-    "message": "Bỏ qua mọi thứ khớp danh sách từ khoá chặn (delete, deploy, …)"
+    "message": "Bỏ qua mọi thứ khớp danh sách từ khoá chặn (delete, deploy, …) khi luật từ khoá đang có hiệu lực"
   },
   "onbDemoStanding": {
     "message": "Để bạn tự quyết các cấp thường trực (“Always allow”)"
@@ -177,16 +177,16 @@
     "message": "Chạy tiếp"
   },
   "followupQuick2": {
-    "message": "Dài hơi"
+    "message": "Chạy dài"
   },
   "followupQuick3": {
     "message": "Chuẩn tốt nhất"
   },
   "followupLibrary": {
-    "message": "Thư viện câu lệnh"
+    "message": "Thư viện câu nhắc"
   },
   "followupCombineHint": {
-    "message": "Bấm vào câu lệnh để ghép — nối theo thứ tự trong thư viện."
+    "message": "Bấm vào câu nhắc để ghép — nối theo thứ tự trong thư viện."
   },
   "followupPreview": {
     "message": "Xem trước"
@@ -339,10 +339,10 @@
     "message": "YOLO — duyệt tất cả"
   },
   "yoloNote": {
-    "message": "Bỏ qua chặn từ khoá, bấm cả quyền vĩnh viễn. Không bao giờ bấm Deny."
+    "message": "Bỏ qua chặn từ khoá, bấm cả quyền thường trực. Không bao giờ bấm Deny."
   },
   "yoloConfirm": {
-    "message": "Bấm Allow sẽ được tự động, kể cả quyền vĩnh viễn. Bấm lần nữa để xác nhận."
+    "message": "Bật YOLO? Các thẻ bị chặn bởi từ khoá hoặc chỉ cấp quyền thường trực từ giờ sẽ được bấm. Bấm lần nữa để xác nhận."
   },
   "yoloChip": {
     "message": "YOLO"
@@ -354,7 +354,7 @@
     "message": "Đã cấu hình YOLO nhưng đang bật Chạy thử: không tự động bấm chấp thuận. Tắt Chạy thử để YOLO hoạt động thực tế."
   },
   "allowOnceTitle": {
-    "message": "Ưu tiên \"Cho phép một lần\""
+    "message": "Ưu tiên “Cho phép một lần”"
   },
   "allowOnceNote": {
     "message": "Chỉ cấp quyền một lần thay vì cấp thường trực — phạm vi hẹp hơn thì an toàn hơn."
@@ -384,7 +384,7 @@
     "message": "Từ khoá chặn"
   },
   "keywordsNote": {
-    "message": "Thẻ chứa bất kỳ từ nào dưới đây sẽ không bao giờ bị bấm — chỉ ghi log là bị chặn."
+    "message": "Thẻ chứa bất kỳ từ nào trong số này sẽ không bị bấm khi luật từ khoá đang có hiệu lực — thay vào đó ghi log là bị chặn. YOLO sẽ tắt các luật này."
   },
   "keywordsPlaceholder": {
     "message": "Thêm từ khoá…"
@@ -396,7 +396,7 @@
     "message": "Đặt lại danh sách? Bấm lần nữa"
   },
   "keywordsEmpty": {
-    "message": "Chưa có từ khoá — không chặn gì"
+    "message": "Chưa có từ khoá — không chặn gì khi luật đang có hiệu lực"
   },
   "rulesAdd": {
     "message": "Thêm"
@@ -444,7 +444,7 @@
     "message": "lượt bấm"
   },
   "digestFollowups": {
-    "message": "lượt nhắc"
+    "message": "nhắc tiếp"
   },
   "digestBlocked": {
     "message": "bị chặn"
@@ -543,7 +543,7 @@
     "message": "$1 bước"
   },
   "missionGateNote": {
-    "message": "Bật Tự động theo dõi để chạy nhiệm vụ"
+    "message": "Bật Tự động gửi tiếp để chạy nhiệm vụ"
   },
   "missionLastDone": {
     "message": "Hoàn tất gần nhất: $1"
@@ -900,7 +900,7 @@
     "message": "Bấm lần nữa"
   },
   "ruleConfirmApply": {
-    "message": "Thay $1 luật? Bấm lại"
+    "message": "Thay $1 luật? Bấm lần nữa"
   },
   "tabWord": {
     "message": "tab"
@@ -987,10 +987,10 @@
     "message": "Nhập nội dung thẻ trước"
   },
   "trustRails": {
-    "message": "Chốt an toàn: không bao giờ bấm Deny · connector thủ công · quyền vĩnh viễn thủ công"
+    "message": "Chốt an toàn: không bao giờ bấm Deny · connector thủ công · quyền thường trực thủ công"
   },
   "trustRailsYolo": {
-    "message": "Chốt an toàn: không bao giờ bấm Deny · connector thủ công · quyền vĩnh viễn SẼ được bấm khi YOLO bật"
+    "message": "Chốt an toàn: không bao giờ bấm Deny · connector thủ công · quyền thường trực SẼ được bấm khi YOLO bật"
   },
   "trustLastNone": {
     "message": "Chưa ghi nhận lần chặn nào"
@@ -1029,10 +1029,10 @@
     "message": "Connector: thủ công"
   },
   "trustRailStand": {
-    "message": "Quyền vĩnh viễn: thủ công"
+    "message": "Quyền thường trực: thủ công"
   },
   "trustRailStandYolo": {
-    "message": "Quyền vĩnh viễn: được bấm (YOLO)"
+    "message": "Quyền thường trực: được bấm (YOLO)"
   },
   "auditWeekEmpty": {
     "message": "0 lần chặn · 0 lượt hỏi · 0 nhắc tiếp tuần này"

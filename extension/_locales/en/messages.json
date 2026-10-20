@@ -78,10 +78,10 @@
     "message": "Clicks Allow when Muse shows a clear approval pair"
   },
   "onbDemoBlock": {
-    "message": "Skips anything matching your keyword block-list (delete, deploy, …)"
+    "message": "Skips anything matching your keyword block-list (delete, deploy, …) while keyword rules are enforced"
   },
   "onbDemoStanding": {
-    "message": "Leaves standing grants (\"Always allow\") to you"
+    "message": "Leaves standing grants (“Always allow”) to you"
   },
   "rangeDay": {
     "message": "Day"
@@ -363,7 +363,7 @@
     "message": "YOLO is configured but Dry-run is on: no approvals are clicked. Turn off Dry-run to resume live YOLO approvals."
   },
   "allowOnceTitle": {
-    "message": "Prefer \"Allow once\""
+    "message": "Prefer “Allow once”"
   },
   "allowOnceNote": {
     "message": "One-time approvals instead of standing access — the narrower grant is safer."
@@ -393,7 +393,7 @@
     "message": "Block keywords"
   },
   "keywordsNote": {
-    "message": "A card containing any of these words is never clicked — it is logged as blocked instead."
+    "message": "A card containing any of these words is not clicked while keyword rules are enforced — it is logged as blocked instead. YOLO turns these rules off."
   },
   "keywordsPlaceholder": {
     "message": "Add a keyword…"
@@ -405,7 +405,7 @@
     "message": "Reset the list? Tap again"
   },
   "keywordsEmpty": {
-    "message": "No keywords set — nothing is blocked"
+    "message": "No keywords set — nothing is blocked while rules are enforced"
   },
   "rulesAdd": {
     "message": "Add"
