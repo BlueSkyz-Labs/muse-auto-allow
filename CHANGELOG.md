@@ -1,6 +1,19 @@
 # Changelog
 
-## 1.22.7 — rounds 7–8 (design-system + native i18n + microcopy)
+## 1.22.8 — round 9 (security hardening)
+- **CRITICAL**: sao lưu (`exportData`) từng chứa **khoá giải mã log** (`cryptKeyRaw`) và **license
+  token** — chia sẻ tệp backup là lộ toàn bộ nội dung log. Nay tệp backup **loại bỏ cả hai**; UI ghi
+  rõ "Backups exclude the log key and the licence token".
+- **HIGH**: import backup không còn nhận license token chưa xác minh chữ ký (bề mặt giả mạo);
+  token phải kích hoạt riêng.
+- **MED**: `getKey()` xác minh lại sau khi ghi khoá và thử lại 1 lần (tránh mất khoá âm thầm);
+  `pullFromSync` kiểm tra kiểu từng khoá (sync bị xâm nhập không thể bật/tắt sai kiểu);
+  xuất audit có ghi chú riêng tư cạnh nút.
+- Audit DOM/messaging độc lập: **0 finding**. CI pin theo major tag: chấp nhận (ghi nhận).
+- Tests: import-security cập nhật theo hành vi mới (**169/0**); qa contrast probe loại trừ
+  disabled/aria-hidden (hết false positive) → **qa 42/42**; mission/a11y/lang/codex xanh khi chạy riêng.
+
+## 1.22.7 — rounds 7–8 (design-system + native i18n + microcopy) — rounds 7–8 (design-system + native i18n + microcopy)
 - **Design system**: KPI "Hôm nay/Tuần nay" hết dùng hue cảnh báo (rose/teal → brand/neutral); khối
   "Tuần này" vào đúng card vocabulary (surface + border + radius 16 + padding + shadow, caption chuẩn);
   radius control về đúng thang (input 12, banner 12, nút icon 8); một tier caption duy nhất; tiêu đề
