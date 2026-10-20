@@ -743,6 +743,13 @@
       const k = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']);
       const raw = await crypto.subtle.exportKey('raw', k);
       await chrome.storage.local.set({ cryptKeyRaw: b64(raw) });
+      // SEC (round 9): a failed write must not be silent — verify, retry once, and only then
+      // fall back to a session key (entries written now stay readable until the next reload).
+      let persisted = await chrome.storage.local.get({ cryptKeyRaw: null });
+      if (!persisted.cryptKeyRaw) {
+        try { await chrome.storage.local.set({ cryptKeyRaw: b64(raw) }); } catch { /* retry below */ }
+        persisted = await chrome.storage.local.get({ cryptKeyRaw: null });
+      }
       // first-install race (V4-5): another tab may have won the write — if the stored
       // key differs from ours, adopt the stored one so every entry stays readable
       const chk = await chrome.storage.local.get({ cryptKeyRaw: null });

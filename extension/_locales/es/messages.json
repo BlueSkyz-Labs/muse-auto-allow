@@ -1060,5 +1060,11 @@
   },
   "shortcutEnabled": {
     "message": "Activar o desactivar el clic automático"
+  },
+  "auditPrivacyNote": {
+    "message": "El archivo contiene contextos descifrados: no lo compartas públicamente."
+  },
+  "backupPrivacyNote": {
+    "message": "Las copias excluyen la clave del registro y la licencia."
   }
 }

@@ -1060,5 +1060,11 @@
   },
   "shortcutEnabled": {
     "message": "开关自动点击"
+  },
+  "auditPrivacyNote": {
+    "message": "文件包含已解密内容——请勿公开分享。"
+  },
+  "backupPrivacyNote": {
+    "message": "备份不含日志密钥与许可证令牌。"
   }
 }

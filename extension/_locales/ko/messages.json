@@ -1060,5 +1060,11 @@
   },
   "shortcutEnabled": {
     "message": "자동 클릭 켜기/끄기"
+  },
+  "auditPrivacyNote": {
+    "message": "파일에는 복호화된 내용이 포함됩니다 — 공개하지 마세요."
+  },
+  "backupPrivacyNote": {
+    "message": "백업에는 로그 키와 라이선스가 포함되지 않습니다."
   }
 }

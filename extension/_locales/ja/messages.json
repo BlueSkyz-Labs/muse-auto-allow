@@ -1060,5 +1060,11 @@
   },
   "shortcutEnabled": {
     "message": "自動クリックのオン/オフ"
+  },
+  "auditPrivacyNote": {
+    "message": "ファイルには復号された内容が含まれます — 公開しないでください。"
+  },
+  "backupPrivacyNote": {
+    "message": "バックアップにはログ鍵とライセンスは含まれません。"
   }
 }

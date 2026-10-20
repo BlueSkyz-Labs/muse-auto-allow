@@ -1060,5 +1060,11 @@
   },
   "shortcutEnabled": {
     "message": "Turn auto-click on or off"
+  },
+  "auditPrivacyNote": {
+    "message": "The file contains decrypted contexts — do not share it publicly."
+  },
+  "backupPrivacyNote": {
+    "message": "Backups exclude the log key and the licence token."
   }
 }

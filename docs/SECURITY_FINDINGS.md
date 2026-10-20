@@ -53,3 +53,18 @@ CLOSED`. Baseline for the first register entry: engine shipped since v1.10.0.
 - renderLayers escape MỌI dữ liệu người dùng qua esc() (kiểm chứng bằng mắt, không có đường innerHTML thô).
 **1 INFO (không phải lỗ hổng):** child audit chỉ chạy rule-engine-unit nên ghi "import merge ordering của stats.js chưa được test phủ" — thực tế path này đã được `test/import-security.mjs` phủ trong battery chuẩn (169/169 xanh, gồm SA-1/merge sub-key).
 **Phương pháp:** audit độc lập bởi mô hình khác (mimo-v2.6-pro), đọc mã + chạy node --check toàn bộ 11 script + unit được phép; kết quả được cha kiểm chứng lại 2 điểm còn nghi bằng mắt.
+
+## Round 9 — independent white-hat pass (prompt 03), 2026-10-20
+
+Three isolated audits (storage/crypto · DOM/messaging · permissions/supply chain) against v1.22.7.
+**DOM & messaging: 0 findings** (all sinks escaped, no page-callable message surface).
+
+| # | Severity | Finding | Resolution |
+|---|---|---|---|
+| S1 | **CRITICAL** | `exportData` dumped the whole store, including **`cryptKeyRaw`** (the AES key) and the licence token — a shared backup would decrypt every log context. | FIXED: export strips `cryptKeyRaw` + `license`; backup note added in the UI ("Backups exclude the log key and the licence token"). |
+| S2 | HIGH | Backup import accepted a format-valid but **unverified** licence token (spoofing surface; dormant mode never verifies). | FIXED: imports no longer carry a licence token at all; it must be activated separately. Tests updated (169/0). |
+| S3 | MED | `getKey()` ignored a failed `cryptKeyRaw` write → silent key loss after reload. | FIXED: read-back verify + one retry before falling back to a session key. |
+| S4 | MED | `pullFromSync` seeded sync values **without type checks** (e.g. `dryRun:'false'` is truthy). | FIXED: per-key type guard; malformed values are ignored. |
+| S5 | MED | Audit export (JSON/CSV) contains decrypted contexts with no warning. | FIXED: static privacy note next to the export buttons. |
+| S6 | LOW (accepted) | CI actions pinned by major tag, not commit SHA. | ACCEPTED for now — pinning requires the exact upstream SHAs; tracked for the release-assurance round. |
+| S7 | INFO (accepted) | `cryptKeyRaw` is deliberately not in `SYNC_SUBSET`; logs from an old device are unreadable on a new one. | ACCEPTED by design (a synced key would put the key in Google's cloud); documented. |

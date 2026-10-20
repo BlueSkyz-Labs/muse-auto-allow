@@ -1060,5 +1060,11 @@
   },
   "shortcutEnabled": {
     "message": "Bật/tắt tự động bấm"
+  },
+  "auditPrivacyNote": {
+    "message": "Tệp chứa nội dung đã giải mã — không chia sẻ công khai."
+  },
+  "backupPrivacyNote": {
+    "message": "Bản sao lưu không chứa khoá giải mã log hay license."
   }
 }

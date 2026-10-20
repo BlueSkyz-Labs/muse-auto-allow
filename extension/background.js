@@ -305,8 +305,19 @@ function pullFromSync(done) {
           // (migrate() would never run). The callback now always fires fin exactly once.
           try {
             const seed = {};
+            // SEC (round 9): sync values are untrusted input — a compromised sync account could
+            // otherwise flip types (e.g. dryRun:'false' is truthy). Only well-typed values are seeded.
+            const typeOk = (k, v) => {
+              if (k === 'enabled' || k === 'dryRun' || k === 'yoloMode' || k === 'allowOnceMode' ||
+                  k === 'codexEnabled' || k === 'followupEnabled') return typeof v === 'boolean';
+              if (k === 'minDelayMs') return typeof v === 'number' && isFinite(v) && v >= 0 && v <= 10000;
+              if (k === 'followupPrompt') return typeof v === 'string' && v.length <= 2000;
+              if (k === 'rules') return typeof v === 'string' && v.length <= 20000;
+              return typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean' ||
+                (v && typeof v === 'object');
+            };
             for (const k of SYNC_SUBSET) {
-              if (!(k in localVals) && syncVals && syncVals[k] !== undefined) seed[k] = syncVals[k];
+              if (!(k in localVals) && syncVals && syncVals[k] !== undefined && typeOk(k, syncVals[k])) seed[k] = syncVals[k];
             }
             if (Object.keys(seed).length) { try { chrome.storage.local.set(seed, fin); return; } catch { /* ignore */ } }
           } catch { /* ignore */ }

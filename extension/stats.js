@@ -417,17 +417,9 @@ const sanitizeMissionObj = (m) => {
 const sanitizeBackup = (d) => {
   const out = {}; let seen = 0;
   if (typeof d.enabled === 'boolean') { out.enabled = d.enabled; seen++; }
-  // v1.21.0 (W4): a license token may ride a backup, but ONLY as an opaque bounded string —
-  // forged tier/lastSeenAt claims are dropped; the getter re-verifies against the committed key.
-  if (d.license && typeof d.license === 'object' && !Array.isArray(d.license)) {
-    const t0 = d.license.token;
-    if (typeof t0 === 'string' && t0.length > 0 && t0.length <= 2048 && /^MAA1\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(t0)) {
-      const lic = { token: t0 };
-      const ex = d.license.exp;
-      if (typeof ex === 'number' && isFinite(ex)) lic.exp = ex; else lic.exp = null;
-      out.license = lic; seen++;
-    }
-  }
+  // SEC (round 9): a backup can no longer carry a licence token. The old path stored a
+  // format-valid but unverified token; without an offline signature check at import time that
+  // is a spoofing surface, so the token is dropped here and must be activated separately.
   if (typeof d.minDelayMs === 'number' && isFinite(d.minDelayMs)) { out.minDelayMs = Math.min(10000, Math.max(0, Math.round(d.minDelayMs))); seen++; }
   if (typeof d.clickCount === 'number' && isFinite(d.clickCount)) { out.clickCount = Math.min(1e7, Math.max(0, Math.floor(d.clickCount))); seen++; } // SA-3: hard ceiling
   if (Array.isArray(d.log)) {
@@ -588,7 +580,11 @@ async function resolveImportedKey(clean, currentKeyRaw) {
 $('exportData').addEventListener('click', async () => {
   try {
     const s = await chrome.storage.local.get(null);
-    const payload = { app: 'muse-auto-allow', schemaVersion: 2, exportedAt: new Date().toISOString(), data: s };
+    // SEC (round 9): a backup must never carry the key that decrypts it, nor the licence token.
+    const data = Object.assign({}, s);
+    delete data.cryptKeyRaw;
+    delete data.license;
+    const payload = { app: 'muse-auto-allow', schemaVersion: 2, exportedAt: new Date().toISOString(), data };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

@@ -384,9 +384,10 @@ async function main() {
   // ================= W4 — license token round-trip (bounded; forged claims dropped) =============
   const LTOK = 'MAA1.' + 'eyJza3UiOiJtYWEtcHJvIn0' + '.' + 'c2lnbmF0dXJl';
   const l1 = T.sanitizeBackup({ license: { token: LTOK, exp: 1799999999, tier: 'pro', lastSeenAt: 42 } });
-  check('W4 license: a bounded token round-trips as {token, exp} — forged tier/lastSeenAt dropped',
-    !!l1 && !!l1.license && l1.license.token === LTOK && l1.license.exp === 1799999999
-    && !('tier' in l1.license) && !('lastSeenAt' in l1.license), { lic: l1 && l1.license });
+  // R9 (security): backups no longer carry a licence token — an unverified token at import time
+  // is a spoofing surface, so it is dropped even when well-formed.
+  check('W4 license: a bounded token is DROPPED from backups (no unverified import)',
+    !l1 || !('license' in l1), { lic: l1 && l1.license });
   const l2 = T.sanitizeBackup({ license: { token: 'x'.repeat(5000) } });
   check('W4 license: oversized token dropped', !l2 || !('license' in l2), { sanitized: l2 ? Object.keys(l2) : null });
   const l2b = T.sanitizeBackup({ license: { token: 'MAA1.' + 'a'.repeat(2043) + '.' + 'b' } }); // tổng 2050 ký tự → quá trần 2048
@@ -396,7 +397,7 @@ async function main() {
   const l4 = T.sanitizeBackup({ license: { token: 'not-a-token' } });
   check('W4 license: malformed shape dropped', !l4 || !('license' in l4), { sanitized: l4 ? Object.keys(l4) : null });
   const l5 = T.sanitizeBackup({ license: { token: LTOK } });
-  check('W4 license: absent exp normalizes to null', !!l5 && !!l5.license && l5.license.exp === null, { lic: l5 && l5.license });
+  check('W4 license: token without exp is still dropped', !l5 || !('license' in l5), { lic: l5 && l5.license });
   resetStore({ license: { token: LTOK, exp: 1 } });
   await importFile(backup({ enabled: true }));
   check('W4 license: an import WITHOUT a license preserves the stored one',
