@@ -162,7 +162,7 @@
     "message": "Intervalo"
   },
   "followupSendNow": {
-    "message": "Enviar ahora"
+    "message": "Enviar recordatorio"
   },
   "followupWorking": {
     "message": "Trabajando"
@@ -937,5 +937,89 @@
   },
   "shortcutDryRun": {
     "message": "Alternar prueba (solo registro)"
+  },
+  "followupLocalNote": {
+    "message": "Se envía solo dentro de tu pestaña de Muse: sin servidor intermedio."
+  },
+  "presetSlow": {
+    "message": "Lento"
+  },
+  "presetNormal": {
+    "message": "Normal"
+  },
+  "presetFast": {
+    "message": "Rápido"
+  },
+  "accRun": {
+    "message": "Modo de ejecución"
+  },
+  "accRules": {
+    "message": "Reglas"
+  },
+  "accAutomation": {
+    "message": "Automatización y monitoreo"
+  },
+  "accDevice": {
+    "message": "Dispositivo y licencia"
+  },
+  "simTitle": {
+    "message": "Probar una tarjeta de ejemplo"
+  },
+  "simPlaceholder": {
+    "message": "texto de la tarjeta, p. ej. delete the database"
+  },
+  "simTopicPlaceholder": {
+    "message": "tema (opcional)"
+  },
+  "simRun": {
+    "message": "Probar"
+  },
+  "simWillClick": {
+    "message": "Haría clic en Allow"
+  },
+  "simWillBlock": {
+    "message": "Se bloquearía"
+  },
+  "simWillAsk": {
+    "message": "Quedaría en tus manos"
+  },
+  "simNeedInput": {
+    "message": "Escribe primero el texto de la tarjeta"
+  },
+  "trustRails": {
+    "message": "Barreras: nunca pulsa Deny · conectores manuales · permisos permanentes manuales"
+  },
+  "trustRailsYolo": {
+    "message": "Barreras: nunca pulsa Deny · conectores manuales · con YOLO sí se pulsan los permisos permanentes"
+  },
+  "trustLastNone": {
+    "message": "Aún no hay bloqueos registrados"
+  },
+  "lastBlockLine": {
+    "message": "Último bloqueo: $1 · $2"
+  },
+  "logWhy": {
+    "message": "Motivo"
+  },
+  "obDemoCardTitle": {
+    "message": "Factura #204 — Acme"
+  },
+  "obDemoCardBody": {
+    "message": "¿Aprobar esta acción?"
+  },
+  "obDemoAllow": {
+    "message": "Allow"
+  },
+  "obDemoDeny": {
+    "message": "Deny"
+  },
+  "obDemoHint": {
+    "message": "Pruébalo: esta tarjeta dice «invoice», así que el motor la omitiría."
+  },
+  "obDemoResult": {
+    "message": "No pasó nada: esa es la idea. Una tarjeta bloqueada nunca se pulsa."
+  },
+  "delayShort": {
+    "message": "Retardo"
   }
 }

@@ -162,7 +162,7 @@
     "message": "Khoảng chờ"
   },
   "followupSendNow": {
-    "message": "Gửi ngay"
+    "message": "Gửi lời nhắc"
   },
   "followupWorking": {
     "message": "Đang làm việc"
@@ -937,5 +937,89 @@
   },
   "shortcutDryRun": {
     "message": "Bật/tắt chạy thử (chỉ ghi log)"
+  },
+  "followupLocalNote": {
+    "message": "Chỉ gửi trong tab Muse của bạn — không có máy chủ trung gian."
+  },
+  "presetSlow": {
+    "message": "Chậm"
+  },
+  "presetNormal": {
+    "message": "Bình thường"
+  },
+  "presetFast": {
+    "message": "Nhanh"
+  },
+  "accRun": {
+    "message": "Chế độ chạy"
+  },
+  "accRules": {
+    "message": "Luật"
+  },
+  "accAutomation": {
+    "message": "Tự động hoá & giám sát"
+  },
+  "accDevice": {
+    "message": "Thiết bị & bản quyền"
+  },
+  "simTitle": {
+    "message": "Thử với một thẻ mẫu"
+  },
+  "simPlaceholder": {
+    "message": "nội dung thẻ, vd: delete the database"
+  },
+  "simTopicPlaceholder": {
+    "message": "chủ đề (tuỳ chọn)"
+  },
+  "simRun": {
+    "message": "Thử"
+  },
+  "simWillClick": {
+    "message": "Sẽ bấm Allow"
+  },
+  "simWillBlock": {
+    "message": "Sẽ bị chặn"
+  },
+  "simWillAsk": {
+    "message": "Sẽ để bạn tự quyết"
+  },
+  "simNeedInput": {
+    "message": "Nhập nội dung thẻ trước"
+  },
+  "trustRails": {
+    "message": "Chốt an toàn: không bao giờ bấm Deny · connector thủ công · quyền vĩnh viễn thủ công"
+  },
+  "trustRailsYolo": {
+    "message": "Chốt an toàn: không bao giờ bấm Deny · connector thủ công · quyền vĩnh viễn SẼ được bấm khi YOLO bật"
+  },
+  "trustLastNone": {
+    "message": "Chưa ghi nhận lần chặn nào"
+  },
+  "lastBlockLine": {
+    "message": "Lần chặn cuối: $1 · $2"
+  },
+  "logWhy": {
+    "message": "Vì sao"
+  },
+  "obDemoCardTitle": {
+    "message": "Hoá đơn #204 — Acme"
+  },
+  "obDemoCardBody": {
+    "message": "Duyệt hành động này?"
+  },
+  "obDemoAllow": {
+    "message": "Allow"
+  },
+  "obDemoDeny": {
+    "message": "Deny"
+  },
+  "obDemoHint": {
+    "message": "Thử xem: thẻ này có “invoice” nên engine sẽ bỏ qua."
+  },
+  "obDemoResult": {
+    "message": "Không có gì xảy ra — đó chính là điều cần thấy. Thẻ bị chặn sẽ không bao giờ được bấm."
+  },
+  "delayShort": {
+    "message": "Độ trễ"
   }
 }

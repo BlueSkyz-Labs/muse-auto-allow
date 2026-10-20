@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.22.4 — Wave A (SGPS prompt-02, owner-approved)
+- **G3 Rule Simulator** (`extension/rulesim.js`, pure): type a sample card + optional topic and
+  see exactly what the shipped engine would do (block / ask / click), which rule matched, and the
+  D1→D6 path — the preview calls `MuseRules.decide()` itself, so it cannot drift.
+- **G2 Audit timeline**: log rows expand on click / Enter / Space (`aria-expanded`), day headers
+  already grouped, newest first.
+- **G4 Trust dashboard** in the Safety panel: the rails that never change (never Deny, connectors
+  manual, standing grants manual — or the YOLO truth) plus the last block, in one glance.
+- **G1 First-run demo**: the onboarding now shows a mock approval card; pressing Allow proves the
+  point — nothing happens, because the card carries a blocked keyword.
+- **G6 Delay presets**: Slow / Normal / Fast (600/300/120 ms) replace a raw milliseconds field.
+- **G10 Explainable block**: a blocked row translates `rule:<id>` back to the rule itself
+  (kind + topics/keywords) instead of showing a bare id.
+- **S1 Collapsible safety groups**: four `<details>` groups (Run mode · Rules · Automation &
+  monitoring · Device & license) — open by default, per-device remembered.
+- **S2 Folded follow-up**: the whole block stays hidden until the feature is enabled; the privacy
+  line ("sends only inside your Muse tab — no server in between") rides the existing status line,
+  so the popup keeps its ≤600px contract (595px measured).
+- **S4 Last blocked** line above the log; **popup contract re-verified at 595px**.
+- i18n **340 keys × 6 locales**; new unit suites `rulesim` **19/19**, `timeline` **22/22**.
+- Not included: CWS upload, pricing, license ceremony (Owner gates).
+
 ## 1.22.3
 - **UX customer-centric vòng 1–3 (23+20+20 findings, 4 audit song song/vòng + heuristic + a11y).**
   - **Vòng 1**: onboarding 3 bullet trấn an (chỉ Allow · log trên máy · bắt đầu chạy thử) + nút

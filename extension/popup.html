@@ -382,6 +382,37 @@
   /* one row: pause control (idle pills / paused state) left, Safety & Control entry right */
   .ctlbar { display: flex; align-items: center; gap: 6px; margin: 0 0 3px; min-width: 0; }
   .pgroup { display: inline-flex; align-items: center; gap: 4px; min-width: 0; flex-wrap: wrap; row-gap: 4px; }
+  .presets { display: inline-flex; gap: 4px; flex-wrap: nowrap; }
+  .presets .pbtn { padding: 2px 7px; font-size: 11px; }
+  /* v1.22.4: rule simulator, trust dash, last block, onboarding mock */
+  .rowsim { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); }
+  .simout { margin-top: 6px; font-size: 11.5px; color: var(--ink-2); line-height: 1.45; }
+  .simout .simact { display: inline-block; font-weight: 600; margin-right: 6px; }
+  .simout .simact.block { color: var(--red); }
+  .simout .simact.ask { color: var(--amber-ink); }
+  .simout .simact.none { color: var(--green-ink); }
+  .simout .simsteps { font-family: ui-monospace, monospace; font-size: 10.5px; color: var(--muted); }
+  .trust { margin: 6px 0 2px; font-size: 11px; line-height: 1.45; color: var(--ink-2); }
+  .trust .tline { overflow-wrap: anywhere; }
+  .lastblock { font-size: 11px; color: var(--muted); padding: 0 0 4px; overflow-wrap: anywhere; }
+  .obmock { margin: 8px 0 0; border: 1px solid var(--line); border-radius: 10px; padding: 8px; background: var(--card-2); }
+  .obmcard { display: flex; flex-direction: column; gap: 2px; font-size: 12px; margin-bottom: 6px; }
+  .obmcard span { color: var(--muted); }
+  .obmbtns { display: flex; gap: 6px; }
+  .obmres { margin-top: 6px; font-size: 11px; color: var(--muted); line-height: 1.45; }
+  .obmres.ok { color: var(--green-ink); font-weight: 500; }
+  .item.exp .c { -webkit-line-clamp: unset; display: block; }
+  .item .why { font-size: 10.5px; color: var(--muted); margin-top: 2px; overflow-wrap: anywhere; }
+  .item { cursor: pointer; }
+  .item:focus-visible { outline: 2px solid var(--accent-line); outline-offset: 2px; }
+  /* v1.22.4 (S1): four collapsible groups — open by default, state remembered */
+  .acc { border-top: 1px solid var(--line); margin-top: 8px; }
+  .acc summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 6px; padding: 9px 0 6px; font-size: 12px; font-weight: 600; color: var(--ink); }
+  .acc summary::-webkit-details-marker { display: none; }
+  .acc summary::after { content: ""; width: 7px; height: 7px; border-right: 1.6px solid currentColor; border-bottom: 1.6px solid currentColor; transform: rotate(-45deg); margin-left: auto; transition: transform .15s; }
+  .acc[open] summary::after { transform: rotate(45deg); }
+  .acc > .rgroup:first-of-type { margin-top: 2px; }
+  .pbtn.preset.on { background: var(--accent-tint); border-color: var(--accent-line); color: var(--accent-text); font-weight: 500; }
   .pbtn { max-width: 100%; text-overflow: clip; ; min-height: 24px; } /* v1.22.1 UX: labels may wrap instead of clipping mid-word */
   .plabel { flex: none; font-size: 11.5px; }
   .sstatus { display: flex; align-items: center; gap: 8px; padding: 6px 8px; margin: 0 0 8px;
@@ -665,8 +696,14 @@
   </div>
   <label class="sw"><input type="checkbox" id="enabled"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="toggleLabel">Auto-click Allow</span></label>
   <div class="modetag" id="modeTag" hidden>SIMULATION — NOT CLICKING</div>
-  <div class="row field"><label class="muted" for="delay" data-i18n="delayLabel" data-nc>Delay between clicks:</label>
-    <span class="numwrap"><input type="number" id="delay" min="0" max="10000" step="100"><span class="unit muted" data-i18n="unitMs">ms</span></span></div>
+  <!-- v1.22.4 (G6): three plain-language presets replace the raw milliseconds row -->
+  <div class="row field presetrow"><span class="muted" data-i18n="delayShort" data-nc>Delay</span>
+    <span class="presets" id="presets">
+      <button type="button" class="pbtn preset" data-delay="600" data-i18n="presetSlow">Slow</button>
+      <button type="button" class="pbtn preset" data-delay="300" data-i18n="presetNormal">Normal</button>
+      <button type="button" class="pbtn preset" data-delay="120" data-i18n="presetFast">Fast</button>
+    </span>
+    <span class="numwrap" hidden><input type="number" id="delay" min="0" max="10000" step="100"><span class="unit muted" data-i18n="unitMs">ms</span></span></div>
   <div class="stats">
     <span class="stat"><span class="muted" data-i18n="clickedLabel" data-nc>Clicked:</span><b class="count" id="count">0</b></span>
     <span class="stat"><span class="muted" data-i18n="todayLabel" data-nc>Today</span><b class="count" id="today">0</b></span>
@@ -772,6 +809,7 @@
       </div>
       <input type="search" id="lfSearch" class="lfsearch" autocomplete="off" data-i18n-ph="logSearchPlaceholder" placeholder="Search…">
     </div>
+    <div class="lastblock" id="lastBlock" hidden></div>
     <div id="logList"></div>
   </div>
   <div class="row foot"><span class="note muted" data-i18n="onlyMuse">Works on muse.ai and chatgpt.com</span><button class="btn ghost" id="openstats" data-i18n="statsOpen">Statistics</button></div>
@@ -831,6 +869,13 @@
         <button type="button" class="pbtn" id="ssPause" data-i18n="pause15">15 min</button>
       </div>
       <div class="ywarn" id="yoloWarn" hidden><span data-i18n="yoloWarn">YOLO is on — keyword and layered rules are not enforced</span></div>
+      <!-- v1.22.4 (G4): one-glance trust summary (rails + last block) -->
+      <div class="trust" id="trustDash" role="status" aria-live="polite">
+        <div class="tline" id="trustRails"></div>
+        <div class="tline muted" id="trustLast"></div>
+      </div>
+      <details class="acc" id="accRun" open>
+        <summary class="acch" data-i18n="accRun">Run mode</summary>
       <div class="rgroup">
         <label class="sw"><input type="checkbox" id="dryRun"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="dryRunTitle">Dry-run (log only)</span></label>
         <div class="rnote" data-i18n="dryRunNote">Detect and log exactly as usual — nothing is clicked and no follow-up is sent.</div>
@@ -855,6 +900,9 @@
         <label class="sw"><input type="checkbox" id="allowOnce"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="allowOnceTitle">Prefer "Allow once"</span></label>
         <div class="rnote" data-i18n="allowOnceNote">One-time approvals instead of standing access — the narrower grant is safer.</div>
       </div>
+      </details>
+      <details class="acc" id="accRules" open>
+        <summary class="acch" data-i18n="accRules">Rules</summary>
       <div class="rgroup" id="topicsGroup">
         <div class="rlabel" data-i18n="topicsLabel">Allowed topics</div>
         <div class="rnote" id="topicsNote" data-i18n="topicsNote">When set, only cards whose topic matches exactly are clicked. Leave empty to allow every topic.</div>
@@ -903,8 +951,21 @@
           </div>
         </div>
         <div class="misnote" id="layerNote" role="status"></div>
+        <!-- v1.22.4 (G3): simulate a card against the saved rules before saving a new one -->
+        <div class="rowsim">
+          <div class="rlabel" data-i18n="simTitle">Try a sample card</div>
+          <div class="row field fset">
+            <input type="text" id="simTopic" class="licinput" maxlength="64" style="flex:0 0 96px" placeholder="topic" data-i18n-ph="simTopicPlaceholder">
+            <input type="text" id="simText" class="licinput" maxlength="500" placeholder="card text" data-i18n-ph="simPlaceholder">
+            <button type="button" class="btn" id="simRun" data-i18n="simRun">Test</button>
+          </div>
+          <div class="simout" id="simOut" role="status" aria-live="polite"></div>
+        </div>
         <div class="rnote" data-i18n="ruleDryRunHint">Tip: keep Dry-run on while you tune the rules — everything is logged and nothing is clicked.</div>
       </div>
+      </details>
+      <details class="acc" id="accAutomation" open>
+        <summary class="acch" data-i18n="accAutomation">Automation & monitoring</summary>
       <!-- v1.20.0 (G04) — Anomaly guard: the engine pauses itself when click behaviour
            looks abnormal. ONE switch governs both rules (sustained rate + topic
            spike); the detector only ADDS pauses — it never weakens any rail. -->
@@ -943,6 +1004,9 @@
         </div>
         <label class="sw"><input type="checkbox" id="errRec"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="smartErrorLabel">Recover from visible errors</span></label>
       </div>
+      </details>
+      <details class="acc" id="accDevice" open>
+        <summary class="acch" data-i18n="accDevice">Device & license</summary>
       <div class="rgroup">
         <label class="sw"><input type="checkbox" id="syncSet"> <span class="track" aria-hidden="true"><span class="knob"></span></span> <span data-i18n="syncTitle">Sync settings across devices</span></label>
         <div class="rnote" data-i18n="syncNote">Uses Chrome Sync (8 KB per-item limit). Lists larger than the limit stay on this device; local settings always win.</div>
@@ -960,6 +1024,7 @@
         </div>
         <div class="rnote" id="licenseStatus" role="status" aria-live="polite" aria-atomic="true"></div>
       </div>
+      </details>
 
     </div>
   </div>
@@ -987,6 +1052,11 @@
         <li data-i18n="onbDemoBlock">Skips anything matching your keyword block-list (delete, deploy, …)</li>
         <li data-i18n="onbDemoStanding">Leaves standing grants ("Always allow") to you</li>
       </ul>
+      <div class="obmock" id="obMock" hidden>
+        <div class="obmcard"><b data-i18n="obDemoCardTitle">Invoice #204 — Acme</b><span data-i18n="obDemoCardBody">Approve this action?</span></div>
+        <div class="obmbtns"><button type="button" class="btn" id="obmAllow" data-i18n="obDemoAllow">Allow</button><button type="button" class="rbtn" id="obmDeny" disabled data-i18n="obDemoDeny">Deny</button></div>
+        <div class="obmres" id="obmRes" role="status" aria-live="polite" data-i18n="obDemoHint">Try it: this card says “invoice”, so the engine would skip it.</div>
+      </div>
       <div class="obquick" id="obQuick" hidden>
         <button type="button" class="qbtn" id="obq0" data-i18n="followupQuick1">Keep going</button>
         <button type="button" class="qbtn" id="obq1" data-i18n="followupQuick2">Long-run</button>
@@ -1003,6 +1073,8 @@
   </div>
   <script src="playbook.js"></script>
   <script src="rules.js"></script>
+  <script src="rulesim.js"></script>
+  <script src="timeline.js"></script>
   <script src="audit.js"></script>
     <script src="license-pubkey.js"></script>
   <script src="license.js"></script>

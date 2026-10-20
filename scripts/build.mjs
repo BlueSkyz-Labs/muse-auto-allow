@@ -41,6 +41,8 @@ const SHIPPED = [
   'playbook.js', // v1.21.0 (G02): the pure token/render module (content_scripts: playbook.js first)
   'rules.js', // v1.22.0 (W5/F1): the pure three-layer rule engine (content_scripts + popup)
   'audit.js', // v1.22.0 (W5/F2): the pure audit-export builder (stats + popup)
+  'rulesim.js', // v1.22.4 (G3): pure rule simulator for the popup form
+  'timeline.js', // v1.22.4 (G2/S4/G10): pure audit timeline + explain
   'license.js', // v1.21.0 (W4): the dormant offline license core (popup-loaded)
   'license-pubkey.js', // v1.21.0 (W4): committed public-key holder (null until the Owner ceremony)
   'codex.js',

@@ -162,7 +162,7 @@
     "message": "간격"
   },
   "followupSendNow": {
-    "message": "지금 보내기"
+    "message": "알림 보내기"
   },
   "followupWorking": {
     "message": "작업 중"
@@ -937,5 +937,89 @@
   },
   "shortcutDryRun": {
     "message": "드라이런 전환"
+  },
+  "followupLocalNote": {
+    "message": "보내기는 사용자의 Muse 탭 안에서만 — 중간 서버가 없습니다."
+  },
+  "presetSlow": {
+    "message": "느리게"
+  },
+  "presetNormal": {
+    "message": "보통"
+  },
+  "presetFast": {
+    "message": "빠르게"
+  },
+  "accRun": {
+    "message": "실행 모드"
+  },
+  "accRules": {
+    "message": "규칙"
+  },
+  "accAutomation": {
+    "message": "자동화 및 모니터링"
+  },
+  "accDevice": {
+    "message": "기기 및 라이선스"
+  },
+  "simTitle": {
+    "message": "샘플 카드로 시험"
+  },
+  "simPlaceholder": {
+    "message": "카드 텍스트 예: delete the database"
+  },
+  "simTopicPlaceholder": {
+    "message": "주제(선택)"
+  },
+  "simRun": {
+    "message": "시험"
+  },
+  "simWillClick": {
+    "message": "Allow를 클릭합니다"
+  },
+  "simWillBlock": {
+    "message": "차단됩니다"
+  },
+  "simWillAsk": {
+    "message": "사용자 판단으로 남습니다"
+  },
+  "simNeedInput": {
+    "message": "먼저 카드 텍스트를 입력하세요"
+  },
+  "trustRails": {
+    "message": "보호 장치: Deny는 누르지 않음 · 커넥터 수동 · 상시 허용 수동"
+  },
+  "trustRailsYolo": {
+    "message": "보호 장치: Deny는 누르지 않음 · 커넥터 수동 · YOLO 중에는 상시 허용을 클릭합니다"
+  },
+  "trustLastNone": {
+    "message": "아직 차단 기록이 없습니다"
+  },
+  "lastBlockLine": {
+    "message": "마지막 차단: $1 · $2"
+  },
+  "logWhy": {
+    "message": "이유"
+  },
+  "obDemoCardTitle": {
+    "message": "청구서 #204 — Acme"
+  },
+  "obDemoCardBody": {
+    "message": "이 작업을 승인할까요?"
+  },
+  "obDemoAllow": {
+    "message": "Allow"
+  },
+  "obDemoDeny": {
+    "message": "Deny"
+  },
+  "obDemoHint": {
+    "message": "해 보세요: 이 카드에는 “invoice”가 있어 엔진이 건너뜁니다."
+  },
+  "obDemoResult": {
+    "message": "아무 일도 일어나지 않습니다 — 그게 핵심입니다. 차단된 카드는 클릭되지 않습니다."
+  },
+  "delayShort": {
+    "message": "지연"
   }
 }

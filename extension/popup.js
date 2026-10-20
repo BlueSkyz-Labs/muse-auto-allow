@@ -389,6 +389,7 @@ function applyFollowupUI(s) {
   const on = s.followupEnabled === true;
   const cb = $('followupEnabled');
   if (cb) cb.checked = on;
+  const fp = $('fpanel'); if (fp) fp.hidden = !on; // v1.22.4 (S2): the block stays folded until follow-up is enabled
   // ---- re-hydrate the builder from storage (absent followupChips = legacy) ----
   const stored = String(s.followupPrompt || PRESETS[0]);
   const idsRaw = Array.isArray(s.followupChips) ? s.followupChips : null;
@@ -582,6 +583,13 @@ function dayLabelOf(at) {
   try { return new Intl.DateTimeFormat(effLang(), { day: '2-digit', month: '2-digit' }).format(d); } catch { return pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1); }
 }
 function paintLog() {
+  // v1.22.4 (S4): "last blocked" rides above the list so the newest refusal is never buried.
+  const lbEl = $('lastBlock');
+  if (lbEl) {
+    const lb = lastBlockedOf();
+    lbEl.hidden = !lb;
+    lbEl.textContent = lb ? t('lastBlockLine', 'Last blocked: $1 · $2', [lb.label, localTime(lb.at)]) : '';
+  }
   const filters = $('logFilters');
   if (filters) filters.hidden = logItems.length === 0;
   const q = logFilter.q.trim().toLowerCase();
@@ -647,11 +655,37 @@ function paintLog() {
         const sMark = e.standing === true
           ? '<span class="smark" role="img" aria-label="' + esc(t('logStanding', 'Granted standing access')) + '" title="' + esc(t('logStanding', 'Granted standing access')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke-width="2.6" stroke-linecap="round"/><rect x="6" y="10" width="12" height="9" rx="2" fill="none" stroke-width="2.6"/></svg></span>'
           : '';
-        return hdr + '<div class="item"><span class="t" title="' + esc(localFull(e.at)) + '">' + esc(localTime(e.at)) + '</span>' +
+        // v1.22.4 (G10): explainable block — a rule id is translated back to the rule itself
+        // (kind + topics/keywords) so the reader never has to hunt for "blk-inv".
+        let why = '';
+        if (k === 'blocked' && /^rule:/.test(kTitle)) {
+          const rid = kTitle.slice(5);
+          const rule = (v18.rules.layers || []).find((r) => r.id === rid);
+          why = '<div class="why">' + esc(t('logWhy', 'Why') + ': ' + (rule ? t(RULE_KIND_KEY[rule.kind] || rule.kind, rule.kind) + ' · ' + layerDesc(rule) : rid)) + '</div>';
+        }
+        return hdr + '<div class="item" tabindex="0" aria-expanded="false"><span class="t" title="' + esc(localFull(e.at)) + '">' + esc(localTime(e.at)) + '</span>' +
           '<div class="top"><span class="k k-' + esc(kCls) + '"' + (kTitle ? ' title="' + esc(kTitle) + '"' : '') + kAria + '>' + esc(kLbl) + kVis + '</span>' + sMark + mTitle + kOpen + '</div>' +
-          '<div class="c" title="' + esc(cTitle) + '">' + esc(ctxS) + '</div></div>';
+          '<div class="c" title="' + esc(cTitle) + '">' + esc(ctxS) + '</div>' + why + '</div>';
       }).join('');
 }
+// v1.22.4 (G2): the log row expands to show its full context — the same data, no extra read.
+function toggleLogRow(row) {
+  if (!row || !row.classList.contains('item')) return;
+  const open = row.classList.toggle('exp');
+  row.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+document.addEventListener('click', (ev) => {
+  const row = ev.target && ev.target.closest ? ev.target.closest('#logList .item') : null;
+  if (!row || (ev.target.closest && ev.target.closest('button,a'))) return;
+  toggleLogRow(row);
+});
+document.addEventListener('keydown', (ev) => {
+  if (ev.key !== 'Enter' && ev.key !== ' ') return;
+  const row = ev.target && ev.target.closest ? ev.target.closest('#logList .item') : null;
+  if (!row) return;
+  ev.preventDefault();
+  toggleLogRow(row);
+});
 async function renderLog(log) {
   const seq = ++renderSeq;
   const sane = (Array.isArray(log) ? log : []).filter((e) => e && typeof e === 'object'); // V4-3: junk entries never crash the render
@@ -773,6 +807,8 @@ function refresh() {
     missionEnabled: false, mission: null, codexEnabled: false }, (s) => {
     $('enabled').checked = s.enabled !== false;
     $('delay').value = s.minDelayMs ?? 300;
+    syncPresetDelay(); // v1.22.4 (G6)
+    applyAccordion(s); // v1.22.4 (S1)
     const c = $('count');
     const v = s.clickCount || 0;
     if (lastCount !== null && v !== lastCount) {
@@ -984,6 +1020,29 @@ function writeLayers(layers) {
   renderLayers();
 }
 function layersNote(text) { const el = $('layerNote'); if (el) el.textContent = text || ''; }
+// v1.22.4 (G3): simulate a sample card against the CURRENT saved rules. Uses the shipped
+// engine through MuseRuleSim, so the answer cannot drift from what the content script will do.
+function renderSim() {
+  const out = $('simOut');
+  if (!out) return;
+  const text = String(($('simText') && $('simText').value) || '').trim();
+  if (!text) { out.textContent = t('simNeedInput', 'Type some card text first'); return; }
+  if (typeof MuseRuleSim === 'undefined' || !MuseRuleSim) { out.textContent = ''; return; }
+  const r = MuseRuleSim.simulate({
+    topic: String(($('simTopic') && $('simTopic').value) || ''),
+    text,
+    layers: v18.rules.layers || [],
+    legacy: { allowTopics: v18.rules.topics || [], blockKeywords: v18.rules.keywords || [] },
+  });
+  const cls = r.action === 'block' ? 'block' : r.action === 'ask' ? 'ask' : 'none';
+  const lbl = r.action === 'block' ? t('simWillBlock', 'Would be blocked') : r.action === 'ask' ? t('simWillAsk', 'Would be left to you') : t('simWillClick', 'Would click Allow');
+  const why = r.ruleDesc ? ' — ' + r.ruleDesc : (r.reason ? ' — ' + r.reason : '');
+  const path = r.steps.map((x) => x.code).join(' → ');
+  out.innerHTML = '<div><span class="simact ' + cls + '">' + esc(lbl) + '</span>' + esc(why) + '</div>' +
+    (path ? '<div class="simsteps">' + esc(path) + '</div>' : '');
+}
+const simBtn = $('simRun');
+if (simBtn) simBtn.addEventListener('click', renderSim);
 function layersFromInputs() {
   const split = (v) => String(v || '').split(',').map((x) => x.trim()).filter(Boolean);
   const kindEl = $('layerKind');
@@ -1289,6 +1348,58 @@ function renderSafetyStatus() {
   if (yolo) parts.push(t('yoloChip', 'YOLO'));
   el.textContent = parts.join(' · ');
   const dot = $('ssDot'); if (dot) dot.classList.toggle('warn', yolo || dry || paused);
+  renderTrustDash();
+}
+// v1.22.4 (G4): one-glance trust summary. Rails are static truths (they never change with the
+// rules — only YOLO alters the standing-grant line); the last block comes from the same decoded
+// log the popup already holds, so this never reads storage twice.
+function lastBlockedOf() {
+  try {
+    if (typeof MuseTimeline === 'undefined' || !MuseTimeline) return null;
+    const entries = logItems.map(({ e }) => ({ at: e.at, kind: e.kind, label: e.label, blockedReason: e.blockedReason }));
+    return MuseTimeline.build(entries, { layers: v18.rules.layers || [] }).lastBlocked;
+  } catch { return null; }
+}
+function renderTrustDash() {
+  const rails = $('trustRails');
+  if (rails) rails.textContent = v18.yoloMode === true ? t('trustRailsYolo', 'Rails: never clicks Deny · connectors stay manual') : t('trustRails', 'Rails: never clicks Deny · connectors stay manual · standing grants stay manual');
+  const last = $('trustLast');
+  if (last) {
+    const lb = lastBlockedOf();
+    last.textContent = lb ? ('⛔ ' + lb.label + ' · ' + localTime(lb.at) + (lb.ruleDesc ? ' · ' + lb.ruleDesc : (lb.reason ? ' · ' + lb.reason : ''))) : t('trustLastNone', 'No block recorded yet');
+  }
+}
+// v1.22.4 (S1): the four safety groups collapse independently; the open/closed state is
+// remembered per device. Defaults stay OPEN so nothing is hidden from first-time readers.
+const ACC_IDS = ['accRun', 'accRules', 'accAutomation', 'accDevice'];
+function applyAccordion(s) {
+  const st = (s && s.accOpen) || {};
+  ACC_IDS.forEach((id) => {
+    const el = $(id);
+    if (!el) return;
+    el.open = st[id] !== undefined ? st[id] === true : true;
+  });
+}
+function saveAccordion() {
+  const st = {};
+  ACC_IDS.forEach((id) => { const el = $(id); if (el) st[id] = el.open; });
+  try { chrome.storage.local.set({ accOpen: st }); } catch { /* ignore */ }
+}
+
+// v1.22.4 (G6): preset selector mirrors the stored delay (nearest bucket within 60ms).
+function syncPresetDelay() {
+  const inp = $('delay');
+  const d = Number(inp ? inp.value : 300) || 0;
+  document.querySelectorAll('#presets .preset').forEach((b) => {
+    const v = Number(b.dataset.delay);
+    b.classList.toggle('on', Math.abs(v - d) <= 60);
+  });
+}
+function setPresetDelay(v) {
+  const inp = $('delay');
+  if (inp) inp.value = String(v);
+  try { chrome.storage.local.set({ minDelayMs: v }); } catch { /* ignore */ }
+  syncPresetDelay();
 }
 function renderDry() {
   const db = $('dryBand');
@@ -1409,6 +1520,15 @@ function setSafety(open) {
 
 // ---- onboarding wizard (3 steps, shown while onboarded !== true) ---------------------
 let obStep = 0;
+// v1.22.4 (G1): the mock Allow button is inert on purpose — the card it shows carries "invoice",
+// a keyword the shipped defaults block, so the honest outcome is "nothing happens".
+const obmAllowBtn = $('obmAllow');
+if (obmAllowBtn) obmAllowBtn.addEventListener('click', () => {
+  const res = $('obmRes');
+  if (!res) return;
+  res.textContent = t('obDemoResult', 'Nothing happened — that is the point.');
+  res.classList.add('ok');
+});
 const OB_STEPS = [
   { title: ['onbStep1Title', 'Turn on auto-click'], body: ['onbStep1Body', 'Muse asks for approval often. Let the extension click Allow for you — you can pause it any time.'],
     primary: ['onbEnable', 'Turn on'], act: 'enable' },
@@ -1440,6 +1560,7 @@ function renderOnboard() {
   const cs = $('obConsent'); if (cs) cs.hidden = obStep !== 1;
   const mo = $('obMore'); if (mo) mo.hidden = obStep !== 1; // v1.19.0 (S07): the rails explainer rides the consent step
   const dm = $('obDemo'); if (dm) dm.hidden = obStep !== 1; // v1.11.0 (G03): the static "what it would do" list
+  const om = $('obMock'); if (om) om.hidden = obStep !== 1; // v1.22.4 (G1): interactive first-run demo
   const rl = $('obRails'); if (rl) rl.hidden = obStep !== 0; // v1.22.1 UX: three reassurance bullets on the first step
   const q = $('obQuick'); if (q) q.hidden = obStep !== 2;
   const bk = $('obBack'); if (bk) bk.hidden = obStep === 0;
@@ -1660,6 +1781,8 @@ async function applyLocale(lang) {
     writeLayers(layers);
   });
 })();
+ACC_IDS.forEach((id) => { const el = $(id); const sm = el && el.querySelector('summary'); if (sm) sm.addEventListener('click', () => setTimeout(saveAccordion, 0)); }); // v1.22.4 (S1)
+document.querySelectorAll('#presets .preset').forEach((b) => b.addEventListener('click', () => setPresetDelay(Number(b.dataset.delay)))); // v1.22.4 (G6)
 const __ssPause = $('ssPause'); if (__ssPause) __ssPause.addEventListener('click', () => { setPause(Date.now() + PAUSE_15M); renderPause(); renderSafetyStatus(); }); // v1.22.1 UX (Vòng 1)
 $('langBtn').addEventListener('click', (e) => { e.stopPropagation(); if (langOpen) closeLangMenu(true); else openLangMenu(true); });
 // one document-level handler serves the button AND the open menu (keydown bubbles)
@@ -2025,9 +2148,11 @@ function fSendNote(text) {
   const el = $('fsendnote');
   if (!el) return;
   if (fSendNoteTimer) { clearTimeout(fSendNoteTimer); fSendNoteTimer = null; }
-  el.textContent = text || '';
+  // v1.22.4 (S2): with nothing to report, the line carries the privacy note instead of sitting
+  // empty — zero extra height, and the sentence is visible exactly where the send happens.
+  el.textContent = text || t('followupLocalNote', 'Sends only inside your Muse tab — no server in between.');
   if (!text) return;
-  fSendNoteTimer = setTimeout(() => { fSendNoteTimer = null; el.textContent = ''; }, 8000);
+  fSendNoteTimer = setTimeout(() => { fSendNoteTimer = null; el.textContent = t('followupLocalNote', 'Sends only inside your Muse tab — no server in between.'); }, 8000);
 }
 // v1.9.0: shared by the panel's 'Send now' and the mission sheet's 'Send step now'. When a
 // mission is active the engine sends the CURRENT mission step through this same path (manual

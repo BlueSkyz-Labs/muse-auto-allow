@@ -162,7 +162,7 @@
     "message": "Cooldown"
   },
   "followupSendNow": {
-    "message": "Send now"
+    "message": "Send reminder"
   },
   "followupWorking": {
     "message": "Working"
@@ -937,5 +937,89 @@
   },
   "shortcutDryRun": {
     "message": "Toggle dry-run (log only)"
+  },
+  "followupLocalNote": {
+    "message": "Sends only inside your Muse tab — no server in between."
+  },
+  "presetSlow": {
+    "message": "Slow"
+  },
+  "presetNormal": {
+    "message": "Normal"
+  },
+  "presetFast": {
+    "message": "Fast"
+  },
+  "accRun": {
+    "message": "Run mode"
+  },
+  "accRules": {
+    "message": "Rules"
+  },
+  "accAutomation": {
+    "message": "Automation & monitoring"
+  },
+  "accDevice": {
+    "message": "Device & license"
+  },
+  "simTitle": {
+    "message": "Try a sample card"
+  },
+  "simPlaceholder": {
+    "message": "card text, e.g. delete the database"
+  },
+  "simTopicPlaceholder": {
+    "message": "topic (optional)"
+  },
+  "simRun": {
+    "message": "Test"
+  },
+  "simWillClick": {
+    "message": "Would click Allow"
+  },
+  "simWillBlock": {
+    "message": "Would be blocked"
+  },
+  "simWillAsk": {
+    "message": "Would be left to you"
+  },
+  "simNeedInput": {
+    "message": "Type some card text first"
+  },
+  "trustRails": {
+    "message": "Rails: never clicks Deny · connectors stay manual · standing grants stay manual"
+  },
+  "trustRailsYolo": {
+    "message": "Rails: never clicks Deny · connectors stay manual · standing grants ARE clicked while YOLO is on"
+  },
+  "trustLastNone": {
+    "message": "No block recorded yet"
+  },
+  "lastBlockLine": {
+    "message": "Last blocked: $1 · $2"
+  },
+  "logWhy": {
+    "message": "Why"
+  },
+  "obDemoCardTitle": {
+    "message": "Invoice #204 — Acme"
+  },
+  "obDemoCardBody": {
+    "message": "Approve this action?"
+  },
+  "obDemoAllow": {
+    "message": "Allow"
+  },
+  "obDemoDeny": {
+    "message": "Deny"
+  },
+  "obDemoHint": {
+    "message": "Try it: this card says “invoice”, so the engine would skip it."
+  },
+  "obDemoResult": {
+    "message": "Nothing happened — that is the point. A blocked card never gets clicked."
+  },
+  "delayShort": {
+    "message": "Delay"
   }
 }

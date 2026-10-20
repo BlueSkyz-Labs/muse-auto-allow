@@ -162,7 +162,7 @@
     "message": "間隔"
   },
   "followupSendNow": {
-    "message": "今すぐ送信"
+    "message": "リマインダーを送信"
   },
   "followupWorking": {
     "message": "作業中"
@@ -937,5 +937,89 @@
   },
   "shortcutDryRun": {
     "message": "ドライランを切り替え"
+  },
+  "followupLocalNote": {
+    "message": "送信はお使いの Muse タブ内だけ — 間にサーバーはありません。"
+  },
+  "presetSlow": {
+    "message": "ゆっくり"
+  },
+  "presetNormal": {
+    "message": "標準"
+  },
+  "presetFast": {
+    "message": "速い"
+  },
+  "accRun": {
+    "message": "実行モード"
+  },
+  "accRules": {
+    "message": "ルール"
+  },
+  "accAutomation": {
+    "message": "自動化と監視"
+  },
+  "accDevice": {
+    "message": "デバイスとライセンス"
+  },
+  "simTitle": {
+    "message": "サンプルカードで試す"
+  },
+  "simPlaceholder": {
+    "message": "カードの文言（例: delete the database）"
+  },
+  "simTopicPlaceholder": {
+    "message": "トピック（任意）"
+  },
+  "simRun": {
+    "message": "試す"
+  },
+  "simWillClick": {
+    "message": "Allow をクリックします"
+  },
+  "simWillBlock": {
+    "message": "ブロックされます"
+  },
+  "simWillAsk": {
+    "message": "あなたの判断になります"
+  },
+  "simNeedInput": {
+    "message": "先にカードの文言を入力してください"
+  },
+  "trustRails": {
+    "message": "レール: Deny は押しません · コネクタは手動 · 常時許可は手動"
+  },
+  "trustRailsYolo": {
+    "message": "レール: Deny は押しません · コネクタは手動 · YOLO 中は常時許可もクリックします"
+  },
+  "trustLastNone": {
+    "message": "ブロックの記録はまだありません"
+  },
+  "lastBlockLine": {
+    "message": "最後のブロック: $1 · $2"
+  },
+  "logWhy": {
+    "message": "理由"
+  },
+  "obDemoCardTitle": {
+    "message": "請求書 #204 — Acme"
+  },
+  "obDemoCardBody": {
+    "message": "この操作を承認しますか？"
+  },
+  "obDemoAllow": {
+    "message": "Allow"
+  },
+  "obDemoDeny": {
+    "message": "Deny"
+  },
+  "obDemoHint": {
+    "message": "試してみてください: このカードは「invoice」を含むため、エンジンはスキップします。"
+  },
+  "obDemoResult": {
+    "message": "何も起きません — それが要点です。ブロックされたカードはクリックされません。"
+  },
+  "delayShort": {
+    "message": "間隔"
   }
 }

@@ -162,7 +162,7 @@
     "message": "间隔"
   },
   "followupSendNow": {
-    "message": "立即发送"
+    "message": "发送提醒"
   },
   "followupWorking": {
     "message": "工作中"
@@ -937,5 +937,89 @@
   },
   "shortcutDryRun": {
     "message": "切换试运行（仅记录）"
+  },
+  "followupLocalNote": {
+    "message": "仅在您的 Muse 标签页内发送——没有中间服务器。"
+  },
+  "presetSlow": {
+    "message": "慢"
+  },
+  "presetNormal": {
+    "message": "正常"
+  },
+  "presetFast": {
+    "message": "快"
+  },
+  "accRun": {
+    "message": "运行模式"
+  },
+  "accRules": {
+    "message": "规则"
+  },
+  "accAutomation": {
+    "message": "自动化与监控"
+  },
+  "accDevice": {
+    "message": "设备与授权"
+  },
+  "simTitle": {
+    "message": "试一张示例卡片"
+  },
+  "simPlaceholder": {
+    "message": "卡片文本，例如 delete the database"
+  },
+  "simTopicPlaceholder": {
+    "message": "主题（可选）"
+  },
+  "simRun": {
+    "message": "测试"
+  },
+  "simWillClick": {
+    "message": "会点击 Allow"
+  },
+  "simWillBlock": {
+    "message": "会被阻止"
+  },
+  "simWillAsk": {
+    "message": "会留给您决定"
+  },
+  "simNeedInput": {
+    "message": "请先输入卡片文本"
+  },
+  "trustRails": {
+    "message": "护栏：从不点击 Deny · 连接器需手动 · 永久授权需手动"
+  },
+  "trustRailsYolo": {
+    "message": "护栏：从不点击 Deny · 连接器需手动 · YOLO 开启时会点击永久授权"
+  },
+  "trustLastNone": {
+    "message": "尚未记录阻止"
+  },
+  "lastBlockLine": {
+    "message": "最近阻止：$1 · $2"
+  },
+  "logWhy": {
+    "message": "原因"
+  },
+  "obDemoCardTitle": {
+    "message": "发票 #204 — Acme"
+  },
+  "obDemoCardBody": {
+    "message": "批准此操作？"
+  },
+  "obDemoAllow": {
+    "message": "Allow"
+  },
+  "obDemoDeny": {
+    "message": "Deny"
+  },
+  "obDemoHint": {
+    "message": "试试看：这张卡含“invoice”，引擎会跳过。"
+  },
+  "obDemoResult": {
+    "message": "什么也没发生——这正是重点。被阻止的卡片永远不会被点击。"
+  },
+  "delayShort": {
+    "message": "延迟"
   }
 }
