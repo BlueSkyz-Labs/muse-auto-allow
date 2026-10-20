@@ -60,6 +60,22 @@ of the artifact gets `http://127.0.0.1/*` appended to `content_scripts[0].matche
 fixture origin — the pristine extraction dir and the shipped manifest stay untouched,
 and the artifact's own bytes are what gets loaded everywhere else.
 
+## Recorded evidence (v1.22.4 freeze)
+
+- Frozen tree: `extension/manifest.json` `"version": "1.22.4"`; tag `v1.22.4` (`e9e774d`).
+- Artifact: `dist/muse-auto-allow-v1.22.4.zip` — **278,510 bytes**, **27 entries**; sha256
+  `1e44f7ce84e992196db9214112af1c1654a77bc998912bcae999b8335c889668`; verify-zip **27/0/0/0**;
+  smoke exit 0 `"ok": true`.
+- Scope: Wave A of the SGPS v1.5 prompt-02 report (owner: "duyệt theo khuyến nghị") — rule
+  simulator (G3), audit timeline expansion (G2), trust dashboard (G4), first-run mock demo (G1),
+  delay presets (G6), explainable block (G10), collapsible safety groups (S1), folded follow-up
+  block + privacy line (S2), last-blocked line (S4). New pure modules `rulesim.js`, `timeline.js`.
+- Gates on the frozen tree: battery **12/12 suites** — lint 66/27 · yolo-ux 5 · rule-engine 20/20 ·
+  **rulesim 19/19** · **timeline 22/22** · background 36/36 · import-security 169/0 · e2e ok ·
+  followup ok (popup **595px** ≤ 600) · mission ok · lang-switch ok (340×6) · codex ok ·
+  `qa-experience` **42/42**.
+- Not done: no Chrome Web Store upload; no CWS review; no store publish.
+
 ## Recorded evidence (v1.22.3 freeze)
 
 - Frozen tree: `extension/manifest.json` `"version": "1.22.3"`; tag `v1.22.3`.
