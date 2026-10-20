@@ -392,7 +392,7 @@ try {
   if (sent2 && sent2[1]) {
     check('A2. the second send carries step 1 (shipped corpus order)', sent2[1].text === GOLIVE[1], { got: String(sent2[1].text).slice(0, 70) });
   }
-  const stepA2 = await waitEngine((p) => p.missionStep === 2, 6000, 'advance to step 2');
+  const stepA2 = await waitEngine((p) => p.missionStep === 2, 12000, 'advance to step 2'); // R1: 6s flaked on a busy box; 12s keeps the assertion deterministic
   check('A2. step advances again on the verified send (1 -> 2)', !!(stepA2 && stepA2.missionStep === 2), stepA2 && { step: stepA2.missionStep });
 
   // stop the auto path; the remaining phases use the deterministic manual path

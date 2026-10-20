@@ -792,8 +792,10 @@ function refreshCodexStat() {
   } catch { /* ignore */ }
 }
 
+let refreshSeq = 0; // R1: a stale storage snapshot must never repaint newer state
 function refresh() {
-  // NOTE: the object form of storage.get returns ONLY the listed keys — followupChips must
+  const mySeq = ++refreshSeq;
+  // NOTE: the object form of storage.get returns ONLY the listed keys
   // be listed (null default keeps 'absent' distinguishable from an explicit empty array).
   // v1.8.0 keys use null defaults where 'absent' must stay distinguishable (rules,
   // followupSmart, followupSchedule, digestCounters) — absent = the engine's default.
@@ -804,7 +806,9 @@ function refresh() {
     syncSettings: false, onboarded: false, digestCounters: null, lastDigestAt: 0,
     anomaly: null, anomalyLastPause: null, // v1.20.0 (G04)
     license: null, // v1.21.0 (W4)
-    missionEnabled: false, mission: null, codexEnabled: false }, (s) => {
+    missionEnabled: false, mission: null, codexEnabled: false,
+    accOpen: null }, (s) => { // R1: accordion state belongs in the snapshot, or saveAccordion can never restore
+    if (mySeq !== refreshSeq) return; // R1: out-of-order callback — a newer refresh owns the UI
     $('enabled').checked = s.enabled !== false;
     $('delay').value = s.minDelayMs ?? 300;
     syncPresetDelay(); // v1.22.4 (G6)
@@ -1362,7 +1366,14 @@ function lastBlockedOf() {
 }
 function renderTrustDash() {
   const rails = $('trustRails');
-  if (rails) rails.textContent = v18.yoloMode === true ? t('trustRailsYolo', 'Rails: never clicks Deny · connectors stay manual') : t('trustRails', 'Rails: never clicks Deny · connectors stay manual · standing grants stay manual');
+  if (rails) {
+    // R1: three separate chips instead of one wrapping sentence (no mid-word breaks)
+    const yolo = v18.yoloMode === true;
+    rails.classList.add('rails');
+    rails.innerHTML = '<span class="rail">' + esc(t('trustRailDeny', 'Never Deny')) + '</span>' +
+      '<span class="rail">' + esc(t('trustRailConn', 'Connectors: manual')) + '</span>' +
+      '<span class="rail">' + esc(t(yolo ? 'trustRailStandYolo' : 'trustRailStand', 'Standing grants: manual')) + '</span>';
+  }
   const last = $('trustLast');
   if (last) {
     const lb = lastBlockedOf();

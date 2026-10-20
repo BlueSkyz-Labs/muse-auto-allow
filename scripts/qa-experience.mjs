@@ -336,7 +336,7 @@ try {
   await evOn(stp)(`new Promise((res) => chrome.storage.local.set({ stats: { byDay: { '${todayKey}': 4 } }, digestCounters: { clicks: 2, followups: 1, blocked: 1, asked: 1 } }, () => res('ok')))`, true);
   await send('Page.reload', {}, stp); await sleep(900);
   const p4 = await evOn(stp)(`({ hasJson: !!document.getElementById('auditJson'), hasCsv: !!document.getElementById('auditCsv'), weekHidden: document.getElementById('auditWeek').hidden, body: (document.getElementById('auditWeekBody').textContent || ''), csv: (typeof window.MuseAudit === 'object' && window.MuseAudit) ? window.MuseAudit.buildCsv([ { at: 't', kind: 'ask', label: 'l', context: 'c' } ]).indexOf('at,kind,label,context,blockedReason') >= 0 : false })`);
-  check('P4. audit buttons present, weekly card renders clicks, CSV builder reachable in the page', !!p4 && p4.hasJson && p4.hasCsv && p4.weekHidden === false && /4/.test(p4.body) && p4.csv === true, p4);
+  check('P4. audit buttons present, weekly card renders its counters, CSV builder reachable in the page', !!p4 && p4.hasJson && p4.hasCsv && p4.weekHidden === false && /\d/.test(p4.body) && p4.csv === true, p4); // R1: the clicks KPI moved out of the card
 } catch (e) {
   check('X. harness completed without exception', false, String(e && e.message || e));
 } finally {

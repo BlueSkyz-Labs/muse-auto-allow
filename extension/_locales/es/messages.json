@@ -51,10 +51,10 @@
     "message": "Aún no hay datos"
   },
   "statsBarScope": {
-    "message": "Barras: proporción sobre $1 clics totales"
+    "message": "Proporción de $1 clics"
   },
   "statsBarScopeTop": {
-    "message": "Top 12 de $1 temas · barras: proporción sobre $2 clics totales"
+    "message": "Top 12 de $1 temas · proporción de $2 clics"
   },
   "stateOff": {
     "message": "Apagado — no se pulsa nada"
@@ -99,7 +99,7 @@
     "message": "$1 pestañas de muse.ai abiertas"
   },
   "museTabsNone": {
-    "message": "Aún no hay una pestaña de Muse abierta: abre muse.ai para que la extensión funcione"
+    "message": "Abre muse.ai para que funcione"
   },
   "onlyMuse": {
     "message": "Funciona en muse.ai y chatgpt.com"
@@ -141,7 +141,7 @@
     "message": "Esta copia se creó con una versión más reciente de Muse Auto-Allow — actualiza la extensión primero."
   },
   "importQuota": {
-    "message": "No se pudo restaurar la copia de seguridad: el almacenamiento del navegador está lleno."
+    "message": "No se pudo restaurar: el almacenamiento del navegador está lleno."
   },
   "importKeyKept": {
     "message": "Importado. No se pudo verificar la clave de cifrado de la copia, así que no se restauró (se mantiene la clave existente)."
@@ -279,7 +279,7 @@
     "message": "No se pudo enviar — no se encontró el cuadro de mensaje en la página de Muse"
   },
   "followupSendBlockedNoPrompt": {
-    "message": "No se pudo enviar — no hay ningún mensaje de seguimiento configurado"
+    "message": "No se pudo enviar: falta un mensaje de seguimiento"
   },
   "followupSendBlockedSending": {
     "message": "Ya se está enviando un seguimiento"
@@ -303,7 +303,7 @@
     "message": "Pausar"
   },
   "pause15": {
-    "message": "15 min"
+    "message": "⏸ Pausar 15 min"
   },
   "pause60": {
     "message": "1 hora"
@@ -864,7 +864,7 @@
     "message": "Aún no hay datos"
   },
   "onbRailNoDeny": {
-    "message": "Solo pulsa Allow, nunca Denegar"
+    "message": "Solo pulsa Allow: nunca Deny"
   },
   "onbRailLocalLog": {
     "message": "Cada clic queda registrado en este equipo (últimos 50)"
@@ -873,7 +873,7 @@
     "message": "Empieza en modo de prueba: no se pulsa nada hasta que lo actives"
   },
   "ruleMatchHint": {
-    "message": "Una regla = los temas + palabras clave de una fila; si defines ambos, la tarjeta debe coincidir con ambos. Varios temas/palabras = coincide con CUALQUIERA. Ej.: temas github.com + palabras payment, billing → solo coincide en github.com Y si el contenido tiene payment o billing."
+    "message": "Temas + palabras clave en una fila: la tarjeta debe cumplir ambos. Varias entradas en un campo: cualquiera de ellas."
   },
   "ruleOrderHint": {
     "message": "El orden solo importa dentro de la misma capa: bloquear siempre gana"
@@ -939,7 +939,7 @@
     "message": "Alternar prueba (solo registro)"
   },
   "followupLocalNote": {
-    "message": "Se envía solo dentro de tu pestaña de Muse: sin servidor intermedio."
+    "message": "Solo en la pestaña de Muse: sin servidor."
   },
   "presetSlow": {
     "message": "Lento"
@@ -1020,6 +1020,18 @@
     "message": "No pasó nada: esa es la idea. Una tarjeta bloqueada nunca se pulsa."
   },
   "delayShort": {
-    "message": "Retardo"
+    "message": "Velocidad"
+  },
+  "trustRailDeny": {
+    "message": "Nunca Deny"
+  },
+  "trustRailConn": {
+    "message": "Conectores: manual"
+  },
+  "trustRailStand": {
+    "message": "Permisos permanentes: manual"
+  },
+  "trustRailStandYolo": {
+    "message": "Permisos permanentes: se pulsan (YOLO)"
   }
 }

@@ -51,10 +51,10 @@
     "message": "아직 데이터 없음"
   },
   "statsBarScope": {
-    "message": "막대는 총 $1회 클릭 대비 비율"
+    "message": "전체 $1회 클릭 중 비율"
   },
   "statsBarScopeTop": {
-    "message": "주제 $1개 중 상위 12 · 막대는 총 $2회 클릭 대비 비율"
+    "message": "$1개 중 상위 12 · 전체 $2회 클릭 중 비율"
   },
   "stateOff": {
     "message": "꺼짐 — 아무것도 클릭하지 않습니다"
@@ -99,7 +99,7 @@
     "message": "muse.ai 탭 $1개 열림"
   },
   "museTabsNone": {
-    "message": "아직 Muse 탭이 열려 있지 않습니다 — 확장 프로그램이 작동하려면 muse.ai를 여세요"
+    "message": "muse.ai를 열면 동작합니다"
   },
   "onlyMuse": {
     "message": "muse.ai 및 chatgpt.com에서 동작합니다"
@@ -303,7 +303,7 @@
     "message": "일시정지"
   },
   "pause15": {
-    "message": "15분"
+    "message": "⏸ 15분 일시정지"
   },
   "pause60": {
     "message": "1시간"
@@ -864,7 +864,7 @@
     "message": "아직 데이터가 없습니다"
   },
   "onbRailNoDeny": {
-    "message": "Allow만 클릭 — 거부는 누르지 않습니다"
+    "message": "Allow만 클릭 — Deny는 누르지 않습니다"
   },
   "onbRailLocalLog": {
     "message": "모든 클릭은 이 기기에 기록됩니다(최근 50건)"
@@ -873,7 +873,7 @@
     "message": "드라이런으로 시작 — 켜기 전에는 클릭하지 않습니다"
   },
   "ruleMatchHint": {
-    "message": "규칙 하나 = 같은 줄의 주제 + 키워드. 둘 다 입력하면 카드가 둘 다 일치해야 합니다. 여러 주제/키워드는 그중 하나라도 일치하면 됩니다. 예: 주제 github.com + 키워드 payment, billing → github.com에서 내용에 payment 또는 billing이 있을 때만 일치."
+    "message": "같은 행의 주제 + 키워드: 카드는 둘 다 일치해야 합니다. 한 칸에 여러 개 = 그중 하나만 일치."
   },
   "ruleOrderHint": {
     "message": "순서는 같은 단계 안에서만 의미가 있습니다 — 차단이 항상 우선"
@@ -939,7 +939,7 @@
     "message": "드라이런 전환"
   },
   "followupLocalNote": {
-    "message": "보내기는 사용자의 Muse 탭 안에서만 — 중간 서버가 없습니다."
+    "message": "Muse 탭 안에서만 — 서버 없음."
   },
   "presetSlow": {
     "message": "느리게"
@@ -1020,6 +1020,18 @@
     "message": "아무 일도 일어나지 않습니다 — 그게 핵심입니다. 차단된 카드는 클릭되지 않습니다."
   },
   "delayShort": {
-    "message": "지연"
+    "message": "클릭 속도"
+  },
+  "trustRailDeny": {
+    "message": "Deny 안 누름"
+  },
+  "trustRailConn": {
+    "message": "커넥터: 수동"
+  },
+  "trustRailStand": {
+    "message": "상시 허용: 수동"
+  },
+  "trustRailStandYolo": {
+    "message": "상시 허용: 클릭함 (YOLO)"
   }
 }

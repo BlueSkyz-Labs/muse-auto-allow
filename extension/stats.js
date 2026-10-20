@@ -190,7 +190,8 @@ function renderKpis() {
   setK('kTotal', num(TOTAL));
   setK('kToday', today);
   setK('kWeek', week);
-  setK('kMonth', num(STATS.byMonth[monthKeyOf(now)]));
+  // R1: the month KPI was removed (it duplicated Total on the current month)
+  const km = $('kMonth'); if (km) km.textContent = String(num(STATS.byMonth[monthKeyOf(now)]));
 }
 
 function renderAll() {
@@ -288,7 +289,7 @@ async function renderAuditWeek() {
     el.hidden = false;
     // v1.22.2 UX (Vòng 3): the four numbers always render — an empty card looked like a stray caption.
     body.innerHTML =
-      '<span>' + t('auditWeekClicks', 'clicks') + ': <b>' + (Number(w.week) || 0) + '</b></span> ' +
+      // R1: the weekly click count already lives in the KPI card — the card keeps the extras
       '<span>' + t('auditWeekBlocked', 'blocked') + ': <b>' + (Number(w.blocked) || 0) + '</b></span> ' +
       '<span>' + t('auditWeekAsked', 'asks') + ': <b>' + (Number(w.asked) || 0) + '</b></span> ' +
       '<span>' + t('auditWeekFollowups', 'follow-ups') + ': <b>' + (Number(w.followups) || 0) + '</b></span>';

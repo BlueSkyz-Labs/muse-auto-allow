@@ -51,10 +51,10 @@
     "message": "No data yet"
   },
   "statsBarScope": {
-    "message": "Bars: share of the $1-click total"
+    "message": "Share of $1 clicks"
   },
   "statsBarScopeTop": {
-    "message": "Top 12 of $1 topics · bars: share of the $2-click total"
+    "message": "Top 12 of $1 topics · share of $2 clicks"
   },
   "stateOff": {
     "message": "Off — nothing is clicked"
@@ -99,7 +99,7 @@
     "message": "$1 muse.ai tabs open"
   },
   "museTabsNone": {
-    "message": "No Muse tab open yet — open muse.ai so the extension can run"
+    "message": "Open muse.ai so it can run"
   },
   "onlyMuse": {
     "message": "Works on muse.ai and chatgpt.com"
@@ -306,7 +306,7 @@
     "message": "Pause"
   },
   "pause15": {
-    "message": "15 min"
+    "message": "⏸ Pause 15 min"
   },
   "pause60": {
     "message": "60 min"
@@ -873,7 +873,7 @@
     "message": "Starts in dry-run (logs only) — nothing is clicked until you turn it on"
   },
   "ruleMatchHint": {
-    "message": "One rule = the topics + keywords on one row; when both are set, the card must match both. Several topics/keywords = match ANY of them. E.g. topics: github.com + keywords: payment, billing → matches only on github.com AND content containing payment or billing."
+    "message": "Topics + keywords in one row = the card must match both. Several entries in one field = any of them."
   },
   "ruleOrderHint": {
     "message": "Order only matters within the same layer — block always wins"
@@ -939,7 +939,7 @@
     "message": "Toggle dry-run (log only)"
   },
   "followupLocalNote": {
-    "message": "Sends only inside your Muse tab — no server in between."
+    "message": "Muse tab only — no server."
   },
   "presetSlow": {
     "message": "Slow"
@@ -1020,6 +1020,18 @@
     "message": "Nothing happened — that is the point. A blocked card never gets clicked."
   },
   "delayShort": {
-    "message": "Delay"
+    "message": "Click speed"
+  },
+  "trustRailDeny": {
+    "message": "Never Deny"
+  },
+  "trustRailConn": {
+    "message": "Connectors: manual"
+  },
+  "trustRailStand": {
+    "message": "Standing grants: manual"
+  },
+  "trustRailStandYolo": {
+    "message": "Standing grants: clicked (YOLO)"
   }
 }

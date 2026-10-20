@@ -51,10 +51,10 @@
     "message": "暂无数据"
   },
   "statsBarScope": {
-    "message": "条形为 $1 次点击总量中的占比"
+    "message": "占 $1 次点击的比例"
   },
   "statsBarScopeTop": {
-    "message": "共 $1 个主题，显示前 12 · 条形为 $2 次点击总量中的占比"
+    "message": "$1 个主题中的前 12 · 占 $2 次点击的比例"
   },
   "stateOff": {
     "message": "已关闭 —— 不会点击任何内容"
@@ -99,7 +99,7 @@
     "message": "已打开 $1 个 muse.ai 标签页"
   },
   "museTabsNone": {
-    "message": "尚未打开 Muse 标签页——请打开 muse.ai 以便扩展运行"
+    "message": "打开 muse.ai 以便运行"
   },
   "onlyMuse": {
     "message": "在 muse.ai 和 chatgpt.com 上运行"
@@ -303,7 +303,7 @@
     "message": "暂停"
   },
   "pause15": {
-    "message": "15 分钟"
+    "message": "⏸ 暂停 15 分钟"
   },
   "pause60": {
     "message": "1 小时"
@@ -864,7 +864,7 @@
     "message": "暂无数据"
   },
   "onbRailNoDeny": {
-    "message": "只点击 Allow——绝不点击拒绝"
+    "message": "只点击 Allow — 从不点击 Deny"
   },
   "onbRailLocalLog": {
     "message": "每次点击都记录在本机（最近 50 条）"
@@ -873,7 +873,7 @@
     "message": "以试运行开始——在你开启前不会点击"
   },
   "ruleMatchHint": {
-    "message": "一条规则 = 同一行中的主题 + 关键词；两者都填时，卡片必须同时匹配。多个主题/关键词 = 匹配其中任意一个。例如：主题 github.com + 关键词 payment, billing → 仅在 github.com 且内容包含 payment 或 billing 时匹配。"
+    "message": "同一行的主题 + 关键词：卡片必须同时匹配。一个字段填多个：匹配任意一个。"
   },
   "ruleOrderHint": {
     "message": "顺序只在同一层内有意义——拦截总是优先"
@@ -939,7 +939,7 @@
     "message": "切换试运行（仅记录）"
   },
   "followupLocalNote": {
-    "message": "仅在您的 Muse 标签页内发送——没有中间服务器。"
+    "message": "仅在 Muse 标签页——无服务器。"
   },
   "presetSlow": {
     "message": "慢"
@@ -1020,6 +1020,18 @@
     "message": "什么也没发生——这正是重点。被阻止的卡片永远不会被点击。"
   },
   "delayShort": {
-    "message": "延迟"
+    "message": "点击速度"
+  },
+  "trustRailDeny": {
+    "message": "不点 Deny"
+  },
+  "trustRailConn": {
+    "message": "连接器：手动"
+  },
+  "trustRailStand": {
+    "message": "永久授权：手动"
+  },
+  "trustRailStandYolo": {
+    "message": "永久授权：会点击（YOLO）"
   }
 }

@@ -51,10 +51,10 @@
     "message": "Chưa có dữ liệu"
   },
   "statsBarScope": {
-    "message": "Cột: tỷ lệ trên tổng $1 lượt bấm"
+    "message": "Tỷ lệ trên tổng $1 lượt bấm"
   },
   "statsBarScopeTop": {
-    "message": "Top 12 trong $1 chủ đề · cột: tỷ lệ trên tổng $2 lượt bấm"
+    "message": "Top 12 trong $1 chủ đề · tỷ lệ trên $2 lượt bấm"
   },
   "stateOff": {
     "message": "Đang tắt — không bấm gì"
@@ -99,7 +99,7 @@
     "message": "$1 tab muse.ai đang mở"
   },
   "museTabsNone": {
-    "message": "Chưa thấy tab Muse mở — mở muse.ai để tiện ích chạy"
+    "message": "Mở muse.ai để tiện ích chạy"
   },
   "onlyMuse": {
     "message": "Hoạt động trên muse.ai và chatgpt.com"
@@ -303,7 +303,7 @@
     "message": "Tạm dừng"
   },
   "pause15": {
-    "message": "15 phút"
+    "message": "⏸ Tạm dừng 15′"
   },
   "pause60": {
     "message": "1 giờ"
@@ -453,7 +453,7 @@
     "message": "Tự động bấm Allow"
   },
   "onbStep1Body": {
-    "message": "Khi Muse xin phê duyệt, tiện ích bấm Allow thay bạn — bạn có thể tạm dừng bất cứ lúc nào."
+    "message": "Khi Muse xin quyền duyệt, tiện ích sẽ tự bấm Allow thay bạn — bạn có thể tạm dừng bất cứ lúc nào."
   },
   "onbEnable": {
     "message": "Bật tự động bấm"
@@ -864,7 +864,7 @@
     "message": "Chưa có dữ liệu"
   },
   "onbRailNoDeny": {
-    "message": "Chỉ bấm Allow — không bao giờ bấm Deny/Từ chối"
+    "message": "Chỉ bấm Allow — không bao giờ bấm Deny"
   },
   "onbRailLocalLog": {
     "message": "Mỗi lần bấm đều được ghi log trên máy bạn (50 lượt gần nhất)"
@@ -873,7 +873,7 @@
     "message": "Bắt đầu ở chế độ chạy thử — chưa bấm thật cho đến khi bạn bật"
   },
   "ruleMatchHint": {
-    "message": "Một luật = các chủ đề + từ khoá trong cùng dòng; nhập cả hai thì thẻ phải khớp cả hai. Nhiều chủ đề/từ khoá = khớp BẤT KỲ mục nào. VD: chủ đề github.com + từ khoá payment, billing → chỉ khớp khi ở github.com VÀ nội dung có payment hoặc billing."
+    "message": "Chủ đề + từ khoá trong cùng dòng = thẻ phải khớp cả hai. Nhiều mục trong một ô = khớp bất kỳ mục nào."
   },
   "ruleOrderHint": {
     "message": "Thứ tự chỉ có ý nghĩa trong cùng tầng — Chặn luôn thắng"
@@ -939,7 +939,7 @@
     "message": "Bật/tắt chạy thử (chỉ ghi log)"
   },
   "followupLocalNote": {
-    "message": "Chỉ gửi trong tab Muse của bạn — không có máy chủ trung gian."
+    "message": "Chỉ trong tab Muse — không qua máy chủ."
   },
   "presetSlow": {
     "message": "Chậm"
@@ -1020,6 +1020,18 @@
     "message": "Không có gì xảy ra — đó chính là điều cần thấy. Thẻ bị chặn sẽ không bao giờ được bấm."
   },
   "delayShort": {
-    "message": "Độ trễ"
+    "message": "Tốc độ bấm"
+  },
+  "trustRailDeny": {
+    "message": "Không bấm Deny"
+  },
+  "trustRailConn": {
+    "message": "Connector: thủ công"
+  },
+  "trustRailStand": {
+    "message": "Quyền vĩnh viễn: thủ công"
+  },
+  "trustRailStandYolo": {
+    "message": "Quyền vĩnh viễn: được bấm (YOLO)"
   }
 }

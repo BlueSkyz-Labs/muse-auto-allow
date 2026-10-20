@@ -51,10 +51,10 @@
     "message": "データはまだありません"
   },
   "statsBarScope": {
-    "message": "バーは全 $1 クリックに対する割合"
+    "message": "$1 回のクリックに占める割合"
   },
   "statsBarScopeTop": {
-    "message": "トピック $1 件中トップ 12 · バーは全 $2 クリックに対する割合"
+    "message": "$1 件中トップ12 · $2 回のクリックに占める割合"
   },
   "stateOff": {
     "message": "オフ — 何もクリックしません"
@@ -99,7 +99,7 @@
     "message": "muse.ai タブ $1 件が開いています"
   },
   "museTabsNone": {
-    "message": "Muse タブがまだ開いていません — 拡張機能を動かすには muse.ai を開いてください"
+    "message": "muse.ai を開くと動作します"
   },
   "onlyMuse": {
     "message": "muse.ai と chatgpt.com で動作します"
@@ -303,7 +303,7 @@
     "message": "一時停止"
   },
   "pause15": {
-    "message": "15 分"
+    "message": "⏸ 15分一時停止"
   },
   "pause60": {
     "message": "1 時間"
@@ -864,7 +864,7 @@
     "message": "データはまだありません"
   },
   "onbRailNoDeny": {
-    "message": "Allow のみクリック — 拒否は押しません"
+    "message": "Allow のみ — Deny は押しません"
   },
   "onbRailLocalLog": {
     "message": "クリックはこの端末に記録されます（直近 50 件）"
@@ -873,7 +873,7 @@
     "message": "まずドライランで開始——有効にするまでクリックしません"
   },
   "ruleMatchHint": {
-    "message": "1 つのルール = 同じ行のトピック + キーワード。両方入れた場合はカードが両方に一致する必要があります。複数のトピック/キーワードは「いずれかに一致」。例: トピック github.com + キーワード payment, billing → github.com 上で、内容に payment または billing を含む場合のみ一致。"
+    "message": "同じ行のトピック + キーワード: カードは両方に一致する必要があります。1欄に複数 = いずれかに一致。"
   },
   "ruleOrderHint": {
     "message": "順序は同じ層の中で意味を持ちます — ブロックが常に優先"
@@ -939,7 +939,7 @@
     "message": "ドライランを切り替え"
   },
   "followupLocalNote": {
-    "message": "送信はお使いの Muse タブ内だけ — 間にサーバーはありません。"
+    "message": "Muse タブ内のみ — サーバーなし。"
   },
   "presetSlow": {
     "message": "ゆっくり"
@@ -1020,6 +1020,18 @@
     "message": "何も起きません — それが要点です。ブロックされたカードはクリックされません。"
   },
   "delayShort": {
-    "message": "間隔"
+    "message": "クリック速度"
+  },
+  "trustRailDeny": {
+    "message": "Deny は押しません"
+  },
+  "trustRailConn": {
+    "message": "コネクタ: 手動"
+  },
+  "trustRailStand": {
+    "message": "常時許可: 手動"
+  },
+  "trustRailStandYolo": {
+    "message": "常時許可: クリックします (YOLO)"
   }
 }
