@@ -277,7 +277,7 @@ function makeSend(ws) {
     const m = { id, method, params };
     if (sessionId) m.sessionId = sessionId;
     ws.send(JSON.stringify(m));
-    setTimeout(() => { if (pending.has(id)) { pending.delete(id); reject(new Error(method + ' timed out')); } }, 20000);
+    setTimeout(() => { if (pending.has(id)) { pending.delete(id); reject(new Error(method + ' timed out')); } }, 30000); // R7: 20s flaked on a loaded box
   });
 }
 

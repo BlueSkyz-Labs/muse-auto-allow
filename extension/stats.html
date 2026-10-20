@@ -92,6 +92,7 @@
   .k-blue   { --kc: var(--c-blue);   --kc-g: var(--c-blue-g); }
   .k-rose   { --kc: var(--c-rose);   --kc-g: var(--c-rose-g); }
   .k-teal   { --kc: var(--c-teal);   --kc-g: var(--c-teal-g); }
+  .k-ink    { --kc: var(--ink-2);     --kc-g: var(--fill); } /* R7: neutral metric, not a warning hue */
   .k-violet { --kc: var(--c-violet); --kc-g: var(--c-violet-g); }
   .k-amber  { --kc: var(--c-amber);  --kc-g: var(--c-amber-g); }
 
@@ -168,8 +169,8 @@
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
   }
-  .wk { display: flex; flex-wrap: wrap; gap: 10px 14px; font-size: 12px; color: var(--ink-2); }
-  .card#auditWeek { margin: 12px 0; }
+  .card#auditWeek { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px 20px; margin: 12px 0; box-shadow: var(--sh-2); } /* R7: joins the card vocabulary */
+  .card#auditWeek .cap { font-size: 11px; font-weight: 500; letter-spacing: .065em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 10px; }
   .wk span b { color: var(--ink); font-variant-numeric: tabular-nums; }
   .topics .n { display: inline-flex; align-items: baseline; gap: 4px; }
   .topics .pct { font-style: normal; color: var(--ink-2); }
@@ -202,18 +203,18 @@
       <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.6l4.4 4.4L19 6.4"/></svg></span>
       <span class="kv"><span class="v" id="kTotal">0</span><span class="l" data-i18n="totalLabel">Total</span></span>
     </div>
-    <div class="kpi k-rose">
+    <div class="kpi k-blue">
       <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.4V12l3.1 2.1"/></svg></span>
       <span class="kv"><span class="v" id="kToday">0</span><span class="l" data-i18n="todayLabel">Today</span></span>
     </div>
-    <div class="kpi k-teal">
+    <div class="kpi k-ink">
       <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3.5"/><path d="M3.5 9.8h17"/><circle cx="12" cy="14.8" r="1.9"/></svg></span>
       <span class="kv"><span class="v" id="kWeek">0</span><span class="l" data-i18n="weekLabel">This week</span></span>
     </div>
   </div>
 
   <div class="card" id="auditWeek" hidden>
-    <div class="rlabel" data-i18n="auditWeeklyTitle">This week</div>
+    <div class="cap" data-i18n="auditWeeklyTitle">This week</div>
     <div class="wk" id="auditWeekBody"></div>
   </div>
 

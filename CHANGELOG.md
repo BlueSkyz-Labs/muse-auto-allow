@@ -1,6 +1,17 @@
 # Changelog
 
-## 1.22.6 — rounds 4b–6 (SGPS prompt-02 auto loop)
+## 1.22.7 — rounds 7–8 (design-system + native i18n + microcopy)
+- **Design system**: KPI "Hôm nay/Tuần nay" hết dùng hue cảnh báo (rose/teal → brand/neutral); khối
+  "Tuần này" vào đúng card vocabulary (surface + border + radius 16 + padding + shadow, caption chuẩn);
+  radius control về đúng thang (input 12, banner 12, nút icon 8); một tier caption duy nhất; tiêu đề
+  surface 14px/600 (bỏ 13.5px lạ); bỏ định nghĩa `.wk` trùng.
+- **i18n native/microcopy (14 fix)**: es demo/off/schedule/"Allow" term; vi yoloConfirm nói rõ thẻ bị chặn
+  từ khoá sẽ được bấm (khớp en); thống nhất "Bấm lần nữa", "Tự động gửi tiếp", "nhắc tiếp", "Thư viện
+  câu nhắc", "Chạy dài"; thuật ngữ **"quyền thường trực"**; **claim từ khoá có điều kiện** (YOLO tắt
+  luật) trong keywordsNote/onbDemoBlock/keywordsEmpty — Product Truth.
+- i18n **354 keys × 6 locale**; lang-switch e2e xanh; timeout e2e nới 20→30s (chống flake máy bận).
+
+## 1.22.6 — rounds 4b–6 (SGPS prompt-02 auto loop) — rounds 4b–6 (SGPS prompt-02 auto loop)
 - **Round 4b**: localized tooltips (`data-i18n-title`), tooltip nhiệm vụ, footer nói rõ chatgpt.com = Codex.
 - **Round 5 (power-user)**: phím tắt **Alt+Shift+A** bật/tắt master switch; nút **"Mở muse.ai"** ngay trên
   state line khi không có tab Muse; state line nói **"Đang chờ tab Muse"** thay vì "Đang chạy" gây mâu thuẫn;

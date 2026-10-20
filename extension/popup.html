@@ -157,7 +157,7 @@
   /* the section title steps OUT of the body tier into the editorial micro-caption tier AND
      out of the muted sub-label tier (ink-2, 11px/600) — so it reads as a section header,
      not as another field label (spec §2.6) */
-  .secttitle { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
+  .secttitle { font-size: 10.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); } /* R7: one caption tier */
   .sect .sw { margin-top: 5px; }
   .fstat { display: flex; align-items: center; gap: 5px; margin-left: auto; font-size: 11px; font-weight: 500;
            padding: 3px 9px; border-radius: 999px; background: var(--fill); color: var(--muted);
@@ -418,11 +418,11 @@
   .pbtn { max-width: 100%; text-overflow: clip; ; min-height: 24px; } /* v1.22.1 UX: labels may wrap instead of clipping mid-word */
   .plabel { flex: none; font-size: 11.5px; }
   .sstatus { display: flex; align-items: center; gap: 8px; padding: 6px 8px; margin: 0 0 8px;
-             border: 1px solid var(--stroke); border-radius: 9px; background: var(--fill); font-size: 11px; }
+             border: 1px solid var(--stroke); border-radius: 12px; background: var(--fill); font-size: 11px; }
   .sstatus #ssText { flex: 1; min-width: 0; font-weight: 500; color: var(--ink); }
   .sdot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-state); flex: none; }
   .sdot.warn { background: #8a5a10; } /* v1.22.2: >=3:1 on the light fill */
-  .ywarn { padding: 6px 9px; margin: 0 0 8px; border-radius: 9px; font-size: 11px; line-height: 1.4;
+  .ywarn { padding: 6px 9px; margin: 0 0 8px; border-radius: 12px; font-size: 11px; line-height: 1.4;
            background: rgba(194,38,63,.12); color: #a51e35; border: 1px solid rgba(194,38,63,.30); }
   @media (prefers-color-scheme: dark) { .ywarn { background: rgba(255,130,150,.14); color: #ff9db0; border-color: rgba(255,130,150,.32); } }
   .obrails { margin: 10px 0 2px; padding: 0; list-style: none; display: grid; gap: 5px; }
@@ -482,7 +482,7 @@
              background: var(--bg); display: flex; flex-direction: column; }
   #onboard { z-index: 10; }
   .ovhead { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; flex: none; }
-  .ovhead h2 { font-size: 13.5px; font-weight: 500; margin: 0; letter-spacing: -0.01em; }
+  .ovhead h2 { font-size: 14px; font-weight: 600; margin: 0; letter-spacing: -0.01em; } /* R7: surface title tier */
   .ovclose { margin-left: auto; flex: none; font: inherit; font-size: 12px; line-height: 1.3; background: transparent;
              color: var(--muted); border: 1px solid var(--stroke); border-radius: 999px; padding: 2px 9px; cursor: pointer; ; min-width: 24px; min-height: 24px; }
   .ovclose:hover { color: var(--ink); background: var(--fill); }
@@ -513,14 +513,14 @@
      enabled-toggle of every rule row (and its focus ring). */
   .lrow input[type=checkbox][data-act="en"] { opacity: 1; position: static; width: auto; height: auto; margin: 0; }
   .lrow [data-act] { min-width: 24px; min-height: 24px; font: inherit; font-size: 11px; background: transparent; border: 1px solid var(--stroke);
-                     border-radius: 6px; color: var(--muted); cursor: pointer; padding: 0 5px; line-height: 1.5; }
+                     border-radius: 8px; color: var(--muted); cursor: pointer; padding: 0 5px; line-height: 1.5; }
   .lrow [data-act]:hover { color: var(--ink); border-color: var(--stroke-hover); }
   .limport { width: 100%; box-sizing: border-box; font: inherit; font-size: 11px; min-height: 56px;
              border-radius: 8px; border: 1px solid var(--stroke); background: var(--fill); color: var(--ink); resize: vertical; }
   .licchip { font-size: 10.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase;
             color: var(--accent-text); background: var(--accent-tint); border: 1px solid var(--accent-line);
             border-radius: 999px; padding: 0 6px; }
-  .licinput { flex: 1; min-width: 0; font: inherit; font-size: 12px; padding: 3px 8px; border-radius: 8px;
+  .licinput { flex: 1; min-width: 0; font: inherit; font-size: 12px; padding: 3px 8px; border-radius: 12px;
               border: 1px solid var(--stroke); background: var(--fill); color: var(--ink); }
   .licinput:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
   .licro { display: flex; gap: 6px; }
@@ -557,7 +557,7 @@
   .obdot { width: 18px; height: 3px; border-radius: 999px; background: var(--fill); }
   .obdot.on { background: var(--accent-state); }
   .obstep { font-size: 10.5px; color: var(--ink-2); margin-left: auto; }
-  .obtitle { font-size: 14px; font-weight: 500; margin: 2px 0 4px; }
+  .obtitle { font-size: 14px; font-weight: 600; margin: 2px 0 4px; }
   .obbody { font-size: 12px; color: var(--muted); margin: 0 0 8px; }
   /* v1.9.3 — the dry-run step's live state + the one consent line. The state chip reuses the
      exact shipped dry-band recipe (same colours as .dryband, incl. dark mode), so the wizard
