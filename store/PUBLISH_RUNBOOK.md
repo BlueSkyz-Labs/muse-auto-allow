@@ -4,7 +4,7 @@ Step-by-step launch and update procedure. Steps marked **[MANUAL/owner]** requir
 with the Google account and payment; everything else can be done from the repo.
 
 **One-line flow:** register developer account → `node scripts/build.mjs` +
-`python scripts/verify-zip.py` → upload `dist/muse-auto-allow-v1.22.0.zip` → fill every
+`python scripts/verify-zip.py` → upload `dist/muse-auto-allow-v1.22.5.zip` → fill every
 dashboard tab → submit → wait for review → publish → for updates: bump version →
 rebuild + verify zip → upload → resubmit.
 
@@ -30,7 +30,7 @@ rebuild + verify zip → upload → resubmit.
 
 ## Step 2 — Build, verify, and upload the package
 
-1. Confirm the version in `extension/manifest.json` is correct (currently `1.22.0`).
+1. Confirm the version in `extension/manifest.json` is correct (currently `1.22.5`).
 2. **Lint gate (mandatory, zero-dependency).** Run from the repo root:
 
    ```bash
@@ -49,7 +49,7 @@ rebuild + verify zip → upload → resubmit.
    node scripts/build.mjs
    ```
 
-   Output: `dist/muse-auto-allow-v1.22.0.zip` with `manifest.json` at the **zip root**
+   Output: `dist/muse-auto-allow-v1.22.5.zip` with `manifest.json` at the **zip root**
    (not nested inside a folder). The build fails closed if the zip does not mirror the
    whole `extension/` tree (exit 3 = file missing from the zip, exit 4 = unexpected file
    in the zip).
@@ -61,11 +61,11 @@ rebuild + verify zip → upload → resubmit.
 
    It checks every zip entry against the on-disk file (sha-identical bytes) and exits
    non-zero on any mismatch, missing file, or extra file. Expected output for this
-   release: `muse-auto-allow-v1.22.0.zip: 25 matched, 0 mismatched, 0 disk-only, 0
+   release: `muse-auto-allow-v1.22.5.zip: 27 matched, 0 mismatched, 0 disk-only, 0
    zip-only` and exit 0. **Do not upload a zip that fails this check.**
 5. In the Developer Dashboard, click **New item** (first release) or open the existing
    item (for updates).
-6. **Upload** `dist/muse-auto-allow-v1.22.0.zip`.
+6. **Upload** `dist/muse-auto-allow-v1.22.5.zip`.
 7. Wait for the dashboard to parse the manifest. It will read the name/description from
    `__MSG_*__` keys resolved against `_locales/en/messages.json`; verify the default
    locale resolves cleanly (no blank name).

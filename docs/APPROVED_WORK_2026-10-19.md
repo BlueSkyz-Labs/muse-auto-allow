@@ -61,5 +61,9 @@ khi còn approved executable. Wave B/C chưa duyệt.
 
 | ID | Trạng thái |
 |---|---|
-| S2 · S4 · G10 · G6 | đang triển khai |
-| G1 · G3 · G4 · G2 · S1 | đang triển khai |
+| S2 · S4 · G10 · G6 | **SHIPPED v1.22.4** |
+| G1 · G3 · G4 · G2 · S1 | **SHIPPED v1.22.4** |
+
+Wave A hoàn tất tại `v1.22.4` (tag `e9e774d`, 278,510 B / 27 entries, battery 12/12); các vòng
+1–3 sau đó tiếp tục tinh chỉnh UX/a11y/nội dung và chốt `v1.22.5` (278,758 B, battery 13/13) —
+xem `docs/RELEASE_INTEGRITY.md`. Ghi chú duyệt ngày 2026-10-19 giữ nguyên làm lịch sử.

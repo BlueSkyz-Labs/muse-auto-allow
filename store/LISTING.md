@@ -15,9 +15,9 @@ dashboard (no repo value to fill).
 | Item name | **Muse Auto-Allow** |
 | Category | **Productivity** |
 | Default language | English (en) |
-| Version | 1.22.0 |
+| Version | 1.22.5 |
 | Manifest version | Manifest V3 |
-| Extension package | `dist/muse-auto-allow-v1.18.0.zip` |
+| Extension package | `dist/muse-auto-allow-v1.22.5.zip` |
 | License | MIT © 2026 BlueSkyz Labs |
 | Homepage / support URL | `https://github.com/BlueSkyz-Labs/muse-auto-allow` |
 | Privacy policy URL | `https://blueskyz-labs.github.io/muse-auto-allow/privacy.html` (GitHub Pages copy of `store/PRIVACY.md`; verified live 2026-10-12) |
@@ -108,7 +108,7 @@ keeps moving.
 
 **What it does**
 - Detects Muse approval requests and clicks the **Allow** button.
-- Works on all four ways Muse shows an approval: marked approval cards, paired
+- Works on all five ways Muse shows an approval: marked approval cards, paired
   Allow/Deny buttons, collapsed “Allow Muse to perform this action…” cards (it expands
   them first), and the background “N tasks need your approval” banner (it opens the
   approvals panel so pending cards can render).
@@ -186,7 +186,7 @@ bị ngắt quãng.
 
 **Tiện ích làm gì**
 - Nhận biết yêu cầu phê duyệt của Muse và bấm nút **Allow**.
-- Xử lý đủ cả bốn cách Muse hiển thị phê duyệt: thẻ phê duyệt có đánh dấu, cặp nút
+- Xử lý đủ cả năm cách Muse hiển thị phê duyệt: thẻ phê duyệt có đánh dấu, cặp nút
   Allow/Deny, thẻ thu gọn “Allow Muse to perform this action…” (tiện ích mở ra trước rồi
   mới duyệt), và dải thông báo nền “N tasks need your approval” (tiện ích mở bảng phê
   duyệt để các thẻ đang chờ hiện ra).
@@ -260,7 +260,7 @@ Muse（muse.ai）在执行操作前会暂停并向你请求批准。你一旦离
 
 **它做什么**
 - 识别 Muse 的批准请求，并点击 **Allow（允许）** 按钮。
-- 覆盖 Muse 展示批准的全部四种方式：带标记的批准卡片、成对的 Allow/Deny 按钮、
+- 覆盖 Muse 展示批准的全部五种方式：带标记的批准卡片、成对的 Allow/Deny 按钮、
   折叠的“Allow Muse to perform this action…”卡片（会先展开再批准），以及后台的
   “N tasks need your approval”横幅（打开批准面板，让待处理卡片显示出来）。
 - 后台标签页同样处理，每分钟检查一次。
@@ -364,7 +364,7 @@ Muse(muse.ai)는 작업 전에 승인을 요청하며 잠시 멈춥니다. 자�
 
 **하는 일**
 - Muse의 승인 요청을 감지하고 **Allow(허용)** 버튼을 클릭합니다.
-- Muse가 승인을 표시하는 네 가지 방식 모두 처리합니다. 표시된 승인 카드,
+- Muse가 승인을 표시하는 다섯 가지 방식 모두 처리합니다. 표시된 승인 카드,
   Allow/Deny 버튼 쌍, 접힌 “Allow Muse to perform this action…” 카드(먼저 펼친 뒤 승인),
   그리고 백그라운드의 “N tasks need your approval” 배너(승인 패널을 열어 대기 중인
   카드가 표시되게 함)입니다.
@@ -424,7 +424,7 @@ se detenga.
 
 **Qué hace**
 - Detecta las solicitudes de aprobación de Muse y pulsa el botón **Allow (Permitir)**.
-- Cubre las cuatro formas en que Muse muestra una aprobación: tarjetas de aprobación
+- Cubre las cinco formas en que Muse muestra una aprobación: tarjetas de aprobación
   marcadas, pares de botones Permitir/Denegar, tarjetas contraídas
   “Allow Muse to perform this action…” (las expande primero) y el aviso de fondo
   “N tasks need your approval” (abre el panel de aprobaciones para que se muestren las
@@ -557,7 +557,7 @@ Compliance notes for this declaration:
 - Manifest V3, no `content_security_policy` relaxation.
 - No analytics SDK, no CDN, no update endpoint. (The optional settings sync uses
   Chrome's built-in sync service — a browser feature, not an extension network call.)
-- `dist/muse-auto-allow-v1.18.0.zip` contains only static files with `manifest.json` at the
+- `dist/muse-auto-allow-v1.22.5.zip` contains only static files with `manifest.json` at the
   zip root.
 
 ---
@@ -628,7 +628,7 @@ The dashboard requires these images. Provide them at the exact sizes below.
 | Asset | Requirement | Source in this repo | Status |
 |---|---|---|---|
 | Extension icon | 128×128 px PNG | `extension/icons/icon128.png` | ✅ present |
-| Screenshots | 1280×800 px PNG (up to 5) | `store/screenshot1.png` (live runtime capture, v1.22.0), `store/screenshot2-stats.png` (Statistics), `store/screenshot3-popup.png` (popup on stage), `store/screenshot4-overview.png` (designed overview), `store/screenshot5-safety.png` (Safety & Control panel: layered allow/ask/block rules with JSON import/export, v1.22.0) | ✅ 5 present, all verified 1280×800 |
+| Screenshots | 1280×800 px PNG (up to 5) | `store/screenshot1.png` (live runtime capture, v1.22.5), `store/screenshot2-stats.png` (Statistics), `store/screenshot3-popup.png` (popup on stage), `store/screenshot4-overview.png` (designed overview), `store/screenshot5-safety.png` (Safety & Control panel: layered allow/ask/block rules with JSON import/export, v1.22.5) | ✅ 5 present, all verified 1280×800 |
 | Small promo tile | 440×280 px PNG | `store/promo440x280.png` | ✅ present (verified 440×280) |
 | Marquee promo tile | 1400×560 px (optional) | `store/marquee1400x560.png` | ✅ present (verified 1400×560) |
 

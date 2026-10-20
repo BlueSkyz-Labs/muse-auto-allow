@@ -18,7 +18,7 @@ Muse Auto-Allow is a zero-dependency Chrome (Manifest V3) extension that clicks 
 [Muse](https://muse.ai) approval requests — and the affirmative option on **Codex (ChatGPT)**
 approval requests on chatgpt.com, behind a separate switch that ships off — so your agents keep
 running instead of waiting on you. It never clicks **Deny**, never clicks a lone **Allow**, and
-sends nothing anywhere.
+sends nothing to the developer or to any remote server.
 
 ---
 
@@ -218,8 +218,9 @@ flowchart LR
 - **Popup + Statistics page** — the control surface and the dashboard; both read and write the
   same `chrome.storage.local` store.
 - **Storage** — settings, the last 50 clicks (approval text encrypted), counters,
-  day/month/year/topic aggregates, and a `schemaVersion` stamp. Local only: never synced, never
-  sent.
+  day/month/year/topic aggregates, and a `schemaVersion` stamp. Local by default; the optional,
+  off-by-default "Sync settings across devices" switch mirrors settings (never the log) through
+  Chrome Sync — nothing is sent to the developer.
 
 ## Privacy & Security
 
