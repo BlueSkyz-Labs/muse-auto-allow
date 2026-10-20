@@ -206,7 +206,7 @@
       "ok": true,
       "detail": {
         "bandShown": true,
-        "bannerText": "Logging only — nothing will be clicked",
+        "bannerText": "Logging only — nothing will be clickedTurn on real clicking",
         "lineText": ""
       }
     },
@@ -242,10 +242,10 @@
       }
     },
     {
-      "name": "G2. keyboard: Tab reaches the controls (11/12 unique) and does not trap",
+      "name": "G2. keyboard: Tab reaches the controls (12/13 unique) and does not trap",
       "ok": true,
       "detail": {
-        "total": 12,
+        "total": 13,
         "uniq": [
           "langBtn",
           "p15",
@@ -257,6 +257,7 @@
           "pbtn preset on",
           "misbtn",
           "followupEnabled",
+          "dryLive",
           "openstats"
         ],
         "tail": [
@@ -382,8 +383,8 @@
         "top": "keyword:banana (1)",
         "trend": "5",
         "delta": "↑ 5 so với 7 ngày trước",
-        "sw": 290,
-        "cw": 290
+        "sw": 285,
+        "cw": 285
       }
     },
     {
