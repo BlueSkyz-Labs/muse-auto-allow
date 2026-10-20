@@ -63,6 +63,10 @@ function applyI18n() {
     const msg = t(el.dataset.i18nPh, el.getAttribute('placeholder') || '');
     if (msg) el.setAttribute('placeholder', msg);
   });
+  document.querySelectorAll('[data-i18n-title]').forEach((el) => { // R4: localized tooltips
+    const msg = t(el.dataset.i18nTitle, el.getAttribute('title') || '');
+    if (msg) { el.setAttribute('title', msg); el.setAttribute('aria-label', msg); }
+  });
   try { document.documentElement.lang = userLocale === 'auto' ? (chrome.i18n.getUILanguage() || 'en') : userLocale.replace('_', '-'); } catch { /* keep */ }
   // v1.8.0 — aria labels / titles that are not plain textContent
   const aria = (id, key, fb) => { const el = $(id); if (el) el.setAttribute('aria-label', t(key, fb)); };

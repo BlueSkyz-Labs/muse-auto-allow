@@ -102,7 +102,7 @@
     "message": "muse.ai를 열면 동작합니다"
   },
   "onlyMuse": {
-    "message": "muse.ai 및 chatgpt.com에서 동작합니다"
+    "message": "muse.ai와 chatgpt.com(Codex)에서 동작"
   },
   "last7": {
     "message": "7일 추세"
@@ -1036,5 +1036,8 @@
   },
   "auditWeekEmpty": {
     "message": "이번 주에는 차단이나 확인 대기가 없습니다"
+  },
+  "missionPick": {
+    "message": "미션 선택"
   }
 }

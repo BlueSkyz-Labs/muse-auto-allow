@@ -102,7 +102,7 @@
     "message": "Open muse.ai so it can run"
   },
   "onlyMuse": {
-    "message": "Works on muse.ai and chatgpt.com"
+    "message": "Works on muse.ai and chatgpt.com (Codex)"
   },
   "last7": {
     "message": "7-day trend"
@@ -1036,5 +1036,8 @@
   },
   "auditWeekEmpty": {
     "message": "No blocks or asks this week"
+  },
+  "missionPick": {
+    "message": "Pick a mission playbook"
   }
 }

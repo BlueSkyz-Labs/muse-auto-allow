@@ -102,7 +102,7 @@
     "message": "Mở muse.ai để tiện ích chạy"
   },
   "onlyMuse": {
-    "message": "Hoạt động trên muse.ai và chatgpt.com"
+    "message": "Hoạt động trên muse.ai và chatgpt.com (Codex)"
   },
   "last7": {
     "message": "Xu hướng 7 ngày"
@@ -1036,5 +1036,8 @@
   },
   "auditWeekEmpty": {
     "message": "Tuần này chưa có lần chặn hay lượt hỏi nào"
+  },
+  "missionPick": {
+    "message": "Chọn nhiệm vụ (playbook)"
   }
 }

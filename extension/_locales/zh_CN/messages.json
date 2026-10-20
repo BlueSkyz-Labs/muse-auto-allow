@@ -102,7 +102,7 @@
     "message": "打开 muse.ai 以便运行"
   },
   "onlyMuse": {
-    "message": "在 muse.ai 和 chatgpt.com 上运行"
+    "message": "在 muse.ai 和 chatgpt.com（Codex）上运行"
   },
   "last7": {
     "message": "7 天趋势"
@@ -1036,5 +1036,8 @@
   },
   "auditWeekEmpty": {
     "message": "本周没有拦截或询问"
+  },
+  "missionPick": {
+    "message": "选择任务剧本"
   }
 }

@@ -102,7 +102,7 @@
     "message": "muse.ai を開くと動作します"
   },
   "onlyMuse": {
-    "message": "muse.ai と chatgpt.com で動作します"
+    "message": "muse.ai と chatgpt.com（Codex）で動作"
   },
   "last7": {
     "message": "7 日間の傾向"
@@ -1036,5 +1036,8 @@
   },
   "auditWeekEmpty": {
     "message": "今週はブロックも確認待ちもありません"
+  },
+  "missionPick": {
+    "message": "ミッションを選択"
   }
 }
