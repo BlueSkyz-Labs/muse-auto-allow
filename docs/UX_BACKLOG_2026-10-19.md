@@ -108,3 +108,19 @@ OPEN = chờ vòng sau; REJECT = không làm (kèm lý do).
 | UX-NEW | Thiếu phím tắt dry-run | `Alt+Shift+D` (`toggle-dry-run`) + background handler + i18n `shortcutDryRun` |
 
 **Tổng i18n sau Vòng 3: 313 khoá × 6 locale, parity xanh.**
+
+## Wave A — SGPS v1.5 prompt-02 (owner duyệt 2026-10-19)
+
+| ID | Đã làm | Bằng chứng |
+|---|---|---|
+| S2 | Khối Auto follow-up gập hẳn khi tắt (`#fpanel.hidden`); nhãn "Gửi lời nhắc"; dòng "chỉ trong tab Muse — không máy chủ" | popup.js applyFollowupUI + i18n followupSendNow/followupLocalNote |
+| G6 | Preset độ trễ Chậm/Bình thường/Nhanh (600/300/120 ms) thay ô ms; nhớ lựa chọn qua `minDelayMs` | #presets + syncPresetDelay() |
+| S1 | Accordion 4 nhóm (Chế độ chạy · Luật · Tự động hoá & giám sát · Thiết bị & bản quyền), mặc định mở, nhớ trạng thái | details.acc ×4 + applyAccordion/saveAccordion |
+| G3 | Rule Simulator: nhập topic + nội dung thẻ → hiện "sẽ bấm/chặn/để bạn quyết" + luật khớp + đường đi D1→D6 | extension/rulesim.js (19/19 test) + #simOut |
+| S4 | "Lần chặn cuối" trên đầu log (ẩn khi chưa có) | #lastBlock + lastBlockedOf() |
+| G10 | Explainable block: `rule:<id>` được dịch thành kind + topics/keywords dưới dòng blocked | .item .why + layerDesc |
+| G2 | Log row mở rộng khi click/Enter/Space (context đầy đủ, aria-expanded) | toggleLogRow + .item.exp |
+| G4 | Trust dashboard: rails luôn đúng + lần chặn cuối, cạnh status strip | #trustDash + renderTrustDash |
+| G1 | Onboarding mock card tương tác: bấm Allow → "không có gì xảy ra — đó là điểm chính" | #obMock + obmAllow |
+
+i18n: **340 khoá × 6 locale** (parity xanh). Unit mới: rulesim **19/19**, timeline **22/22**.
