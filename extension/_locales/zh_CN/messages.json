@@ -1035,9 +1035,30 @@
     "message": "永久授权：会点击（YOLO）"
   },
   "auditWeekEmpty": {
-    "message": "本周没有拦截或询问"
+    "message": "本周 0 次拦截 · 0 次询问 · 0 次跟进"
   },
   "missionPick": {
     "message": "选择任务剧本"
+  },
+  "openMuse": {
+    "message": "打开 muse.ai"
+  },
+  "stateWaiting": {
+    "message": "等待 Muse 标签页"
+  },
+  "museTabsNoneShort": {
+    "message": "未打开 Muse 标签页"
+  },
+  "dryGoLive": {
+    "message": "开启真实点击"
+  },
+  "dryGoLiveArm": {
+    "message": "再次点击确认"
+  },
+  "dryGoLiveHint": {
+    "message": "试运行中——不会点击"
+  },
+  "shortcutEnabled": {
+    "message": "开关自动点击"
   }
 }

@@ -1035,9 +1035,30 @@
     "message": "Quyền vĩnh viễn: được bấm (YOLO)"
   },
   "auditWeekEmpty": {
-    "message": "Tuần này chưa có lần chặn hay lượt hỏi nào"
+    "message": "0 lần chặn · 0 lượt hỏi · 0 nhắc tiếp tuần này"
   },
   "missionPick": {
     "message": "Chọn nhiệm vụ (playbook)"
+  },
+  "openMuse": {
+    "message": "Mở muse.ai"
+  },
+  "stateWaiting": {
+    "message": "Đang chờ tab Muse"
+  },
+  "museTabsNoneShort": {
+    "message": "Chưa mở tab Muse"
+  },
+  "dryGoLive": {
+    "message": "Bật bấm thật"
+  },
+  "dryGoLiveArm": {
+    "message": "Bấm lần nữa để xác nhận"
+  },
+  "dryGoLiveHint": {
+    "message": "Đang chạy thử — chưa bấm gì"
+  },
+  "shortcutEnabled": {
+    "message": "Bật/tắt tự động bấm"
   }
 }

@@ -1035,9 +1035,30 @@
     "message": "Permisos permanentes: se pulsan (YOLO)"
   },
   "auditWeekEmpty": {
-    "message": "Sin bloqueos ni consultas esta semana"
+    "message": "0 bloqueos · 0 consultas · 0 seguimientos esta semana"
   },
   "missionPick": {
     "message": "Elegir un playbook de misión"
+  },
+  "openMuse": {
+    "message": "Abrir muse.ai"
+  },
+  "stateWaiting": {
+    "message": "Esperando una pestaña de Muse"
+  },
+  "museTabsNoneShort": {
+    "message": "Ninguna pestaña de Muse abierta"
+  },
+  "dryGoLive": {
+    "message": "Activar clics reales"
+  },
+  "dryGoLiveArm": {
+    "message": "Toca otra vez para confirmar"
+  },
+  "dryGoLiveHint": {
+    "message": "Prueba activa: no se hace clic"
+  },
+  "shortcutEnabled": {
+    "message": "Activar o desactivar el clic automático"
   }
 }

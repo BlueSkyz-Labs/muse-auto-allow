@@ -116,6 +116,8 @@ function renderChart() {
   const yMax = Math.max(0, ...data.map((x) => x.v));
   if (yMax > 0) out += '<line class="grid" x1="' + padL + '" y1="' + padT + '" x2="' + (W - padR) + '" y2="' + padT + '"/>' +
     '<text class="tick" x="' + padL + '" y="' + (padT - 1) + '">' + yMax + '</text>';
+  // R5: a lone max label made bar heights unreadable — anchor the scale with a zero tick
+  out += '<text class="tick" x="' + padL + '" y="' + (padT + innerH + 11) + '">0</text>';
   out += '<line class="base" x1="' + padL + '" y1="' + (padT + innerH) + '" x2="' + (W - padR) + '" y2="' + (padT + innerH) + '"/>';
   data.forEach((x, i) => {
     const last = i === data.length - 1;

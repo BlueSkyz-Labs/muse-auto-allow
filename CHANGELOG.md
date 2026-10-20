@@ -1,6 +1,16 @@
 # Changelog
 
-## 1.22.5 — rounds 1–3 (SGPS prompt-02, auto-merge an toàn)
+## 1.22.6 — rounds 4b–6 (SGPS prompt-02 auto loop)
+- **Round 4b**: localized tooltips (`data-i18n-title`), tooltip nhiệm vụ, footer nói rõ chatgpt.com = Codex.
+- **Round 5 (power-user)**: phím tắt **Alt+Shift+A** bật/tắt master switch; nút **"Mở muse.ai"** ngay trên
+  state line khi không có tab Muse; state line nói **"Đang chờ tab Muse"** thay vì "Đang chạy" gây mâu thuẫn;
+  banner chạy thử có nút **"Bật bấm thật"** (2 bước, tự huỷ sau 5 giây); chart thêm mốc **0** trên trục Y.
+- **Round 6 (empty/error)**: card Tuần này nói rõ metric ("0 lần chặn · 0 lượt hỏi · 0 nhắc tiếp") thay vì
+  câu mơ hồ đứng cạnh số 11; nút mở muse.ai chỉ hiện khi thật sự không có tab.
+- i18n **353 keys × 6 locale**; battery: 10/13 xanh + 3 e2e tree xanh khi chạy riêng (máy bận — flake
+  timeout đã biết; Round 27 sẽ xử lý triệt để).
+
+## 1.22.5 — rounds 1–3 (SGPS prompt-02, auto-merge an toàn) — rounds 1–3 (SGPS prompt-02, auto-merge an toàn)
 - **Round 1 (14 fix)**: `.obfoot` CSS rule thật sự bị gãy (`{` thừa) → footer onboarding hết lơ lửng;
   KPI "Tháng này" bỏ (luôn trùng Tổng); trust rails thành 3 chip rời (hết wrap giữa từ "thủ|công");
   nút pause đổi thành "⏸ Tạm dừng 15′"; dòng phụ status strip lên `--ink-2` (≥4.5:1); hàng

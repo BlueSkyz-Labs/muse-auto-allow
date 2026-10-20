@@ -1035,9 +1035,30 @@
     "message": "Standing grants: clicked (YOLO)"
   },
   "auditWeekEmpty": {
-    "message": "No blocks or asks this week"
+    "message": "0 blocked · 0 asks · 0 follow-ups this week"
   },
   "missionPick": {
     "message": "Pick a mission playbook"
+  },
+  "openMuse": {
+    "message": "Open muse.ai"
+  },
+  "stateWaiting": {
+    "message": "Waiting for a Muse tab"
+  },
+  "museTabsNoneShort": {
+    "message": "No Muse tab open"
+  },
+  "dryGoLive": {
+    "message": "Turn on real clicking"
+  },
+  "dryGoLiveArm": {
+    "message": "Tap again to confirm"
+  },
+  "dryGoLiveHint": {
+    "message": "Dry-run is on — nothing is clicked"
+  },
+  "shortcutEnabled": {
+    "message": "Turn auto-click on or off"
   }
 }

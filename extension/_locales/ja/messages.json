@@ -1035,9 +1035,30 @@
     "message": "常時許可: クリックします (YOLO)"
   },
   "auditWeekEmpty": {
-    "message": "今週はブロックも確認待ちもありません"
+    "message": "今週 0 ブロック · 0 確認 · 0 フォロー"
   },
   "missionPick": {
     "message": "ミッションを選択"
+  },
+  "openMuse": {
+    "message": "muse.ai を開く"
+  },
+  "stateWaiting": {
+    "message": "Muse タブを待っています"
+  },
+  "museTabsNoneShort": {
+    "message": "Muse タブが開いていません"
+  },
+  "dryGoLive": {
+    "message": "実際のクリックを有効化"
+  },
+  "dryGoLiveArm": {
+    "message": "もう一度押して確定"
+  },
+  "dryGoLiveHint": {
+    "message": "ドライラン中 — クリックしません"
+  },
+  "shortcutEnabled": {
+    "message": "自動クリックのオン/オフ"
   }
 }

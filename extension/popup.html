@@ -460,9 +460,11 @@
   .miniEmpty { font-size: 11px; color: var(--muted); padding: 8px 0 4px; }
   /* dry-run banner + digest: inside #logTop, sticky at the top of the log's scroll area */
   .logtop { position: sticky; top: 0; z-index: 2; background: var(--bg); }
-  .dryband { display: flex; align-items: center; box-sizing: border-box; border-radius: 10px;
+  .dryband { display: flex; align-items: center; gap: 6px; box-sizing: border-box; border-radius: 10px;
              padding: 1px 8px; font-size: 10.5px; line-height: 1.4;
              background: rgba(243,217,180,.55); border: 1px solid rgba(214,150,20,.7); color: #6b4a12; } /* R1: >=3:1 */
+  .dryband .dband { margin-left: auto; flex: none; }
+  .pbtn.armed { background: var(--accent-tint); border-color: var(--accent-line); color: var(--accent-text); font-weight: 500; }
   .digest { box-sizing: border-box; border-radius: 10px; padding: 0 8px; margin-top: 2px;
             background: var(--panel); border: 1px solid var(--stroke); }
   .digest .dhead { font-size: 10px; line-height: 1.3; color: var(--ink-2); display: flex; gap: 6px; }
@@ -787,7 +789,7 @@
          layout no height, so they can never push the popup past its 600px cap -->
     <div class="logtop" id="logTop" hidden>
       <div class="stateline" id="stateLine" role="status"><span class="stok" id="stateToken"></span><span class="stsurf" id="stateSurf"></span><button type="button" class="stact" id="stateAction" hidden></button></div>
-      <div class="dryband" id="dryBand" hidden><span data-i18n="dryRunBanner">Logging only — nothing will be clicked</span></div>
+      <div class="dryband" id="dryBand" hidden><span data-i18n="dryRunBanner">Logging only — nothing will be clicked</span><button type="button" class="pbtn dband" id="dryLive" data-i18n="dryGoLive">Turn on real clicking</button></div>
       <div class="digest" id="digest" hidden>
         <div class="dhead"><span data-i18n="digestTitle">While you were away</span><span id="dSince"></span></div>
         <div class="drow">

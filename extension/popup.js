@@ -1479,7 +1479,7 @@ function renderStateLine() {
     act.hidden = !canResume;
     if (canResume) { act.dataset.act = 'resume'; act.textContent = t('pauseResume', 'Resume'); }
   }
-  refreshStateSurf();
+  refreshStateSurf(); // R5: when no Muse tab is open the surf line owns the 'open muse.ai' action
 }
 function refreshStateSurf() {
   const surf = $('stateSurf');
@@ -1494,7 +1494,22 @@ function refreshStateSurf() {
   try {
     chrome.tabs.query({ url: ['https://muse.ai/*', 'https://*.muse.ai/*'] }, (tabs) => {
       const m = Array.isArray(tabs) ? tabs.length : 0;
-      if (v18.codexEnabled !== true) { surf.textContent = muse(m); return; }
+      // R5: no Muse tab -> say so and offer the one action that fixes it; never "live" + "open muse.ai" together
+      const sl = $('stateLine');
+      const tk = $('stateToken');
+      const act = $('stateAction');
+      if (sl && tk && act && !(v18.pauseUntil > Date.now())) { // paused: the resume action owns the line
+        if (m === 0) {
+          tk.textContent = v18.enabled === false ? t('stateOff', 'Off — nothing is clicked') : t('stateWaiting', 'Waiting for a Muse tab');
+          act.hidden = v18.enabled === false;
+          act.dataset.act = 'openmuse';
+          act.textContent = t('openMuse', 'Open muse.ai');
+        } else if (act.dataset.act === 'openmuse') {
+          act.dataset.act = '';
+          act.hidden = true;
+        }
+      }
+      if (v18.codexEnabled !== true) { surf.textContent = m === 0 ? t('museTabsNoneShort', 'No Muse tab open') : muse(m); return; }
       chrome.tabs.query({ url: ['https://chatgpt.com/*', 'https://*.chatgpt.com/*'] }, (ct) => {
         const c = Array.isArray(ct) ? ct.length : 0;
         surf.textContent = muse(m) + ' · ' + codex(c);
@@ -2244,7 +2259,27 @@ $('logList').addEventListener('click', (e) => {
 });
 // v1.11.0 (G01): the state line's corrective action — Resume directly from the line.
 {
-  const sa = $('stateAction');
+  // R5: the surf action opens muse.ai; the dry banner offers the two-step "turn on real clicking"
+const sa2 = $('stateAction');
+if (sa2) sa2.addEventListener('click', () => {
+  if (sa2.dataset.act === 'openmuse') { try { chrome.tabs.create({ url: 'https://muse.ai/' }); } catch { /* ignore */ } }
+});
+let dryLiveArmed = false; let dryLiveTimer = null;
+const dl = $('dryLive');
+if (dl) dl.addEventListener('click', () => {
+  if (!dryLiveArmed) { // R5: leaving dry-run is a mode switch — never a single tap
+    dryLiveArmed = true;
+    dl.textContent = t('dryGoLiveArm', 'Tap again to confirm');
+    dl.classList.add('armed');
+    dryLiveTimer = setTimeout(() => { dryLiveArmed = false; dl.textContent = t('dryGoLive', 'Turn on real clicking'); dl.classList.remove('armed'); dryLiveTimer = null; }, 5000);
+    return;
+  }
+  if (dryLiveTimer) { clearTimeout(dryLiveTimer); dryLiveTimer = null; }
+  dryLiveArmed = false;
+  dl.textContent = t('dryGoLive', 'Turn on real clicking'); dl.classList.remove('armed');
+  try { chrome.storage.local.set({ dryRun: false }); } catch { /* ignore */ }
+});
+const sa = $('stateAction');
   if (sa) sa.addEventListener('click', () => { if (sa.dataset.act === 'resume') setPause(0); });
 }
 $('safetyClose').addEventListener('click', () => setSafety(false));

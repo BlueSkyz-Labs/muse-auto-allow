@@ -1035,9 +1035,30 @@
     "message": "상시 허용: 클릭함 (YOLO)"
   },
   "auditWeekEmpty": {
-    "message": "이번 주에는 차단이나 확인 대기가 없습니다"
+    "message": "이번 주 차단 0 · 확인 0 · 후속 0"
   },
   "missionPick": {
     "message": "미션 선택"
+  },
+  "openMuse": {
+    "message": "muse.ai 열기"
+  },
+  "stateWaiting": {
+    "message": "Muse 탭을 기다리는 중"
+  },
+  "museTabsNoneShort": {
+    "message": "Muse 탭이 열려 있지 않음"
+  },
+  "dryGoLive": {
+    "message": "실제 클릭 켜기"
+  },
+  "dryGoLiveArm": {
+    "message": "다시 눌러 확인"
+  },
+  "dryGoLiveHint": {
+    "message": "드라이런 중 — 클릭 없음"
+  },
+  "shortcutEnabled": {
+    "message": "자동 클릭 켜기/끄기"
   }
 }
