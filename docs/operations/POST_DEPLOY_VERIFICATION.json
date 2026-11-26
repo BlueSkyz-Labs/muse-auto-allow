@@ -1,0 +1,84 @@
+{
+  "schema": "sgps.post-deploy/1",
+  "standard": "standards/testing/POST_DEPLOY_VERIFICATION_STANDARD.md (PDV 1.0)",
+  "updated": "YYYY-MM-DD",
+  "base_url": "https://TODO.example",
+  "deploy_command": "TODO: the script or workflow step that runs PDV right after promotion",
+  "identity": {
+    "endpoint": "TODO: /api/health or /build-meta.json",
+    "commit_field": "commit",
+    "tries": 8,
+    "interval_seconds": 5,
+    "split_samples": 10
+  },
+  "rollout": "TODO: zero_then_100 | version_affinity | single_version",
+  "public": {
+    "pages": [
+      "/"
+    ],
+    "viewports": [
+      {
+        "name": "320",
+        "width": 320,
+        "height": 640,
+        "scheme": "light"
+      },
+      {
+        "name": "390-dark",
+        "width": 390,
+        "height": 844,
+        "scheme": "dark"
+      },
+      {
+        "name": "1280",
+        "width": 1280,
+        "height": 800,
+        "scheme": "light"
+      }
+    ],
+    "languages": [
+      "vi"
+    ],
+    "allowed_anonymous_401": [
+      "/api/session"
+    ]
+  },
+  "closed_doors": [
+    {
+      "path": "/api/admin/TODO",
+      "expect": 401
+    }
+  ],
+  "signed_in": {
+    "method": "TODO: access_service_token | in_worker_synthetic | owner_device | none",
+    "journey": [
+      "TODO: read-only steps of the main journey"
+    ],
+    "credential_location": "TODO: ci_secret | worker_secret | owner_device_profile | none",
+    "agent_reads_credential": false,
+    "challenge_bypass": false,
+    "writes": "none",
+    "demo_tag": "TODO: the DEMO workspace label (TAG 1.0) when the journey runs as a customer",
+    "not_verified": [
+      "TODO: what this method cannot see, e.g. the real login with its bot challenge"
+    ],
+    "token_expiry_days": 365,
+    "service_principal_get_only": true
+  },
+  "evidence": {
+    "report": "sgps.pdv-report/1",
+    "screenshots": true,
+    "store": "TODO: ci_artifact_private | private_evidence_folder",
+    "retention_days": 14
+  },
+  "rollback": {
+    "automatic": true,
+    "command": "TODO: e.g. wrangler versions deploy <last-passing-version>@100%",
+    "rerun_after": true
+  },
+  "schedule": {
+    "every_minutes": 5,
+    "where": "TODO: Worker cron | CI schedule",
+    "alert": "TODO: the GP-55 channel"
+  }
+}
