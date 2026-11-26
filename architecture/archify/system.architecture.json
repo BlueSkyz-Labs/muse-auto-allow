@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "PRODUCT — system",
+    "output": "system.html",
+    "visual_preset": "blueprint",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "engineering_profile": "deployment-ownership"
+  },
+  "components": [
+    { "id": "user", "type": "external", "label": "Customer", "sublabel": "browser / app", "pos": [30, 200], "size": [130, 60], "tag": "public" },
+    { "id": "edge", "type": "security", "label": "Edge / auth", "sublabel": "replace: Access, WAF, session", "pos": [220, 200], "size": [160, 60], "tag": "identity" },
+    { "id": "app", "type": "backend", "label": "App Worker", "sublabel": "replace: worker name", "pos": [460, 200], "size": [150, 60], "tag": "product" },
+    { "id": "db", "type": "database", "label": "Data store", "sublabel": "replace: D1, R2, KV", "pos": [700, 200], "size": [150, 60], "tag": "product" }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Cloudflare / production", "wraps": ["edge", "app", "db"], "pad": 20 },
+    { "kind": "security-group", "label": "private data", "wraps": ["db"], "pad": 12 }
+  ],
+  "connections": [
+    { "from": "user", "to": "edge", "label": "HTTPS", "variant": "emphasis" },
+    { "from": "edge", "to": "app", "label": "request" },
+    { "from": "app", "to": "db", "label": "binding" }
+  ]
+}
