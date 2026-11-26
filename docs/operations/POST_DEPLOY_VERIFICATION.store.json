@@ -1,0 +1,35 @@
+{
+  "schema": "sgps.post-deploy/1",
+  "kind": "store_release",
+  "standard": "standards/testing/POST_DEPLOY_VERIFICATION_STANDARD.md (PDV 1.0, section 3)",
+  "updated": "2026-11-26",
+  "note": "Not on the Chrome Web Store yet (README). This record applies from the first published version: read the published version back, smoke the installed extension, then watch reviews and support for 24 h.",
+  "store": {
+    "platforms": ["chrome_web_store"],
+    "build_readback": {
+      "source": "chrome_web_store",
+      "match_commit": true,
+      "how": "The published version in the developer dashboard equals extension/manifest.json version, and the uploaded zip SHA-256 equals the deterministic build (scripts/build.mjs, scripts/verify-zip.py)."
+    },
+    "backend_record": "none",
+    "backend_reason": "The extension has no server: licences are verified offline with license-pubkey.js and nothing is sent to a BlueSkyz API.",
+    "smoke": {
+      "method": "owner_device",
+      "screens": ["install and first run", "popup", "options and rules", "stats overview", "safety pause"],
+      "schemes": ["light", "dark"],
+      "data": "fixture",
+      "not_verified": ["behaviour on the live Muse site under a signed-in owner account", "screen reader on every view"]
+    },
+    "crash_readback": {
+      "source": "chrome_web_store reviews and support tab",
+      "window_hours": 24
+    },
+    "bad_build": "expire_and_supersede"
+  },
+  "evidence": {
+    "report": "sgps.pdv-report/1",
+    "screenshots": true,
+    "store": "private_evidence_folder",
+    "retention_days": 14
+  }
+}
